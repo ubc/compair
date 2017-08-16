@@ -2,17 +2,18 @@ from __future__ import division
 import operator
 import random
 
-from bouncer.constants import READ, CREATE, MANAGE
+from bouncer.constants import READ, CREATE, EDIT, MANAGE
 from flask import Blueprint, current_app
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import or_, and_
+from sqlalchemy.orm import joinedload
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import require, allow
-from compair.models import Answer, Score, Comparison, Course, \
+from compair.models import Answer, Comparison, Course, WinningAnswer, \
     Assignment, UserCourse, CourseRole, AssignmentCriterion
 from .util import new_restful_api
 
@@ -25,16 +26,13 @@ comparison_api = Blueprint('comparison_api', __name__)
 api = new_restful_api(comparison_api)
 
 update_comparison_parser = RequestParser()
-update_comparison_parser.add_argument('comparisons', type=list, required=True, location='json')
+update_comparison_parser.add_argument('comparison_criteria', type=list, required=True, location='json')
+update_comparison_parser.add_argument('draft', type=bool, default=False)
 
 # events
 on_comparison_get = event.signal('COMPARISON_GET')
 on_comparison_create = event.signal('COMPARISON_CREATE')
 on_comparison_update = event.signal('COMPARISON_UPDATE')
-
-#messages
-comparison_deadline_message = 'Assignment comparison deadline has passed.'
-educators_can_not_compare_message = 'Only students can compare answers in this assignment.'
 
 # /
 class CompareRootAPI(Resource):
@@ -45,37 +43,43 @@ class CompareRootAPI(Resource):
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(READ, assignment)
-        require(CREATE, Comparison)
+        require(READ, assignment,
+            title="Comparisons Unavailable",
+            message="Assignments and their comparisons can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
+        require(CREATE, Comparison,
+            title="Comparisons Unavailable",
+            message="Comparisons can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
         if not assignment.compare_grace:
-            return {'error': comparison_deadline_message}, 403
+            abort(403, title="Comparisons Unavailable",
+                message="The comparison deadline has passed. No comparisons can be done beyond the deadline.")
         elif not restrict_user and not assignment.educators_can_compare:
-            return {'error': educators_can_not_compare_message}, 403
+            abort(403, title="Comparisons Unavailable",
+                message="Only students can currently compare answers for this assignment. To change these settings to include instructors and teaching assistants, edit the assignment.")
 
-        # check if user has comparisons they have not completed yet
-        comparisons = Comparison.query \
+        # check if user has a comparison they have not completed yet
+        new_pair = False
+        comparison = Comparison.query \
+            .options(joinedload('comparison_criteria')) \
             .filter_by(
                 assignment_id=assignment.id,
                 user_id=current_user.id,
                 completed=False
             ) \
-            .all()
+            .first()
 
-        new_pair = False
-
-        if len(comparisons) > 0:
+        if comparison:
             on_comparison_get.send(
                 self,
                 event_name=on_comparison_get.name,
                 user=current_user,
                 course_id=course.id,
-                data=marshal(comparisons, dataformat.get_comparison(restrict_user)))
+                data=marshal(comparison, dataformat.get_comparison(restrict_user)))
         else:
-            # if there aren't incomplete comparisons, assign a new one
+            # if there isn't an incomplete comparison, assign a new one
             try:
-                comparisons = Comparison.create_new_comparison_set(assignment.id, current_user.id,
+                comparison = Comparison.create_new_comparison(assignment.id, current_user.id,
                     skip_comparison_examples=allow(MANAGE, assignment))
                 new_pair = True
 
@@ -84,19 +88,19 @@ class CompareRootAPI(Resource):
                     event_name=on_comparison_create.name,
                     user=current_user,
                     course_id=course.id,
-                    data=marshal(comparisons, dataformat.get_comparison(restrict_user)))
+                    data=marshal(comparison, dataformat.get_comparison(restrict_user)))
 
             except InsufficientObjectsForPairException:
-                return {"error": "Not enough answers are available for a comparison."}, 400
+                abort(400, title="Comparisons Unavailable", message="Not enough answers are available for you to do comparisons. Please check back later for more answers.")
             except UserComparedAllObjectsException:
-                return {"error": "You have compared all the currently available answers."}, 400
+                abort(400, title="Comparisons Unavailable", message="You have compared all the currently available answer pairs. Please check back later for more answers.")
             except UnknownPairGeneratorException:
-                return {"error": "Generating scored pairs failed, this really shouldn't happen."}, 500
+                abort(500, title="Comparisons Unavailable", message="Generating scored pairs failed, this really shouldn't happen.")
 
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
 
         return {
-            'objects': marshal(comparisons, dataformat.get_comparison(restrict_user)),
+            'comparison': marshal(comparison, dataformat.get_comparison(restrict_user)),
             'new_pair': new_pair,
             'current': comparison_count+1
         }
@@ -108,92 +112,118 @@ class CompareRootAPI(Resource):
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(READ, assignment)
-        require(CREATE, Comparison)
+        require(READ, assignment,
+            title="Comparison Not Saved",
+            message="Comparisons can only be saved by those enrolled in the course. Please double-check your enrollment in this course.")
+        require(EDIT, Comparison,
+            title="Comparison Not Saved",
+            message="Comparisons can only be updated by those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
         if not assignment.compare_grace:
-            return {'error': comparison_deadline_message}, 403
+            abort(403, title="Comparison Not Saved",
+                message="The comparison deadline has passed. No comparisons can be done beyond the deadline.")
         elif not restrict_user and not assignment.educators_can_compare:
-            return {'error': educators_can_not_compare_message}, 403
+            abort(403, title="Comparison Not Saved",
+                message="Only students can save answer comparisons for this assignment. To change these settings to include instructors and teaching assistants, edit the assignment.")
 
-        comparisons = Comparison.query \
+        comparison = Comparison.query \
+            .options(joinedload('comparison_criteria')) \
             .filter_by(
                 assignment_id=assignment.id,
                 user_id=current_user.id,
                 completed=False
             ) \
-            .all()
+            .first()
 
         params = update_comparison_parser.parse_args()
         completed = True
 
         # check if there are any comparisons to update
-        if len(comparisons) == 0:
-            return {"error": "There are no comparisons open for evaluation."}, 400
+        if not comparison:
+            abort(400, title="Comparison Not Saved", message="There are no comparisons open for evaluation.")
 
-        is_comparison_example = comparisons[0].comparison_example_id != None
+        is_comparison_example = comparison.comparison_example_id != None
 
-        # check if number of comparisons submitted matches number of comparisons needed
-        if len(comparisons) != len(params['comparisons']):
-            return {"error": "Not all criteria were evaluated."}, 400
+        # check if number of comparison criteria submitted matches number of comparison criteria needed
+        if len(comparison.comparison_criteria) != len(params['comparison_criteria']):
+            abort(400, title="Comparison Not Saved", message="Not all criteria were evaluated.")
+
+        if params.get('draft'):
+            completed = False
 
         # check if each comparison has a criterion Id and a winner id
-        for comparison_to_update in params['comparisons']:
-            # check if saving a draft
-            if 'draft' in comparison_to_update and comparison_to_update['draft']:
-                completed = False
-
+        for comparison_criterion_update in params['comparison_criteria']:
             # ensure criterion param is present
-            if 'criterion_id' not in comparison_to_update:
-                return {"error": "Missing criterion_id in evaluation."}, 400
+            if 'criterion_id' not in comparison_criterion_update:
+                abort(400, title="Comparison Not Saved", message="The assignment is missing criteria. Please reload the page and try again.")
 
             # set default values for cotnent and winner
-            comparison_to_update.setdefault('content', None)
-            winner_uuid = comparison_to_update.setdefault('winner_id', None)
+            comparison_criterion_update.setdefault('content', None)
+            winner = comparison_criterion_update.setdefault('winner', None)
 
-            # if winner isn't set for any comparisons, then the comparison set isn't complete yet
-            if winner_uuid == None:
+            # if winner isn't set for any comparison criterion, then the comparison isn't complete yet
+            if winner == None:
                 completed = False
 
             # check that we're using criteria that were assigned to the course and that we didn't
-            # get duplicate criteria in comparisons
+            # get duplicate criteria in comparison criteria
             known_criterion = False
-            for comparison in comparisons:
-                if comparison_to_update['criterion_id'] == comparison.criterion_uuid:
+            for comparison_criterion in comparison.comparison_criteria:
+                if comparison_criterion_update['criterion_id'] == comparison_criterion.criterion_uuid:
                     known_criterion = True
 
                     # check that the winner id matches one of the answer pairs
-                    if winner_uuid not in [comparison.answer1_uuid, comparison.answer2_uuid, None]:
-                        return {"error": "Selected answer does not match the available answers in comparison."}, 400
+                    if winner not in [None, WinningAnswer.answer1.value, WinningAnswer.answer2.value]:
+                        abort(400, title="Comparison Not Saved", message="Please select a valid winner from the list provided.")
 
                     break
             if not known_criterion:
-                return {"error": "Unknown criterion submitted!"}, 400
+                abort(400, title="Comparison Not Saved", message="You are attempting to submit comparison of an unknown criterion, which is not allowed.")
 
 
-        # update comparisons
-        for comparison in comparisons:
-            comparison.completed = completed
+        # update comparison criterion
+        comparison.completed = completed
+        comparison.winner = None
 
-            for comparison_to_update in params['comparisons']:
-                if comparison_to_update['criterion_id'] != comparison.criterion_uuid:
+        assignment_criteria = assignment.assignment_criteria
+        answer1_weight = 0
+        answer2_weight = 0
+
+        for comparison_criterion in comparison.comparison_criteria:
+            for comparison_criterion_update in params['comparison_criteria']:
+                if comparison_criterion_update['criterion_id'] != comparison_criterion.criterion_uuid:
                     continue
 
-                if comparison_to_update['winner_id'] == comparison.answer1_uuid:
-                    comparison.winner_id = comparison.answer1_id
-                elif comparison_to_update['winner_id'] == comparison.answer2_uuid:
-                    comparison.winner_id = comparison.answer2_id
-                else:
-                    comparison.winner_id = None
-                comparison.content = comparison_to_update['content']
+                winner = WinningAnswer(comparison_criterion_update['winner']) if comparison_criterion_update['winner'] != None else None
+
+                comparison_criterion.winner = winner
+                comparison_criterion.content = comparison_criterion_update['content']
+
+                if completed:
+                    weight = next((
+                        assignment_criterion.weight for assignment_criterion in assignment_criteria \
+                        if assignment_criterion.criterion_uuid == comparison_criterion.criterion_uuid
+                    ), 0)
+                    if winner == WinningAnswer.answer1:
+                        answer1_weight += weight
+                    elif winner == WinningAnswer.answer2:
+                        answer2_weight += weight
+
+        if completed:
+            if answer1_weight > answer2_weight:
+                comparison.winner = WinningAnswer.answer1
+            elif answer1_weight < answer2_weight:
+                comparison.winner = WinningAnswer.answer2
+            else:
+                comparison.winner = WinningAnswer.draw
 
         db.session.commit()
 
         # update answer scores
         if completed and not is_comparison_example:
             current_app.logger.debug("Doing scoring")
-            Comparison.update_scores_1vs1(comparisons)
+            Comparison.update_scores_1vs1(comparison)
             #Comparison.calculate_scores(assignment.id)
 
         # update course & assignment grade for user if comparison is completed
@@ -207,10 +237,10 @@ class CompareRootAPI(Resource):
             user=current_user,
             course_id=course.id,
             assignment=assignment,
-            comparisons=comparisons,
+            comparison=comparison,
             is_comparison_example=is_comparison_example,
-            data=marshal(comparisons, dataformat.get_comparison(restrict_user)))
+            data=marshal(comparison, dataformat.get_comparison(restrict_user)))
 
-        return {'objects': marshal(comparisons, dataformat.get_comparison(restrict_user))}
+        return {'comparison': marshal(comparison, dataformat.get_comparison(restrict_user))}
 
 api.add_resource(CompareRootAPI, '')

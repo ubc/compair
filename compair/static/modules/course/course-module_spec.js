@@ -5,25 +5,31 @@ describe('course-module', function () {
         "id": id,
         "permissions": {
             "Course": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "Assignment": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "User": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             }
         }
     };
@@ -39,7 +45,9 @@ describe('course-module', function () {
         last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
         modified: "Tue, 12 Aug 2014 20:53:31 -0000",
         username: "root",
-        system_role: "System Administrator"
+        system_role: "System Administrator",
+        uses_compair_login: true,
+        email_notification_method: 'enable'
     };
     var mockCourse = {
         "available": true,
@@ -49,7 +57,6 @@ describe('course-module', function () {
         "student_assignment_count": 0,
         "student_count": 0,
         "created": "Fri, 09 Jan 2015 17:23:59 -0000",
-        "description": null,
         "id": "1abcABC123-abcABC123_Z",
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
         "name": "Test Course",
@@ -72,18 +79,18 @@ describe('course-module', function () {
     });
 
     describe('CourseController', function () {
-        var $rootScope, createController, $location, $modal, $q, xAPISettings;
+        var $rootScope, createController, $location, $uibModal, $q, xAPISettings;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _xAPISettings_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_, _xAPISettings_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
-            createController = function (route, params) {
+            createController = function (params, resolvedData) {
                 return $controller('CourseController', {
                     $scope: $rootScope,
                     $routeParams: params || {},
-                    $route: route || {}
+                    resolvedData: resolvedData || {}
                 });
             }
             xAPISettings = _xAPISettings_;
@@ -97,7 +104,7 @@ describe('course-module', function () {
 
         describe('view:', function () {
             var controller;
-            describe('new', function () {
+            describe('create', function () {
                 var toaster;
                 var course = {
                     "name": "Test111",
@@ -107,9 +114,7 @@ describe('course-module', function () {
                     "end_date": null,
                     "assignment_count": 0,
                     "student_assignment_count": 0,
-                    "student_count": 0,
-                    "descriptionCheck": true,
-                    "description": "<p>Description</p>\n"
+                    "student_count": 0
                 };
                 beforeEach(inject(function (_Toaster_) {
                     toaster = _Toaster_;
@@ -117,7 +122,9 @@ describe('course-module', function () {
                 }));
 
                 beforeEach(function () {
-                    controller = createController({current: {method: 'new'}});
+                    controller = createController({}, {
+                        loggedInUser: angular.copy(mockUser),
+                    });
                 });
 
                 it('should be correctly initialized', function () {
@@ -163,18 +170,18 @@ describe('course-module', function () {
                 beforeEach(function () {
                     editCourse = angular.copy(mockCourse);
                     editCourse.id = "2abcABC123-abcABC123_Z";
-                    controller = createController({current: {method: 'edit'}}, {courseId: "2abcABC123-abcABC123_Z"});
-                    $httpBackend.expectGET('/api/courses/2abcABC123-abcABC123_Z').respond(editCourse);
-                    $httpBackend.flush();
+                    controller = createController({courseId: editCourse.id}, {
+                        course: editCourse,
+                        loggedInUser: angular.copy(mockUser),
+                    });
                 });
 
                 it('should be correctly initialized', function () {
                     expect($rootScope.course).toEqualData(_.merge(editCourse));
+                    expect($rootScope.course).toEqualData(editCourse);
                 });
 
                 it('should error when start date is not before end date', function () {
-                    var editedCourse = angular.copy(editCourse);
-                    $rootScope.course = editedCourse;
                     $rootScope.date.course_start.date = new Date();
                     $rootScope.date.course_start.time = new Date();
                     $rootScope.date.course_end.date = new Date();
@@ -189,12 +196,10 @@ describe('course-module', function () {
                 });
 
                 it('should be able to save edited course', function () {
-                    var editedCourse = angular.copy(editCourse);
-                    editedCourse.name = 'new name';
-                    editedCourse.year = 2016;
-                    editedCourse.term = "Summer";
-                    $rootScope.course = editedCourse;
-                    $httpBackend.expectPOST('/api/courses/2abcABC123-abcABC123_Z', $rootScope.course).respond(editedCourse);
+                    $rootScope.course.name = 'new name';
+                    $rootScope.course.year = 2016;
+                    $rootScope.course.term = "Summer";
+                    $httpBackend.expectPOST('/api/courses/2abcABC123-abcABC123_Z', $rootScope.course).respond($rootScope.course);
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
@@ -203,7 +208,6 @@ describe('course-module', function () {
                 });
 
                 it('should enable save button even if save failed', function() {
-                    $rootScope.course = angular.copy(editCourse);
                     $httpBackend.expectPOST('/api/courses/2abcABC123-abcABC123_Z', $rootScope.course).respond(400, '');
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
@@ -215,12 +219,12 @@ describe('course-module', function () {
     });
 
     describe('CourseSelectModalController', function () {
-        var $rootScope, createController, $location, $modal, $q;
+        var $rootScope, createController, $location, $uibModal, $q;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
             modalInstance = {
                 close: jasmine.createSpy('modalInstance.close'),
@@ -229,7 +233,7 @@ describe('course-module', function () {
                     then: jasmine.createSpy('modalInstance.result.then')
                 }
             };
-            createController = function (route, params) {
+            createController = function (params) {
                 return $controller('CourseSelectModalController', {
                     $scope: $rootScope,
                     $uibModalInstance: modalInstance,
@@ -245,7 +249,6 @@ describe('course-module', function () {
                 {
                     "available": false,
                     "created": "2016-07-29T19:34:40",
-                    "description": null,
                     "assignment_count": 0,
                     "student_assignment_count": 0,
                     "student_count": 0,
@@ -261,7 +264,6 @@ describe('course-module', function () {
                 {
                     "available": true,
                     "created": "2016-10-04T21:32:54",
-                    "description": "<p>This is the test course</p>\n",
                     "assignment_count": 0,
                     "student_assignment_count": 0,
                     "student_count": 0,
@@ -324,9 +326,7 @@ describe('course-module', function () {
                     "end_date": null,
                     "assignment_count": 0,
                     "student_assignment_count": 0,
-                    "student_count": 0,
-                    "descriptionCheck": true,
-                    "description": "<p>Description</p>\n"
+                    "student_count": 0
                 };
 
                 it('should error when start date is not before end date', function () {
@@ -360,12 +360,12 @@ describe('course-module', function () {
     });
 
     describe('CourseDuplicateModalController', function () {
-        var $rootScope, createController, $location, $modal, $q;
+        var $rootScope, createController, $location, $uibModal, $q;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
             modalInstance = {
                 close: jasmine.createSpy('modalInstance.close'),
@@ -389,7 +389,6 @@ describe('course-module', function () {
             var course = {
                 "available": false,
                 "created": "2016-07-29T19:34:40",
-                "description": null,
                 "assignment_count": 0,
                 "student_assignment_count": 0,
                 "student_count": 0,
@@ -432,6 +431,7 @@ describe('course-module', function () {
                         }
                     ],
                     "description": "",
+                    "peer_feedback_prompt": null,
                     "educators_can_compare": false,
                     "enable_self_evaluation": false,
                     "evaluation_count": 0,
@@ -483,6 +483,7 @@ describe('course-module', function () {
                         }
                     ],
                     "description": "",
+                    "peer_feedback_prompt": null,
                     "educators_can_compare": false,
                     "enable_self_evaluation": false,
                     "evaluation_count": 0,
@@ -545,8 +546,13 @@ describe('course-module', function () {
 
                     // check course start date automatic generation
                     var startOfWeek = new Date();
-                    // +1 for converting to ISO 8601 first day of week (monday)
-                    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+                    // -day of week+1 for converting to ISO 8601 first day of week (monday)
+                    // -6 for sundays (since they are d)
+                    if (startOfWeek.getDay() == 0) {
+                        startOfWeek.setDate(startOfWeek.getDate() - 6);
+                    } else {
+                        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
+                    }
 
                     expect($rootScope.duplicateCourse.date.course_start.date.toDateString()).toEqual(startOfWeek.toDateString());
 
@@ -580,7 +586,7 @@ describe('course-module', function () {
                         // +1 for converting to ISO 8601 first day of week (monday)
                         startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1);
 
-                        for (var dayIndex = 0; dayIndex < 1; dayIndex++) {
+                        for (var dayIndex = 0; dayIndex < 7; dayIndex++) {
                             var day = new Date(startOfWeek);
                             day.setDate(startOfWeek.getDate() + dayIndex);
 

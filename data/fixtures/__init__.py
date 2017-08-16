@@ -7,12 +7,12 @@ import string
 from compair import db
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, FileFactory, \
-    AssignmentCommentFactory, AnswerCommentFactory, ScoreFactory, ComparisonExampleFactory, \
+    AssignmentCommentFactory, AnswerCommentFactory, AnswerScoreFactory, ComparisonExampleFactory, \
     LTIConsumerFactory, LTIContextFactory, LTIResourceLinkFactory, \
     LTIUserFactory, LTIUserResourceLinkFactory, ThirdPartyUserFactory
 
 from compair.models import PairingAlgorithm, SystemRole, CourseRole, Comparison, \
-    AnswerComment, AnswerCommentType, Answer
+    AnswerComment, AnswerCommentType, Answer, WinningAnswer
 
 def random_generator(size=8, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -71,7 +71,6 @@ class DemoDataFixture(object):
         course = CourseFactory(
             id=DemoDataFixture.DEFAULT_COURSE_ID, #need to have a fixed ids from demos
             name="ComPAIR Demo Course",
-            description=None,
             year=now.year,
             term="W1",
         )
@@ -221,9 +220,9 @@ class DemoDataFixture(object):
             (You will in turn receive peer feedback on your own chosen film.)</p>
             """,
             answer_start=(now - datetime.timedelta(days=30)),
-            answer_end=(now + datetime.timedelta(days=365)),
+            answer_end=(now + datetime.timedelta(days=120)),
             compare_start=(now - datetime.timedelta(days=30)),
-            compare_end=(now + datetime.timedelta(days=365)),
+            compare_end=(now + datetime.timedelta(days=120)),
             number_of_comparisons=3,
             students_can_reply=True,
             enable_self_evaluation=True,
@@ -1014,17 +1013,19 @@ class DemoDataFixture(object):
         comparison_index = 0
         for rank_index, student in enumerate(students):
             for i in range(complex_assignment.number_of_comparisons):
-                comparisons = Comparison.create_new_comparison_set(complex_assignment.id, student.id, False)
-                for comparison in comparisons:
-                    comparison.completed = True
-                    comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                    comparison.created = (now - datetime.timedelta(days=20) + datetime.timedelta(minutes=5*comparison_index))
-                    db.session.add(comparison)
+                comparison = Comparison.create_new_comparison(complex_assignment.id, student.id, False)
+                comparison.completed = True
+                comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+                comparison.created = (now - datetime.timedelta(days=20) + datetime.timedelta(minutes=5*comparison_index))
+                for comparison_criterion in comparison.comparison_criteria:
+                    comparison_criterion.winner = comparison.winner
+                    comparison_criterion.created = (now - datetime.timedelta(days=20) + datetime.timedelta(minutes=5*comparison_index))
+                db.session.add(comparison)
 
-                Comparison.update_scores_1vs1(comparisons)
+                Comparison.update_scores_1vs1(comparison)
 
                 # add answer comment if necessary
-                for answer in [comparisons[0].answer1, comparisons[0].answer2]:
+                for answer in [comparison.answer1, comparison.answer2]:
                     answer_comment = AnswerComment.query \
                         .filter_by(
                             user_id=student.id,

@@ -25,7 +25,7 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     flagged = db.Column(db.Boolean(name='flagged'), default=False, nullable=False)
     flagger_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="SET NULL"),
         nullable=True)
-    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False)
+    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False, index=True)
     top_answer = db.Column(db.Boolean(name='top_answer'), default=False, nullable=False, index=True)
 
     # relationships
@@ -34,7 +34,8 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # file via File Model
 
     comments = db.relationship("AnswerComment", backref="answer")
-    scores = db.relationship("Score", backref="answer")
+    score = db.relationship("AnswerScore", uselist=False, backref="answer")
+    criteria_scores = db.relationship("AnswerCriterionScore", backref="answer")
 
     # hyprid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
@@ -60,6 +61,22 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     @saved.expression
     def saved(cls):
         return cls.modified != cls.created
+
+    @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Answer Unavailable"
+        if not message:
+            message = "The answer was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Answer Unavailable"
+        if not message:
+            message = "The answer was removed from the system or is no longer accessible."
+        return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
     def __declare_last__(cls):

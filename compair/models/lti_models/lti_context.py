@@ -18,6 +18,7 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
     context_title = db.Column(db.String(255), nullable=True)
     ext_ims_lis_memberships_id = db.Column(db.String(255), nullable=True)
     ext_ims_lis_memberships_url = db.Column(db.Text, nullable=True)
+    custom_context_memberships_url = db.Column(db.Text, nullable=True)
     compair_course_id = db.Column(db.Integer, db.ForeignKey("course.id", ondelete="CASCADE"),
         nullable=True)
 
@@ -29,6 +30,18 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
 
     # hyprid and other functions
     compair_course_uuid = association_proxy('compair_course', 'uuid')
+
+    @hybrid_property
+    def membership_enabled(self):
+        return self.membership_ext_enabled or self.membership_service_enabled
+
+    @hybrid_property
+    def membership_ext_enabled(self):
+        return self.ext_ims_lis_memberships_url and self.ext_ims_lis_memberships_id
+
+    @hybrid_property
+    def membership_service_enabled(self):
+        return self.custom_context_memberships_url
 
     def is_linked_to_course(self):
         return self.compair_course_id != None
@@ -84,6 +97,9 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
         lti_context.context_title = tool_provider.context_title
         lti_context.ext_ims_lis_memberships_id = tool_provider.ext_ims_lis_memberships_id
         lti_context.ext_ims_lis_memberships_url = tool_provider.ext_ims_lis_memberships_url
+
+        if tool_provider.custom_context_memberships_url:
+            lti_context.custom_context_memberships_url = tool_provider.custom_context_memberships_url
 
         db.session.commit()
 

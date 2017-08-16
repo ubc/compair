@@ -18,7 +18,6 @@ describe('xapi-module', function () {
             "start_date": null,
             "end_date": null,
             "created": "Fri, 09 Jan 2015 17:23:59 -0000",
-            "description": null,
             "id": "1abcABC123-abcABC123_Z",
             "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
             "name": "Test Course",
@@ -61,35 +60,32 @@ describe('xapi-module', function () {
             "available": true,
             "students_can_reply": false,
             "comment_count": 1,
-            "criteria": [{
-                "active": true,
-                "criterion": {
+            "criteria": [
+                {
+                    "compared": true,
                     "created": "Fri, 09 Jan 2015 22:47:02 -0000",
                     "default": true,
                     "public": false,
-                    "description": "criterionn 1",
+                    "description": "criterion 1",
                     "id": "4abcABC123-abcABC123_Z",
-                    "compared": true,
                     "modified": "Fri, 09 Jan 2015 22:47:02 -0000",
                     "name": "Which answer has the better critical idea?",
-                    "user_id": "50bcABC123-abcABC123_Z"
+                    "user_id": "50bcABC123-abcABC123_Z",
+                    "weight": 1
                 },
-                "id": "12bcABC123-abcABC123_Z"
-            }, {
-                "active": true,
-                "criterion": {
+                {
+                    "compared": true,
                     "created": "Fri, 09 Jan 2015 22:50:06 -0000",
                     "default": true,
                     "public": false,
                     "description": "criterion 2",
                     "id": "5abcABC123-abcABC123_Z",
-                    "compared": true,
                     "modified": "Fri, 09 Jan 2015 22:50:06 -0000",
                     "name": "Which answer is more effectively articulated? Explain the reason for your preference.",
-                    "user_id": "50bcABC123-abcABC123_Z"
-                },
-                "id": "13bcABC123-abcABC123_Z"
-            }],
+                    "user_id": "50bcABC123-abcABC123_Z",
+                    "weight": 1
+                }
+            ],
             "evaluation_count": 252,
             "id": "9abcABC123-abcABC123_Z",
             "compare_end": "Thu, 15 Sep 2016 16:00:00 -0000",
@@ -97,11 +93,12 @@ describe('xapi-module', function () {
             "compared": true,
             "compare_period": true,
             "modified": "Fri, 25 Sep 2015 07:40:19 -0000",
+            "peer_feedback_prompt": null,
             "number_of_comparisons": 3,
             "total_comparisons_required": 3,
             "total_steps_required": 4,
             "content": "<p><strong>For your answer, write ONLY the premise of 20-60 words. Do not include your notes. Consider spending 10-15 minutes making the notes, but not much longer for this exercise. I strongly recommend marking up a hard copy, as we do in class: paste the poem into a word document and print yourself a working copy.</strong></p>\n\n<p>Transplanted<br />\n&nbsp;&nbsp;&nbsp; ---by Lorna Crozier<br />\n<br />\nThis heart met the air. Grew in the hours<br />\nbetween the first body and the next<br />\na taste for things outside it: the heat<br />\nof high intensity, wind grieving<br />\nin the poplar leaves, the smell of steam<br />\nwafting through the open window<br />\nfrom the hot dog vendor&#39;s cart. Often it skips<br />\n<br />\na beat - grouse explode from ditches,<br />\na man flies through the windshield,<br />\na face the heart once knew<br />\nweeps in the corridor that gives nothing back<br />\nbut unloveliness and glare.<br />\n<br />\nLike a shovel that hits the earth, then rises,<br />\nand hits the earth again, it feels its own<br />\ndull blows. Some nights it is a sail billowing<br />\nwith blood, a raw fist punching.<br />\nSome nights, beneath the weight of blankets,<br />\nflesh and bones, the heart remembers. Feels those<br />\nsurgical gloves close around it, and goes cold.</p>\n",
-            "file": [],
+            "file": null,
             "user": {
                 "avatar": "b893bcb68fbeef6738437fa1deca0a28",
                 "displayname": "Tiffany Potter",
@@ -118,7 +115,7 @@ describe('xapi-module', function () {
             "comment_count": 3,
             "content": "This is answer 1",
             "created": "Sat, 29 Aug 2015 08:00:19 -0000",
-            "file": [],
+            "file": null,
             "flagged": false,
             "top_answer": false,
             "id": "407cABC123-abcABC123_Z",
@@ -158,7 +155,7 @@ describe('xapi-module', function () {
             "comment_count": 4,
             "content": "This is answer 2",
             "created": "Tue, 24 Feb 2015 04:09:28 -0000",
-            "file": [],
+            "file": null,
             "flagged": false,
             "top_answer": false,
             "id": "279cABC123-abcABC123_Z",
@@ -194,73 +191,63 @@ describe('xapi-module', function () {
             "user_id": "162cABC123-abcABC123_Z"
         };
 
-        var mockComparisons = [
-            {
-                'id': "1abcABC123-abcABC123_Z",
-                'course_id': "1abcABC123-abcABC123_Z",
-                'assignment_id': "9abcABC123-abcABC123_Z",
-                'criterion_id': "4abcABC123-abcABC123_Z",
-                'user_id': id,
-                'answer1_id': "407cABC123-abcABC123_Z",
-                'answer2_id': "279cABC123-abcABC123_Z",
-                'answer1': angular.copy(mockAnswer1),
-                'answer2': angular.copy(mockAnswer2),
-                'winner_id': null,
+        var mockComparison = {
+            'id': "1abcABC123-abcABC123_Z",
+            'course_id': "1abcABC123-abcABC123_Z",
+            'assignment_id': "9abcABC123-abcABC123_Z",
+            'user_id': id,
+            'answer1_id': "407cABC123-abcABC123_Z",
+            'answer2_id': "279cABC123-abcABC123_Z",
+            'answer1': angular.copy(mockAnswer1),
+            'answer2': angular.copy(mockAnswer2),
+            'winner': null,
 
-                'content': '',
-                'criterion': {
-                    "created": "Fri, 09 Jan 2015 22:47:02 -0000",
-                    "default": true,
-                    "public": false,
-                    "description": "criterionn 1",
-                    "id": "4abcABC123-abcABC123_Z",
-                    "compared": true,
-                    "modified": "Fri, 09 Jan 2015 22:47:02 -0000",
-                    "name": "Which answer has the better critical idea?",
-                    "user_id": "50bcABC123-abcABC123_Z",
-                },
+            'comparison_criteria': [
+                {
+                    'id': "1abcABC123-abcABC123_Z",
+                    'winner': null,
+                    'content': '',
 
-                'user': {
-                    'avatar': "63a9f0ea7bb98050796b649e85481845",
-                    'displayname': "root",
-                    'fullname': "John Smith",
-                    'id': id
-                },
-                'created': "Fri, 09 Jan 2015 18:35:58 -0000",
-            }, {
-                'id': "2abcABC123-abcABC123_Z",
-                'course_id': "1abcABC123-abcABC123_Z",
-                'assignment_id': "9abcABC123-abcABC123_Z",
-                'criterion_id': "5abcABC123-abcABC123_Z",
-                'user_id': id,
-                'answer1_id': "407cABC123-abcABC123_Z",
-                'answer2_id': "279cABC123-abcABC123_Z",
-                'answer1': angular.copy(mockAnswer1),
-                'answer2': angular.copy(mockAnswer2),
-                'winner_id': "279cABC123-abcABC123_Z",
+                    'criterion_id': "4abcABC123-abcABC123_Z",
+                    'criterion': {
+                        "created": "Fri, 09 Jan 2015 22:47:02 -0000",
+                        "default": true,
+                        "public": false,
+                        "description": "criterion 1",
+                        "id": "4abcABC123-abcABC123_Z",
+                        "compared": true,
+                        "modified": "Fri, 09 Jan 2015 22:47:02 -0000",
+                        "name": "Which answer has the better critical idea?",
+                        "user_id": "50bcABC123-abcABC123_Z",
+                    }
+                }, {
+                    'id': "2abcABC123-abcABC123_Z",
+                    'winner': 'answer2',
+                    'content': '',
 
-                'content': '',
-                'criterion': {
-                    "created": "Fri, 09 Jan 2015 22:50:06 -0000",
-                    "default": true,
-                    "public": false,
-                    "description": "criterion 2",
-                    "id": "5abcABC123-abcABC123_Z",
-                    "compared": true,
-                    "modified": "Fri, 09 Jan 2015 22:50:06 -0000",
-                    "name": "Which answer is more effectively articulated? Explain the reason for your preference.",
-                    "user_id": "50bcABC123-abcABC123_Z"
-                },
+                    'criterion_id': "5abcABC123-abcABC123_Z",
+                    'criterion': {
+                        "created": "Fri, 09 Jan 2015 22:50:06 -0000",
+                        "default": true,
+                        "public": false,
+                        "description": "criterion 2",
+                        "id": "5abcABC123-abcABC123_Z",
+                        "compared": true,
+                        "modified": "Fri, 09 Jan 2015 22:50:06 -0000",
+                        "name": "Which answer is more effectively articulated? Explain the reason for your preference.",
+                        "user_id": "50bcABC123-abcABC123_Z",
+                    }
+                }
+            ],
 
-                'user': {
-                    'avatar': "63a9f0ea7bb98050796b649e85481845",
-                    'displayname': "root",
-                    'fullname': "John Smith",
-                    'id': id
-                },
-                'created': "Fri, 09 Jan 2015 18:35:58 -0000",
-            }
-        ];
+            'user': {
+                'avatar': "63a9f0ea7bb98050796b649e85481845",
+                'displayname': "root",
+                'fullname': "John Smith",
+                'id': id
+            },
+            'created': "Fri, 09 Jan 2015 18:35:58 -0000",
+        };
 
         var mockComment = {
             "answer_id": "279cABC123-abcABC123_Z",
@@ -1018,7 +1005,7 @@ describe('xapi-module', function () {
             });
         });
 
-        describe('opened_inline_pdf:', function() {
+        describe('opened_inline_kaltura_media:', function() {
             it('should generate a valid statement', function() {
                 var expectedStatement = {
                     "id": mockStatementId,
@@ -1043,21 +1030,21 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?section="+encodeURIComponent("Inline PDF Attachment"),
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?section="+encodeURIComponent("Inline Kaltura Media Attachment"),
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://id.tincanapi.com/activitytype/section",
-                            "name": { "en-US": "Inline PDF Attachment" }
+                            "name": { "en-US": "Inline Kaltura Media Attachment" }
                         }
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.opened_inline_pdf(mockFile.name);
+                xAPIStatementHelper.opened_inline_kaltura_media(mockFile.name);
                 $httpBackend.flush();
             });
         });
 
-        describe('closed_inline_pdf:', function() {
+        describe('closed_inline_kaltura_media:', function() {
             it('should generate a valid statement', function() {
                 var expectedStatement = {
                     "id": mockStatementId,
@@ -1082,21 +1069,21 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?section="+encodeURIComponent("Inline PDF Attachment"),
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?section="+encodeURIComponent("Inline Kaltura Media Attachment"),
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://id.tincanapi.com/activitytype/section",
-                            "name": { "en-US": "Inline PDF Attachment" }
+                            "name": { "en-US": "Inline Kaltura Media Attachment" }
                         }
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.closed_inline_pdf(mockFile.name);
+                xAPIStatementHelper.closed_inline_kaltura_media(mockFile.name);
                 $httpBackend.flush();
             });
         });
 
-        describe('opened_pdf_modal:', function() {
+        describe('opened_attachment_modal:', function() {
             it('should generate a valid statement', function() {
                 var expectedStatement = {
                     "id": mockStatementId,
@@ -1121,21 +1108,21 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View PDF Attachment"),
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View Attachment"),
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
-                            "name": { "en-US": "View PDF Attachment" }
+                            "name": { "en-US": "View Attachment" }
                         }
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.opened_pdf_modal(mockFile.name);
+                xAPIStatementHelper.opened_attachment_modal(mockFile.name);
                 $httpBackend.flush();
             });
         });
 
-        describe('closed_pdf_modal:', function() {
+        describe('closed_attachment_modal:', function() {
             it('should generate a valid statement', function() {
                 var expectedStatement = {
                     "id": mockStatementId,
@@ -1160,16 +1147,94 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View PDF Attachment"),
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View Attachment"),
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
-                            "name": { "en-US": "View PDF Attachment" }
+                            "name": { "en-US": "View Attachment" }
                         }
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.closed_pdf_modal(mockFile.name);
+                xAPIStatementHelper.closed_attachment_modal(mockFile.name);
+                $httpBackend.flush();
+            });
+        });
+
+        describe('opened_embeddable_content_modal:', function() {
+            it('should generate a valid statement', function() {
+                var expectedStatement = {
+                    "id": mockStatementId,
+                    "timestamp": mockTimestamp,
+                    "verb":{
+                        "id":"http://activitystrea.ms/schema/1.0/open",
+                        "display":{"en-US":"opened"}
+                    },
+                    "context":{
+                        "contextActivities":{
+                            "parent":[{
+                                "id": "https://localhost:8888/app/#"+mockLocationPath,
+                                "objectType":"Activity"
+                            }],
+                            "other":[{
+                                "id": mockLocationAbsUrl,
+                                "objectType":"Activity"
+                            },{
+                                "id": "https://mock.com/url",
+                                "objectType":"Activity"
+                            }]
+                        }
+                    },
+                    "object":{
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View Embeddable Content"),
+                        "objectType":"Activity",
+                        "definition":{
+                            "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                            "name": { "en-US": "View Embeddable Content" }
+                        }
+                    }
+                };
+                $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                xAPIStatementHelper.opened_embeddable_content_modal("https://mock.com/url");
+                $httpBackend.flush();
+            });
+        });
+
+        describe('closed_embeddable_content_modal:', function() {
+            it('should generate a valid statement', function() {
+                var expectedStatement = {
+                    "id": mockStatementId,
+                    "timestamp": mockTimestamp,
+                    "verb":{
+                        "id":"http://activitystrea.ms/schema/1.0/close",
+                        "display":{"en-US":"closed"}
+                    },
+                    "context":{
+                        "contextActivities":{
+                            "parent":[{
+                                "id": "https://localhost:8888/app/#"+mockLocationPath,
+                                "objectType":"Activity"
+                            }],
+                            "other":[{
+                                "id": mockLocationAbsUrl,
+                                "objectType":"Activity"
+                            },{
+                                "id": "https://mock.com/url",
+                                "objectType":"Activity"
+                            }]
+                        }
+                    },
+                    "object":{
+                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?modal="+encodeURIComponent("View Embeddable Content"),
+                        "objectType":"Activity",
+                        "definition":{
+                            "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                            "name": { "en-US": "View Embeddable Content" }
+                        }
+                    }
+                };
+                $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                xAPIStatementHelper.closed_embeddable_content_modal("https://mock.com/url");
                 $httpBackend.flush();
             });
         });
@@ -1264,51 +1329,6 @@ describe('xapi-module', function () {
             });
         });
 
-        describe('opened_answer_show_all_section:', function() {
-            it('should do nothing when no answer id provided', function() {
-                var invalid = angular.copy(mockAnswer1);
-                invalid.id = null;
-                xAPIStatementHelper.opened_answer_show_all_section(invalid);
-            });
-
-            it('should generate a valid statement', function() {
-                var expectedStatement = {
-                    "id": mockStatementId,
-                    "timestamp": mockTimestamp,
-                    "verb":{
-                        "id":"http://activitystrea.ms/schema/1.0/open",
-                        "display":{"en-US":"opened"}
-                    },
-                    "context":{
-                        "contextActivities":{
-                            "parent":[{
-                                "id": "https://localhost:8888/app/#"+mockLocationPath,
-                                "objectType":"Activity"
-                            }],
-                            "other":[{
-                                "id": mockLocationAbsUrl,
-                                "objectType":"Activity"
-                            },{
-                                "id": "https://localhost:8888/app/xapi/answer/407cABC123-abcABC123_Z",
-                                "objectType":"Activity"
-                            }]
-                        }
-                    },
-                    "object":{
-                        "id":"https://localhost:8888/app/#"+mockLocationPath+"?section="+encodeURIComponent("Answer show all"),
-                        "objectType":"Activity",
-                        "definition":{
-                            "type":"http://id.tincanapi.com/activitytype/section",
-                            "name": { "en-US": "Answer show all" }
-                        }
-                    }
-                };
-                $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.opened_answer_show_all_section(mockAnswer1);
-                $httpBackend.flush();
-            });
-        });
-
         describe('initialize_comparison_question:', function() {
             it('should do nothing when no answer id provided', function() {
                 xAPIStatementHelper.initialize_comparison_question([], 1, "random", mockRegistration);
@@ -1350,7 +1370,7 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/xapi/assignment/9abcABC123-abcABC123_Z/comparison?pair=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z",
+                        "id":"https://localhost:8888/app/xapi/comparison/1abcABC123-abcABC123_Z/question",
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://adlnet.gov/expapi/activities/question",
@@ -1363,7 +1383,7 @@ describe('xapi-module', function () {
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.initialize_comparison_question(mockComparisons, comparisonNumber, "random", mockRegistration);
+                xAPIStatementHelper.initialize_comparison_question(mockComparison, comparisonNumber, "random", mockRegistration);
                 $httpBackend.flush();
             });
         });
@@ -1409,7 +1429,7 @@ describe('xapi-module', function () {
                         }
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/xapi/assignment/9abcABC123-abcABC123_Z/comparison?pair=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z",
+                        "id":"https://localhost:8888/app/xapi/comparison/1abcABC123-abcABC123_Z/question",
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://adlnet.gov/expapi/activities/question",
@@ -1422,7 +1442,7 @@ describe('xapi-module', function () {
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.resume_comparison_question(mockComparisons, comparisonNumber, "random", mockRegistration);
+                xAPIStatementHelper.resume_comparison_question(mockComparison, comparisonNumber, "random", mockRegistration);
                 $httpBackend.flush();
             });
         });
@@ -1472,7 +1492,7 @@ describe('xapi-module', function () {
                         "success": false
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/xapi/assignment/9abcABC123-abcABC123_Z/comparison?pair=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z",
+                        "id":"https://localhost:8888/app/xapi/comparison/1abcABC123-abcABC123_Z/question",
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://adlnet.gov/expapi/activities/question",
@@ -1485,16 +1505,22 @@ describe('xapi-module', function () {
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.exited_comparison_question(mockComparisons, comparisonNumber, "random", mockRegistration, mockDuration);
+                xAPIStatementHelper.exited_comparison_question(mockComparison, comparisonNumber, "random", mockRegistration, mockDuration);
                 $httpBackend.flush();
             });
         });
 
-        describe('interacted_comparison_solution:', function() {
-            it('should do nothing when no answer id provided', function() {
-                var invalid = angular.copy(mockComparisons[0]);
+        describe('interacted_comparison_criterion_solution:', function() {
+            it('should do nothing when no comparison id provided', function() {
+                var invalid = angular.copy(mockComparison);
                 invalid.id = null;
-                xAPIStatementHelper.interacted_comparison_solution(invalid, mockRegistration);
+                xAPIStatementHelper.interacted_comparison_criterion_solution(invalid, mockComparison.comparison_criteria[0], mockRegistration);
+            });
+
+            it('should do nothing when no comparison_criterion id provided', function() {
+                var invalid = angular.copy(mockComparison.comparison_criteria[0]);
+                invalid.id = null;
+                xAPIStatementHelper.interacted_comparison_criterion_solution(mockComparison, invalid, mockRegistration);
             });
 
             it('should generate a valid statement', function() {
@@ -1509,7 +1535,7 @@ describe('xapi-module', function () {
                         "registration": mockRegistration,
                         "contextActivities":{
                             "parent":[{
-                                "id": "https://localhost:8888/app/xapi/assignment/9abcABC123-abcABC123_Z/comparison?pair=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z",
+                                "id": "https://localhost:8888/app/xapi/comparison/1abcABC123-abcABC123_Z",
                                 "objectType":"Activity"
                             },{
                                 "id": "https://localhost:8888/app/xapi/criterion/4abcABC123-abcABC123_Z",
@@ -1527,6 +1553,9 @@ describe('xapi-module', function () {
                             },{
                                 "id": "https://localhost:8888/app/xapi/answer/279cABC123-abcABC123_Z",
                                 "objectType":"Activity"
+                            },{
+                                "id": "https://localhost:8888/app/xapi/comparison/1abcABC123-abcABC123_Z/question",
+                                "objectType":"Activity"
                             }]
                         }
                     },
@@ -1534,16 +1563,16 @@ describe('xapi-module', function () {
                         "response": "Undecided"
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/xapi/comparison/1abcABC123-abcABC123_Z",
+                        "id":"https://localhost:8888/app/xapi/comparison/criterion/1abcABC123-abcABC123_Z",
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://id.tincanapi.com/activitytype/solution",
-                            "name": { "en-US": "Assignment criteria comparison" }
+                            "name": { "en-US": "Assignment criterion comparison" }
                         },
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.interacted_comparison_solution(mockComparisons[0], mockRegistration);
+                xAPIStatementHelper.interacted_comparison_criterion_solution(mockComparison, mockComparison.comparison_criteria[0], mockRegistration);
                 $httpBackend.flush();
 
                 var expectedStatement = {
@@ -1557,7 +1586,7 @@ describe('xapi-module', function () {
                         "registration": mockRegistration,
                         "contextActivities":{
                             "parent":[{
-                                "id": "https://localhost:8888/app/xapi/assignment/9abcABC123-abcABC123_Z/comparison?pair=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z",
+                                "id": "https://localhost:8888/app/xapi/comparison/1abcABC123-abcABC123_Z",
                                 "objectType":"Activity"
                             },{
                                 "id": "https://localhost:8888/app/xapi/criterion/5abcABC123-abcABC123_Z",
@@ -1575,6 +1604,9 @@ describe('xapi-module', function () {
                             },{
                                 "id": "https://localhost:8888/app/xapi/answer/279cABC123-abcABC123_Z",
                                 "objectType":"Activity"
+                            },{
+                                "id": "https://localhost:8888/app/xapi/comparison/1abcABC123-abcABC123_Z/question",
+                                "objectType":"Activity"
                             }]
                         }
                     },
@@ -1582,16 +1614,16 @@ describe('xapi-module', function () {
                         "response": "https://localhost:8888/app/xapi/answer/279cABC123-abcABC123_Z"
                     },
                     "object":{
-                        "id":"https://localhost:8888/app/xapi/comparison/2abcABC123-abcABC123_Z",
+                        "id":"https://localhost:8888/app/xapi/comparison/criterion/2abcABC123-abcABC123_Z",
                         "objectType":"Activity",
                         "definition":{
                             "type":"http://id.tincanapi.com/activitytype/solution",
-                            "name": { "en-US": "Assignment criteria comparison" }
+                            "name": { "en-US": "Assignment criterion comparison" }
                         },
                     }
                 };
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
-                xAPIStatementHelper.interacted_comparison_solution(mockComparisons[1], mockRegistration);
+                xAPIStatementHelper.interacted_comparison_criterion_solution(mockComparison, mockComparison.comparison_criteria[1], mockRegistration);
                 $httpBackend.flush();
             });
         });

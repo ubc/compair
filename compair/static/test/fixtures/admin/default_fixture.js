@@ -1,17 +1,20 @@
 var UserFactory = require('../../factories/user_factory.js');
 var userFactory = new UserFactory();
 
-var SessionFactory  = require('../../factories/session_factory.js');
+var SessionFactory = require('../../factories/session_factory.js');
 var sessionFactory = new SessionFactory();
 
-var CourseFactory  = require('../../factories/course_factory.js');
+var CourseFactory = require('../../factories/course_factory.js');
 var courseFactory = new CourseFactory();
 
-var AssignmentFactory  = require('../../factories/assignment_factory.js');
+var AssignmentFactory = require('../../factories/assignment_factory.js');
 var assignmentFactory = new AssignmentFactory();
 
-var CriterionFactory  = require('../../factories/criterion_factory.js');
+var CriterionFactory = require('../../factories/criterion_factory.js');
 var criterionFactory = new CriterionFactory();
+
+var LTIConsumerFactory = require('../../factories/lti_consumer_factory.js');
+var ltiConsumerFactory = new LTIConsumerFactory();
 
 var storage = {
     session: {},
@@ -22,6 +25,7 @@ var storage = {
     assignments: {},
     course_assignments: {},
     criteria: {},
+    lti_consumers: {},
     user_search_results: {}
 }
 
@@ -31,6 +35,7 @@ var admin = userFactory.generateUser("1abcABC123-abcABC123_Z", "System Administr
     firstname: "JaNy",
     lastname: "bwsV",
     fullname: "JaNy bwsV",
+    email: "admin@exmple.com"
 });
 storage.users[admin.id] = admin;
 
@@ -67,16 +72,14 @@ storage.users[student2.id] = student2;
 var course = courseFactory.generateCourse("1abcABC123-abcABC123_Z",  {
     name: "CHEM 111",
     year: 2015,
-    term: "Winter",
-    description: "<p>CHEM 111 description<p>",
+    term: "Winter"
 });
 storage.courses[course.id] = course;
 
 var course2 = courseFactory.generateCourse("2abcABC123-abcABC123_Z", {
     name: "PHYS 101",
     year: 2015,
-    term: "Winter",
-    description: "<p>PHYS 101  description<p>",
+    term: "Winter"
 });
 storage.courses[course2.id] = course2;
 
@@ -109,7 +112,7 @@ storage.criteria[criterion3.id] = criterion3;
 
 // user_courses
 storage.user_courses[admin.id] = [
-    { courseId: course.id, courseRole: "Instructor", groupName: null },
+    { courseId: course.id, courseRole: "Instructor", groupName: group1 },
     { courseId: course2.id, courseRole: "Instructor", groupName: null }
 ];
 
@@ -170,6 +173,18 @@ var assignment_upcoming = assignmentFactory.generateAssignment("4abcABC123-abcAB
 });
 storage.assignments[assignment_upcoming.id] = assignment_upcoming;
 storage.course_assignments[course.id].push(assignment_upcoming.id);
+
+var consumer1 = ltiConsumerFactory.generateConsumer("1abcABC123-abcABC123_Z", "consumer_key_1", "consumer_secret_1", {
+    "user_id_override": "consumer_user_id_override"
+});
+var consumer2 = ltiConsumerFactory.generateConsumer("2abcABC123-abcABC123_Z", "consumer_key_2", "consumer_secret_2");
+var consumer3 = ltiConsumerFactory.generateConsumer("3abcABC123-abcABC123_Z", "consumer_key_3", "consumer_secret_3", {
+    "active": false
+});
+
+storage.lti_consumers[consumer1.id] = consumer1;
+storage.lti_consumers[consumer2.id] = consumer2;
+storage.lti_consumers[consumer3.id] = consumer3;
 
 // user_search_results
 storage.user_search_results.objects = [student2];

@@ -1,0 +1,127 @@
+<div class="evaluations-screen">
+    <div class="tab-header">
+        <div class="row">
+            <div class="col-sm-6">
+                <h2>Comparisons
+                    <span ng-if="comparisonFilters.group && !comparisonFilters.author"> for "{{ comparisonFilters.group }}"</span>
+                    <span ng-if="comparisonFilters.author"> for "{{ comparisonFiltersName }}"</span>
+                </h2>
+                <p ng-if="numPages > 1">(Page {{comparisonFilters.page}} of {{numPages}})</p>
+            </div>
+
+            <div class="col-sm-6 text-right multi-filters">
+                <span class="filter">
+                    <label>Show: &nbsp;</label>
+                    <select ng-if="groups.length > 0" ng-model="comparisonFilters.group" class="nullable" chosen disable_search_threshold="8"
+                            ng-options="group as group for group in groups | orderBy: 'toString()'">
+                        <option value="">All groups</option>
+                    </select>
+                    <select id="comparison-filter" ng-model="comparisonFilters.author" class="nullable" chosen disable_search_threshold="8"
+                            ng-options="u.id as u.name for u in users | orderBy: 'name'">
+                        <option value="">All students</option>
+                    </select>
+                </span>
+
+                <span class="filter">
+                    <button uib-btn-checkbox ng-model="showAnswers" class="btn btn-sm btn-default">
+                        Expand All Answer Pairs Below
+                    </button>
+                </span>
+            </div>
+        </div>
+
+        <p class="intro-text">Filter by a group (if available) and student evaluator's name, or select "any" for these options to see the full list of available comparisons. To see all feedback left for each student answer, visit the "Answers" tab.</p>
+
+        <div ng-show="!comparison_sets.length">
+            <p>No comparisons were found<span ng-if="comparisonFilters.group || comparisonFilters.author"> with these filter settings. Try another choice above</span>.</p>
+        </div>
+    </div>
+
+    <div ng-show="comparison_sets.length" class="evaluations">
+
+        <div ng-repeat="comparison_set in comparison_sets">
+            <div class="each-evaluation" ng-repeat="comparison in comparison_set.comparisons">
+                <h4 class="text-center evaluator-heading" ng-if="$first">
+                    <i class="fa fa-user" aria-hidden="true"></i> {{ comparison_set.user.fullname }} <br />
+                    <i class="fa fa-arrow-down"></i>
+                </h4>
+
+                <div class="evaluator-answer" ng-if="$first">
+                    <p class="content"><a href="" ng-click="loadAnswerByAuthor(comparison.user_id);showMyAnswer = !showMyAnswer;">
+                        <i ng-show="showMyAnswer" class="fa fa-chevron-down"></i>
+                        <i ng-hide="showMyAnswer" class="fa fa-chevron-right"></i>
+                        Show student's answer
+                    </a></p>
+                    <compair-student-answer class="answer" answer="(answers | filter:{user_id:comparison.user_id}:true)[0]" ng-show="showMyAnswer"></compair-student-answer>
+                    <br />
+                    <div class="" ng-if="comparison_set.self_evaluations.length > 0">
+                        <div ng-repeat="self_evaluation in comparison_set.self_evaluations">
+                            <div class="each-header">
+                                <compair-avatar user-id="self_evaluation.user_id" avatar="self_evaluation.user.avatar" display-name="self_evaluation.user.fullname"></compair-avatar>
+                                <strong>self-evaluated</strong> on {{ self_evaluation.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                            </div>
+                            <div class="content" mathjax hljs ng-bind-html="self_evaluation.content"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison Header -->
+                <div class="each-header">
+                    <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" display-name="comparison.user.fullname"></compair-avatar>
+                    <strong>submitted</strong> on {{ comparison.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                </div>
+
+                <!-- Answers -->
+                <h5 class="content">Answer Pair</h5>
+
+                <p class="show-answers content"><a href="" ng-click="showAnswers = !showAnswers;">
+                    <i ng-show="showAnswers" class="fa fa-chevron-down"></i>
+                    <i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
+                    Show answer pair
+                </a></p>
+
+                <div class="row collapsible-content" ng-show="showAnswers">
+                    <compair-answer-content answer="comparison.answer1" is-chosen="comparison.winner == WinningAnswer.answer1" name="Odd-Numbered Answer" show-score="true"></compair-answer-content>
+                    <compair-answer-content answer="comparison.answer2" is-chosen="comparison.winner == WinningAnswer.answer2" name="Even-Numbered Answer" show-score="true"></compair-answer-content>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5 class="content">Feedback for Odd-Numbered Answer</h5>
+                        <!-- feedback for odd-numbered answer -->
+                        <div ng-repeat="feedback in comparison.answer1_feedback">
+                            <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="content">Feedback for Even-Numbered Answer</h5>
+                        <!-- feedback for even-numbered answer -->
+                        <div ng-repeat="feedback in comparison.answer2_feedback">
+                            <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h5 class="content">Comparisons</h5>
+
+                <div ng-repeat="comparison_criterion in comparison.comparison_criteria">
+
+                    <p class="content">"{{comparison_criterion.criterion.name}}"<br />
+                        <span class="glyphicon glyphicon-ok-circle"></span>
+                        <span ng-if="comparison_criterion.winner == WinningAnswer.answer1"><strong>Odd-numbered answer</strong></span>
+                        <span ng-if="comparison_criterion.winner == WinningAnswer.answer2"><strong>Even-numbered answer</strong></span>
+                    </p>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="text-center">
+        <ul uib-pagination total-items="totalNumComparisonSets" ng-model="comparisonFilters.page"
+            max-size="10" class="pagination-sm" boundary-links="true" direction-links="false"
+            items-per-page="comparisonFilters.perPage" num-pages="numPages" ng-hide="numPages == 1"></ul>
+    </div>
+</div>

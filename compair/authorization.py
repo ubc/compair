@@ -1,8 +1,10 @@
 from bouncer.constants import ALL, MANAGE, EDIT, READ, CREATE, DELETE
 from flask_bouncer import ensure
 from flask_login import current_user
-from werkzeug.exceptions import Unauthorized, Forbidden
+from werkzeug.exceptions import Unauthorized
 from sqlalchemy import and_
+
+from .core import abort
 
 from .models import Course, User, UserCourse, CourseRole, SystemRole, \
     Assignment, Answer, AnswerComment, Comparison, Criterion, \
@@ -89,7 +91,7 @@ def define_authorization(user, they):
         # owner of the answer comment
         they.can((EDIT, DELETE, READ), AnswerComment, user_id=user.id)
         # students, instructor and ta can submit comparisons
-        they.can(CREATE, Comparison, course_id=entry.course_id)
+        they.can((CREATE, EDIT), Comparison, course_id=entry.course_id)
         # instructors can modify the course and enrolment
         if entry.course_role == CourseRole.instructor:
             they.can((EDIT, DELETE), Course, id=entry.course_id)
@@ -127,62 +129,65 @@ def get_logged_in_user_permissions():
         .filter(UserCourse.course_role != CourseRole.dropped) \
         .all()
 
-    admin = user.system_role == SystemRole.sys_admin
+    is_admin = user.system_role == SystemRole.sys_admin
     permissions = {}
     models = {
         User.__name__: user,
     }
-    operations = {
-        MANAGE,
-        READ,
-        EDIT,
-        CREATE,
-        DELETE
-    }
+    operations = [MANAGE, READ, EDIT,  CREATE, DELETE]
+
     # global models
     for model_name, model in models.items():
         # create entry if not already exists
         permissions.setdefault(model_name, {})
         # if not model_name in permissions:
         # permissions[model_name] = {}
-        # obtain permission values for each operation
+        # obtain permission values for each operations
+
+        global_permissions = set()
         for operation in operations:
-            permissions[model_name][operation] = {'global': True}
-            try:
-                ensure(operation, model)
-            except Unauthorized:
-                permissions[model_name][operation]['global'] = False
+            if allow(operation, model):
+                global_permissions.add(operation)
+        permissions[model_name]['global'] = list(global_permissions)
+
     # course model
-    # model_name / operation / courseId OR global
-    permissions['Course'] = {CREATE: {'global': allow(CREATE, Course)}}
-    mod_operations = {MANAGE, READ, EDIT, DELETE}
-    for operation in mod_operations:
-        permissions['Course'].setdefault(operation, {})
-        permissions['Course'][operation]['global'] = admin
-        for course in courses:
-            course_uuid = course.course_uuid
-            try:
-                ensure(operation, Course(id=course.course_id))
-                permissions['Course'][operation][course_uuid] = True
-                permissions['Course'][operation]['global'] = True
-            except Unauthorized:
-                permissions['Course'][operation][course_uuid] = False
+    # model_name / courseId OR global / operation
+    permissions['Course'] = {}
+    mod_operations = [MANAGE, READ, EDIT, DELETE]
+    course_global_permissions = set()
+
+    for course in courses:
+        course_permissions = set()
+        for operation in mod_operations:
+            if allow(operation, Course(id=course.course_id)):
+                course_permissions.add(operation)
+                course_global_permissions.add(operation)
+        permissions['Course'][course.course_uuid] = list(course_permissions)
+
+    if allow(CREATE, Course):
+        course_global_permissions.add(CREATE)
+    if is_admin:
+        for operation in mod_operations:
+            course_global_permissions.add(operation)
+    permissions['Course']['global'] = list(course_global_permissions)
 
     # assignment model
-    # model_name / operation / courseId OR global
+    # model_name / courseId OR global / operation
     permissions['Assignment'] = {}
-    mod_operations = {MANAGE, READ, EDIT, CREATE, DELETE}
-    for operation in mod_operations:
-        permissions['Assignment'].setdefault(operation, {})
-        permissions['Assignment'][operation]['global'] = admin
-        for course in courses:
-            course_uuid = course.course_uuid
-            try:
-                ensure(operation, Assignment(course_id=course.course_id))
-                permissions['Assignment'][operation][course_uuid] = True
-                permissions['Assignment'][operation]['global'] = True
-            except Unauthorized:
-                permissions['Assignment'][operation][course_uuid] = False
+    assignment_global_permissions = set()
+
+    for course in courses:
+        assignment_permissions = set()
+        for operation in operations:
+            if allow(operation, Assignment(course_id=course.course_id)):
+                assignment_permissions.add(operation)
+                assignment_global_permissions.add(operation)
+        permissions['Assignment'][course.course_uuid] = list(assignment_permissions)
+
+    if is_admin:
+        for operation in operations:
+            assignment_global_permissions.add(operation)
+    permissions['Assignment']['global'] = list(assignment_global_permissions)
 
     return permissions
 
@@ -199,7 +204,7 @@ def allow(operation, target):
         return False
 
 
-def require(operation, target):
+def require(operation, target, title=None, message=None):
     """
     This is basically Flask-Bouncer's ensure except it throws a 403 instead of a 401
     if the permission check fails. A 403 is more accurate since authentication would
@@ -212,7 +217,11 @@ def require(operation, target):
     try:
         ensure(operation, target)
     except Unauthorized as e:
-        raise Forbidden(e.get_description())
+        if not title:
+            title = "Forbidden"
+        if not message:
+            message = e.description
+        abort(403, title=title, message=message)
 
 
 def is_user_access_restricted(user):

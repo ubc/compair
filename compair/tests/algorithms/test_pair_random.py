@@ -101,7 +101,7 @@ class TestPairAdaptive(unittest.TestCase):
 
         self.assertEqual(min_key, 1)
         self.assertEqual(max_key, 2)
-        self.assertEqual(results.winning_key, None)
+        self.assertEqual(results.winner, None)
 
 
         # Selects lowest round objects first

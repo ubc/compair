@@ -6,7 +6,7 @@ var AssignmentPage = function() {
     this.clickButton = function(button) {
         switch (button) {
             case "Edit Assignment":
-                return element(by.cssContainingText(".standalone-assignment a", "Edit")).click();
+                return element(by.cssContainingText(".assignment-screen a", "Edit Assignment")).click();
         }
     }
 };

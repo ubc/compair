@@ -1,11 +1,11 @@
 import json
 
-from data.fixtures.test_data import ComparisonTestData, ComparisonFactory
+from data.fixtures.test_data import ComparisonTestData, ComparisonFactory, ComparisonCriterionFactory
 from compair.tests.test_compair import ComPAIRXAPITestCase
 
 from compair.core import db
 from flask_login import current_app
-from compair.models import PairingAlgorithm
+from compair.models import PairingAlgorithm, WinningAnswer
 
 from compair.xapi.capture_events import on_comparison_update
 
@@ -21,41 +21,52 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
         self.answer2 = self.data.answers[1]
         self.comparison_example = self.data.comparisons_examples[0]
 
-        self.example_comparisons = []
-        self.comparisons = []
+        self.example_comparison = ComparisonFactory(
+            assignment=self.assignment,
+            user=self.user,
+            answer1_id=self.comparison_example.answer1.id,
+            answer2_id=self.comparison_example.answer2.id,
+            winner=None,
+            completed=False
+        )
+        self.example_comparison_criteria = []
+
+        self.comparison = ComparisonFactory(
+            assignment=self.assignment,
+            user=self.user,
+            answer1_id=self.answer1.id,
+            answer2_id=self.answer2.id,
+            winner=None,
+            completed=False
+        )
+        self.comparison_criteria = []
+
         for criterion in self.assignment.criteria:
-            self.example_comparisons.append(ComparisonFactory(
-                assignment=self.assignment,
+            self.example_comparison_criteria.append(ComparisonCriterionFactory(
+                comparison=self.example_comparison,
                 criterion=criterion,
-                user=self.user,
-                answer1_id=self.comparison_example.answer1.id,
-                answer2_id=self.comparison_example.answer2.id,
-                winner_id=self.comparison_example.answer1.id,
-                completed=False
+                winner=WinningAnswer.answer1,
             ))
 
-            self.comparisons.append(ComparisonFactory(
-                assignment=self.assignment,
+            self.comparison_criteria.append(ComparisonCriterionFactory(
+                comparison=self.comparison,
                 criterion=criterion,
-                user=self.user,
-                answer1_id=self.answer1.id,
-                answer2_id=self.answer2.id,
-                winner_id=self.answer1.id,
-                completed=False
+                winner=WinningAnswer.answer1,
             ))
+
         db.session.commit()
+
+        self.maxDiff = None
 
     def test_on_comparison_update(self):
         completed_count = 0
 
-        for (is_comparison_example, comparisons) in [(True, self.example_comparisons), (False, self.comparisons)]:
-            answer_uuids = [comparisons[0].answer1_uuid, comparisons[0].answer2_uuid]
-            answer_uuids.sort()
-
+        for (is_comparison_example, comparison) in [(True, self.example_comparison), (False, self.comparison)]:
             for completed in [False, True]:
-                for comparison in comparisons:
-                    comparison.completed = completed
+                comparison.completed = completed
+                comparison.winner = WinningAnswer.answer1 if completed else None
                 db.session.commit()
+
                 if completed:
                     completed_count+=1
 
@@ -65,18 +76,71 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                     event_name=on_comparison_update.name,
                     user=self.user,
                     assignment=self.assignment,
-                    comparisons=comparisons,
+                    comparison=comparison,
                     is_comparison_example=is_comparison_example
                 )
 
                 statements = self.get_and_clear_statement_log()
                 if completed and not is_comparison_example:
-                    self.assertEqual(len(statements), len(comparisons) + 1 + (2*len(comparisons)))
+                    self.assertEqual(len(statements), len(self.example_comparison_criteria) + 1 + 1 + (2*(len(self.example_comparison_criteria) + 1)))
                 else:
-                    self.assertEqual(len(statements), len(comparisons) + 1)
+                    self.assertEqual(len(statements), len(self.example_comparison_criteria) + 1 + 1)
 
                 index = 0
-                for comparison in comparisons:
+
+                self.assertEqual(statements[index]['actor'], self.get_compair_actor(self.user))
+                if completed:
+                    self.assertEqual(statements[index]['verb'], {
+                        'id': 'http://activitystrea.ms/schema/1.0/submit',
+                        'display': {'en-US': 'submitted'}
+                    })
+                else:
+                    self.assertEqual(statements[index]['verb'], {
+                        'id': 'http://xapi.learninganalytics.ubc.ca/verb/draft',
+                        'display': {'en-US': 'drafted'}
+                    })
+                self.assertEqual(statements[index]['object'], {
+                    'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid,
+                    'definition': {
+                        'type': 'http://id.tincanapi.com/activitytype/solution',
+                        'name': {'en-US': 'Assignment comparison' }
+                    },
+                    'objectType': 'Activity'
+                })
+                if completed:
+                    self.assertEqual(statements[index]['result'], {
+                        'response': 'https://localhost:8888/app/xapi/answer/'+comparison.answer1_uuid,
+                        'success': True
+                    })
+                else:
+                    self.assertEqual(statements[index]['result'], {
+                        'response': 'Undecided'
+                    })
+                self.assertEqual(statements[index]['context'], {
+                    'contextActivities': {
+                        'grouping': [{
+                            'id': 'https://localhost:8888/app/xapi/course/'+self.course.uuid,
+                            'objectType': 'Activity'
+                        },{
+                            'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid,
+                            'objectType': 'Activity'
+                        },{
+                            'id': 'https://localhost:8888/app/xapi/answer/'+comparison.answer1_uuid,
+                            'objectType': 'Activity'
+                        },{
+                            'id': 'https://localhost:8888/app/xapi/answer/'+comparison.answer2_uuid,
+                            'objectType': 'Activity'
+                        }],
+                        'parent': [{
+                            'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid+'/question',
+                            'objectType': 'Activity'
+                        }]
+                    }
+                })
+
+                index+=1
+
+                for comparison_criterion in comparison.comparison_criteria:
                     self.assertEqual(statements[index]['actor'], self.get_compair_actor(self.user))
                     if completed:
                         self.assertEqual(statements[index]['verb'], {
@@ -89,21 +153,21 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                             'display': {'en-US': 'drafted'}
                         })
                     self.assertEqual(statements[index]['object'], {
-                        'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid,
+                        'id': 'https://localhost:8888/app/xapi/comparison/criterion/'+comparison_criterion.uuid,
                         'definition': {
                             'type': 'http://id.tincanapi.com/activitytype/solution',
-                            'name': {'en-US': 'Assignment criteria comparison' }
+                            'name': {'en-US': 'Assignment criterion comparison' }
                         },
                         'objectType': 'Activity'
                     })
                     if completed:
                         self.assertEqual(statements[index]['result'], {
-                            'response': 'https://localhost:8888/app/xapi/answer/'+comparison.winner_uuid,
+                            'response': 'https://localhost:8888/app/xapi/answer/'+comparison_criterion.answer1_uuid,
                             'success': True
                         })
                     else:
                         self.assertEqual(statements[index]['result'], {
-                            'response': 'https://localhost:8888/app/xapi/answer/'+comparison.winner_uuid
+                            'response': 'https://localhost:8888/app/xapi/answer/'+comparison_criterion.answer1_uuid
                         })
                     self.assertEqual(statements[index]['context'], {
                         'contextActivities': {
@@ -119,12 +183,15 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                             },{
                                 'id': 'https://localhost:8888/app/xapi/answer/'+comparison.answer2_uuid,
                                 'objectType': 'Activity'
+                            },{
+                                'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid+'/question',
+                                'objectType': 'Activity'
                             }],
                             'parent': [{
-                                'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid+'/comparison?pair='+answer_uuids[0]+','+answer_uuids[1],
+                                'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid,
                                 'objectType': 'Activity'
                             },{
-                                'id': 'https://localhost:8888/app/xapi/criterion/'+comparison.criterion_uuid,
+                                'id': 'https://localhost:8888/app/xapi/criterion/'+comparison_criterion.criterion_uuid,
                                 'objectType': 'Activity'
                             }]
                         }
@@ -144,7 +211,7 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                         'display': {'en-US': 'suspended'}
                     })
                 self.assertEqual(statements[index]['object'], {
-                    'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid+'/comparison?pair='+answer_uuids[0]+','+answer_uuids[1],
+                    'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid+'/question',
                     'definition': {
                         'type': 'http://adlnet.gov/expapi/activities/question',
                         'name': {'en-US': 'Assignment comparison #'+str(completed_count+1) },
@@ -164,9 +231,9 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                     'id': 'https://localhost:8888/app/xapi/course/'+self.course.uuid,
                     'objectType': 'Activity'
                 }]
-                for comparison in comparisons:
+                for comparison_criterion in comparison.comparison_criteria:
                     grouping.append({
-                        'id': 'https://localhost:8888/app/xapi/criterion/'+comparison.criterion_uuid,
+                        'id': 'https://localhost:8888/app/xapi/criterion/'+comparison_criterion.criterion_uuid,
                         'objectType': 'Activity'
                     })
                 self.assertEqual(statements[index]['context'], {
@@ -176,10 +243,10 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                             'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid,
                             'objectType': 'Activity'
                         },{
-                            'id': 'https://localhost:8888/app/xapi/answer/'+comparisons[0].answer1_uuid,
+                            'id': 'https://localhost:8888/app/xapi/answer/'+comparison.answer1_uuid,
                             'objectType': 'Activity'
                         },{
-                            'id': 'https://localhost:8888/app/xapi/answer/'+comparisons[0].answer2_uuid,
+                            'id': 'https://localhost:8888/app/xapi/answer/'+comparison.answer2_uuid,
                             'objectType': 'Activity'
                         }]
                     }
@@ -188,9 +255,61 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
 
                 if completed and not is_comparison_example:
                     for answer in [self.answer1, self.answer2]:
-                        for score in answer.scores:
-                            comparison = next(comparison for comparison in comparisons \
-                                if comparison.criterion_id == score.criterion_id)
+                        score = answer.score
+
+                        self.assertEqual(statements[index]['actor'], self.get_compair_actor(self.user))
+                        self.assertEqual(statements[index]['verb'], {
+                            'id': 'http://www.tincanapi.co.uk/verbs/evaluated',
+                            'display': {'en-US': 'evaluated'}
+                        })
+                        self.assertEqual(statements[index]['object'], {
+                            'id': 'https://localhost:8888/app/xapi/answer/'+answer.uuid,
+                            'definition': {
+                                'type': 'http://id.tincanapi.com/activitytype/solution',
+                                'name': {'en-US': 'Assignment answer' }
+                            },
+                            'objectType': 'Activity'
+                        })
+                        self.assertEqual(statements[index]['result'], {
+                            'score': { 'raw': float(score.score) },
+                            'extensions': {
+                                'http://xapi.learninganalytics.ubc.ca/extension/score-details': {
+                                    'algorithm': score.scoring_algorithm.value,
+                                    'loses': score.loses,
+                                    'opponents': score.opponents,
+                                    'rounds': score.rounds,
+                                    'wins': score.wins,
+                                }
+                            }
+                        })
+                        self.assertEqual(statements[index]['context'], {
+                            'contextActivities': {
+                                'grouping': [{
+                                    'id': 'https://localhost:8888/app/xapi/course/'+self.course.uuid,
+                                    'objectType': 'Activity'
+                                },{
+                                    'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid,
+                                    'objectType': 'Activity'
+                                }],
+                                'other': [{
+                                    'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid,
+                                    'objectType': 'Activity'
+                                },{
+                                    'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid+'/question',
+                                    'objectType': 'Activity'
+                                }],
+                                'parent': [{
+                                    'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid+'/question',
+                                    'objectType': 'Activity'
+                                }]
+                            }
+                        })
+                        index+=1
+
+
+                        for score in answer.criteria_scores:
+                            comparison_criterion = next(comparison_criterion for comparison_criterion in comparison.comparison_criteria \
+                                if comparison_criterion.criterion_id == score.criterion_id)
 
                             self.assertEqual(statements[index]['actor'], self.get_compair_actor(self.user))
                             self.assertEqual(statements[index]['verb'], {
@@ -230,10 +349,13 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                                         'objectType': 'Activity'
                                     }],
                                     'other': [{
+                                        'id': 'https://localhost:8888/app/xapi/comparison/criterion/'+comparison_criterion.uuid,
+                                        'objectType': 'Activity'
+                                    },{
                                         'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid,
                                         'objectType': 'Activity'
                                     },{
-                                        'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid+'/comparison?pair='+answer_uuids[0]+','+answer_uuids[1],
+                                        'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid+'/question',
                                         'objectType': 'Activity'
                                     }],
                                     'parent': [{
@@ -259,7 +381,7 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                         event_name=on_comparison_update.name,
                         user=self.user,
                         assignment=self.assignment,
-                        comparisons=comparisons,
+                        comparison=comparison,
                         is_comparison_example=is_comparison_example
                     )
 
@@ -267,7 +389,37 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                     self.assertEqual(len(statements), len(tracking_statements))
 
                     index = 0
-                    for comparison in comparisons:
+
+                    self.assertEqual(statements[index]['actor'], tracking_statements[index]['actor'])
+                    self.assertEqual(statements[index]['verb'], tracking_statements[index]['verb'])
+                    self.assertEqual(statements[index]['object'], tracking_statements[index]['object'])
+                    self.assertEqual(statements[index]['result'], tracking_statements[index]['result'])
+                    self.assertEqual(tracking_statements[index]['context'], {
+                        'registration': tracking.get('registration'),
+                        'contextActivities': {
+                            'grouping': [{
+                                'id': 'https://localhost:8888/app/xapi/course/'+self.course.uuid,
+                                'objectType': 'Activity'
+                            },{
+                                'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid,
+                                'objectType': 'Activity'
+                            },{
+                                'id': 'https://localhost:8888/app/xapi/answer/'+comparison.answer1_uuid,
+                                'objectType': 'Activity'
+                            },{
+                                'id': 'https://localhost:8888/app/xapi/answer/'+comparison.answer2_uuid,
+                                'objectType': 'Activity'
+                            }],
+                            'parent': [{
+                                'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid+'/question',
+                                'objectType': 'Activity'
+                            }]
+                        }
+                    })
+
+                    index+=1
+
+                    for comparison_criterion in comparison.comparison_criteria:
                         self.assertEqual(statements[index]['actor'], tracking_statements[index]['actor'])
                         self.assertEqual(statements[index]['verb'], tracking_statements[index]['verb'])
                         self.assertEqual(statements[index]['object'], tracking_statements[index]['object'])
@@ -287,12 +439,15 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                                 },{
                                     'id': 'https://localhost:8888/app/xapi/answer/'+comparison.answer2_uuid,
                                     'objectType': 'Activity'
+                                },{
+                                    'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid+'/question',
+                                    'objectType': 'Activity'
                                 }],
                                 'parent': [{
-                                    'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid+'/comparison?pair='+answer_uuids[0]+','+answer_uuids[1],
+                                    'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid,
                                     'objectType': 'Activity'
                                 },{
-                                    'id': 'https://localhost:8888/app/xapi/criterion/'+comparison.criterion_uuid,
+                                    'id': 'https://localhost:8888/app/xapi/criterion/'+comparison_criterion.criterion_uuid,
                                     'objectType': 'Activity'
                                 }]
                             }
@@ -316,10 +471,10 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                                 'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid,
                                 'objectType': 'Activity'
                             },{
-                                'id': 'https://localhost:8888/app/xapi/answer/'+comparisons[0].answer1_uuid,
+                                'id': 'https://localhost:8888/app/xapi/answer/'+comparison.answer1_uuid,
                                 'objectType': 'Activity'
                             },{
-                                'id': 'https://localhost:8888/app/xapi/answer/'+comparisons[0].answer2_uuid,
+                                'id': 'https://localhost:8888/app/xapi/answer/'+comparison.answer2_uuid,
                                 'objectType': 'Activity'
                             }]
                         }
@@ -328,9 +483,38 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
 
                     if completed and not is_comparison_example:
                         for answer in [self.answer1, self.answer2]:
-                            for score in answer.scores:
-                                comparison = next(comparison for comparison in comparisons \
-                                    if comparison.criterion_id == score.criterion_id)
+                            self.assertEqual(statements[index]['actor'], tracking_statements[index]['actor'])
+                            self.assertEqual(statements[index]['verb'], tracking_statements[index]['verb'])
+                            self.assertEqual(statements[index]['object'], tracking_statements[index]['object'])
+                            self.assertEqual(statements[index]['result'], tracking_statements[index]['result'])
+                            self.assertEqual(tracking_statements[index]['context'], {
+                                'registration': tracking.get('registration'),
+                                'contextActivities': {
+                                    'grouping': [{
+                                        'id': 'https://localhost:8888/app/xapi/course/'+self.course.uuid,
+                                        'objectType': 'Activity'
+                                    },{
+                                        'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid,
+                                        'objectType': 'Activity'
+                                    }],
+                                    'other': [{
+                                        'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid,
+                                        'objectType': 'Activity'
+                                    },{
+                                        'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid+'/question',
+                                        'objectType': 'Activity'
+                                    }],
+                                    'parent': [{
+                                        'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid+'/question',
+                                        'objectType': 'Activity'
+                                    }]
+                                }
+                            })
+                            index+=1
+
+                            for score in answer.criteria_scores:
+                                comparison_criterion = next(comparison_criterion for comparison_criterion in comparison.comparison_criteria \
+                                    if comparison_criterion.criterion_id == score.criterion_id)
 
                                 self.assertEqual(statements[index]['actor'], tracking_statements[index]['actor'])
                                 self.assertEqual(statements[index]['verb'], tracking_statements[index]['verb'])
@@ -350,10 +534,13 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                                             'objectType': 'Activity'
                                         }],
                                         'other': [{
+                                            'id': 'https://localhost:8888/app/xapi/comparison/criterion/'+comparison_criterion.uuid,
+                                            'objectType': 'Activity'
+                                        },{
                                             'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid,
                                             'objectType': 'Activity'
                                         },{
-                                            'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid+'/comparison?pair='+answer_uuids[0]+','+answer_uuids[1],
+                                            'id': 'https://localhost:8888/app/xapi/comparison/'+comparison.uuid+'/question',
                                             'objectType': 'Activity'
                                         }],
                                         'parent': [{

@@ -17,6 +17,9 @@
             img {
                 max-width: 100%;
             }
+            .navbar-brand {
+                padding:5px 15px 0 15px;
+            }
             .value-prop {
                 margin-bottom: 1.5em; 
             }
@@ -43,6 +46,23 @@
             }
             .second-apple {
                 color: #ff6961;
+            }
+            .logo-row .col-md-4 {
+                text-align: center;
+            }
+            @media (min-width: 992px) {
+                .logo-row .col-md-4 {
+                    text-align: left;
+                }
+                .logo-row img {
+                    margin: 1em 0;
+                }
+            }
+            .logo-row img {
+                margin-bottom: 1em;
+            }
+            .logo-row h3 {
+                margin: 0;
             }
             .highlight-heading {
                 padding: .8em;
@@ -74,6 +94,10 @@
             }
             .intro-list li a:hover {
                 text-decoration: none;
+            }
+            .intro-list .btn-primary {
+                margin-bottom: 1em;
+                border-bottom: none;
             }
             .intro-list .side-selected i {
                 margin-top: .25em;

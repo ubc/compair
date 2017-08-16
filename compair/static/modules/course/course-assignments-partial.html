@@ -1,13 +1,11 @@
-<div ng-controller="CourseAssignmentsController" class="course-screen">
+<div class="course-screen">
 
     <div class="row">
         <header class="col-sm-6">
             <h1><i class="fa fa-book"></i> {{course.name}} <br />({{course.year}} {{course.term}})</h1>
-            <div class="intro-text" mathjax hljs ng-bind-html="course.description">
-            </div>
         </header>
         <div class="col-sm-6 sub-nav">
-            <span ng-if="canCreateAssignments">
+            <span ng-if="canCreateAssignment">
                 <a ng-href="#/course/{{course.id}}/assignment/create"
                     class="btn btn-primary" id="add-assignment-btn">
                     <i class="fa fa-plus"></i>
@@ -15,13 +13,15 @@
                 </a>
             </span>
             <span ng-if="canEditCourse">
-                <a id="edit-course-btn" ng-href="#/course/{{course.id}}/configure" class="btn btn-primary">
-                    <i class="fa fa-edit"></i>
-                    Edit Course
-                </a>
                 <a id="manage-users-btn" ng-href="#/course/{{course.id}}/user" class="btn btn-primary">
                     <i class="fa fa-users"></i>
                     Manage Users
+                </a>
+            </span>
+            <span ng-if="canEditCourse">
+                <a id="edit-course-btn" ng-href="#/course/{{course.id}}/edit" class="btn btn-primary">
+                    <i class="fa fa-edit"></i>
+                    Edit Course
                 </a>
             </span>
         </div>
@@ -46,8 +46,7 @@
 
     <div ng-if="!assignments.length">
         <hr />
-        <p>No assignments currently posted.</p>
-        <p ng-if="canCreateAssignments">Would you like to <a ng-href="#/course/{{course.id}}/assignment/create">add an assignment</a>?</p>
+        <p>No assignments currently posted. <span ng-if="canCreateAssignment">Would you like to <a ng-href="#/course/{{course.id}}/assignment/create">add an assignment</a>?</span></p>
     </div>
 
     <!-- Assignments List -->
@@ -69,9 +68,7 @@
 
                 <!-- Details -->
                 <div class="assignment-desc">
-                    <div mathjax hljs ng-bind-html="assignment.description"></div>
-                    <!-- Attachment -->
-                    <compair-attachment-inline label="See assignment details:" attachment="assignment.file"></compair-attachment-inline>
+                    <rich-content content="assignment.description" attachment="assignment.file"></rich-content>
                 </div>
 
                 <!-- Metadata -->
@@ -82,45 +79,60 @@
                             Edit
                         </a>
                     </li>
+                    <li ng-if="canManageAssignment">
+                        <a ng-href="#/course/{{course.id}}/assignment/{{assignment.id}}/duplicate" title="Duplicate">
+                            Duplicate
+                        </a>
+                    </li>
                     <!-- Total Answers -->
                     <li title="{{assignment.answer_count}} answers">
-                        <span ng-if="(!canManageAssignment && assignment.answers_available) || canManageAssignment">
-                            {{assignment.answer_count}} answer<span ng-if="assignment.answer_count != 1">s</span>
+                        <span ng-if="(!canManageAssignment && assignment.see_answers) || canManageAssignment">
+                            <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=answers#answers">
+                                {{assignment.answer_count}} answer<span ng-if="assignment.answer_count != 1">s</span> &raquo;
+                            </a>
                         </span>
-                        <span ng-if="!canManageAssignment && !assignment.answers_available">
+                        <span ng-if="!canManageAssignment && !assignment.see_answers">
                             Answers not yet available
                         </span>
                     </li>
                     <!-- Total Comparisons -->
                     <li ng-if="canManageAssignment" title="{{assignment.evaluation_count}} comments">
-                        {{assignment.evaluation_count}} comparison<span ng-if="assignment.evaluation_count != 1">s</span>
+                        <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=comparisons#comparisons">
+                            {{assignment.evaluation_count}} comparison<span ng-if="assignment.evaluation_count != 1">s</span> &raquo;
+                        </a>
                     </li>
                     <!-- Total Comments -->
                     <li title="{{assignment.comment_count}} comments">
-                        {{assignment.comment_count}} comment<span ng-if="assignment.comment_count != 1">s</span>
+                        <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=help#comments">
+                            {{assignment.comment_count}} comment<span ng-if="assignment.comment_count != 1">s</span> &raquo;
+                        </a>
                     </li>
                     <!-- Completed Assignment Feedback (for students) -->
                     <li ng-if="!canManageAssignment && (assignment.steps_left == 0 || assignment.status.answers.answered)">
                         You
-                        <span ng-if="answered"><strong>answered</strong> <span ng-if="assignment.steps_left == 0">and </span></span>
+                        <span ng-if="assignment.status.answers.answered"><strong>answered</strong> <span ng-if="assignment.steps_left == 0">and </span></span>
                         <span ng-if="assignment.steps_left == 0"><strong>compared</strong></span>
                     </li>
                     <!-- Assignment Feedback (for students) -->
                     <li ng-if="!canManageAssignment && ((assignment.compare_period && assignment.steps_left > 0) || (assignment.answer_period && !assignment.status.answers.answered))" class="label label-warning">
                         <span ng-if="assignment.answer_period && !assignment.status.answers.answered">1 answer<span ng-if="(assignment.compare_period && assignment.steps_left) > 0">, </span></span>
                         <span ng-if="assignment.compare_period && assignment.steps_left > 0">{{assignment.steps_left}} comparison<span ng-if="(assignment.steps_left) != 1">s</span></span>
-                        needed from you
+                        needed
+                    </li>
+                    <!-- Assignment Peer Feedback (for students) -->
+                    <li ng-if="!canManageAssignment && assignment.status.answers.feedback" class="label label-warning">
+                        {{assignment.status.answers.feedback}} feedback item<span ng-if="assignment.status.answers.feedback != 1">s</span> received
                     </li>
                     <!-- Assignment Feedback (for instructors) -->
                     <li ng-if="canManageAssignment">
-                        <span ng-if="!assignment.answer_period && !assignment.compare_period && !assignment.answers_available">Scheduled for {{assignment.answer_start | amDateFormat: 'MMM D'}}</span>
-                        <span ng-if="assignment.answer_period && !assignment.compare_period" class="label label-warning">Answering period</span>
-                        <span ng-if="!assignment.answer_period && assignment.compare_period" class="label label-warning">Comparing period</span>
-                        <span ng-if="assignment.answer_period && assignment.compare_period" class="label label-warning">Answer/compare period</span>
-                        <span ng-if="!assignment.answer_period && !assignment.compare_period && assignment.answers_available">Assignment completed {{assignment.compare_end | amDateFormat: 'MMM D'}}</span>
+                        <span ng-if="!assignment.answer_period && !assignment.compare_period && !assignment.see_answers">Scheduled for {{assignment.answer_start | amDateFormat: 'MMM D'}}</span>
+                        <span ng-if="assignment.answer_period && !assignment.compare_period" class="label label-warning">Answer period</span>
+                        <span ng-if="!assignment.answer_period && assignment.compare_period" class="label label-warning">Comparison period</span>
+                        <span ng-if="assignment.answer_period && assignment.compare_period" class="label label-warning">Answer/comparison period</span>
+                        <span ng-if="!assignment.answer_period && !assignment.compare_period && assignment.see_answers">Completed on {{assignment.compare_end | amDateFormat: 'MMM D'}}</span>
                     </li>
                     <li ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
-                        <a confirmation-needed="deleteAssignment(course.id, assignment.id)" keyword="assignment" title="Delete" href="">
+                        <a confirmation-needed="deleteAssignment(assignment)" keyword="assignment" title="Delete" href="">
                             <i class="fa fa-trash-o"></i>
                         </a>
                     </li>
@@ -149,30 +161,24 @@
                  basically we force users to answer first, if they can
                  enabled only when answer pairs are available for comparison (a negative number = good)
                  -->
-            <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{course.id}}/assignment/{{assignment.id}}/compare"
+            <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Pairs" ng-href="#/course/{{course.id}}/assignment/{{assignment.id}}/compare"
                ng-show="!canManageAssignment && assignment.compare_period && assignment.comparisons_left > 0 && ((assignment.answer_period && assignment.status.answers.answered) || (!assignment.answer_period))" ng-disabled="!assignment.status.comparisons.available">
-                Compare Answers
+                Compare Pairs
             </a>
 
             <!-- BUTTON when user is not an admin AND the comparison period is active AND user has finished pair comparisons AND has a self-evaluation remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)
                  basically we force users to answer first, if they can
                  enabled only when user has answered assignment -->
-            <a class="btn" ng-class="{'btn-success': assignment.status.answers.answered, 'btn-default': !assignment.status.answers.answered}" title="Compare Answers" ng-href="#/course/{{ course.id }}/assignment/{{ assignment.id }}/self_evaluation"
+            <a class="btn" ng-class="{'btn-success': assignment.status.answers.answered, 'btn-default': !assignment.status.answers.answered}" title="Compare Pairs" ng-href="#/course/{{ course.id }}/assignment/{{ assignment.id }}/self_evaluation"
                ng-show="!canManageAssignment && assignment.compare_period && !assignment.comparisons_left > 0 && assignment.self_evaluation_needed && ((assignment.answer_period && assignment.status.answers.answered) || (!assignment.answer_period))" ng-disabled="!assignment.status.answers.answered">
-                Compare Answers
-            </a>
-
-            <!-- BUTTON when user is an admin AND (the comparison period is active OR is complete OR 1+ comparison exists) -->
-            <a class="btn btn-success" title="Comparisons" ng-href="#/course/{{course.id}}/assignment/{{assignment.id}}/comparisons"
-               ng-show="canManageAssignment && (assignment.compare_period || assignment.after_comparing || assignment.evaluation_count > 0)">
-                See Comparisons
+                Compare Pairs
             </a>
 
             <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
-           <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Answers" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
+            <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Pairs" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
                ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
-                Compare Answers
-           </a>
+                Compare Pairs
+            </a>
 
             <!-- ADDITIONAL TEXT when user has not answered AND user is not an admin AND answer period is active -->
             <p class="below-button-text"
@@ -197,7 +203,6 @@
                 ng-show="!canManageAssignment && assignment.compare_period && !assignment.comparisons_left && assignment.self_evaluation_needed && !assignment.status.answers.answered">
                 Self-evaluation comparison unavailable<br />(You have not answered the assignment)
             </p>
-
         </div>
 
     </div>

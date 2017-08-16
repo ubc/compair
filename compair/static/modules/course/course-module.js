@@ -11,15 +11,15 @@ function combineDateTime(datetime) {
 }
 
 function getWeeksDelta(firstDate, secondDate) {
-    firstDate = moment(firstDate) || moment();
-    secondDate = moment(secondDate) || moment();
+    firstDate = firstDate == null ? moment() : moment(firstDate);
+    secondDate = secondDate == null ? moment() : moment(secondDate);
     // By default, moment#diff will return a number rounded towards zero (down for positive, up for negative).
     // we instead want to always Math.floor for both positive and negative numbers
     return Math.floor(firstDate.startOf('day').diff(secondDate.startOf('day'), 'weeks', true));
 }
 
 function getNewDuplicateDate(originalDate, weekDelta) {
-    originalDate = moment(originalDate) || moment();
+    originalDate = originalDate == null ? moment() : moment(originalDate);
     weekDelta = weekDelta || 0;
     return originalDate.add(weekDelta, 'weeks')
 }
@@ -36,19 +36,18 @@ var module = angular.module('ubc.ctlt.compair.course',
         'ubc.ctlt.compair.common.interceptor',
         'ubc.ctlt.compair.comparison',
         'ubc.ctlt.compair.assignment',
-        'ubc.ctlt.compair.common.highlightjs',
-        'ubc.ctlt.compair.common.attachment',
+        'ubc.ctlt.compair.rich.content',
         'ubc.ctlt.compair.toaster'
     ]
 );
 
 /***** Providers *****/
 module.factory('CourseResource',
-    ["$q", "$routeParams", "$log", "$resource", "Interceptors",
-    function($q, $routeParams, $log, $resource, Interceptors)
+    ["$q", "$routeParams", "$resource", "Interceptors",
+    function($q, $routeParams, $resource, Interceptors)
 {
     var url = '/api/courses/:id';
-    var ret = $resource('/api/courses/:id', {id: '@id'},
+    var ret = $resource('/api/courses/:courseId', {id: '@id'},
         {
             // would enable caching for GET but there's no automatic cache
             // invalidation, I don't want to deal with that manually
@@ -70,93 +69,61 @@ module.factory('CourseResource',
 /***** Controllers *****/
 module.controller(
     'CourseAssignmentsController',
-    ["$scope", "$log", "$routeParams", "CourseResource", "AssignmentResource", "Authorize",
-             "AuthenticationService", "required_rounds", "Toaster", "xAPIStatementHelper",
-    function($scope, $log, $routeParams, CourseResource, AssignmentResource, Authorize,
-             AuthenticationService, required_rounds, Toaster, xAPIStatementHelper)
+    ["$scope", "$routeParams", "CourseResource", "AssignmentResource", "resolvedData",
+     "Toaster", "xAPIStatementHelper",
+    function($scope, $routeParams, CourseResource, AssignmentResource, resolvedData,
+             Toaster, xAPIStatementHelper)
     {
         // get course info
-        var courseId = $scope.courseId = $routeParams['courseId'];
-        $scope.answered = {};
+        $scope.courseId = $routeParams.courseId;
+
+        $scope.course = resolvedData.course;
+        $scope.assignments = resolvedData.courseAssignments.objects;
         $scope.count = {};
-        $scope.filters = [];
-        Authorize.can(Authorize.CREATE, AssignmentResource.MODEL, courseId).then(function(result) {
-            $scope.canCreateAssignments = result;
-        });
-        Authorize.can(Authorize.EDIT, CourseResource.MODEL, courseId).then(function(result) {
-            $scope.canEditCourse = result;
-        });
-        Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, courseId).then(function(result) {
-            $scope.canManageAssignment = result;
-            $scope.filters.push('All course assignments');
-            if ($scope.canManageAssignment) {
-                $scope.filters.push('Assignments being answered', 'Assignments being compared', 'Upcoming assignments');
-            } else {
-                $scope.filters.push('My unfinished assignments');
-            }
-            $scope.filter = $scope.filters[0];
-            $scope.$watchCollection('filter', filterWatcher);
-        });
-        CourseResource.get({'id': courseId}).$promise.then(
-            function (ret) {
-                $scope.course = ret;
-            },
-            function (ret) {
-                Toaster.reqerror("Course Not Found For ID "+ courseId, ret);
-            }
-        );
+        $scope.canEditCourse = resolvedData.canEditCourse;
+        $scope.canCreateAssignment = resolvedData.canCreateAssignment;
+        $scope.canManageAssignment = resolvedData.canManageAssignment;
 
-        // get course assignments
-        AssignmentResource.get({'courseId': courseId}).$promise.then(
-            function (ret)
-            {
-                $scope.assignments = ret.objects;
+        CourseResource.getCurrentUserStatus({'id': $scope.courseId}).$promise.then(
+            function(ret) {
+                var statuses = ret.statuses;
 
-                CourseResource.getCurrentUserStatus({'id': courseId}).$promise.then(
-                    function (ret) {
-                        var statuses = ret.statuses;
-                        for (var key in $scope.assignments) {
-                            assignment = $scope.assignments[key];
-                            assignment.status = statuses[assignment.id]
+                // get course assignments status
+                $scope.assignments.forEach(function(assignment) {
+                    assignment.status = statuses[assignment.id]
 
-                            // comparison count
-                            assignment.comparisons_left = assignment.status.comparisons.left;
-                            assignment.self_evaluation_needed = assignment.enable_self_evaluation ?
-                                !assignment.status.comparisons.self_evaluation_completed : false;
-                            assignment.steps_left = assignment.comparisons_left + (assignment.self_evaluation_needed ? 1 : 0);
+                    // comparison count
+                    assignment.comparisons_left = assignment.status.comparisons.left;
+                    assignment.self_evaluation_needed = assignment.enable_self_evaluation ?
+                        !assignment.status.comparisons.self_evaluation_completed : false;
+                    assignment.steps_left = assignment.comparisons_left + (assignment.self_evaluation_needed ? 1 : 0);
 
-                            // if evaluation period is set answers can be seen after it ends
-                            if (assignment.compare_end) {
-                                assignment.answers_available = assignment.after_comparing;
-                            // if an evaluation period is NOT set - answers can be seen after req met
-                            } else {
-                                assignment.answers_available = assignment.after_comparing &&
-                                    assignment.comparisons_left < 1 && !assignment.self_evaluation_needed;
-                            }
-                        }
-                    },
-                    function (ret) {
-                        Toaster.reqerror("Assignment Status Not Found", ret)
+                    // if evaluation period is set answers can be seen after it ends
+                    if (assignment.compare_end) {
+                        assignment.see_answers = assignment.after_comparing;
+                    // if an evaluation period is NOT set - answers can be seen after req met
+                    } else {
+                        assignment.see_answers = assignment.after_comparing && assignment.comparisons_left == 0;
                     }
-                );
-            },
-            function (ret)
-            {
-                Toaster.reqerror("Assignments Not Found For Course ID " +
-                    courseId, ret);
+                });
             }
         );
 
-        $scope.deleteAssignment = function(course_id, assignment_id) {
-            AssignmentResource.delete({'courseId': course_id, 'assignmentId': assignment_id}).$promise.then(
+        $scope.filters = ['All course assignments'];
+        if ($scope.canManageAssignment) {
+            $scope.filters.push('Assignments being answered', 'Assignments being compared', 'Upcoming assignments');
+        } else {
+            $scope.filters.push('My unfinished assignments');
+        }
+        $scope.filter = $scope.filters[0];
+
+        $scope.deleteAssignment = function(assignment) {
+            AssignmentResource.delete({'courseId': assignment.course_id, 'assignmentId': assignment.id}).$promise.then(
                 function (ret) {
-                    Toaster.success("Successfully deleted assignment " + ret.id);
-                    $scope.assignments = _.filter($scope.assignments, function(assignment) {
-                        return assignment.id != assignment_id;
+                    Toaster.success("Assignment Removed");
+                    $scope.assignments = _.filter($scope.assignments, function(a) {
+                        return a.id != assignment.id;
                     });
-                },
-                function (ret) {
-                    Toaster.reqerror("Assignment deletion failed", ret);
                 }
             );
         };
@@ -178,7 +145,7 @@ module.controller(
                         return !assignment.available;
                     // STUDENTS: return all assignments that need to be answered or compared
                     case "My unfinished assignments":
-                        return (assignment.answer_period && !$scope.answered[assignment.id]) ||
+                        return (assignment.answer_period && !assignment.status.answers.answered) ||
                             (assignment.compare_period && assignment.steps_left > 0);
                     default:
                         return false;
@@ -192,15 +159,16 @@ module.controller(
                 display: $scope.filter
             });
         };
+        $scope.$watchCollection('filter', filterWatcher);
     }
 ]);
 
 module.controller(
     'CourseSelectModalController',
     ["$rootScope", "$scope", "$uibModalInstance", "AssignmentResource",
-     "Session", "Authorize", "CourseResource", "Toaster", "UserResource", "LTI", "xAPIStatementHelper",
+     "Session", "CourseResource", "Toaster", "UserResource", "LTI", "xAPIStatementHelper",
     function ($rootScope, $scope, $uibModalInstance, AssignmentResource,
-              Session, Authorize, CourseResource, Toaster, UserResource, LTI, xAPIStatementHelper) {
+              Session, CourseResource, Toaster, UserResource, LTI, xAPIStatementHelper) {
 
         $scope.submitted = false;
         $scope.totalNumCourses = 0;
@@ -231,15 +199,11 @@ module.controller(
             $scope.originalCourse = angular.copy(course);
         };
 
-        $scope.date.course_start.open = function($event) {
+        $scope.datePickerOpen = function($event, object) {
             $event.preventDefault();
             $event.stopPropagation();
-            $scope.date.course_start.opened = true;
-        };
-        $scope.date.course_end.open = function($event) {
-            $event.preventDefault();
-            $event.stopPropagation();
-            $scope.date.course_end.opened = true;
+
+            object.opened = true;
         };
 
         $scope.save = function() {
@@ -261,7 +225,7 @@ module.controller(
             }
 
             CourseResource.save({}, $scope.course, function (ret) {
-                Toaster.success("Course Created", 'The course was created successfully');
+                Toaster.success("Course Saved");
                 // refresh permissions
                 Session.expirePermissions();
                 $scope.selectCourse(ret.id);
@@ -283,9 +247,6 @@ module.controller(
                 function(ret) {
                     $scope.courses = ret.objects;
                     $scope.totalNumCourses = ret.total;
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve your courses.", ret);
                 }
             );
         };
@@ -336,26 +297,12 @@ module.controller(
                 }
             }
 
-            $scope.duplicateCourse.date.course_start.open = function($event) {
-                $event.preventDefault();
-                $event.stopPropagation();
-                $scope.duplicateCourse.date.course_start.opened = true;
-            };
-            $scope.duplicateCourse.date.course_end.open = function($event) {
-                $event.preventDefault();
-                $event.stopPropagation();
-                $scope.duplicateCourse.date.course_end.opened = true;
-            };
-
             $scope.originalAssignments = [];
             $scope.duplicateAssignments = [];
             AssignmentResource.get({'courseId': $scope.originalCourse.id}).$promise.then(
                 function (ret) {
                     $scope.originalAssignments = ret.objects;
                     $scope.adjustDuplicateAssignmentDates();
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve course assignments: " + $scope.originalCourse.id, ret);
                 }
             );
         };
@@ -411,29 +358,15 @@ module.controller(
                     duplicate_assignment.availableCheck = true;
                 }
 
-                duplicate_assignment.date.astart.open = function($event) {
-                    $event.preventDefault();
-                    $event.stopPropagation();
-                    duplicate_assignment.date.astart.opened = true;
-                };
-                duplicate_assignment.date.aend.open = function($event) {
-                    $event.preventDefault();
-                    $event.stopPropagation();
-                    duplicate_assignment.date.aend.opened = true;
-                };
-                duplicate_assignment.date.cstart.open = function($event) {
-                    $event.preventDefault();
-                    $event.stopPropagation();
-                    duplicate_assignment.date.cstart.opened = true;
-                };
-                duplicate_assignment.date.cend.open = function($event) {
-                    $event.preventDefault();
-                    $event.stopPropagation();
-                    duplicate_assignment.date.cend.opened = true;
-                };
-
                 $scope.duplicateAssignments.push(duplicate_assignment);
             });
+        };
+
+        $scope.datePickerOpen = function($event, object) {
+            $event.preventDefault();
+            $event.stopPropagation();
+
+            object.opened = true;
         };
 
         $scope.cancelDuplicateCourse = function() {
@@ -442,6 +375,30 @@ module.controller(
             } else {
                 $scope.$dismiss();
             }
+        };
+
+        $scope.datePickerMinDate = function() {
+            var dates = Array.prototype.slice.call(arguments).filter(function(val) {
+                return val !== null;
+            });
+            if (dates.length == 0) {
+                return null;
+            }
+            return dates.reduce(function (left, right) {
+                return moment(left) > moment(right) ? left : right;
+            }, dates[0]);
+        };
+
+        $scope.datePickerMaxDate = function() {
+            var dates = Array.prototype.slice.call(arguments).filter(function(val) {
+                return val !== null;
+            });
+            if (dates.length == 0) {
+                return null;
+            }
+            return dates.reduce(function (left, right) {
+                return moment(left) < moment(right) ? left : right;
+            }, dates[0]);
         };
 
         $scope.duplicate = function() {
@@ -469,6 +426,7 @@ module.controller(
 
                 var assignment_submit = {
                     id: assignment.id,
+                    name: assignment.name,
                     answer_start: combineDateTime(assignment.date.astart),
                     answer_end: combineDateTime(assignment.date.aend),
                     compare_start: combineDateTime(assignment.date.cstart),
@@ -500,7 +458,7 @@ module.controller(
             }
 
             CourseResource.createDuplicate({id: $scope.originalCourse.id}, $scope.duplicateCourse, function (ret) {
-                Toaster.success("Course Duplicated", 'The course was successfully duplicated');
+                Toaster.success("Course Duplicated");
                 // refresh permissions
                 Session.expirePermissions();
 
@@ -526,18 +484,17 @@ module.controller(
 
 module.controller(
     'CourseController',
-    ['$scope', '$log', '$route', '$routeParams', '$location', 'Session', 'Authorize',
-     'CourseResource', 'Toaster', 'EditorOptions',
-    function($scope, $log, $route, $routeParams, $location, Session, Authorize,
-            CourseResource, Toaster, EditorOptions) {
-        var self = this;
+    ['$scope', '$route', '$routeParams', '$location', 'Session',
+     'CourseResource', 'Toaster', 'EditorOptions',  "resolvedData",
+    function($scope, $route, $routeParams, $location, Session,
+             CourseResource, Toaster, EditorOptions, resolvedData)
+    {
+        $scope.courseId = $routeParams.courseId;
+        $scope.course = resolvedData.course || {};
+        $scope.loggedInUserId = resolvedData.loggedInUser.id;
         $scope.editorOptions = EditorOptions.basic;
-        $scope.course = {};
-        var messages = {
-            new: {title: 'Course Created', msg: 'The course created successfully'},
-            edit: {title: 'Course Successfully Updated', msg: 'Your course changes have been saved.'}
-        };
 
+        $scope.method = $scope.course.id ? "edit" : "create";
         // unlike for assignments, course dates initially blank
         $scope.format = 'dd-MMMM-yyyy';
         $scope.date = {
@@ -545,39 +502,21 @@ module.controller(
             'course_end': {'date': null, 'time': new Date().setHours(23, 59, 0, 0)},
         };
 
-        self['new'] = function() {
+        if ($scope.method == "create") {
             $scope.course.year = new Date().getFullYear();
-        };
+        } else if ($scope.method == "edit") {
+            // dates may be left blank
+            $scope.date.course_start.date = $scope.course.start_date != null ? new Date($scope.course.start_date) : null;
+            $scope.date.course_end.date = $scope.course.end_date != null ? new Date($scope.course.end_date) : null;
+            $scope.date.course_start.time = new Date($scope.course.start_date);
+            $scope.date.course_end.time = new Date($scope.course.end_date);
+        }
 
-        self.edit = function() {
-            $scope.courseId = $routeParams['courseId'];
-            CourseResource.get({'id':$scope.courseId}).$promise.then(
-                function (ret) {
-                    // dates may be left blank
-                    $scope.date.course_start.date = ret.start_date != null ? new Date(ret.start_date) : null;
-                    $scope.date.course_end.date = ret.end_date != null ? new Date(ret.end_date) : null;
-                    $scope.date.course_start.time = new Date(ret.start_date);
-                    $scope.date.course_end.time = new Date(ret.end_date);
-                    $scope.course = ret;
-                }
-            );
-        };
-
-        Session.getUser().then(function(user) {
-            $scope.loggedInUserId = user.id;
-        });
-
-        $scope.date.course_start.open = function($event) {
+        $scope.datePickerOpen = function($event, object) {
             $event.preventDefault();
             $event.stopPropagation();
 
-            $scope.date.course_start.opened = true;
-        };
-        $scope.date.course_end.open = function($event) {
-            $event.preventDefault();
-            $event.stopPropagation();
-
-            $scope.date.course_end.opened = true;
+            object.opened = true;
         };
 
         $scope.save = function() {
@@ -602,7 +541,12 @@ module.controller(
             }
 
             CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
-                Toaster.success(messages[$scope.method].title, messages[$scope.method].msg);
+                if ($scope.method == "create") {
+                    Toaster.success("Course Saved");
+                } else if ($scope.method == "edit") {
+                    Toaster.success("Course Updated");
+                }
+
                 // refresh permissions
                 Session.expirePermissions();
                 $location.path('/course/' + ret.id);
@@ -610,14 +554,6 @@ module.controller(
                 $scope.submitted = false;
             });
         };
-
-        //  Calling routeParam method
-        if ($route.current !== undefined && $route.current.method !== undefined) {
-            $scope.method = $route.current.method;
-            if (self.hasOwnProperty($route.current.method)) {
-                self[$scope.method]();
-            }
-        }
     }]
 );
 

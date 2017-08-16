@@ -17,15 +17,18 @@ var hooks = function () {
             }
         });
 
-        // ensure cookies are cleared
+        // ensure cookies and local storage are cleared
         browser.manage().deleteAllCookies();
+        browser.executeScript('window.sessionStorage.clear();');
+        browser.executeScript('window.localStorage.clear();');
 
         // print any js errors
         browser.manage().logs().get('browser').then( function(browserLog) {
             var browserErrorLogs = [];
             browserLog.forEach(function (log) {
-                // error severity is high and not a ckeditor error
+                // error severity is high and not a ckeditor or pdf.js error
                 // (ckeditor doesn't always clean it self up fast enough with the tests current speed)
+                // (pdf.js also sometimes have problems with page load errors at this speed for some reason)
                 if (log.level.value > 900 &&
                         !log.message.match(/ckeditor\.js/g) &&
                         !log.message.match(/CWL_login_button\.gif/g) &&

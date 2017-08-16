@@ -1,6 +1,7 @@
 import csv
 import json
 import io
+import unicodecsv as csv
 
 from compair.core import db
 from data.fixtures.test_data import BasicTestData, ThirdPartyUserFactory
@@ -42,7 +43,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
-            reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
+            reader = csv.reader(rv.data.splitlines(), delimiter=',')
 
             self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
             for user, cas_username, group_name in expected:
@@ -70,7 +71,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
-            reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
+            reader = csv.reader(rv.data.splitlines(), delimiter=',')
 
             self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
             for user, cas_username, group_name in expected:
@@ -94,7 +95,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
-            reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
+            reader = csv.reader(rv.data.splitlines(), delimiter=',')
 
             self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
             for user, cas_username, group_name in expected:
@@ -112,7 +113,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
-            reader = csv.reader(rv.data.decode(encoding='UTF-8').splitlines(), delimiter=',')
+            reader = csv.reader(rv.data.splitlines(), delimiter=',')
 
             self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
             for user, cas_username, group_name in expected:
@@ -246,7 +247,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assert404(rv)
 
             # test invalid user id
-            invalid_url = self._create_enrol_url(self.url, 999)
+            invalid_url = self._create_enrol_url(self.url, "999")
             rv = self.client.post(
                 invalid_url,
                 data=json.dumps(role),
@@ -313,7 +314,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assert404(rv)
 
             # test invalid user id
-            invalid_url = self._create_enrol_url(self.url, 999)
+            invalid_url = self._create_enrol_url(self.url, "999")
             rv = self.client.delete(invalid_url)
             self.assert404(rv)
 
@@ -341,26 +342,26 @@ class ClassListAPITest(ComPAIRAPITestCase):
         filename = "classlist.csv"
 
         # test login required
-        uploaded_file = io.BytesIO((student.username+",password").encode())
+        uploaded_file = io.BytesIO((student.username+",password").encode('utf-8'))
         rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
         self.assert401(rv)
         uploaded_file.close()
 
         # test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):
-            uploaded_file = io.BytesIO(student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert403(rv)
             uploaded_file.close()
 
         with self.login(self.data.get_authorized_student().username):
-            uploaded_file = io.BytesIO(student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert403(rv)
             uploaded_file.close()
 
         with self.login(self.data.get_authorized_ta().username):
-            uploaded_file = io.BytesIO(student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert403(rv)
             uploaded_file.close()
@@ -368,21 +369,21 @@ class ClassListAPITest(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             # test invalid course id
             invalid_url = '/api/courses/999/users'
-            uploaded_file = io.BytesIO(student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode('utf-8'))
             rv = self.client.post(invalid_url, data=dict(file=(uploaded_file, filename)))
             uploaded_file.close()
             self.assert404(rv)
 
             # test invalid file type
             invalid_filetype = "classlist.png"
-            uploaded_file = io.BytesIO(student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, invalid_filetype)))
             uploaded_file.close()
             self.assert400(rv)
 
             # test no username provided
             content = "".join([",\n", student.username, ",password,", student.student_number])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -394,7 +395,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test no password provided
             content = "".join(["nopasswordusername"])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -406,7 +407,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test duplicate usernames in file
             content = "".join([student.username, ",password\n", student.username, ",password"])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -418,7 +419,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test duplicate student number in system
             content = "".join(['username1,password,', student.student_number, "\n", student.username, ',password'])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -432,7 +433,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             content = "".join([
                 student.username, ",password,", student.student_number, "\n",
                 "username1,password,", student.student_number])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -444,7 +445,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test existing display
             content = "username1,password,,,," + student.displayname
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -465,7 +466,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             current_password = student.password
             new_password = 'password123'
 
-            uploaded_file = io.BytesIO((student.username+','+new_password).encode())
+            uploaded_file = io.BytesIO((student.username+','+new_password).encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -478,7 +479,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             student.last_online = None
             db.session.commit()
 
-            uploaded_file = io.BytesIO((student.username+','+new_password).encode())
+            uploaded_file = io.BytesIO((student.username+','+new_password).encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -490,7 +491,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             new_password = 'password1234'
             for set_password in [new_password, '*', '']:
-                uploaded_file = io.BytesIO((student.username+','+set_password).encode())
+                uploaded_file = io.BytesIO((student.username+','+set_password).encode('utf-8'))
                 rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
                 self.assert200(rv)
                 result = rv.json
@@ -501,14 +502,14 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test invalid import type app login disabled
             self.app.config['APP_LOGIN_ENABLED'] = False
-            uploaded_file = io.BytesIO(student.username.encode())
+            uploaded_file = io.BytesIO(student.username.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert400(rv)
             uploaded_file.close()
             self.app.config['APP_LOGIN_ENABLED'] = True
 
             # test authorized instructor - existing instructor
-            uploaded_file = io.BytesIO(instructor.username.encode())
+            uploaded_file = io.BytesIO(instructor.username.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -526,7 +527,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertIsNotNone(instructor_enrollment)
 
             # test authorized instructor - existing teaching assistant
-            uploaded_file = io.BytesIO(ta.username.encode())
+            uploaded_file = io.BytesIO(ta.username.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -549,7 +550,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 instructor.username, ",*,,,,,,group_instructor\n",
                 ta.username, ",*,,,,,,group_ta\n",
             ])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -580,7 +581,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 instructor.username, ",*,,,,,,\n",
                 ta.username, ",*,,,,,,\n",
             ])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
             result = rv.json
@@ -613,26 +614,26 @@ class ClassListAPITest(ComPAIRAPITestCase):
         filename = "classlist.csv"
 
         # test login required
-        uploaded_file = io.BytesIO((third_party_student.unique_identifier).encode())
+        uploaded_file = io.BytesIO((third_party_student.unique_identifier).encode('utf-8'))
         rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
         self.assert401(rv)
         uploaded_file.close()
 
         # test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert403(rv)
             uploaded_file.close()
 
         with self.login(self.data.get_authorized_student().username):
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert403(rv)
             uploaded_file.close()
 
         with self.login(self.data.get_authorized_ta().username):
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert403(rv)
             uploaded_file.close()
@@ -640,21 +641,21 @@ class ClassListAPITest(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             # test invalid course id
             invalid_url = '/api/courses/999/users'
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(invalid_url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             uploaded_file.close()
             self.assert404(rv)
 
             # test invalid file type
             invalid_filetype = "classlist.png"
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, invalid_filetype), import_type=ThirdPartyType.cas.value))
             uploaded_file.close()
             self.assert400(rv)
 
             # test no username provided
             content = "".join([",\n", third_party_student.unique_identifier, ",", student.student_number])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -666,7 +667,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test duplicate usernames in file
             content = "".join([third_party_student.unique_identifier, "\n", third_party_student.unique_identifier])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -678,7 +679,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test duplicate student number in system
             content = "".join(['username1,', student.student_number, "\n", third_party_student.unique_identifier])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -692,7 +693,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             content = "".join([
                 third_party_student.unique_identifier, ",", student.student_number, "\n",
                 "username1,", student.student_number])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -704,7 +705,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test existing display
             content = "username1,,,," + student.displayname
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -722,7 +723,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             uploaded_file.close()
 
             # test authorized instructor - existing user
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -732,14 +733,14 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test invalid import type cas login disabled
             self.app.config['CAS_LOGIN_ENABLED'] = False
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode())
+            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert400(rv)
             uploaded_file.close()
             self.app.config['CAS_LOGIN_ENABLED'] = True
 
             # test authorized instructor - existing instructor
-            uploaded_file = io.BytesIO(third_party_instructor.unique_identifier.encode())
+            uploaded_file = io.BytesIO(third_party_instructor.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -757,7 +758,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertIsNotNone(instructor_enrollment)
 
             # test authorized instructor - existing teaching assistant
-            uploaded_file = io.BytesIO(third_party_ta.unique_identifier.encode())
+            uploaded_file = io.BytesIO(third_party_ta.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -780,7 +781,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 third_party_instructor.unique_identifier, ",,,,,,group_instructor\n",
                 third_party_ta.unique_identifier, ",,,,,,group_ta\n",
             ])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -811,7 +812,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 third_party_instructor.unique_identifier, ",,,,,,\n",
                 third_party_ta.unique_identifier, ",,,,,,\n",
             ])
-            uploaded_file = io.BytesIO(content.encode())
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -964,7 +965,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
 
     def _create_enrol_url(self, url, user_id):
-        return url + '/' + str(user_id)
+        return url + '/' + user_id
 
 
 

@@ -4,10 +4,7 @@
 
 test_app_settings = {
     'DEBUG': False,
-    # disable this for now, since Flask-Login will ignore the login_required
-    # decorator if this is true. Not sure if this is required for testing,
-    # so leaving it here for now in case other stuff breaks in the future.
-    #'TESTING': True,
+    'TESTING': True,
     #'PRESERVE_CONTEXT_ON_EXCEPTION': False,
     'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
     'SQLALCHEMY_ECHO': False,
@@ -18,7 +15,9 @@ test_app_settings = {
     'XAPI_ENABLED': False,
     'XAPI_APP_BASE_URL': 'https://localhost:8888/',
     'LRS_STATEMENT_ENDPOINT': 'local',
-    'DEMO_INSTALLATION': False
+    'DEMO_INSTALLATION': False,
+    'MAIL_NOTIFICATION_ENABLED': True,
+    'MAIL_DEFAULT_SENDER': 'compair@example.com'
 }
 
 test_app_xapi_settings = test_app_settings.copy()

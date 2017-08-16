@@ -1,0 +1,46 @@
+<div>
+    <div class="pull-right">
+        <a id="edit-profile-btn" ng-href="#/lti/consumer/{{consumer.id}}/edit" class="btn btn-primary">
+            <i class="fa fa-edit"></i> Edit Consumer
+        </a>
+    </div>
+    <h1>View LTI Consumer</h1>
+
+    <div class="user-details">
+        <div class="row">
+            <strong class="col-md-2">Launch Url:</strong>
+            <div id="consumer_launch_url" class="col-md-10">{{ launchUrl }}</div>
+        </div>
+        <div class="row">
+            <strong class="col-md-2">Consumer Key:</strong>
+            <div id="consumer_oauth_consumer_key" class="col-md-10">{{ consumer.oauth_consumer_key }}</div>
+        </div>
+        <div class="row">
+            <strong class="col-md-2">Consumer Secret:</strong>
+            <div id="consumer_oauth_consumer_secret" class="col-md-10">
+                <span class="spoiler">{{ consumer.oauth_consumer_secret }}</span>
+            </div>
+        </div>
+        <div class="row">
+            <strong class="col-md-2">LTI User ID Override:</strong>
+            <div id="consumer_user_id_override" class="col-md-10">
+                {{consumer.user_id_override}}
+            </div>
+        </div>
+        <div class="row">
+            <strong class="col-md-2">Active:</strong>
+            <div class="col-md-10">
+                <input id="consumer_active" type="checkbox" ng-model="consumer.active"
+                    ng-change="updateConsumerActive()">
+            </div>
+        </div>
+        <div class="row">
+            <strong class="col-md-2">Created:</strong>
+            <div id="consumer_created" class="col-md-10">{{ consumer.created | amDateFormat: 'MMM Do, YYYY @ h:mm a' }}</div>
+        </div>
+        <div class="row">
+            <strong class="col-md-2">Last Modified:</strong>
+            <div id="consumer_modified" class="col-md-10">{{ consumer.modified | amDateFormat: 'MMM Do, YYYY @ h:mm a' }}</div>
+        </div>
+    </div>
+</div>

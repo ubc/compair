@@ -5,25 +5,31 @@ describe('assignment-module', function () {
         "id": id,
         "permissions": {
             "Course": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "Assignment": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             },
             "User": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
             }
         }
     };
@@ -39,7 +45,9 @@ describe('assignment-module', function () {
         last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
         modified: "Tue, 12 Aug 2014 20:53:31 -0000",
         username: "root",
-        system_role: "System Administrator"
+        system_role: "System Administrator",
+        uses_compair_login: true,
+        email_notification_method: 'enable'
     };
     var mockCourse = {
         "available": true,
@@ -49,7 +57,6 @@ describe('assignment-module', function () {
         "student_assignment_count": 0,
         "student_count": 0,
         "created": "Fri, 09 Jan 2015 17:23:59 -0000",
-        "description": null,
         "id": "1abcABC123-abcABC123_Z",
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
         "name": "Test Course",
@@ -110,7 +117,8 @@ describe('assignment-module', function () {
                 "id": "1abcABC123-abcABC123_Z",
                 "modified": "Mon, 06 Jun 2016 19:50:47 -0000",
                 "name": "Which is better?",
-                "user_id": "1abcABC123-abcABC123_Z"
+                "user_id": "1abcABC123-abcABC123_Z",
+                "weight": 1
             },
             {
                 "compared": true,
@@ -121,10 +129,12 @@ describe('assignment-module', function () {
                 "id": "3abcABC123-abcABC123_Z",
                 "modified": "Mon, 06 Jun 2016 19:52:23 -0000",
                 "name": "Which sounds better?",
-                "user_id": "1abcABC123-abcABC123_Z"
+                "user_id": "1abcABC123-abcABC123_Z",
+                "weight": 1
             }
         ],
         "description": "<p>This is the description</p>\n",
+        "peer_feedback_prompt": null,
         "enable_self_evaluation": true,
         "evaluation_count": 17,
         "file": null,
@@ -807,22 +817,22 @@ describe('assignment-module', function () {
     });
 
     describe('AssignmentViewController', function () {
-        var $rootScope, createController, $location, $modal, $q;
+        var $rootScope, createController, $location, $uibModal, $q, $route;
         var controller;
         var toaster;
         var xAPISettings;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_, _Toaster_, _xAPISettings_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_, _Toaster_, _xAPISettings_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
             toaster = _Toaster_;
-            createController = function (route, params) {
+            createController = function (params, resolvedData) {
                 return $controller('AssignmentViewController', {
                     $scope: $rootScope,
                     $routeParams: params || {},
-                    $route: route || {}
+                    resolvedData: resolvedData || {}
                 });
             }
             xAPISettings = _xAPISettings_;
@@ -832,12 +842,14 @@ describe('assignment-module', function () {
 
         describe('view:', function() {
             beforeEach(function () {
-                controller = createController({}, {courseId: "1abcABC123-abcABC123_Z", assignmentId: "1abcABC123-abcABC123_Z"});
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/users/students').respond(mockStudents);
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comments').respond(mockAssignmentComments);
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/users/instructors/labels').respond(mockInstructorLabels);
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z').respond(mockAssignment);
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/groups').respond(mockGroups);
+                controller = createController({courseId: "1abcABC123-abcABC123_Z", assignmentId: "1abcABC123-abcABC123_Z"}, {
+                    course: angular.copy(mockCourse),
+                    assignment: angular.copy(mockAssignment),
+                    students: angular.copy(mockStudents),
+                    instructorLabels: angular.copy(mockInstructorLabels),
+                    loggedInUser: angular.copy(mockUser),
+                    canManageAssignment: true,
+                });
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/status').respond({
                     "status": {
                         "answers": {
@@ -854,17 +866,23 @@ describe('assignment-module', function () {
                         }
                     }
                 });
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/groups').respond(mockGroups);
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers?page=1&perPage=20').respond(mockAnswers);
                 $httpBackend.flush();
             });
 
             it('should be correctly initialized', function () {
+                var expectedStudents = _.sortBy(angular.copy(mockStudents.objects), 'name');
+                expectedStudents.unshift({
+                    id: "top-picks",
+                    name: "Instructor's top picks"
+                });
+
                 expect($rootScope.assignment.id).toEqual(mockAssignment.id);
-                expect($rootScope.criteria).toEqual(mockAssignment.criteria);
                 expect($rootScope.courseId).toEqual(mockCourse.id);
 
                 expect($rootScope.allStudents).toEqual(mockStudents.objects);
-                expect($rootScope.students).toEqual(mockStudents.objects);
+                expect($rootScope.students).toEqual(expectedStudents);
 
                 expect($rootScope.totalNumAnswers).toEqual(mockAnswers.total);
 
@@ -889,38 +907,39 @@ describe('assignment-module', function () {
                 expect($rootScope.see_answers).toBe(false);
                 expect($rootScope.warning).toBe(false);
 
-                expect($rootScope.comments.objects).toEqual(mockAssignmentComments.objects);
-
                 expect($rootScope.assignment.status.answers.answered).toBe(true);
 
                 expect($rootScope.instructors).toEqual(mockInstructorLabels.instructors);
 
                 expect($rootScope.showTab('answers')).toBe(true);
-                expect($rootScope.showTab('help')).toBe(false);
-                expect($rootScope.showTab('participation')).toBe(false);
-                expect($rootScope.showTab('comparisons')).toBe(false);
             });
 
-            it('should be able to change tabs', function () {
+            it('should be able to change to answers tab', function () {
+                $rootScope.setTab('answers');
+                $rootScope.$emit('$routeUpdate');
+                expect($rootScope.showTab('answers')).toBe(true);
+            });
+
+            it('should be able to change to help tab', function () {
                 $rootScope.setTab('help');
-                expect($rootScope.showTab('answers')).toBe(false);
+                $rootScope.$emit('$routeUpdate');
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comments').respond(mockAssignmentComments);
+                $httpBackend.flush();
                 expect($rootScope.showTab('help')).toBe(true);
-                expect($rootScope.showTab('participation')).toBe(false);
-                expect($rootScope.showTab('comparisons')).toBe(false);
+            });
 
+            it('should be able to change to participation tab', function () {
                 $rootScope.setTab('participation');
-                expect($rootScope.showTab('answers')).toBe(false);
-                expect($rootScope.showTab('help')).toBe(false);
+                $rootScope.$emit('$routeUpdate');
                 expect($rootScope.showTab('participation')).toBe(true);
-                expect($rootScope.showTab('comparisons')).toBe(false);
+            });
 
-                $rootScope.setTab('comparisons');
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/comparisons').respond({
-                    "objects": [],
-                    "page": 1,
-                    "pages": 0,
-                    "per_page": 20,
-                    "total": 0
+            it('should be able to change to your work tab', function () {
+                $rootScope.setTab('your_work');
+                $rootScope.$emit('$routeUpdate');
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/user/comparisons').respond({
+                    "comparisons": [],
+                    "self_evaluations": []
                 });
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers?author=1abcABC123-abcABC123_Z').respond({
                     "objects": [],
@@ -930,15 +949,18 @@ describe('assignment-module', function () {
                     "total": 0
                 });
                 $httpBackend.flush();
-                expect($rootScope.showTab('answers')).toBe(false);
-                expect($rootScope.showTab('help')).toBe(false);
-                expect($rootScope.showTab('participation')).toBe(false);
+                expect($rootScope.showTab('your_work')).toBe(true);
+            });
+
+            it('should be able to change to comparisons tab', function () {
+                $rootScope.setTab('comparisons');
+                $rootScope.$emit('$routeUpdate');
                 expect($rootScope.showTab('comparisons')).toBe(true);
             });
 
             it('should be able to delete assignment', function () {
                 $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z').respond(mockAssignment);
-                $rootScope.deleteAssignment(mockAssignment.course_id, mockAssignment.id);
+                $rootScope.deleteAssignment(mockAssignment);
                 $httpBackend.flush();
                 expect($location.path()).toEqual('/course/1abcABC123-abcABC123_Z');
             });
@@ -949,7 +971,7 @@ describe('assignment-module', function () {
                 expect($rootScope.assignment.answer_count).toEqual(12);
                 expect($rootScope.assignment.status.answers.answered).toBe(true);
 
-                $rootScope.deleteAnswer(answer, mockAssignment.course_id, mockAssignment.id, answer.id);
+                $rootScope.deleteAnswer(answer);
                 $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/'+answer.id).respond({id: answer.id});
                 $httpBackend.flush();
 
@@ -963,7 +985,7 @@ describe('assignment-module', function () {
                 expect($rootScope.assignment.answer_count).toEqual(12);
                 expect($rootScope.assignment.status.answers.answered).toBe(true);
 
-                $rootScope.deleteAnswer(answer, mockAssignment.course_id, mockAssignment.id, answer.id);
+                $rootScope.deleteAnswer(answer);
                 $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/'+answer.id).respond({id: answer.id});
                 $httpBackend.flush();
 
@@ -976,7 +998,7 @@ describe('assignment-module', function () {
 
                 expect(answer.flagged).toBe(true);
 
-                $rootScope.unflagAnswer(answer, mockAssignment.course_id, mockAssignment.id, answer.id);
+                $rootScope.unflagAnswer(answer);
                 $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/'+answer.id+'/flagged').respond({});
                 $httpBackend.flush();
 
@@ -1040,57 +1062,80 @@ describe('assignment-module', function () {
 
             });
 
-            it('should be able to delete assignment comments', function () {
-                answer = mockAnswers.objects[2];
-                comments = angular.copy(mockAssignmentComments.objects);
-                comment = comments[0];
+            describe("assignment comments", function() {
 
-                expect($rootScope.comments.objects).toEqual(comments);
-                expect($rootScope.assignment.comment_count).toEqual(comments.length);
-
-                $rootScope.deleteComment(0, mockAssignment.course_id, mockAssignment.id, comment.id);
-                $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comments/'+comment.id).respond({
-                    id: comment.id
+                beforeEach(function(){
+                    $rootScope.setTab('help');
+                    $rootScope.$emit('$routeUpdate');
+                    $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comments').respond(mockAssignmentComments);
+                    $httpBackend.flush();
                 });
-                $httpBackend.flush();
 
-                comments.shift();
+                it('should be properly initialized', function() {
+                    expect($rootScope.comments.objects).toEqual(mockAssignmentComments.objects);
+                });
 
-                expect($rootScope.comments.objects).toEqual(comments);
-                expect($rootScope.assignment.comment_count).toEqual(comments.length);
+                it('should be able to delete assignment comments', function () {
+                    comments = angular.copy(mockAssignmentComments.objects);
+                    comment = comments[0];
+
+                    expect($rootScope.comments.objects).toEqual(comments);
+                    expect($rootScope.assignment.comment_count).toEqual(comments.length);
+
+                    $rootScope.deleteComment(0, mockAssignment.course_id, mockAssignment.id, comment.id);
+                    $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comments/'+comment.id).respond({
+                        id: comment.id
+                    });
+                    $httpBackend.flush();
+
+                    comments.shift();
+
+                    expect($rootScope.comments.objects).toEqual(comments);
+                    expect($rootScope.assignment.comment_count).toEqual(comments.length);
+                });
             });
+
         });
     });
 
     describe('AssignmentWriteController', function () {
-        var $rootScope, createController, $location, $modal, $q;
+        var $rootScope, createController, $location, $uibModal, $q, modalInstance, $route;
         var controller;
         var defaultCriteria;
         var otherCriteria;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$modal_, _$q_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_, _$route_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $modal = _$modal_;
+            $uibModal = _$uibModal_;
             $q = _$q_;
-            createController = function (route, params) {
+            $route = _$route_;
+            $route.current = {};
+            createController = function (params, resolvedData) {
                 return $controller('AssignmentWriteController', {
                     $scope: $rootScope,
                     $routeParams: params || {},
-                    $route: route || {}
+                    $route: $route,
+                    resolvedData: resolvedData || {}
                 });
             }
         }));
 
-        describe('new:', function() {
+        describe('create:', function() {
             beforeEach(function () {
-                controller = createController({current: {method: 'new'}}, {courseId: "1abcABC123-abcABC123_Z"});
-                $httpBackend.expectGET('/api/criteria').respond(mockCritiera);
-                $httpBackend.flush();
+                controller = createController({courseId: "1abcABC123-abcABC123_Z"}, {
+                    course: angular.copy(mockCourse),
+                    criteria: angular.copy(mockCritiera),
+                    loggedInUser: angular.copy(mockUser),
+                    canManageAssignment: true,
+                });
 
-                defaultCriteria = mockCritiera.objects[0];
+                defaultCriteria = angular.merge({}, mockCritiera.objects[0], { weight:1 });
                 otherCriteria = angular.copy(mockCritiera.objects);
                 otherCriteria.shift();
+                otherCriteria.forEach(function(criterion) {
+                    criterion.weight = 1;
+                });
             });
 
             it('should be correctly initialized', function () {
@@ -1100,7 +1145,7 @@ describe('assignment-module', function () {
                     educators_can_compare: false,
                     number_of_comparisons: 3,
                     pairing_algorithm: 'adaptive',
-                    rank_display_limit: '0',
+                    rank_display_limit: null,
                     answer_grade_weight: 1,
                     comparison_grade_weight: 1,
                     self_evaluation_grade_weight: 1
@@ -1113,7 +1158,7 @@ describe('assignment-module', function () {
                     answer2: {}
                 });
 
-                expect($rootScope.canManageCriteriaAssignment).toBe(true);
+                expect($rootScope.canManageAssignment).toBe(true);
             });
 
             it('should add criteria to course from available criteria when add is called', function() {
@@ -1139,51 +1184,45 @@ describe('assignment-module', function () {
             });
 
             describe('when changeCriterion is called', function() {
-                var deferred;
                 var criterion;
-                var closeFunc;
+                var fakeModal = {
+                    result: {
+                        then: function(confirmCallback, cancelCallback) {
+                            this.confirmCallBack = confirmCallback;
+                            this.cancelCallback = cancelCallback;
+                        }
+                    },
+                    close: function( item ) {
+                        this.result.confirmCallBack( item );
+                    },
+                    dismiss: function( type ) {
+                        this.result.cancelCallback( type );
+                    },
+                    opened: {
+                        then: function() { }
+                    }
+                };
                 beforeEach(function() {
-                    criterion = {id: "1abcABC123-abcABC123_Z", name: 'test'};
-                    deferred = $q.defer();
-                    closeFunc = jasmine.createSpy('close');
-                    spyOn($modal, 'open').and.returnValue({
-                        result: deferred.promise,
-                        close: closeFunc,
-                        opened: deferred.promise
-                    });
+                    criterion = {id: "1abcABC123-abcABC123_Z", name: 'test', weight: 10};
+                    spyOn($uibModal, 'open').and.returnValue(fakeModal);
                     $rootScope.changeCriterion(criterion);
                 });
 
                 it('should open a modal dialog', function() {
-                    expect($modal.open).toHaveBeenCalledWith({
+                    expect($uibModal.open).toHaveBeenCalledWith({
                         animation: true,
                         backdrop: 'static',
-                        template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
+                        controller: "CriterionModalController",
+                        templateUrl: 'modules/criterion/criterion-modal-partial.html',
                         scope: jasmine.any(Object)
                     })
                 });
 
-                it('should listen on CRITERION_UPDATED event and close dialog', function() {
+                it('should update after the close event', function() {
                     var updated = {id: "1abcABC123-abcABC123_Z", name: 'test1'};
-                    $rootScope.$broadcast("CRITERION_UPDATED", updated);
-                    expect(criterion).toEqual(updated);
-                    expect(closeFunc).toHaveBeenCalled();
-                });
-
-                it('should listen to CRITERION_ADDED event and close dialog', function() {
-                    $rootScope.assignment.criteria = [];
-                    var criteria = {id: "1abcABC123-abcABC123_Z"};
-                    $rootScope.$broadcast("CRITERION_ADDED", criteria);
-                    expect($rootScope.assignment.criteria).toEqual([criteria]);
-                    expect(closeFunc).toHaveBeenCalled();
-                });
-
-                it('should un-register listener when dialog is closed', function() {
-                    deferred.resolve();
-                    $rootScope.$digest();
-                    $rootScope.$broadcast('CRITERION_UPDATED');
-                    expect(closeFunc).not.toHaveBeenCalled();
-                    $httpBackend.flush();
+                    var expectedUpdate = angular.merge({}, updated, {id: criterion.id, weight: criterion.weight});
+                    $rootScope.modalInstance.close(updated);
+                    expect(criterion).toEqual(expectedUpdate);
                 });
             });
 
@@ -1207,12 +1246,12 @@ describe('assignment-module', function () {
                 };
                 beforeEach(function() {
                     $rootScope.comparison_example.answer1 = {};
-                    spyOn($modal, 'open').and.returnValue(fakeModal);
+                    spyOn($uibModal, 'open').and.returnValue(fakeModal);
                     $rootScope.changeAnswer($rootScope.comparison_example.answer1, true);
                 });
 
                 it('should open a modal dialog', function() {
-                    expect($modal.open).toHaveBeenCalledWith({
+                    expect($uibModal.open).toHaveBeenCalledWith({
                         animation: true,
                         backdrop: 'static',
                         controller: "ComparisonExampleModalController",
@@ -1225,7 +1264,6 @@ describe('assignment-module', function () {
                     var updated = {content: 'test1'};
                     $rootScope.modalInstance.close(updated);
                     expect($rootScope.comparison_example.answer1).toEqual(updated);
-                    $httpBackend.flush();
                 });
             });
 
@@ -1381,22 +1419,27 @@ describe('assignment-module', function () {
 
         describe('edit:', function() {
             beforeEach(function () {
-                controller = createController({current: {method: 'edit'}}, {courseId: "1abcABC123-abcABC123_Z", assignmentId: "1abcABC123-abcABC123_Z"});
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z').respond(mockAssignment);
-                $httpBackend.expectGET('/api/criteria').respond(mockCritiera);
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comparisons/examples').respond(mockComparisonExamples);
-                $httpBackend.flush();
+                controller = createController({courseId: "1abcABC123-abcABC123_Z", assignmentId: "1abcABC123-abcABC123_Z"}, {
+                    course: angular.copy(mockCourse),
+                    assignment: angular.copy(mockAssignment),
+                    assignmentComparisonExamples: angular.copy(mockComparisonExamples),
+                    criteria: angular.copy(mockCritiera),
+                    loggedInUser: angular.copy(mockUser),
+                    canManageAssignment: true,
+                });
 
-                defaultCriteria = mockCritiera.objects[0];
+                defaultCriteria = angular.merge({}, mockCritiera.objects[0], { weight:1 });
                 otherCriteria = angular.copy(mockCritiera.objects);
                 otherCriteria.shift();
+                otherCriteria.forEach(function(criterion) {
+                    criterion.weight = 1;
+                });
             });
 
             it('should be correctly initialized', function () {
                 expect($rootScope.assignment.id).toEqual(mockAssignment.id);
                 expect($rootScope.assignment.criteria).toEqual(mockAssignment.criteria);
                 expect($rootScope.assignment.addPractice).toEqual(true);
-                expect($rootScope.compared).toEqual(mockAssignment.compared);
 
                 expect($rootScope.recommended_comparisons).toEqual(3);
                 expect($rootScope.availableCriteria).toEqual(otherCriteria);
@@ -1405,7 +1448,7 @@ describe('assignment-module', function () {
                 expect($rootScope.comparison_example.answer1_id).toEqual(mockComparisonExamples.objects[0].answer1_id);
                 expect($rootScope.comparison_example.answer2_id).toEqual(mockComparisonExamples.objects[0].answer2_id);
 
-                expect($rootScope.canManageCriteriaAssignment).toBe(true);
+                expect($rootScope.canManageAssignment).toBe(true);
             });
 
             it('should add criteria to course from available criteria when add is called', function() {
@@ -1431,51 +1474,45 @@ describe('assignment-module', function () {
             });
 
             describe('when changeCriterion is called', function() {
-                var deferred;
                 var criterion;
-                var closeFunc;
+                var fakeModal = {
+                    result: {
+                        then: function(confirmCallback, cancelCallback) {
+                            this.confirmCallBack = confirmCallback;
+                            this.cancelCallback = cancelCallback;
+                        }
+                    },
+                    close: function( item ) {
+                        this.result.confirmCallBack( item );
+                    },
+                    dismiss: function( type ) {
+                        this.result.cancelCallback( type );
+                    },
+                    opened: {
+                        then: function() { }
+                    }
+                };
                 beforeEach(function() {
-                    criterion = {id: "1abcABC123-abcABC123_Z", name: 'test'};
-                    deferred = $q.defer();
-                    closeFunc = jasmine.createSpy('close');
-                    spyOn($modal, 'open').and.returnValue({
-                        result: deferred.promise,
-                        close: closeFunc,
-                        opened: deferred.promise
-                    });
+                    criterion = {id: "1abcABC123-abcABC123_Z", name: 'test', weight: 10};
+                    spyOn($uibModal, 'open').and.returnValue(fakeModal);
                     $rootScope.changeCriterion(criterion);
                 });
 
                 it('should open a modal dialog', function() {
-                    expect($modal.open).toHaveBeenCalledWith({
+                    expect($uibModal.open).toHaveBeenCalledWith({
                         animation: true,
                         backdrop: 'static',
-                        template: '<criterion-form criterion=criterion editor-options=editorOptions></criterion-form>',
+                        controller: "CriterionModalController",
+                        templateUrl: 'modules/criterion/criterion-modal-partial.html',
                         scope: jasmine.any(Object)
                     })
                 });
 
-                it('should listen on CRITERION_UPDATED event and close dialog', function() {
+                it('should update after the close event', function() {
                     var updated = {id: "1abcABC123-abcABC123_Z", name: 'test1'};
-                    $rootScope.$broadcast("CRITERION_UPDATED", updated);
-                    expect(criterion).toEqual(updated);
-                    expect(closeFunc).toHaveBeenCalled();
-                });
-
-                it('should listen to CRITERION_ADDED event and close dialog', function() {
-                    $rootScope.assignment.criteria = [];
-                    var criteria = {id: "1abcABC123-abcABC123_Z"};
-                    $rootScope.$broadcast("CRITERION_ADDED", criteria);
-                    expect($rootScope.assignment.criteria).toEqual([criteria]);
-                    expect(closeFunc).toHaveBeenCalled();
-                });
-
-                it('should un-register listener when dialog is closed', function() {
-                    deferred.resolve();
-                    $rootScope.$digest();
-                    $rootScope.$broadcast('CRITERION_UPDATED');
-                    expect(closeFunc).not.toHaveBeenCalled();
-                    $httpBackend.flush();
+                    var expectedUpdate = angular.merge({}, updated, {id: criterion.id, weight: criterion.weight});
+                    $rootScope.modalInstance.close(updated);
+                    expect(criterion).toEqual(expectedUpdate);
                 });
             });
 
@@ -1498,12 +1535,12 @@ describe('assignment-module', function () {
                     }
                 };
                 beforeEach(function() {
-                    spyOn($modal, 'open').and.returnValue(fakeModal);
+                    spyOn($uibModal, 'open').and.returnValue(fakeModal);
                     $rootScope.changeAnswer($rootScope.comparison_example.answer1, true);
                 });
 
                 it('should open a modal dialog', function() {
-                    expect($modal.open).toHaveBeenCalledWith({
+                    expect($uibModal.open).toHaveBeenCalledWith({
                         animation: true,
                         backdrop: 'static',
                         controller: "ComparisonExampleModalController",
@@ -1516,7 +1553,6 @@ describe('assignment-module', function () {
                     var updated = angular.merge({}, $rootScope.comparison_example.answer1, {content: 'test123'}) ;
                     $rootScope.modalInstance.close(updated);
                     expect($rootScope.comparison_example.answer1).toEqual(updated);
-                    $httpBackend.flush();
                 });
             });
 
@@ -1578,7 +1614,6 @@ describe('assignment-module', function () {
 
                 it('should error when comparison examples enabled and answer B is not set', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
-                    $rootScope.assignment.id = undefined;
                     $rootScope.assignment.addPractice = true;
                     $rootScope.comparison_example.answer2.content = "";
                     var currentPath = $location.path();
@@ -1624,6 +1659,302 @@ describe('assignment-module', function () {
                     $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/2abcABC123-abcABC123_Z/comparisons/examples/1abcABC123-abcABC123_Z')
                         .respond({});
 
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(true);
+                    $httpBackend.flush();
+                    expect($location.path()).toEqual('/course/1abcABC123-abcABC123_Z');
+                    expect($rootScope.submitted).toBe(false);
+                });
+            });
+        });
+
+        describe('copy:', function() {
+            beforeEach(function () {
+                $route.current.method = "copy";
+                controller = createController({courseId: "1abcABC123-abcABC123_Z", assignmentId: "1abcABC123-abcABC123_Z"}, {
+                    course: angular.copy(mockCourse),
+                    assignment: angular.copy(mockAssignment),
+                    assignmentComparisonExamples: angular.copy(mockComparisonExamples),
+                    criteria: angular.copy(mockCritiera),
+                    loggedInUser: angular.copy(mockUser),
+                    canManageAssignment: true,
+                });
+
+                defaultCriteria = angular.merge({}, mockCritiera.objects[0], { weight:1 });
+                otherCriteria = angular.copy(mockCritiera.objects);
+                otherCriteria.shift();
+                otherCriteria.forEach(function(criterion) {
+                    criterion.weight = 1;
+                });
+            });
+
+            it('should be correctly initialized', function () {
+                expect($rootScope.assignment.id).toEqual(undefined);
+                expect($rootScope.assignment.criteria).toEqual(mockAssignment.criteria);
+                expect($rootScope.assignment.addPractice).toEqual(true);
+                expect($rootScope.compared).toEqual(undefined);
+
+                expect($rootScope.recommended_comparisons).toEqual(3);
+                expect($rootScope.availableCriteria).toEqual(otherCriteria);
+                expect($rootScope.loggedInUserId).toEqual(id);
+
+                expect($rootScope.comparison_example.id).toEqual(undefined);
+                expect($rootScope.comparison_example.answer1_id).toEqual(undefined);
+                expect($rootScope.comparison_example.answer1.content).toEqual(mockComparisonExamples.objects[0].answer1.content);
+                expect($rootScope.comparison_example.answer1.file).toEqual(mockComparisonExamples.objects[0].answer1.file);
+                expect($rootScope.comparison_example.answer2_id).toEqual(undefined);
+                expect($rootScope.comparison_example.answer2.content).toEqual(mockComparisonExamples.objects[0].answer2.content);
+                expect($rootScope.comparison_example.answer2.file).toEqual(mockComparisonExamples.objects[0].answer2.file);
+
+                expect($rootScope.canManageAssignment).toBe(true);
+            });
+
+            it('should add criteria to course from available criteria when add is called', function() {
+                $rootScope.assignment.criteria = [];
+                $rootScope.availableCriteria = [{id: "1abcABC123-abcABC123_Z"}, {id: "2abcABC123-abcABC123_Z"}];
+                $rootScope.add(0);
+                expect($rootScope.assignment.criteria).toEqual([{id: "1abcABC123-abcABC123_Z"}]);
+                expect($rootScope.availableCriteria).toEqual([{id: "2abcABC123-abcABC123_Z"}]);
+            });
+
+            it('should remove criteria from course criteria when remove is called', function() {
+                $rootScope.assignment.criteria = [{id: "1abcABC123-abcABC123_Z", default: true}, {id: "2abcABC123-abcABC123_Z", default: false}];
+                $rootScope.availableCriteria = [];
+                $rootScope.remove(0);
+                // add to available list when default == true
+                expect($rootScope.assignment.criteria).toEqual([{id: "2abcABC123-abcABC123_Z", default: false}]);
+                expect($rootScope.availableCriteria).toEqual([{id: "1abcABC123-abcABC123_Z", default: true}]);
+
+                $rootScope.remove(0);
+                // don't add to available list when default == false
+                expect($rootScope.assignment.criteria).toEqual([]);
+                expect($rootScope.availableCriteria).toEqual([{id: "1abcABC123-abcABC123_Z", default: true}]);
+            });
+
+            describe('when changeCriterion is called', function() {
+                var criterion;
+                var fakeModal = {
+                    result: {
+                        then: function(confirmCallback, cancelCallback) {
+                            this.confirmCallBack = confirmCallback;
+                            this.cancelCallback = cancelCallback;
+                        }
+                    },
+                    close: function( item ) {
+                        this.result.confirmCallBack( item );
+                    },
+                    dismiss: function( type ) {
+                        this.result.cancelCallback( type );
+                    },
+                    opened: {
+                        then: function() { }
+                    }
+                };
+                beforeEach(function() {
+                    criterion = {id: "1abcABC123-abcABC123_Z", name: 'test', weight: 10};
+                    spyOn($uibModal, 'open').and.returnValue(fakeModal);
+                    $rootScope.changeCriterion(criterion);
+                });
+
+                it('should open a modal dialog', function() {
+                    expect($uibModal.open).toHaveBeenCalledWith({
+                        animation: true,
+                        backdrop: 'static',
+                        controller: "CriterionModalController",
+                        templateUrl: 'modules/criterion/criterion-modal-partial.html',
+                        scope: jasmine.any(Object)
+                    })
+                });
+
+                it('should update after the close event', function() {
+                    var updated = {id: "1abcABC123-abcABC123_Z", name: 'test1'};
+                    var expectedUpdate = angular.merge({}, updated, {id: criterion.id, weight: criterion.weight});
+                    $rootScope.modalInstance.close(updated);
+                    expect(criterion).toEqual(expectedUpdate);
+                });
+            });
+
+            describe('when changeAnswer is called', function() {
+                var fakeModal = {
+                    result: {
+                        then: function(confirmCallback, cancelCallback) {
+                            this.confirmCallBack = confirmCallback;
+                            this.cancelCallback = cancelCallback;
+                        }
+                    },
+                    close: function( item ) {
+                        this.result.confirmCallBack( item );
+                    },
+                    dismiss: function( type ) {
+                        this.result.cancelCallback( type );
+                    },
+                    opened: {
+                        then: function() { }
+                    }
+                };
+                beforeEach(function() {
+                    spyOn($uibModal, 'open').and.returnValue(fakeModal);
+                    $rootScope.changeAnswer($rootScope.comparison_example.answer1, true);
+                });
+
+                it('should open a modal dialog', function() {
+                    expect($uibModal.open).toHaveBeenCalledWith({
+                        animation: true,
+                        backdrop: 'static',
+                        controller: "ComparisonExampleModalController",
+                        templateUrl: 'modules/answer/answer-modal-partial.html',
+                        scope: jasmine.any(Object)
+                    })
+                });
+
+                it('should update after the close event', function() {
+                    var updated = angular.merge({}, $rootScope.comparison_example.answer1, {content: 'test123'}) ;
+                    $rootScope.modalInstance.close(updated);
+                    expect($rootScope.comparison_example.answer1).toEqual(updated);
+                });
+            });
+
+            describe('save', function() {
+                var toaster;
+                var mockPracticeAnswer1 = {content: "content A"};
+                var mockPracticeAnswer2 = {content: "content B"};
+                var expectedCriterion = angular.copy(mockAssignment.criteria[0]);
+                expectedCriterion.id = null;
+                expectedCriterion.default = false;
+                expectedCriterion.public = false;
+                var mockNewCriterion = {
+                    "compared": false,
+                    "created": "Mon, 06 Jun 2016 19:50:47 -0000",
+                    "default": false,
+                    "public": false,
+                    "description": "<p>Choose the response that you think is the better of the two.</p>",
+                    "id": "1abcABC123-abcABC123_Z",
+                    "modified": "Mon, 06 Jun 2016 19:50:47 -0000",
+                    "name": "Which is better?",
+                    "user_id": "9abcABC123-abcABC123_Z"
+                }
+                beforeEach(inject(function (_Toaster_) {
+                    toaster = _Toaster_;
+                    spyOn(toaster, 'error');
+                }));
+
+                it('should error when answer start is not before answer end', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.date.aend.date = $rootScope.date.astart.date;
+                    $rootScope.date.aend.time = $rootScope.date.astart.time;
+                    var currentPath = $location.path();
+
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Answer Period Error', 'Answer end time must be after answer start time.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
+                it('should error when answer start is not before compare start', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.availableCheck = true;
+                    $rootScope.date.cstart.date = angular.copy($rootScope.date.astart.date);
+                    $rootScope.date.cstart.date.setDate($rootScope.date.cstart.date.getDate()-1);
+                    var currentPath = $location.path();
+
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'Please double-check the answer and comparison period start and end times.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
+                it('should error when compare start is not before compare end', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.availableCheck = true;
+                    $rootScope.date.cend.date = $rootScope.date.cstart.date;
+                    $rootScope.date.cend.time = $rootScope.date.cstart.time;
+                    var currentPath = $location.path();
+
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'comparison end time must be after comparison start time.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
+                it('should enable save button even if save failed', function() {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+
+                    $httpBackend.expectPOST('/api/criteria', expectedCriterion).respond(200, mockNewCriterion);
+                    $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments', $rootScope.assignment)
+                        .respond(400, '');
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(true);
+                    $httpBackend.flush();
+                    expect($rootScope.submitted).toBe(false);
+                });
+
+                it('should error when comparison examples enabled and answer A is not set', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.addPractice = true;
+                    $rootScope.comparison_example = {
+                        answer1: {},
+                        answer2: mockPracticeAnswer2
+                    };
+
+                    var currentPath = $location.path();
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer A Error', 'Practice answers needs to have content.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
+                it('should error when comparison examples enabled and answer B is not set', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.addPractice = true;
+                    $rootScope.comparison_example = {
+                        answer1: mockPracticeAnswer1,
+                        answer2: {}
+                    };
+
+                    var currentPath = $location.path();
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer B Error', 'Practice answers needs to have content.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
+                it('should be able to save new assignment', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+
+                    $httpBackend.expectPOST('/api/criteria', expectedCriterion).respond(200, mockNewCriterion);
+                    $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments', $rootScope.assignment)
+                        .respond(angular.merge({}, mockAssignment, {id: "2abcABC123-abcABC123_Z"}));
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(true);
+                    $httpBackend.flush();
+                    expect($location.path()).toEqual('/course/1abcABC123-abcABC123_Z');
+                    expect($rootScope.submitted).toBe(false);
+                });
+
+                it('should be able to save new assignment with comparison examples', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.addPractice = true;
+                    $rootScope.comparison_example = {
+                        answer1: mockPracticeAnswer1,
+                        answer2: mockPracticeAnswer2
+                    };
+                    $httpBackend.expectPOST('/api/criteria', expectedCriterion).respond(200, mockNewCriterion);
+                    $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments', $rootScope.assignment)
+                        .respond(angular.merge({}, mockAssignment, {id: "2abcABC123-abcABC123_Z"}));
+                    $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments/2abcABC123-abcABC123_Z/answers', $rootScope.comparison_example.answer1)
+                        .respond(angular.merge({}, mockPracticeAnswer1, {id: "100cABC123-abcABC123_Z"}));
+                    $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments/2abcABC123-abcABC123_Z/answers', $rootScope.comparison_example.answer2)
+                        .respond(angular.merge({}, mockPracticeAnswer2, {id: "101cABC123-abcABC123_Z"}));
+                    $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments/2abcABC123-abcABC123_Z/comparisons/examples', $rootScope.comparison_example)
+                        .respond(angular.merge({}, mockComparisonExamples.objects[0], {id: "1abcABC123-abcABC123_Z"}));
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();

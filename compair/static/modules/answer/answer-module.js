@@ -13,9 +13,8 @@ var module = angular.module('ubc.ctlt.compair.answer',
         'ubc.ctlt.compair.common.xapi',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.interceptor',
-        'ubc.ctlt.compair.common.mathjax',
-        'ubc.ctlt.compair.common.highlightjs',
         'ubc.ctlt.compair.common.timer',
+        'ubc.ctlt.compair.rich.content',
         'ubc.ctlt.compair.assignment',
         'ubc.ctlt.compair.attachment',
         'ubc.ctlt.compair.toaster'
@@ -90,7 +89,6 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
                 url: '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/top',
                 interceptor: cacheInterceptor
             },
-            comparisons: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/comparisons'},
             user: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user'},
             userUnsaved: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user', params:{draft: true, unsaved: true}, cache: false}
         }
@@ -103,100 +101,85 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
 /***** Controllers *****/
 module.controller(
     "AnswerWriteController",
-    ["$scope", "$log", "$location", "$routeParams", "AnswerResource", "ClassListResource", "$route",
-        "AssignmentResource", "TimerResource", "Toaster", "Authorize", "Session", "$timeout",
-        "answerAttachService", "AttachmentResource", "EditorOptions", "xAPI", "xAPIStatementHelper",
-    function ($scope, $log, $location, $routeParams, AnswerResource, ClassListResource, $route,
-        AssignmentResource, TimerResource, Toaster, Authorize, Session, $timeout,
-        answerAttachService, AttachmentResource, EditorOptions, xAPI, xAPIStatementHelper)
+    ["$scope", "$location", "$routeParams", "AnswerResource", "ClassListResource", "$route",
+        "AssignmentResource", "Toaster", "$timeout", "UploadValidator",
+        "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper", "resolvedData",
+    function ($scope, $location, $routeParams, AnswerResource, ClassListResource, $route,
+        AssignmentResource, Toaster, $timeout, UploadValidator,
+        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, resolvedData)
     {
-        $scope.courseId = $routeParams['courseId'];
-        var assignmentId = $routeParams['assignmentId'];
-        $scope.assignment = {};
-        $scope.answer = {};
-        $scope.preventExit = true; //user should be warned before leaving page by default
-        $scope.tracking = xAPI.generateTracking();
+        $scope.courseId = $routeParams.courseId;
+        $scope.assignmentId = $routeParams.assignmentId;
+        $scope.answerId = $routeParams.answerId || undefined;
 
+        $scope.course = resolvedData.course;
+        $scope.assignment = resolvedData.assignment;
+        $scope.answer = resolvedData.answer || {};
+        if ($scope.answer.file) {
+            $scope.answer.uploadedFile = true;
+        }
+        $scope.loggedInUserId = resolvedData.loggedInUser.id;
+        $scope.canManageAssignment = resolvedData.canManageAssignment;
+
+        $scope.method = $scope.answer.id ? 'edit' : 'create';
+        $scope.preventExit = true; //user should be warned before leaving page by default
+        $scope.UploadValidator = UploadValidator;
+        $scope.tracking = xAPI.generateTracking();
         $scope.editorOptions = xAPI.ckeditorContentTracking(EditorOptions.basic, function(duration) {
             xAPIStatementHelper.interacted_answer_solution(
                 $scope.answer, $scope.tracking.getRegistration(), duration
             );
         });
 
-        if ($route.current.method == "new") {
-            $scope.answer.draft = true;
-            $scope.answer.course_id = $scope.courseId;
-            $scope.answer.assignment_id = assignmentId;
-
-            AnswerResource.userUnsaved({'courseId': $scope.courseId, 'assignmentId': assignmentId}).$promise.then(
-                function (ret) {
-                    if (!ret.objects.length) {
-                        // if no answers found, create a new draft answer
-                        AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId}, {draft: true}).$promise.then(
-                            function (ret) {
-                                // set answer id to new answer id
-                                $scope.answer.id = ret.id;
-                            },
-                            function (ret) {
-                                // if answer period is not in session
-                                if (ret.status == '403' && 'error' in ret.data) {
-                                    Toaster.error(ret.data.error);
-                                } else {
-                                    Toaster.reqerror("Answer Load Failed.", ret);
-                                }
-                            }
-                        );
-                    } else {
-                        // draft found for user, use it
-                        $scope.answer.id = ret.objects[0].id;
+        if ($scope.method == "create") {
+            $scope.answer = {
+                draft: true,
+                course_id: $scope.courseId,
+                assignment_id: $scope.assignmentId
+            };
+            if (!resolvedData.answerUnsaved.objects.length) {
+                // if no answers found, create a new draft answer
+                AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, {draft: true}).$promise.then(
+                    function (ret) {
+                        // set answer id to new answer id
+                        $scope.answer.id = ret.id;
                     }
-                },
+                );
+            } else {
+                // draft found for user, use it
+                $scope.answer.id = resolvedData.answerUnsaved.objects[0].id;
+            }
+        }
+        if ($scope.canManageAssignment) {
+            // get list of users in the course
+            ClassListResource.get({'courseId': $scope.courseId}).$promise.then(
                 function (ret) {
-                    Toaster.reqerror("Unable To Retrieve Answer", ret);
+                    $scope.classlist = ret.objects;
                 }
             );
-        } else if ($route.current.method == "edit") {
-            $scope.answerId = $routeParams['answerId'];
-            AnswerResource.get({'courseId': $scope.courseId, 'assignmentId': assignmentId, 'answerId': $scope.answerId}).$promise.then(
-                function (ret) {
-                    $scope.answer = ret;
+            $scope.answer.user_id = $scope.loggedInUserId;
+        }
 
-                    if (ret.file) {
-                        $scope.answer.uploadedFile = ret.file
-                    }
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
-                }
+        if ($scope.method == "create" || !$scope.answer.draft) {
+            xAPIStatementHelper.initialize_assignment_question(
+                $scope.assignment, $scope.tracking.getRegistration()
+            );
+        } else {
+            xAPIStatementHelper.resume_assignment_question(
+                $scope.assignment, $scope.tracking.getRegistration()
             );
         }
 
-        var countDown = function() {
-            $scope.showCountDown = true;
-        };
-
-        Session.getUser().then(function(user) {
-            $scope.loggedInUserId = user.id;
-        });
-
-        Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL, $scope.courseId).then(function(canManageAssignment){
-            $scope.canManageAssignment = canManageAssignment;
-
-            if ($scope.canManageAssignment) {
-                // get list of users in the course
-                ClassListResource.get({'courseId': $scope.courseId}).$promise.then(
-                    function (ret) {
-                        $scope.classlist = ret.objects;
-                    },
-                    function (ret) {
-                        Toaster.reqerror("No Users Found For Course ID "+$scope.courseId, ret);
-                    }
-                );
-                Session.getUser().then(function(user) {
-                    $scope.answer.user_id = user.id
-                });
+        var due_date = new Date($scope.assignment.answer_end);
+        if (!$scope.canManageAssignment) {
+            var current_time = resolvedData.timer.date;
+            var trigger_time = due_date.getTime() - current_time  - 600000; //(10 mins)
+            if (trigger_time < 86400000) { //(1 day)
+                $timeout(function() {
+                    $scope.showCountDown = true;
+                }, trigger_time);
             }
-        });
+        }
 
         $scope.uploader = answerAttachService.getUploader();
         $scope.resetFileUploader = function() {
@@ -215,56 +198,13 @@ module.controller(
         });
 
         $scope.deleteFile = function(file) {
-            AttachmentResource.delete({'fileId': file.id}).$promise.then(
-                function (ret) {
-                    Toaster.success('Attachment deleted successfully');
-                    $scope.answer.file = null;
-                    $scope.answer.uploadedFile = false;
+            $scope.answer.file = null;
+            $scope.answer.uploadedFile = false;
 
-                    xAPIStatementHelper.deleted_answer_attachment(
-                        file, $scope.answer, $scope.tracking.getRegistration()
-                    );
-                },
-                function (ret) {
-                    Toaster.reqerror('Attachment deletion failed', ret);
-                }
+            xAPIStatementHelper.deleted_answer_attachment(
+                file, $scope.answer, $scope.tracking.getRegistration()
             );
         };
-
-        AssignmentResource.get({'courseId': $scope.courseId, 'assignmentId': assignmentId}).$promise.then(
-            function (ret) {
-                $scope.assignment = ret;
-
-                if ($route.current.method == "new" || !$scope.answer.draft) {
-                    xAPIStatementHelper.initialize_assignment_question(
-                        $scope.assignment, $scope.tracking.getRegistration()
-                    );
-                } else {
-                    xAPIStatementHelper.resume_assignment_question(
-                        $scope.assignment, $scope.tracking.getRegistration()
-                    );
-                }
-
-                var due_date = new Date($scope.assignment.answer_end);
-                if (!$scope.canManageAssignment) {
-                    TimerResource.get(
-                        function (ret) {
-                            var current_time = ret.date;
-                            var trigger_time = due_date.getTime() - current_time  - 600000; //(10 mins)
-                            if (trigger_time < 86400000) { //(1 day)
-                                $timeout(countDown, trigger_time);
-                            }
-                        },
-                        function (ret) {
-                            Toaster.reqerror("Unable to get the current time", ret);
-                        }
-                    );
-                }
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to load assignment.", ret);
-            }
-        );
 
         $scope.trackExited = function() {
             xAPIStatementHelper.exited_assignment_question(
@@ -287,31 +227,22 @@ module.controller(
             }
 
             $scope.answer.tracking = $scope.tracking.toParams();
-            AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': assignmentId}, $scope.answer).$promise.then(
+            AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
                 function (ret) {
                     $scope.submitted = false;
                     $scope.preventExit = false; //user has saved answer, does not need warning when leaving page
 
                     if (ret.draft) {
-                        Toaster.success("Saved Draft Successfully!", "Remember to submit your answer before the deadline.");
-                        $location.path('/course/' + $scope.courseId + '/assignment/' + assignmentId + '/answer/' + $scope.answer.id + '/edit');
+                        Toaster.success("Draft Saved", "Remember to submit your answer before the deadline.");
+                        $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/answer/' + $scope.answer.id + '/edit');
                     } else {
                         // if was a draft, show new success message
                         if (wasDraft) {
-                            Toaster.success("New Answer Posted!");
+                            Toaster.success("Answer Saved");
                         } else {
-                            Toaster.success("Answer Updated!");
+                            Toaster.success("Answer Updated");
                         }
-                        $location.path('/course/' + $scope.courseId + '/assignment/' +assignmentId);
-                    }
-                },
-                function (ret) {
-                    $scope.submitted = false;
-                    // if answer period is not in session
-                    if (ret.status == '403' && 'error' in ret.data) {
-                        Toaster.error(ret.data.error);
-                    } else {
-                        Toaster.reqerror("Answer Save Failed.", ret);
+                        $location.path('/course/' + $scope.courseId + '/assignment/' +$scope.assignmentId);
                     }
                 }
             );
@@ -323,9 +254,9 @@ module.controller(
 module.controller(
     "AnswerEditModalController",
     ["$scope", "AnswerResource", "Toaster", "xAPI", "xAPIStatementHelper",
-        "answerAttachService", "AttachmentResource", "EditorOptions", "$uibModalInstance",
+        "answerAttachService", "UploadValidator", "EditorOptions", "$uibModalInstance",
     function ($scope, AnswerResource, Toaster, xAPI, xAPIStatementHelper,
-        answerAttachService, AttachmentResource, EditorOptions, $uibModalInstance)
+        answerAttachService, UploadValidator, EditorOptions, $uibModalInstance)
     {
         //$scope.courseId
         //$scope.assignmentId
@@ -333,6 +264,7 @@ module.controller(
         $scope.answer = typeof($scope.answer) != 'undefined' ? $scope.answer : {};
         $scope.method = 'edit';
         $scope.modalInstance = $uibModalInstance;
+        $scope.UploadValidator = UploadValidator;
         $scope.tracking = xAPI.generateTracking();
         $scope.editorOptions =  xAPI.ckeditorContentTracking(EditorOptions.basic, function(duration) {
             xAPIStatementHelper.interacted_answer_solution(
@@ -340,16 +272,12 @@ module.controller(
             );
         });
 
-        AnswerResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId, 'answerId': $scope.answer.id})
-        .$promise.then(
+        AnswerResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId, 'answerId': $scope.answer.id}).$promise.then(
             function (ret) {
                 $scope.answer = ret;
                 if (ret.file) {
-                    $scope.answer.uploadedFile = ret.file
+                    $scope.answer.uploadedFile = true;
                 }
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
             }
         );
         xAPIStatementHelper.resume_assignment_question(
@@ -373,19 +301,11 @@ module.controller(
         });
 
         $scope.deleteFile = function(file) {
-            AttachmentResource.delete({'fileId': file.id}).$promise.then(
-                function (ret) {
-                    Toaster.success('Attachment deleted successfully');
-                    $scope.answer.file = null;
-                    $scope.answer.uploadedFile = false;
+            $scope.answer.file = null;
+            $scope.answer.uploadedFile = false;
 
-                    xAPIStatementHelper.deleted_answer_attachment(
-                        file, $scope.answer, $scope.tracking.getRegistration()
-                    );
-                },
-                function (ret) {
-                    Toaster.reqerror('Attachment deletion failed', ret);
-                }
+            xAPIStatementHelper.deleted_answer_attachment(
+                file, $scope.answer, $scope.tracking.getRegistration()
             );
         };
 
@@ -417,39 +337,37 @@ module.controller(
             AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
                 function (ret) {
                     $scope.answer = ret;
-                    $scope.submitted = false;
-                    Toaster.success("Answer Updated!");
+                    Toaster.success("Answer Updated");
                     $uibModalInstance.close($scope.answer);
-                },
-                function (ret) {
-                    $scope.submitted = false;
-                    Toaster.reqerror("Answer Save Failed.", ret);
                 }
-            );
+            ).finally(function() {
+                $scope.submitted = false;
+            });
         };
     }
 ]);
 
 module.controller(
     "ComparisonExampleModalController",
-    ["$scope", "AnswerResource", "Toaster",
-        "answerAttachService", "AttachmentResource", "EditorOptions", "$uibModalInstance",
-    function ($scope, AnswerResource, Toaster,
-        answerAttachService, AttachmentResource, EditorOptions, $uibModalInstance)
+    ["$scope", "AnswerResource", "Toaster", "UploadValidator",
+        "answerAttachService", "EditorOptions", "$uibModalInstance",
+    function ($scope, AnswerResource, Toaster, UploadValidator,
+        answerAttachService, EditorOptions, $uibModalInstance)
     {
         //$scope.courseId
         //$scope.assignmentId
         $scope.answer = typeof($scope.answer) != 'undefined' ? $scope.answer : {};
-        $scope.method = $scope.answer.id ? 'edit' : 'new';
+        $scope.method = $scope.answer.id ? 'edit' : 'create';
         $scope.modalInstance = $uibModalInstance;
         $scope.comparison_example = true;
+        $scope.UploadValidator = UploadValidator;
 
         $scope.editorOptions = EditorOptions.basic;
 
-        if ($scope.method == 'new') {
-            // if answer is new, prepopulate the file upload area if needed
+        if ($scope.method == 'create') {
+            // if answer is new, pre-populate the file upload area if needed
             if ($scope.answer.file) {
-                $scope.answer.uploadedFile = $scope.answer.file;
+                $scope.answer.uploadedFile = true;
             }
         } else if($scope.method == 'edit') {
             // refresh the answer if already exists
@@ -458,11 +376,8 @@ module.controller(
                 function (ret) {
                     $scope.answer = ret;
                     if (ret.file) {
-                        $scope.answer.uploadedFile = ret.file
+                        $scope.answer.uploadedFile = true;
                     }
-                },
-                function (ret) {
-                    Toaster.reqerror("Unable to retrieve answer "+answerId, ret);
                 }
             );
         }
@@ -471,16 +386,8 @@ module.controller(
         $scope.resetFileUploader = answerAttachService.reset();
 
         $scope.deleteFile = function(file) {
-            AttachmentResource.delete({'fileId': file.id}).$promise.then(
-                function (ret) {
-                    Toaster.success('Attachment deleted successfully');
-                    $scope.answer.file = null;
-                    $scope.answer.uploadedFile = false;
-                },
-                function (ret) {
-                    Toaster.reqerror('Attachment deletion failed', ret);
-                }
-            );
+            $scope.answer.file = null;
+            $scope.answer.uploadedFile = false;
         };
 
         $scope.answerSubmit = function () {
@@ -496,7 +403,7 @@ module.controller(
                 $scope.answer.file_id = null;
             }
 
-            if ($scope.method == 'new') {
+            if ($scope.method == 'create') {
                 // save the uploaded file info in case modal is reopened
                 $uibModalInstance.close($scope.answer);
             } else {
@@ -504,15 +411,12 @@ module.controller(
                 AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
                     function (ret) {
                         $scope.answer = ret;
-                        $scope.submitted = false;
-                        Toaster.success("Practice Answer Updated!");
+                        Toaster.success("Practice Answer Updated");
                         $uibModalInstance.close($scope.answer);
-                    },
-                    function (ret) {
-                        $scope.submitted = false;
-                        Toaster.reqerror("Practice Answer Save Failed.", ret);
                     }
-                );
+                ).finally(function() {
+                    $scope.submitted = false;
+                });
             }
         };
     }

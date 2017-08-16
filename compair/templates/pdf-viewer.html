@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+<html ng-app="app" ng-controller="AppCtrl">
+    <head>
+        <title>PDF.js</title>
+        <script src="{{ pdf_lib_folder }}/pdf.js"></script>
+        <link rel="stylesheet" href="{{ pdf_lib_folder }}/viewer.css" />
+
+        <style>
+            html, body {
+                height: 100%;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            .pdfjs {
+                height: 100%;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="pdfjs">
+            {{ include_raw("static/viewer.html") }}
+        </div>
+
+        <script>
+            window.PDFJS.webViewerLoad();
+        </script>
+    </body>
+</html>

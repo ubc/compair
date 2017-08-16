@@ -8,12 +8,28 @@ var expect = chai.expect;
 
 var viewUserStepDefinitionsWrapper = function () {
 
+    this.When("I toggle the user notification settings option", function() {
+        return element(by.model("user.email_notification_method")).click()
+    });
+
+    this.Then("I should see the notification settings set to off", function() {
+        return expect(element(by.model("user.email_notification_method")).isSelected()).to.eventually.equal(false);
+    });
+
     this.Then("I should see the edit profile button", function () {
         return expect(element(by.css("#edit-profile-btn")).isPresent()).to.eventually.equal(true);
     });
 
     this.Then("I should not see the edit profile button", function () {
         return expect(element(by.css("#edit-profile-btn")).isPresent()).to.eventually.equal(false);
+    });
+
+    this.Then("I should see the edit notification settings option", function () {
+        return expect(element(by.css("#user_email_notification_method")).isPresent()).to.eventually.equal(true);
+    });
+
+    this.Then("I should not see the edit notification settings option", function () {
+        return expect(element(by.css("#user_email_notification_method")).isPresent()).to.eventually.equal(false);
     });
 
     this.Then("I should see root's profile", {timeout: 10 * 1000}, function () {
@@ -24,7 +40,7 @@ var viewUserStepDefinitionsWrapper = function () {
         expect(element(by.css("#user_username")).getText()).to.eventually.equal("root");
         expect(element(by.css("#user_fullname")).getText()).to.eventually.equal("JaNy bwsV");
         expect(element(by.css("#user_displayname")).getText()).to.eventually.equal("root");
-        return expect(element(by.css("#user_email")).getText()).to.eventually.equal("");
+        return expect(element(by.css("#user_email")).getText()).to.eventually.equal("admin@exmple.com");
     });
 
     this.Then("I should see First Instructor's profile", {timeout: 10 * 1000}, function () {

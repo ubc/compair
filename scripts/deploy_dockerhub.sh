@@ -17,6 +17,9 @@ else
     #docker tag $REPO $REPO:travis-$TRAVIS_BUILD_NUMBER-$TRAVIS_COMMIT
 fi
 
+# clean tags
+TAG=${TAG//[^a-zA-Z0-9-\._]/}
+
 docker login -u $DOCKER_USER -p $DOCKER_PASS
 docker tag $REPO $REPO:$TAG
 docker push $REPO:$TAG

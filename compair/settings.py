@@ -28,12 +28,15 @@ PERSISTENT_BASE = os.getcwd() + '/persistent'
 REPORT_FOLDER = PERSISTENT_BASE + '/report'
 UPLOAD_FOLDER = PERSISTENT_BASE + '/tmp'
 ATTACHMENT_UPLOAD_FOLDER = PERSISTENT_BASE + '/attachment'
+ATTACHMENT_UPLOAD_LIMIT = 262144000 #1024 * 1024 * 250 -> max 250MB
 
 # file upload options
-ATTACHMENT_ALLOWED_EXTENSIONS = {'pdf','mp3','mp4','jpg','jpeg','png'}
+ATTACHMENT_ALLOWED_EXTENSIONS = {'pdf','mp3','mp4','webm','jpg','jpeg','png'}
 UPLOAD_ALLOWED_EXTENSIONS = {'csv'}
 
 PASSLIB_CONTEXT = 'default'
+
+ERROR_404_HELP = False
 
 # make the session valid for a day
 PERMANENT_SESSION_LIFETIME = 3600 * 24
@@ -89,3 +92,11 @@ LTI_LOGIN_ENABLED = True
 CAS_SERVER = 'http://localhost:8088'
 CAS_AUTH_PREFIX = '/cas'
 CAS_USE_SAML = False
+
+# kaltura integration defaults
+KALTURA_ENABLED = False
+KALTURA_VIDEO_EXTENSIONS = {'mp4', 'webm', 'mov'}
+KALTURA_AUDIO_EXTENSIONS = {'wav', 'mp3'}
+
+# Mail
+MAIL_NOTIFICATION_ENABLED = False

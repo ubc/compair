@@ -17,6 +17,14 @@ h6 {
   font-weight: bold;
 }
 
+modal-cancel-button + h1 {
+  margin-top: 0;
+}
+
+.rich-content-attachments h5 {
+  margin-top: 15px;
+}
+
 /* code highlighting blocks shouldn't have boxes around them */
 pre {
     background-color: transparent;
@@ -92,6 +100,24 @@ input[type=checkbox] {
 
 }
 
+/* increase emphasis for certain buttons */
+.btn-success,
+.btn-info {
+  font-weight: bold;
+}
+.btn-success {
+  border-color: #3b933b;
+}
+.btn-info {
+  border-color: #27a4c6;
+}
+
+/* labels to look less like buttons */
+.label {
+  border-radius: 1em;
+  font-weight: normal;
+}
+
 /* fix placement of bootstrap form feedback icons */
 .has-feedback .form-control-feedback {
   top: 25px;
@@ -119,6 +145,32 @@ dt {
   }
 
 }//closes sub-nav
+
+/* class for collapsible content */
+.collapsible-content {
+
+  margin: 1em 0;
+  padding-left: 1.5em;
+  border-left: 2px solid @border-gray;
+
+}//closes collapsible-content
+
+/* attachments similar styling to collapsible */
+.each-attachment-content {
+
+  &:extend(.collapsible-content);
+  border-left: 1px dashed @link-blue;
+
+  .btn {
+    margin: .5em .5em .5em 0;
+  }
+
+}//closes each-attachment-content
+
+/* additional responsize embed sizes */
+.embed-responsive-pdf {
+  padding-bottom: 100%
+}
 
 /* class for filters */
 .filter {
@@ -171,7 +223,7 @@ dt {
   }
 
   /* assignment details */
-  div {
+  .assignment-desc {
     font-size: 1.1em;
   }
 
@@ -243,6 +295,17 @@ dt {
   }//closes ng-leave
 
 }//closes am-fade
+
+/* for hiding sensitive info */
+.spoiler {
+    background-color: black;
+    color: black;
+}
+
+.spoiler:hover {
+    background-color: transparent;
+    color: inherit;
+}
 
 /* for ie9 */
 .ie9 .search-courses:before {

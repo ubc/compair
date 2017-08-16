@@ -1,21 +1,22 @@
 """
     Report Generator
 """
-import csv
 
 from flask_script import Manager
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
+import unicodecsv as csv
 
-from compair.models import Score, Answer, Criterion, Comparison, \
-    Course, User, UserCourse
+from compair.models import AnswerScore, AnswerCriterionScore, Answer, \
+    Criterion, Comparison, Course, User, UserCourse
 
 manager = Manager(usage="Generate Reports")
 
-
+# TODO: Fix generate report
+"""
 @manager.option('-c', '--course', dest='course_id', help='Specify a course ID to generate report from.')
 def create(course_id):
-    """Creates report"""
+    #Creates report
     course_name = ''
     if course_id:
         course_name = Course.query.with_entities(Course.name).filter_by(id=course_id).scalar()
@@ -39,7 +40,7 @@ def create(course_id):
     scores = query.all()
 
     write_csv(
-        course_name + 'scores.csv',
+        course_name + ' scores.csv',
         ['User Id', 'Assignment Id', 'Answer Id', 'Criterion Id', 'Criterion', 'Score'],
         scores
     )
@@ -92,7 +93,7 @@ def create(course_id):
 
 
 def write_csv(filename, headers, data):
-    with open(filename, 'wt') as csvfile:
+    with open(filename, 'wb') as csvfile:
         report_writer = csv.writer(
             csvfile, delimiter=',',
             quotechar='"', quoting=csv.QUOTE_MINIMAL
@@ -100,3 +101,4 @@ def write_csv(filename, headers, data):
         report_writer.writerow(headers)
         for d in data:
             report_writer.writerow(d)
+"""

@@ -66,6 +66,7 @@ module.exports.buildStorageFixture = function(storageFixture) {
         assignment_comparison_examples: {},
         criteria: {},
         groups: [],
+        lti_consumers: {},
         user_search_results: {
             "objects": [],
             "page":1,
@@ -89,11 +90,13 @@ module.exports.buildStorageFixture = function(storageFixture) {
 };
 
 module.exports.httpbackendMock = function(storageFixtures) {
-    angular.module('MyApp.services.mock', []);
+    var myApp = angular.module("myApp");
+    myApp.requires.push('ngMockE2E');
+
     angular.module('httpBackEndMock', ['ngMockE2E'])
     .factory('storageFixture', function() {
         var fixtures = storageFixtures;
-        var currentFixture = fixtures['admin/default_fixture'];
+        var currentFixture = {};
 
         return {
             setCurrentFixture: function(fixtureName) {
@@ -104,7 +107,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
             }
         }
     })
-    .run(function($httpBackend, storageFixture) {
+    .run(["$httpBackend", "storageFixture", function($httpBackend, storageFixture) {
         var generateNewId = function(num) {
             var id = ""+num;
             return id + "zabcABC123-abcABC123_Z".substr(id.length);
@@ -163,7 +166,8 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "modified": "Sun, 11 Jan 2015 02:55:59 -0000",
                 "last_online": "Sun, 11 Jan 2015 02:55:59 -0000",
                 "system_role": null,
-                "uses_compair_login": true
+                "uses_compair_login": true,
+                "email_notification_method": 'enable'
             };
 
             newUser = angular.merge({}, newUser, data);
@@ -183,8 +187,25 @@ module.exports.httpbackendMock = function(storageFixtures) {
         });
 
         // search for user by text
-        $httpBackend.whenGET(/\/api\/users\?search\=.*$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenGET(/\/api\/users\?.*search\=.*$/).respond(function(method, url, data, headers) {
             return [200, storageFixture.storage().user_search_results, {}];
+        });
+
+        // get users
+        $httpBackend.whenGET(/\/api\/users\?.*$/).respond(function(method, url, data, headers) {
+            var users = _.values(storageFixture.storage().users);
+
+            users = _.sortBy(users, function(user) {
+                return user.firstname;
+            });
+
+            return [200, {
+                "objects": users,
+                "page": 1,
+                "pages": 1,
+                "total": users.length,
+                "per_page": 20
+            }, {}]
         });
 
         // get edit button availability
@@ -233,6 +254,13 @@ module.exports.httpbackendMock = function(storageFixtures) {
             var editId = url.split('/').pop();
             storageFixture.storage().users[editId] = data;
             return [200, data, {}];
+        });
+
+        // update user notification settings
+        $httpBackend.whenPOST(/\/api\/users\/[A-Za-z0-9_-]{22}\/notification$/).respond(function(method, url, data, headers) {
+            var editId = url.split('/')[3];
+            storageFixture.storage().users[editId].email_notification_method = data.email_notification_method;
+            return [200, storageFixture.storage().users[editId], {}];
         });
 
         // update user password
@@ -286,7 +314,65 @@ module.exports.httpbackendMock = function(storageFixtures) {
             }, {}]
         });
 
-        // get current user courses
+        // get user courses (fake search)
+        $httpBackend.whenGET(/\/api\/users\/[A-Za-z0-9_-]{22}\/courses\?.*search=CHEM.*$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/')[3];
+            var courses = [];
+
+            if (storageFixture.storage().user_courses[userId]) {
+                angular.forEach(storageFixture.storage().user_courses[userId], function(userCourseInfo) {
+
+                    var course_copy = angular.copy(storageFixture.storage().courses[userCourseInfo.courseId]);
+                    course_copy.course_role = userCourseInfo.courseRole;
+                    course_copy.group_name = userCourseInfo.groupName;
+                    if (course_copy.name.indexOf("CHEM") !== -1) {
+                        courses.push(course_copy)
+                    }
+                });
+            }
+
+            courses = _.sortBy(courses, function(course) {
+                return course.name;
+            });
+
+            return [200, {
+                "objects": courses,
+                "page": 1,
+                "pages": 1,
+                "total": courses.length,
+                "per_page": 20
+            }, {}]
+        });
+
+        // get user courses
+        $httpBackend.whenGET(/\/api\/users\/[A-Za-z0-9_-]{22}\/courses\?.*$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/')[3];
+            var courses = [];
+
+            if (storageFixture.storage().user_courses[userId]) {
+                angular.forEach(storageFixture.storage().user_courses[userId], function(userCourseInfo) {
+
+                    var course_copy = angular.copy(storageFixture.storage().courses[userCourseInfo.courseId]);
+                    course_copy.course_role = userCourseInfo.courseRole;
+                    course_copy.group_name = userCourseInfo.groupName;
+                    courses.push(course_copy)
+                });
+            }
+
+            courses = _.sortBy(courses, function(course) {
+                return course.name;
+            });
+
+            return [200, {
+                "objects": courses,
+                "page": 1,
+                "pages": 1,
+                "total": courses.length,
+                "per_page": 20
+            }, {}]
+        });
+
+        // get current user courses status
         $httpBackend.whenGET(/\/api\/users\/courses\/status\?.*$/).respond(function(method, url, data, headers) {
             var courses = _.values(storageFixture.storage().courses);
 
@@ -310,7 +396,6 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "name": data.name,
                 "year": data.year,
                 "term": data.term,
-                "description": data.description,
                 "available": true,
                 "start_date": data.start_date,
                 "end_date": data.end_date,
@@ -451,11 +536,18 @@ module.exports.httpbackendMock = function(storageFixtures) {
             return [200, returnData, {}];
         });
 
-        // drop user from coruse
+        // drop user from course
         $httpBackend.whenDELETE(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
             var userId = url.split('/').pop();
 
-            storageFixture.storage().user_courses[userId] = [];
+            if (storageFixture.storage().user_courses[userId]) {
+                angular.forEach(storageFixture.storage().user_courses[userId], function(userCourseInfo, index) {
+                    if (userCourseInfo.courseId == courseId) {
+                        storageFixture.storage().user_courses[userId].splice(index, 1);
+                    }
+                });
+            };
 
             var returnData = {
                 fullname: storageFixture.storage().users[userId].fullname,
@@ -551,6 +643,12 @@ module.exports.httpbackendMock = function(storageFixtures) {
             return [200, { 'objects': storageFixture.storage().criteria }, {}];
         });
 
+        $httpBackend.whenGET(/\/api\/criteria\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            var id = url.split('/').pop();
+
+            return [200, storageFixture.storage().criteria[id], {}];
+        });
+
         // create new criterion
         $httpBackend.whenPOST('/api/criteria').respond(function(method, url, data, headers) {
             data = JSON.parse(data);
@@ -631,9 +729,13 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "compared": false,
                 "compare_period": false,
                 "modified": "Wed, 20 Apr 2016 21:50:31 -0000",
+                "peer_feedback_prompt": null,
                 "enable_self_evaluation": false,
                 "content": null,
-                "file": [],
+                "file": null,
+                "answer_grade_weight": 1,
+                "comparison_grade_weight": 1,
+                "self_evaluation_grade_weight": 1,
                 "user": angular.copy(currentUser),
                 "pairing_algorithm": null,
                 "educators_can_compare": null,
@@ -826,6 +928,59 @@ module.exports.httpbackendMock = function(storageFixtures) {
 
         // End Assignments
 
+
+        // LTI Consumers
+
+        // get lti consumers
+        $httpBackend.whenGET(/\/api\/lti\/consumers\?.*$/).respond(function(method, url, data, headers) {
+            var consumers = _.values(storageFixture.storage().lti_consumers);
+
+            return [200, {
+                "objects": consumers,
+                "page": 1,
+                "pages": 1,
+                "total": consumers.length,
+                "per_page": 20
+            }, {}]
+        });
+
+        // create new lti consumer
+        $httpBackend.whenPOST('/api/lti/consumers').respond(function(method, url, data, headers) {
+            data = JSON.parse(data);
+
+            var newConsumer = {
+                "id": generateNewId(_.keys(storageFixture.storage().lti_consumers).length + 1),
+                "oauth_consumer_key": data.oauth_consumer_key,
+                "oauth_consumer_secret": data.oauth_consumer_secret,
+                "active": true,
+                "created": "Mon, 18 Apr 2016 17:38:23 -0000",
+                "modified": "Mon, 18 Apr 2016 17:38:23 -0000"
+            }
+
+            storageFixture.storage().lti_consumers[newConsumer.id] = newConsumer;
+
+            return [200, newConsumer, {}];
+        });
+
+        // get lti consumer by id
+        $httpBackend.whenGET(/\/api\/lti\/consumers\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            var id = url.split('/').pop();
+            return [200, storageFixture.storage().lti_consumers[id], {}];
+        });
+
+        // edit lti consumer by id
+        $httpBackend.whenPOST(/\/api\/lti\/consumers\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            data = JSON.parse(data);
+
+            var id = url.split('/').pop();
+            storageFixture.storage().lti_consumers[id] = angular.merge(storageFixture.storage().lti_consumers[id], data);
+
+            return [200, storageFixture.storage().lti_consumers[id], {}];
+        });
+
+        // END LTI Consumers
+
+
         // Statements
         $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {
             return [200, { 'success':true }, {}];
@@ -834,7 +989,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
         // End Statements
 
         $httpBackend.whenGET(/.*/).passThrough();
-    });
+    }]);
 
     angular.module('ubc.ctlt.compair.common.xapi')
     .run( ['$location', 'xAPISettings', function($location, xAPISettings) {

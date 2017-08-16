@@ -57,9 +57,6 @@ elif "DATABASE" in config and 'DATABASE_URI' not in config:
 elif "DATABASE_URI" in config:
     config['SQLALCHEMY_DATABASE_URI'] = config['DATABASE_URI']
 
-if os.environ.get('SQLALCHEMY_POOL_RECYCLE'):
-    config['SQLALCHEMY_POOL_RECYCLE'] = int(os.environ.get('SQLALCHEMY_POOL_RECYCLE'))
-
 # clear DATABASE value
 if 'DATABASE' in config:
     del config['DATABASE']
@@ -72,6 +69,10 @@ env_overridables = [
     'XAPI_APP_BASE_URL',
     'LRS_STATEMENT_ENDPOINT', 'LRS_AUTH', 'LRS_USERNAME', 'LRS_PASSWORD',
     'LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER', 'LRS_ACTOR_ACCOUNT_CAS_HOMEPAGE',
+    'KALTURA_SERVICE_URL', 'KALTURA_PARTNER_ID', 'KALTURA_USER_ID',
+    'KALTURA_SECRET', 'KALTURA_PLAYER_ID',
+    'MAIL_SERVER', 'MAIL_DEBUG', 'MAIL_USERNAME', 'MAIL_PASSWORD',
+    'MAIL_DEFAULT_SENDER', 'MAIL_SUPPRESS_SEND',
     'GA_TRACKING_ID'
 ]
 
@@ -79,7 +80,15 @@ env_bool_overridables = [
     'APP_LOGIN_ENABLED', 'CAS_LOGIN_ENABLED', 'LTI_LOGIN_ENABLED',
     'CAS_USE_SAML', 'DEMO_INSTALLATION',
     'CELERY_ALWAYS_EAGER', 'XAPI_ENABLED', 'LRS_ACTOR_ACCOUNT_USE_CAS',
+    'KALTURA_ENABLED',
+    'MAIL_NOTIFICATION_ENABLED', 'MAIL_USE_TLS', 'MAIL_USE_SSL', 'MAIL_ASCII_ATTACHMENTS',
     'ENFORCE_SSL'
+]
+
+env_int_overridables = [
+    'SQLALCHEMY_POOL_RECYCLE',
+    'ATTACHMENT_UPLOAD_LIMIT',
+    'MAIL_PORT', 'MAIL_MAX_EMAILS'
 ]
 
 for env in env_overridables:
@@ -90,7 +99,12 @@ for env in env_bool_overridables:
     if os.environ.get(env) != None:
         config[env] = strtobool(os.environ.get(env))
 
+for env in env_int_overridables:
+    if os.environ.get(env) != None:
+        config[env] = int(os.environ.get(env))
 
+# KALTURA_ATTACHMENT_EXTENSIONS is the combination of both KALTURA_VIDEO_EXTENSIONS and KALTURA_AUDIO_EXTENSIONS
+config['KALTURA_ATTACHMENT_EXTENSIONS'] = config['KALTURA_VIDEO_EXTENSIONS'] | config['KALTURA_AUDIO_EXTENSIONS']
 # force cas login to be disabled when demo installation
 if config['DEMO_INSTALLATION'] == True:
     config['APP_LOGIN_ENABLED'] = True

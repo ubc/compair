@@ -19,8 +19,9 @@ import csv
 import os
 import random
 import math
+import unicodecsv as csv
 
-from compair.algorithms import ComparisonPair, ScoredObject
+from compair.algorithms import ComparisonPair, ScoredObject, ComparisonWinner
 from compair.algorithms.score import calculate_score_1vs1
 from compair.algorithms.pair import generate_pair
 from compair.models import PairingAlgorithm, ScoringAlgorithm
@@ -52,8 +53,8 @@ CLOSELY_MATCHED_ERRORS = lambda value1, value2: 0.5 + (abs(value1-value2) / NUMB
 ROUNDS_TO_GIVE_INCORRECT_SELECTION = []
 
 def select_winner(round, student_key, key1, key2):
-    correct_answer = key1 if key1 > key2 else key2
-    incorrect_answer = key2 if key1 > key2 else key1
+    correct_answer = ComparisonWinner.key1 if key1 > key2 else ComparisonWinner.key2
+    incorrect_answer = ComparisonWinner.key2 if key1 > key2 else ComparisonWinner.key1
 
     if round in ROUNDS_TO_GIVE_INCORRECT_SELECTION:
         return incorrect_answer
@@ -207,8 +208,8 @@ for pairing_package_name in pairing_packages:
                     )
                     key1 = comparison_pair.key1
                     key2 = comparison_pair.key2
-                    winning_key = select_winner(round, student['key'], key1, key2)
-                    comparison_pair = comparison_pair._replace(winning_key=winning_key)
+                    winner = select_winner(round, student['key'], key1, key2)
+                    comparison_pair = comparison_pair._replace(winner=winner)
 
                     comparisons.append(comparison_pair)
                     student['comparisons_completed'].append(comparison_pair)
@@ -223,7 +224,7 @@ for pairing_package_name in pairing_packages:
                         package_name=scoring_package_name,
                         key1_scored_object=answers[index1],
                         key2_scored_object=answers[index2],
-                        winning_key=winning_key,
+                        winner=winner,
                         other_comparison_pairs=comparisons
                     )
                     answers[index1] = result1

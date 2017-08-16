@@ -32,16 +32,23 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379
       #- GA_TRACKING_ID=12345
       - ENFORCE_SSL=0
+      - MAIL_NOTIFICATION_ENABLED=1
+      - MAIL_SERVER=mail
+      - MAIL_PORT=1025
+      - MAIL_USERNAME=compair
+      - MAIL_PASSWORD=compair
+      - MAIL_DEFAULT_SENDER=compair@example.com
     volumes:
       - .:/code
       - ./.data/persistent:/code/persistent
     depends_on:
       - db
       - redis
+      - mail
   worker: &worker
     <<: *app
-    command: celery worker -A celery_worker.celery --loglevel=DEBUG
-    environment: &worker_env
+    command: celery worker --app=celery_worker.celery --loglevel=DEBUG
+    environment:
       - DB_DRIVER=mysql+pymysql
       - DB_USERNAME=compair
       - DB_PASSWORD=compair
@@ -53,9 +60,15 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379
       - C_FORCE_ROOT=1
       - ENFORCE_SSL=0
+      - MAIL_NOTIFICATION_ENABLED=1
+      - MAIL_SERVER=mail
+      - MAIL_PORT=1025
+      - MAIL_USERNAME=compair
+      - MAIL_PASSWORD=compair
+      - MAIL_DEFAULT_SENDER=compair@example.com
   worker_scheduler:
     <<: *worker
-    command: celery beat -A celery_worker.celery --loglevel=DEBUG
+    command: celery beat --app=celery_worker.celery --loglevel=DEBUG
   web:
     image: nginx:1.11
     volumes:
@@ -65,3 +78,14 @@ services:
       - "8080:80"
     depends_on:
       - app
+  worker_monitor:
+    image: mher/flower
+    command: flower --port=5555 --broker=redis://redis:6379
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+  mail:
+    image: mailhog/mailhog:v1.0.0
+    ports:
+      - "8025:8025"

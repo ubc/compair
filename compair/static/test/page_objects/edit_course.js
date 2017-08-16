@@ -1,6 +1,6 @@
 var EditCoursePage = function() {
     this.getLocation = function(courseId) {
-        return 'course/' + courseId + '/configure';
+        return 'course/' + courseId + '/edit';
     };
 };
 

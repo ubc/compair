@@ -14,7 +14,6 @@ from alembic import op
 import sqlalchemy as sa
 
 from compair.models import convention
-from sqlalchemy.dialects import mysql
 
 def upgrade():
     with op.batch_alter_table('user', naming_convention=convention) as batch_op:

@@ -1,61 +1,74 @@
-from flask import Blueprint, current_app, abort, session as sess
+from flask import Blueprint, current_app, session as sess
 from bouncer.constants import MANAGE, EDIT, CREATE, READ
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from flask_login import login_required, current_user
 from sqlalchemy.orm import load_only
-from sqlalchemy import exc, asc, or_, and_, func
+from sqlalchemy import exc, asc, or_, and_, func, desc, asc
+from six import text_type
 
 from . import dataformat
 from compair.authorization import is_user_access_restricted, require, allow
-from compair.core import db, event
+from compair.core import db, event, abort
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.models import User, SystemRole, Course, UserCourse, CourseRole, \
     Assignment, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
-    Answer, Comparison, AnswerComment, AnswerCommentType
+    Answer, Comparison, AnswerComment, AnswerCommentType, EmailNotificationMethod
 from compair.api.login import authenticate
 
 user_api = Blueprint('user_api', __name__)
 
-def non_blank_str(value):
+def non_blank_text(value):
     if value is None:
         return None
     else:
-        return None if str(value).strip() == "" else str(value)
+        return None if text_type(value).strip() == "" else text_type(value)
 
 new_user_parser = RequestParser()
-new_user_parser.add_argument('username', type=non_blank_str, required=False)
-new_user_parser.add_argument('student_number', type=non_blank_str)
-new_user_parser.add_argument('system_role', type=str, required=True)
-new_user_parser.add_argument('firstname', type=str, required=True)
-new_user_parser.add_argument('lastname', type=str, required=True)
-new_user_parser.add_argument('displayname', type=str, required=True)
-new_user_parser.add_argument('email', type=str)
-new_user_parser.add_argument('password', type=str, required=False)
+new_user_parser.add_argument('username', type=non_blank_text, required=False)
+new_user_parser.add_argument('student_number', type=non_blank_text)
+new_user_parser.add_argument('system_role', required=True)
+new_user_parser.add_argument('firstname', required=True)
+new_user_parser.add_argument('lastname', required=True)
+new_user_parser.add_argument('displayname', required=True)
+new_user_parser.add_argument('email')
+new_user_parser.add_argument('email_notification_method')
+new_user_parser.add_argument('password', required=False)
 
 existing_user_parser = RequestParser()
-existing_user_parser.add_argument('id', type=str, required=True)
-existing_user_parser.add_argument('username', type=non_blank_str, required=False)
-existing_user_parser.add_argument('student_number', type=non_blank_str)
-existing_user_parser.add_argument('system_role', type=str, required=True)
-existing_user_parser.add_argument('firstname', type=str, required=True)
-existing_user_parser.add_argument('lastname', type=str, required=True)
-existing_user_parser.add_argument('displayname', type=str, required=True)
-existing_user_parser.add_argument('email', type=str)
+existing_user_parser.add_argument('id', required=True)
+existing_user_parser.add_argument('username', type=non_blank_text, required=False)
+existing_user_parser.add_argument('student_number', type=non_blank_text)
+existing_user_parser.add_argument('system_role', required=True)
+existing_user_parser.add_argument('firstname', required=True)
+existing_user_parser.add_argument('lastname', required=True)
+existing_user_parser.add_argument('displayname', required=True)
+existing_user_parser.add_argument('email')
+existing_user_parser.add_argument('email_notification_method')
+
+update_notification_settings_parser = RequestParser()
+update_notification_settings_parser.add_argument('email_notification_method', required=True)
 
 update_password_parser = RequestParser()
-update_password_parser.add_argument('oldpassword', type=str, required=False)
-update_password_parser.add_argument('newpassword', type=str, required=True)
+update_password_parser.add_argument('oldpassword', required=False)
+update_password_parser.add_argument('newpassword', required=True)
 
 user_list_parser = pagination_parser.copy()
-user_list_parser.add_argument('search', type=str, required=False, default=None)
-user_list_parser.add_argument('ids', type=str, required=False, default=None)
+user_list_parser.add_argument('search', required=False, default=None)
+user_list_parser.add_argument('orderBy', required=False, default=None)
+user_list_parser.add_argument('reverse', type=bool, default=False)
+user_list_parser.add_argument('ids', required=False, default=None)
 
 user_course_list_parser = pagination_parser.copy()
-user_course_list_parser.add_argument('search', type=str, required=False, default=None)
+user_course_list_parser.add_argument('search', required=False, default=None)
+
+user_id_course_list_parser = pagination_parser.copy()
+user_id_course_list_parser.add_argument('search', required=False, default=None)
+user_id_course_list_parser.add_argument('orderBy', required=False, default=None)
+user_id_course_list_parser.add_argument('reverse', type=bool, default=False)
 
 user_course_status_list_parser = RequestParser()
-user_course_status_list_parser.add_argument('ids', type=str, required=True, default=None)
+user_course_status_list_parser.add_argument('ids', required=True, default=None)
 
 # events
 on_user_modified = event.signal('USER_MODIFIED')
@@ -66,16 +79,26 @@ on_user_course_get = event.signal('USER_COURSE_GET')
 on_user_course_status_get = event.signal('USER_COURSE_STATUS_GET')
 on_teaching_course_get = event.signal('USER_TEACHING_COURSE_GET')
 on_user_edit_button_get = event.signal('USER_EDIT_BUTTON_GET')
+on_user_notifications_update = event.signal('USER_NOTIFICATIONS_UPDATE')
 on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
 
-def check_valid_system_role(system_role):
+def check_valid_system_role(system_role, title=None):
     system_roles = [
         SystemRole.sys_admin.value,
         SystemRole.instructor.value,
         SystemRole.student.value
     ]
     if system_role not in system_roles:
-        abort(400)
+        abort(400, title=title, message="Please select a valid system role from the list provided.")
+
+
+def check_valid_email_notification_method(email_notification_method, title=None):
+    email_notification_methods = [
+        EmailNotificationMethod.enable.value,
+        EmailNotificationMethod.disable.value
+    ]
+    if email_notification_method not in email_notification_methods:
+        abort(400, title=title, message="Please select a valid email notification method from the list provided.")
 
 # /user_uuid
 class UserAPI(Resource):
@@ -96,22 +119,23 @@ class UserAPI(Resource):
         user = User.get_by_uuid_or_404(user_uuid)
 
         if is_user_access_restricted(user):
-            return {'error': "Sorry, you don't have permission for this action."}, 403
+            abort(403, title="Account Not Updated", message="Your system role does not allow you to update this account.")
 
         params = existing_user_parser.parse_args()
 
         # make sure the user id in the url and the id matches
         if params['id'] != user_uuid:
-            return {"error": "User id does not match URL."}, 400
+            abort(400, title="Account Not Updated",
+                message="The account's ID does not match the URL, which is required in order to update the account.")
 
         # only update username if user uses compair login method
         if user.uses_compair_login:
             username = params.get("username")
             if username == None:
-                return {"error": "Missing required parameter: username."}, 400
+                abort(400, title="Account Not Updated", message="The required field username is missing.")
             username_exists = User.query.filter_by(username=username).first()
             if username_exists and username_exists.id != user.id:
-                return {"error": "This username already exists. Please pick another."}, 409
+                abort(409, title="Account Not Updated", message="This username already exists. Please pick another.")
 
             user.username = username
         elif allow(MANAGE, user):
@@ -120,14 +144,14 @@ class UserAPI(Resource):
             if username:
                 username_exists = User.query.filter_by(username=username).first()
                 if username_exists and username_exists.id != user.id:
-                    return {"error": "This username already exists. Please pick another."}, 409
+                    abort(409, title="Account Not Updated", message="This username already exists. Please pick another.")
             user.username = username
         else:
             user.username = None
 
         if allow(MANAGE, user):
             system_role = params.get("system_role", user.system_role.value)
-            check_valid_system_role(system_role)
+            check_valid_system_role(system_role, title="Account Not Updated")
             user.system_role = SystemRole(system_role)
 
         # only students should have student numbers
@@ -135,7 +159,7 @@ class UserAPI(Resource):
             student_number = params.get("student_number", user.student_number)
             student_number_exists = User.query.filter_by(student_number=student_number).first()
             if student_number is not None and student_number_exists and student_number_exists.id != user.id:
-                return {"error": "This student number already exists. Please pick another."}, 409
+                abort(409, title="Account Not Updated", message="This student number already exists. Please pick another.")
             else:
                 user.student_number = student_number
         else:
@@ -146,6 +170,11 @@ class UserAPI(Resource):
         user.displayname = params.get("displayname", user.displayname)
 
         user.email = params.get("email", user.email)
+
+        email_notification_method = params.get("email_notification_method")
+        check_valid_email_notification_method(email_notification_method, title="Account Not Updated")
+        user.email_notification_method = EmailNotificationMethod(email_notification_method)
+
         changes = get_model_changes(user)
 
         restrict_user = not allow(EDIT, user)
@@ -159,8 +188,7 @@ class UserAPI(Resource):
                 data={'id': user.id, 'changes': changes})
         except exc.IntegrityError:
             db.session.rollback()
-            current_app.logger.error("Failed to edit user. Duplicate.")
-            return {'error': 'A user with the same identifier already exists.'}, 409
+            abort(409, title="Account Not Updated", message="A user with the same identifier already exists.")
 
         return marshal(user, dataformat.get_user(restrict_user))
 
@@ -174,8 +202,23 @@ class UserListAPI(Resource):
 
         query = User.query
         if params['search']:
-            search = '%{}%'.format(params['search'])
-            query = query.filter(or_(User.firstname.like(search), User.lastname.like(search)))
+            # match each word of search
+            for word in params['search'].strip().split(' '):
+                if word != '':
+                    search = '%'+word+'%'
+                    query = query.filter(or_(
+                        User.firstname.like(search),
+                        User.lastname.like(search),
+                        User.displayname.like(search)
+                    ))
+
+        if params['orderBy']:
+            if params['reverse']:
+                query = query.order_by(desc(params['orderBy']))
+            else:
+                query = query.order_by(asc(params['orderBy']))
+        query.order_by(User.firstname.asc(), User.lastname.asc())
+
         page = query.paginate(params['page'], params['perPage'])
 
         on_user_list_get.send(
@@ -201,6 +244,10 @@ class UserListAPI(Resource):
         user.lastname = params.get("lastname")
         user.displayname = params.get("displayname")
 
+        email_notification_method = params.get("email_notification_method")
+        check_valid_email_notification_method(email_notification_method, title="Account Not Saved")
+        user.email_notification_method = EmailNotificationMethod(email_notification_method)
+
         # if creating a cas user, do not set username or password
         if sess.get('oauth_create_user_link') and sess.get('LTI') and sess.get('CAS_CREATE'):
             user.username = None
@@ -209,20 +256,20 @@ class UserListAPI(Resource):
             # else enforce required password and unique username
             user.password = params.get("password")
             if user.password == None:
-                return {"error": "Missing required parameter: password."}, 400
+                abort(400, title="Account Not Saved", message="The required field password is missing.")
 
             user.username = params.get("username")
             if user.username == None:
-                return {"error": "Missing required parameter: username."}, 400
+                abort(400, title="Account Not Saved", message="The required field username is missing.")
 
             username_exists = User.query.filter_by(username=user.username).first()
             if username_exists:
-                return {"error": "This username already exists. Please pick another."}, 409
+                abort(409, title="Account Not Saved", message="This username already exists. Please pick another.")
 
         student_number_exists = User.query.filter_by(student_number=user.student_number).first()
         # if student_number is not left blank and it exists -> 409 error
         if user.student_number is not None and student_number_exists:
-            return {"error": "This student number already exists. Please pick another."}, 409
+            abort(409, title="Account Not Saved", message="This student number already exists. Please pick another.")
 
         # handle oauth_create_user_link setup for third party logins
         if sess.get('oauth_create_user_link'):
@@ -257,10 +304,12 @@ class UserListAPI(Resource):
                     db.session.add(thirdpartyuser)
         else:
             system_role = params.get("system_role")
-            check_valid_system_role(system_role)
+            check_valid_system_role(system_role, title="Account Not Saved")
             user.system_role = SystemRole(system_role)
 
-            require(CREATE, user)
+            require(CREATE, user,
+                title="Account Not Saved",
+                message="Your system role does not allow you to create accounts.")
 
         # only students can have student numbers
         if user.system_role != SystemRole.student:
@@ -284,7 +333,7 @@ class UserListAPI(Resource):
         except exc.IntegrityError:
             db.session.rollback()
             current_app.logger.error("Failed to add new user. Duplicate.")
-            return {'error': 'A user with the same identifier already exists.'}, 400
+            abort(409, title="Account Not Saved", message="A user with the same identifier already exists.")
 
         # handle oauth_create_user_link teardown for third party logins
         if sess.get('oauth_create_user_link'):
@@ -300,7 +349,7 @@ class UserListAPI(Resource):
 
 
 # /courses
-class UserCourseListAPI(Resource):
+class CurrentUserCourseListAPI(Resource):
     @login_required
     def get(self):
         params = user_course_list_parser.parse_args()
@@ -322,7 +371,7 @@ class UserCourseListAPI(Resource):
             search_terms = params['search'].split()
             for search_term in search_terms:
                 if search_term != "":
-                    search = '%{}%'.format(search_term)
+                    search = '%'+search_term+'%'
                     query = query.filter(or_(
                         Course.name.like(search),
                         Course.year.like(search),
@@ -341,6 +390,64 @@ class UserCourseListAPI(Resource):
                 "page": page.page, "pages": page.pages,
                 "total": page.total, "per_page": page.per_page}
 
+# /id/courses
+class UserCourseListAPI(Resource):
+    @login_required
+    def get(self, user_uuid):
+        user = User.get_by_uuid_or_404(user_uuid)
+
+        require(MANAGE, User,
+            title="User's Courses Unavailable",
+            message="Your system role does not allow you to view courses for this user.")
+
+        params = user_id_course_list_parser.parse_args()
+
+        query = Course.query \
+            .join(UserCourse) \
+            .add_columns(UserCourse.course_role, UserCourse.group_name) \
+            .filter(and_(
+                Course.active == True,
+                UserCourse.user_id == user.id,
+                UserCourse.course_role != CourseRole.dropped
+            ))
+
+        if params['search']:
+            search_terms = params['search'].split()
+            for search_term in search_terms:
+                if search_term != "":
+                    search = '%'+search_term+'%'
+                    query = query.filter(or_(
+                        Course.name.like(search),
+                        Course.year.like(search),
+                        Course.term.like(search)
+                    ))
+
+        if params['orderBy']:
+            if params['reverse']:
+                query = query.order_by(desc(params['orderBy']))
+            else:
+                query = query.order_by(asc(params['orderBy']))
+        query = query.order_by(Course.start_date_order.desc(), Course.name)
+
+        page = query.paginate(params['page'], params['perPage'])
+
+        # fix results
+        courses = []
+        for (_course, _course_role, _group_name) in page.items:
+            _course.course_role = _course_role
+            _course.group_name = _group_name
+            courses.append(_course)
+        page.items = courses
+
+        on_user_course_get.send(
+            self,
+            event_name=on_user_course_get.name,
+            user=user)
+
+        return {"objects": marshal(page.items, dataformat.get_user_courses()),
+                "page": page.page, "pages": page.pages,
+                "total": page.total, "per_page": page.per_page}
+
 # /courses/status
 class UserCourseStatusListAPI(Resource):
     @login_required
@@ -349,7 +456,7 @@ class UserCourseStatusListAPI(Resource):
         course_uuids = params['ids'].split(',')
 
         if params['ids'] == '' or len(course_uuids) == 0:
-            return {"error": "Select at least one course"}, 400
+            abort(400, title="Course Status Unavailable", message="Please select a valid course.")
 
         query = Course.query \
             .filter(and_(
@@ -373,7 +480,8 @@ class UserCourseStatusListAPI(Resource):
         results = query.all()
 
         if len(course_uuids) != len(results):
-            return {"error": "Not enrolled in course"}, 400
+            abort(400, title="Course Status Unavailable",
+                message="Your are not enrolled in one or more users selected courses yet.")
 
         statuses = {}
 
@@ -431,8 +539,7 @@ class UserCourseStatusListAPI(Resource):
 
                     for assignment in compare_period_assignments:
                         assignment_comparisons = [comparison for comparison in comparisons if comparison.assignment_id == assignment.id]
-                        comparison_count = len(assignment_comparisons) / assignment.criteria_count if assignment.criteria_count else 0
-                        if comparison_count < assignment.total_comparisons_required:
+                        if len(assignment_comparisons) < assignment.total_comparisons_required:
                             incomplete_assignment_ids.add(assignment.id)
 
                         if assignment.enable_self_evaluation:
@@ -492,38 +599,70 @@ class UserEditButtonAPI(Resource):
 
         return {'available': available}
 
+# /notification
+class UserUpdateNotificationAPI(Resource):
+    @login_required
+    def post(self, user_uuid):
+        user = User.get_by_uuid_or_404(user_uuid)
+        # anyone who passes checking below should be an instructor or admin
+        require(EDIT, user,
+            title="Notification Settings Not Updated",
+            message="Your system role does not allow you to update notification settings for this account.")
+
+        if not user.email:
+            abort(400, title="Notification Settings Not Updated",
+                message="Cannot update notification settings. User does not have an email address.")
+
+        params = update_notification_settings_parser.parse_args()
+
+        email_notification_method = params.get("email_notification_method")
+        check_valid_email_notification_method(email_notification_method, title="Notification Settings Not Updated")
+        user.email_notification_method = EmailNotificationMethod(email_notification_method)
+
+        db.session.commit()
+        on_user_notifications_update.send(
+            self,
+            event_name=on_user_notifications_update.name,
+            user=current_user)
+        return marshal(user, dataformat.get_user(is_user_access_restricted(user)))
+
 # /password
 class UserUpdatePasswordAPI(Resource):
     @login_required
     def post(self, user_uuid):
         user = User.get_by_uuid_or_404(user_uuid)
         # anyone who passes checking below should be an instructor or admin
-        require(EDIT, user)
+        require(EDIT, user,
+            title="Password Not Updated",
+            message="Your system role does not allow you to update passwords for this account.")
 
-        if user.uses_compair_login:
-            params = update_password_parser.parse_args()
-            oldpassword = params.get('oldpassword')
-            # if it is not current user changing own password, it must be an instructor or admin
-            # because of above check
-            if current_user.id != user.id or (oldpassword and user.verify_password(oldpassword)):
-                user.password = params.get('newpassword')
-                db.session.commit()
-                on_user_password_update.send(
-                    self,
-                    event_name=on_user_password_update.name,
-                    user=current_user)
-                return marshal(user, dataformat.get_user(False))
-            else:
-                return {"error": "The old password is incorrect or you do not have permission to change password."}, 403
-        else:
-            return {"error": "Cannot update password. User does not use ComPAIR account login authentication method."}, 400
+        if not user.uses_compair_login:
+            abort(400, title="Password Not Updated",
+                message="Cannot update password. User does not use the ComPAIR account login authentication method.")
 
+        params = update_password_parser.parse_args()
+        oldpassword = params.get('oldpassword')
+
+        if current_user.id == user.id and not oldpassword:
+            abort(400, title="Password Not Updated", message="The old password is missing.")
+        elif current_user.id == user.id and not user.verify_password(oldpassword):
+            abort(400, title="Password Not Updated", message="The old password is incorrect.")
+
+        user.password = params.get('newpassword')
+        db.session.commit()
+        on_user_password_update.send(
+            self,
+            event_name=on_user_password_update.name,
+            user=current_user)
+        return marshal(user, dataformat.get_user(False))
 
 api = new_restful_api(user_api)
 api.add_resource(UserAPI, '/<user_uuid>')
 api.add_resource(UserListAPI, '')
-api.add_resource(UserCourseListAPI, '/courses')
+api.add_resource(UserCourseListAPI, '/<user_uuid>/courses')
+api.add_resource(CurrentUserCourseListAPI, '/courses')
 api.add_resource(UserCourseStatusListAPI, '/courses/status')
 api.add_resource(TeachingUserCourseListAPI, '/courses/teaching')
 api.add_resource(UserEditButtonAPI, '/<user_uuid>/edit')
+api.add_resource(UserUpdateNotificationAPI, '/<user_uuid>/notification')
 api.add_resource(UserUpdatePasswordAPI, '/<user_uuid>/password')

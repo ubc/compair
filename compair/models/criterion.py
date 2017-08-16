@@ -30,8 +30,8 @@ class Criterion(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     assignment_criteria = db.relationship("AssignmentCriterion",
         back_populates="criterion", lazy='dynamic')
 
-    comparisons = db.relationship("Comparison", backref="criterion", lazy='dynamic')
-    scores = db.relationship("Score", backref="criterion", lazy='dynamic')
+    comparison_criteria = db.relationship("ComparisonCriterion", backref="criterion", lazy='dynamic')
+    answer_criteria_scores = db.relationship("AnswerCriterionScore", backref="criterion", lazy='dynamic')
 
     # hyprid and other functions
     @hybrid_property
@@ -39,12 +39,28 @@ class Criterion(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         return self.compare_count > 0
 
     @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Criterion Unavailable"
+        if not message:
+            message = "The criterion was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Criterion Unavailable"
+        if not message:
+            message = "The criterion was removed from the system or is no longer accessible."
+        return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
 
         cls.compare_count = column_property(
-            select([func.count(Comparison.id)]).
-            where(Comparison.criterion_id == cls.id),
+            select([func.count(ComparisonCriterion.id)]).
+            where(ComparisonCriterion.criterion_id == cls.id),
             deferred=True,
             group="counts"
         )

@@ -1,10 +1,11 @@
 import csv
 import os
 import time
+import unicodecsv as csv
 import re
 
 from bouncer.constants import MANAGE
-from flask import Blueprint, current_app, abort
+from flask import Blueprint, current_app
 from flask_login import login_required, current_user
 
 from flask_restful import Resource, reqparse
@@ -13,7 +14,7 @@ from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import joinedload
 
 from compair.authorization import require
-from compair.core import event
+from compair.core import event, abort
 from compair.models import User, CourseRole, Assignment, UserCourse, Course, Answer, \
     AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType
 from .util import new_restful_api
@@ -22,10 +23,10 @@ report_api = Blueprint('report_api', __name__)
 api = new_restful_api(report_api)
 
 report_parser = reqparse.RequestParser()
-report_parser.add_argument('group_name', type=str)
+report_parser.add_argument('group_name')
 # may change 'type' to int
-report_parser.add_argument('type', type=str, required=True)
-report_parser.add_argument('assignment', type=str)
+report_parser.add_argument('type', required=True)
+report_parser.add_argument('assignment')
 
 # events
 on_export_report = event.signal('EXPORT_REPORT')
@@ -45,7 +46,9 @@ class ReportRootAPI(Resource):
     def post(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment(course_id=course.id)
-        require(MANAGE, assignment)
+        require(MANAGE, assignment,
+            title="Report Not Generated",
+            message="Your system role does not allow you to generate reports.")
 
         params = report_parser.parse_args()
         group_name = params.get('group_name', None)
@@ -74,7 +77,7 @@ class ReportRootAPI(Resource):
                 ) \
                 .first()
             if group_exists == None:
-                abort(404)
+                abort(400, title="Report Not Generated", message="Please select a valid group from the list provided.")
 
         if report_type == "participation_stat":
             data = participation_stat_report(course, assignments, group_name, assignment_uuid is None)
@@ -102,8 +105,9 @@ class ReportRootAPI(Resource):
                     .all()
 
                 title_row1 += [assignment.name] + [""] * len(assignment_criteria)
+                title_row2.append('Percentage score for answer overall')
                 for assignment_criterion in assignment_criteria:
-                    title_row2.append('Percentage Score for "' + assignment_criterion.criterion.name + '"')
+                    title_row2.append('Percentage score for "' + assignment_criterion.criterion.name + '"')
                 title_row2.append("Evaluations Submitted (" + str(assignment.total_comparisons_required) + ' required)')
                 if assignment.enable_self_evaluation:
                     title_row1 += [""]
@@ -126,18 +130,17 @@ class ReportRootAPI(Resource):
             data = peer_feedback_report(course, assignments, group_name)
             titles = [titles1, titles2]
         else:
-            return {'error': 'The requested report type cannot be found'}, 400
+            abort(400, title="Report Not Generated", message="Please select a valid report type from the list provided.")
 
         name = name_generator(course, report_type, group_name)
         tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], name)
 
-        report = open(tmp_name, 'wt')
-        out = csv.writer(report)
-        for t in titles:
-            out.writerow(t)
-        for s in data:
-            out.writerow(s)
-        report.close()
+        with open(tmp_name, 'wb') as report:
+            out = csv.writer(report)
+            for t in titles:
+                out.writerow(t)
+            for s in data:
+                out.writerow(s)
 
         on_export_report.send(
             self,
@@ -185,20 +188,20 @@ def participation_stat_report(course, assignments, group_name, overall):
             .filter_by(assignment_id=assignment.id) \
             .group_by(Comparison.user_id) \
             .all()
-        evaluations = {user_id: count for (user_id, count) in evaluations}
+        evaluation_submitted = {user_id: int(count) for (user_id, count) in evaluations}
 
         # COMMENTS
         comments = AnswerComment.query \
             .join(Answer) \
             .filter(Answer.assignment_id == assignment.id) \
             .filter(AnswerComment.draft == False) \
+            .filter(AnswerComment.active == True) \
             .with_entities(AnswerComment.user_id, func.count(AnswerComment.id)) \
             .group_by(AnswerComment.user_id) \
             .all()
         comments = {user_id: count for (user_id, count) in comments}
 
         total_req += assignment.total_comparisons_required  # for overall required
-        criteria_count = len(assignment.criteria)
 
         for user_course_student in user_course_students:
             user = user_course_student.user
@@ -216,11 +219,10 @@ def participation_stat_report(course, assignments, group_name, overall):
             total[user.id]['total_answers'] += submitted
             temp.extend([submitted, answer_uuid])
 
-            evaluation_submitted = evaluations[user.id] if user.id in evaluations else 0
-            evaluation_submitted = int(evaluation_submitted / criteria_count) if criteria_count else 0
-            evaluation_req_met = 'Yes' if evaluation_submitted >= assignment.total_comparisons_required else 'No'
-            total[user.id]['total_evaluations'] += evaluation_submitted
-            temp.extend([evaluation_submitted, assignment.total_comparisons_required, evaluation_req_met])
+            evaluations = evaluation_submitted.get(user.id, 0)
+            evaluation_req_met = 'Yes' if evaluations >= assignment.total_comparisons_required else 'No'
+            total[user.id]['total_evaluations'] += evaluations
+            temp.extend([evaluations, assignment.total_comparisons_required, evaluation_req_met])
 
             comment_count = comments[user.id] if user.id in comments else 0
             total[user.id]['total_comments'] += comment_count
@@ -264,17 +266,24 @@ def participation_report(course, assignments, group_name):
 
     # ANSWERS - scores
     answers = Answer.query \
+        .options(joinedload('score')) \
+        .options(joinedload('criteria_scores')) \
         .filter(Answer.assignment_id.in_(assignment_ids)) \
         .filter(Answer.user_id.in_(user_ids)) \
         .filter(Answer.draft == False) \
         .filter(Answer.practice == False) \
         .all()
 
-    scores = {}  # structure - user_id/assignment_id/criterion_id/normalized_score
+    scores = {} # structure - user_id/assignment_id/normalized_score
     for answer in answers:
         user_object = scores.setdefault(answer.user_id, {})
+        user_object.setdefault(answer.assignment_id, answer.score.normalized_score if answer.score else None)
+
+    criteria_scores = {} # structure - user_id/assignment_id/criterion_id/normalized_score
+    for answer in answers:
+        user_object = criteria_scores.setdefault(answer.user_id, {})
         assignment_object = user_object.setdefault(answer.assignment_id, {})
-        for s in answer.scores:
+        for s in answer.criteria_scores:
             assignment_object[s.criterion_id] = s.normalized_score
 
     # COMPARISONS
@@ -324,14 +333,22 @@ def participation_report(course, assignments, group_name):
         temp = [user.lastname, user.firstname, user.student_number]
 
         for assignment in assignments:
+            if user.id not in scores or assignment.id not in scores[user.id]:
+                score = 'No Answer'
+            elif scores[user.id][assignment.id] == None:
+                score = 'Not Evaluated'
+            else:
+                score = scores[user.id][assignment.id]
+            temp.append(score)
+
             for criterion in criteria[assignment.id]:
-                if user.id not in scores or assignment.id not in scores[user.id]:
-                    score = 'No Answer'
-                elif criterion not in scores[user.id][assignment.id]:
-                    score = 'Not Evaluated'
+                if user.id not in criteria_scores or assignment.id not in criteria_scores[user.id]:
+                    criterion_score = 'No Answer'
+                elif criterion not in criteria_scores[user.id][assignment.id]:
+                    criterion_score = 'Not Evaluated'
                 else:
-                    score = scores[user.id][assignment.id][criterion]
-                temp.append(score)
+                    criterion_score = criteria_scores[user.id][assignment.id][criterion]
+                temp.append(criterion_score)
             if user.id not in comparisons or assignment.id not in comparisons[user.id]:
                 compared = 0
             else:

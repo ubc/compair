@@ -2,6 +2,7 @@ import hashlib
 from flask import current_app
 from datetime import datetime
 import time
+from six import text_type
 
 # sqlalchemy
 from sqlalchemy.orm import synonym
@@ -9,7 +10,7 @@ from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
 
-from flask_login import UserMixin
+from flask_login import UserMixin, current_user
 from . import *
 
 from compair.core import db
@@ -38,6 +39,8 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     lastname = db.Column(db.String(255))
     student_number = db.Column(db.String(50), unique=True, nullable=True)
     last_online = db.Column(db.DateTime)
+    email_notification_method = db.Column(EnumType(EmailNotificationMethod, name="email_notification_method"),
+        nullable=False, default=EmailNotificationMethod.enable, index=True)
 
     # relationships
 
@@ -68,6 +71,9 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         backref="user", lazy='dynamic')
     files = db.relationship("File",
         foreign_keys='File.user_id',
+        backref="user", lazy='dynamic')
+    kaltura_files = db.relationship("KalturaMedia",
+        foreign_keys='KalturaMedia.user_id',
         backref="user", lazy='dynamic')
     comparisons = db.relationship("Comparison",
         foreign_keys='Comparison.user_id',
@@ -152,12 +158,6 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     #     s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
     #     return s.dumps({'id': self.id})
 
-    def __repr__(self):
-        if self.username:
-            return self.username
-        else:
-            return "User"
-
     def get_course_role(self, course_id):
         """ Return user's course role by course id """
 
@@ -166,6 +166,22 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
                 return user_course.course_role
 
         return None
+
+    @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "User Unavailable"
+        if not message:
+            message = "The user was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "User Unavailable"
+        if not message:
+            message = "The user was removed from the system or is no longer accessible."
+        return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
     def __declare_last__(cls):

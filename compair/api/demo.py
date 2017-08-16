@@ -1,13 +1,13 @@
 import string
 
-from flask import Blueprint, current_app, abort, session as sess
+from flask import Blueprint, current_app, session as sess
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from flask_login import current_user
 from sqlalchemy import exc, asc, or_, and_, func
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.models import User, SystemRole, UserCourse, CourseRole
 from compair.api.login import authenticate
@@ -24,20 +24,20 @@ new_user_demo_parser.add_argument('system_role', type=str, required=True)
 # events
 on_user_demo_create = event.signal('USER_DEMO_CREATE')
 
-def check_valid_system_role(system_role):
+def check_valid_system_role(system_role, title):
     system_roles = [
         SystemRole.sys_admin.value,
         SystemRole.instructor.value,
         SystemRole.student.value
     ]
     if system_role not in system_roles:
-        abort(400)
+        abort(400, title=title, message="Please select a valid system role from the list provided.")
 
 # /
 class DemoListAPI(Resource):
     def post(self):
         if not current_app.config.get('DEMO_INSTALLATION', False):
-            abort(404)
+            abort(404, title="Demo Accounts Unavailable", message="The system settings do now allow the use of demo accounts.")
 
         params = new_user_demo_parser.parse_args()
 
@@ -45,7 +45,7 @@ class DemoListAPI(Resource):
         user.password = "demo"
 
         system_role = params.get("system_role")
-        check_valid_system_role(system_role)
+        check_valid_system_role(system_role, title="Demo Account Not Saved")
         user.system_role = SystemRole(system_role)
 
         user_count = User.query \

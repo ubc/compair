@@ -10,7 +10,8 @@ var module = angular.module('ubc.ctlt.compair.common.xapi', [
     'ngResource',
     'angularMoment',
     'angular-uuid',
-    'ubc.ctlt.compair.session'
+    'ubc.ctlt.compair.session',
+    'ubc.ctlt.compair.comparison'
 ]);
 
 /***** Providers *****/
@@ -20,7 +21,7 @@ module.factory('StatementResource',
 {
     var ret = $resource('/api/statements', {},
         {
-            'save': { method: 'POST', ignoreLoadingBar: true }
+            'save': { method: 'POST', ignoreLoadingBar: true, bypassErrorsInterceptor: true }
         }
     );
     return ret;
@@ -200,9 +201,9 @@ module.constant('xAPIExtensions', {
 });
 
 module.service('xAPI',
-    [ "uuid", "StatementResource", "Session", "moment",
+    [ "uuid", "StatementResource", "Session", "moment", "WinningAnswer",
       "xAPISettings", "xAPIVerb", "xAPIActivityType", "xAPIExtensions",
-    function(uuid, StatementResource, Session, moment,
+    function(uuid, StatementResource, Session, moment, WinningAnswer,
              xAPISettings, xAPIVerb, xAPIActivityType, xAPIExtensions) {
         var _this = this;
 
@@ -286,9 +287,8 @@ module.service('xAPI',
             assignment_question: function(assignment_id) {
                 return _this._resourceIRI._appUrl() + "assignment/"+assignment_id+"/question";
             },
-            comparison_question: function(assignment_id, answer1_id, answer2_id) {
-                ids = _.sortBy([answer1_id, answer2_id]);
-                return _this._resourceIRI._appUrl() + "assignment/"+assignment_id+"/comparison?pair="+ids[0]+","+ids[1];
+            comparison_question: function(comparison_id) {
+                return _this._resourceIRI._appUrl() + "comparison/"+comparison_id+"/question";
             },
             self_evaluation_question: function(assignment_id) {
                 return _this._resourceIRI._appUrl() + "assignment/"+assignment_id+"/self-evaluation";
@@ -301,6 +301,9 @@ module.service('xAPI',
             },
             comparison: function(comparison_id) {
                 return _this._resourceIRI._appUrl() + "comparison/"+comparison_id;
+            },
+            comparison_criterion: function(comparison_criterion_id) {
+                return _this._resourceIRI._appUrl() + "comparison/criterion/"+comparison_criterion_id;
             },
             attachment: function(fileName) {
                 return _this._resourceIRI._attachmentUrl() + fileName;
@@ -375,12 +378,9 @@ module.service('xAPI',
                 return object;
             },
 
-            comparison_question: function(comparisons, comparison_number, pairing_algorithm) {
-                var comparison = comparisons[0];
-
+            comparison_question: function(comparison, comparison_number, pairing_algorithm) {
                 var object = {
-                    id: _this._resourceIRI.comparison_question(
-                        comparison.assignment_id, comparison.answer1.id, comparison.answer2.id),
+                    id: _this._resourceIRI.comparison_question(comparison.id),
                     definition: {
                         type: _this.activityType.question,
                         name: { 'en-US': "Assignment comparison #"+comparison_number }
@@ -449,7 +449,17 @@ module.service('xAPI',
                     id: _this._resourceIRI.comparison(comparison.id),
                     definition: {
                         type: _this.activityType.solution,
-                        name: { 'en-US': "Assignment criteria comparison" }
+                        name: { 'en-US': "Assignment comparison" }
+                    }
+                }
+            },
+
+            comparison_criterion: function(comparison, comparison_criterion) {
+                return {
+                    id: _this._resourceIRI.comparison_criterion(comparison_criterion.id),
+                    definition: {
+                        type: _this.activityType.solution,
+                        name: { 'en-US': "Assignment criterion comparison" }
                     }
                 }
             },
@@ -551,10 +561,8 @@ module.service('xAPI',
                 return context;
             },
 
-            comparison_question: function(comparisons, options) {
+            comparison_question: function(comparison, options) {
                 options = options || {};
-
-                var comparison = comparisons[0];
 
                 var context = angular.merge({
                     contextActivities: {
@@ -573,9 +581,9 @@ module.service('xAPI',
                     }
                 }, _this.context.basic(options));
 
-                _.forEach(comparisons, function(comparison) {
+                _.forEach(comparison.comparison_criteria, function(comparison_criterion) {
                     context.contextActivities.grouping.push({
-                        id: _this._resourceIRI.criterion(comparison.criterion_id)
+                        id: _this._resourceIRI.criterion(comparison_criterion.criterion_id)
                     })
                 });
 
@@ -631,10 +639,7 @@ module.service('xAPI',
                     contextActivities: {
                         // parent is assignment question
                         parent: [{
-                            id: _this._resourceIRI.comparison_question(
-                                comparison.assignment_id, comparison.answer1.id, comparison.answer2.id)
-                        }, {
-                            id: _this._resourceIRI.criterion(comparison.criterion_id)
+                            id: _this._resourceIRI.comparison_question(comparison.id)
                         }],
                         // grouping is course + assignment
                         grouping: [{
@@ -645,6 +650,35 @@ module.service('xAPI',
                             id: _this._resourceIRI.answer(comparison.answer1.id)
                         }, {
                             id: _this._resourceIRI.answer(comparison.answer2.id)
+                        }]
+                    }
+                }, _this.context.basic(options));
+
+                return context;
+            },
+
+            comparison_criterion: function(comparison, comparison_criterion, options) {
+                options = options || {};
+
+                var context = angular.merge({
+                    contextActivities: {
+                        // parent is assignment question
+                        parent: [{
+                            id: _this._resourceIRI.comparison(comparison.id)
+                        }, {
+                            id: _this._resourceIRI.criterion(comparison_criterion.criterion_id)
+                        }],
+                        // grouping is course + assignment
+                        grouping: [{
+                            id: _this._resourceIRI.course(comparison.course_id)
+                        }, {
+                            id: _this._resourceIRI.assignment(comparison.assignment_id)
+                        }, {
+                            id: _this._resourceIRI.answer(comparison.answer1.id)
+                        }, {
+                            id: _this._resourceIRI.answer(comparison.answer2.id)
+                        }, {
+                            id: _this._resourceIRI.comparison_question(comparison.id)
                         }]
                     }
                 }, _this.context.basic(options));
@@ -790,10 +824,23 @@ module.service('xAPI',
                 return context;
             },
 
-            pdf_modal: function(pdf_name, relativePath, locationUrl, options) {
+            attachment_modal: function(attachment_name, relativePath, locationUrl, options) {
                 var context = _this.context.modal(relativePath, locationUrl, options);
                 context.contextActivities.other.push({
-                    id: _this._resourceIRI.attachment(pdf_name),
+                    id: _this._resourceIRI.attachment(attachment_name),
+                });
+                return context;
+            },
+
+            embeddable_content_modal: function(contentUrl, relativePath, locationUrl, options) {
+                var context = _this.context.modal(relativePath, locationUrl, options);
+
+                // ensure is valid url
+                if (!/^https?:\/\//i.test(contentUrl)) {
+                    contentUrl = 'http://' + contentUrl;
+                }
+                context.contextActivities.other.push({
+                    id: contentUrl,
                 });
                 return context;
             },
@@ -863,8 +910,29 @@ module.service('xAPI',
                 options = options || {};
 
                 var response = "Undecided"
-                if (comparison.winner_id) {
-                    response = _this._resourceIRI.answer(comparison.winner_id)
+                if (comparison.winner == WinningAnswer.draw) {
+                    response = "Draw"
+                } else if (comparison.winner == WinningAnswer.answer1) {
+                    response = _this._resourceIRI.answer(comparison.answer1_id)
+                } else if (comparison.winner == WinningAnswer.answer2) {
+                    response = _this._resourceIRI.answer(comparison.answer2_id)
+                }
+
+                var result = angular.merge({
+                    response: response
+                }, _this.result.basic(options));
+
+                return result;
+            },
+
+            comparison_criterion: function(comparison, comparison_criterion, options) {
+                options = options || {};
+
+                var response = "Undecided"
+                if (comparison_criterion.winner == WinningAnswer.answer1) {
+                    response = _this._resourceIRI.answer(comparison.answer1_id)
+                } else if (comparison_criterion.winner == WinningAnswer.answer2) {
+                    response = _this._resourceIRI.answer(comparison.answer2_id)
                 }
 
                 var result = angular.merge({
@@ -895,8 +963,6 @@ module.service('xAPI',
 module.service('xAPIStatementHelper',
     ["$location", "xAPI",
     function($location, xAPI) {
-
-
         // verb_answer_solution
         this.interacted_answer_solution = function(answer, registration, duration) {
             // skip if not yet loaded
@@ -1129,51 +1195,74 @@ module.service('xAPIStatementHelper',
         };
 
 
-        // verb_inline_pdf
-        this.opened_inline_pdf = function(pdf_name) {
+        // verb_inline_kaltura_media
+        this.opened_inline_kaltura_media = function(pdf_name) {
             var relativePath = $location.path();
             var pageUrl = $location.absUrl();
 
             xAPI.generateStatement({
                 verb: xAPI.verb.opened,
-                object: xAPI.object.page_section(relativePath, "Inline PDF Attachment"),
+                object: xAPI.object.page_section(relativePath, "Inline Kaltura Media Attachment"),
                 context: xAPI.context.inline_pdf(pdf_name, relativePath, pageUrl)
             });
         };
 
-        this.closed_inline_pdf = function(pdf_name) {
+        this.closed_inline_kaltura_media = function(pdf_name) {
             var relativePath = $location.path();
             var locationUrl = $location.absUrl();
 
             xAPI.generateStatement({
                 verb: xAPI.verb.closed,
-                object: xAPI.object.page_section(relativePath, "Inline PDF Attachment"),
+                object: xAPI.object.page_section(relativePath, "Inline Kaltura Media Attachment"),
                 context: xAPI.context.inline_pdf(pdf_name, relativePath, locationUrl)
             });
         };
 
-
-
-        // verb_pdf_modal
-        this.opened_pdf_modal = function(pdf_name) {
+        // verb_attachment_modal
+        this.opened_attachment_modal = function(attachment_name) {
             var relativePath = $location.path();
             var locationUrl = $location.absUrl();
 
             xAPI.generateStatement({
                 verb: xAPI.verb.opened,
-                object: xAPI.object.modal(relativePath, "View PDF Attachment"),
-                context: xAPI.context.pdf_modal(pdf_name, relativePath, locationUrl)
+                object: xAPI.object.modal(relativePath, "View Attachment"),
+                context: xAPI.context.attachment_modal(attachment_name, relativePath, locationUrl)
             });
         };
 
-        this.closed_pdf_modal = function(pdf_name) {
+        this.closed_attachment_modal = function(attachment_name) {
             var relativePath = $location.path();
             var locationUrl = $location.absUrl();
 
             xAPI.generateStatement({
                 verb: xAPI.verb.closed,
-                object: xAPI.object.modal(relativePath, "View PDF Attachment"),
-                context: xAPI.context.pdf_modal(pdf_name, relativePath, locationUrl)
+                object: xAPI.object.modal(relativePath, "View Attachment"),
+                context: xAPI.context.attachment_modal(attachment_name, relativePath, locationUrl)
+            });
+        };
+
+
+
+        // verb_embeddable_content_modal
+        this.opened_embeddable_content_modal = function(contentUrl) {
+            var relativePath = $location.path();
+            var locationUrl = $location.absUrl();
+
+            xAPI.generateStatement({
+                verb: xAPI.verb.opened,
+                object: xAPI.object.modal(relativePath, "View Embeddable Content"),
+                context: xAPI.context.embeddable_content_modal(contentUrl, relativePath, locationUrl)
+            });
+        };
+
+        this.closed_embeddable_content_modal = function(contentUrl) {
+            var relativePath = $location.path();
+            var locationUrl = $location.absUrl();
+
+            xAPI.generateStatement({
+                verb: xAPI.verb.closed,
+                object: xAPI.object.modal(relativePath, "View Embeddable Content"),
+                context: xAPI.context.embeddable_content_modal(contentUrl, relativePath, locationUrl)
             });
         };
 
@@ -1206,57 +1295,41 @@ module.service('xAPIStatementHelper',
             });
         };
 
-
-        // verb_answer_show_all_section
-        this.opened_answer_show_all_section = function(answer) {
-            if (!answer.id) { return; }
-
-            var relativePath = $location.path();
-            var pageUrl = $location.absUrl();
-
-            xAPI.generateStatement({
-                verb: xAPI.verb.opened,
-                object: xAPI.object.page_section(relativePath, "Answer show all"),
-                context: xAPI.context.answer_page_section(answer, relativePath, pageUrl)
-            });
-        };
-
-
         // verb_comparison_question
-        this.initialize_comparison_question = function(comparisons, comparison_number, pairing_algorithm, registration) {
+        this.initialize_comparison_question = function(comparison, comparison_number, pairing_algorithm, registration) {
             // skip if not yet loaded
-            if (comparisons.length <= 0) { return; }
+            if (!comparison.id) { return; }
 
             xAPI.generateStatement({
                 verb: xAPI.verb.initialized,
-                object: xAPI.object.comparison_question(comparisons, comparison_number, pairing_algorithm),
-                context: xAPI.context.comparison_question(comparisons, {
+                object: xAPI.object.comparison_question(comparison, comparison_number, pairing_algorithm),
+                context: xAPI.context.comparison_question(comparison, {
                     registration: registration
                 })
             });
         };
 
-        this.resume_comparison_question = function(comparisons, comparison_number, pairing_algorithm, registration) {
+        this.resume_comparison_question = function(comparison, comparison_number, pairing_algorithm, registration) {
             // skip if not yet loaded
-            if (comparisons.length <= 0) { return; }
+            if (!comparison.id) { return; }
 
             xAPI.generateStatement({
                 verb: xAPI.verb.resumed,
-                object: xAPI.object.comparison_question(comparisons, comparison_number, pairing_algorithm),
-                context: xAPI.context.comparison_question(comparisons, {
+                object: xAPI.object.comparison_question(comparison, comparison_number, pairing_algorithm),
+                context: xAPI.context.comparison_question(comparison, {
                     registration: registration
                 })
             });
         };
 
-        this.exited_comparison_question = function(comparisons, comparison_number, pairing_algorithm, registration, duration) {
+        this.exited_comparison_question = function(comparison, comparison_number, pairing_algorithm, registration, duration) {
             // skip if not yet loaded
-            if (comparisons.length <= 0) { return; }
+            if (!comparison.id) { return; }
 
             xAPI.generateStatement({
                 verb: xAPI.verb.exited,
-                object: xAPI.object.comparison_question(comparisons, comparison_number, pairing_algorithm),
-                context: xAPI.context.comparison_question(comparisons, {
+                object: xAPI.object.comparison_question(comparison, comparison_number, pairing_algorithm),
+                context: xAPI.context.comparison_question(comparison, {
                     registration: registration
                 }),
                 result: xAPI.result.basic({
@@ -1266,19 +1339,18 @@ module.service('xAPIStatementHelper',
             });
         };
 
-
-        // verb_comparison_solution
-        this.interacted_comparison_solution = function(comparison, registration) {
+        // verb_comparison_criterion_solution
+        this.interacted_comparison_criterion_solution = function(comparison, comparison_criterion, registration) {
             // skip if not yet loaded
-            if (!comparison.id) { return; }
+            if (!comparison.id || !comparison_criterion.id) { return; }
 
             xAPI.generateStatement({
-            verb: xAPI.verb.interacted,
-            object: xAPI.object.comparison(comparison),
-            context: xAPI.context.comparison(comparison, {
+                verb: xAPI.verb.interacted,
+                object: xAPI.object.comparison_criterion(comparison, comparison_criterion),
+                context: xAPI.context.comparison_criterion(comparison, comparison_criterion, {
                     registration: registration
                 }),
-                result: xAPI.result.comparison(comparison)
+                result: xAPI.result.comparison_criterion(comparison, comparison_criterion)
             });
         };
 

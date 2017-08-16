@@ -16,11 +16,6 @@ var commonStepDefinitionsWrapper = function() {
     var pageFactory = new PageFactory();
     var page;
 
-    // check title of page
-    this.Then("'$content_title' page should load", function (content_title) {
-        return expect($("#view-title").getText()).to.eventually.equal(content_title);
-    });
-
     // fill in form
     this.When("I fill form item '$item' in with '$content'", function (item, content) {
         return element(by.model(item)).getTagName().then(function(tagName) {
@@ -47,6 +42,10 @@ var commonStepDefinitionsWrapper = function() {
         return element(by.cssContainingText('label', label)).click();
     });
 
+    this.When("I toggle the '$model' form checkbox", function (model) {
+        return element(by.model(model)).click();
+    });
+
     // generate page factory
     this.Given("I'm on '$pageName' page", function (pageName) {
         page = pageFactory.createPage(pageName);
@@ -68,6 +67,11 @@ var commonStepDefinitionsWrapper = function() {
         return browser.setLocation(page.getLocation(id));
     });
 
+    this.Given("I'm on '$pageName' page for consumer with id '$id'", function (pageName, id) {
+        page = pageFactory.createPage(pageName);
+        return browser.setLocation(page.getLocation(id));
+    });
+
     // click button on page factory
     this.When("I select '$button' button", function (button) {
         return page.clickButton(button);
@@ -76,6 +80,14 @@ var commonStepDefinitionsWrapper = function() {
     //submit form button
     this.When("I submit form with '$button' button", function (button) {
         return element(by.css('input[type=submit][value="'+button+'"]')).click();
+    });
+
+    this.When("I submit form with the first '$button' button", function (button) {
+        return element.all(by.css('input[type=submit][value="'+button+'"]')).get(0).click();
+    });
+
+    this.When("I submit form with the second '$button' button", function (button) {
+        return element.all(by.css('input[type=submit][value="'+button+'"]')).get(0).click();
     });
 
     //submit modal form button
@@ -88,11 +100,19 @@ var commonStepDefinitionsWrapper = function() {
         var page_regex = {
             'course': /.*\/course\/[A-Za-z0-9_-]{22}$/,
             'manage users': /.*\/course\/[A-Za-z0-9_-]{22}\/user$/,
+            'create assignment': /.*\/course\/[A-Za-z0-9_-]{22}\/assignment\/create$/,
             'edit assignment': /.*\/course\/[A-Za-z0-9_-]{22}\/assignment\/[A-Za-z0-9_-]{22}\/edit$/,
-            'edit course': /.*\/course\/[A-Za-z0-9_-]{22}\/configure$/,
+            'create course': /.*\/course\/create$/,
+            'edit course': /.*\/course\/[A-Za-z0-9_-]{22}\/edit$/,
             'profile': /.*\/user\/[A-Za-z0-9_-]{22}$/,
             'create user': /.*\/user\/create$/,
-            'edit profile': /.*\/user\/[A-Za-z0-9_-]{22}\/edit$/
+            'edit profile': /.*\/user\/[A-Za-z0-9_-]{22}\/edit$/,
+            'users': /.*\/users(\?.+)?$/,
+            'user courses': /.*\/users\/[A-Za-z0-9_-]{22}\/course(\?.+)?$/,
+            'manage lti': /.*\/lti\/consumer(\?.+)?$/,
+            'create lti consumer': /.*\/lti\/consumer\/create$/,
+            'edit lti consumer': /.*\/lti\/consumer\/[A-Za-z0-9_-]{22}\/edit$/,
+            'lti consumer': /.*\/lti\/consumer\/[A-Za-z0-9_-]{22}$/
         };
         return expect(browser.getCurrentUrl()).to.eventually.match(page_regex[page]);
     });

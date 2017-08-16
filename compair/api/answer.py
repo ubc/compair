@@ -1,5 +1,5 @@
 from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
-from flask import Blueprint, abort
+from flask import Blueprint
 from flask_login import login_required, current_user, current_app
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
@@ -9,10 +9,10 @@ from itertools import groupby
 from operator import attrgetter
 
 from . import dataformat
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.authorization import require, allow, is_user_access_restricted
 from compair.models import Answer, Assignment, Course, User, Comparison, Criterion, \
-    Score, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType, File
+    AnswerScore, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType, File
 
 from .util import new_restful_api, get_model_changes, pagination_parser
 
@@ -20,32 +20,28 @@ answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
 
 new_answer_parser = RequestParser()
-new_answer_parser.add_argument('user_id', type=str, default=None)
-new_answer_parser.add_argument('content', type=str, default=None)
-new_answer_parser.add_argument('file_id', type=str, default=None)
+new_answer_parser.add_argument('user_id', default=None)
+new_answer_parser.add_argument('content', default=None)
+new_answer_parser.add_argument('file_id', default=None)
 new_answer_parser.add_argument('draft', type=bool, default=False)
 
 existing_answer_parser = RequestParser()
-existing_answer_parser.add_argument('id', type=str, required=True, help="Answer id is required.")
-existing_answer_parser.add_argument('user_id', type=str, default=None)
-existing_answer_parser.add_argument('content', type=str, default=None)
-existing_answer_parser.add_argument('file_id', type=str, default=None)
+existing_answer_parser.add_argument('id', required=True, help="Answer id is required.")
+existing_answer_parser.add_argument('user_id', default=None)
+existing_answer_parser.add_argument('content', default=None)
+existing_answer_parser.add_argument('file_id', default=None)
 existing_answer_parser.add_argument('draft', type=bool, default=False)
 
 answer_list_parser = pagination_parser.copy()
-answer_list_parser.add_argument('group', type=str, required=False, default=None)
-answer_list_parser.add_argument('author', type=str, required=False, default=None)
-answer_list_parser.add_argument('orderBy', type=str, required=False, default=None)
+answer_list_parser.add_argument('group', required=False, default=None)
+answer_list_parser.add_argument('author', required=False, default=None)
+answer_list_parser.add_argument('orderBy', required=False, default=None)
 answer_list_parser.add_argument('top', type=bool, required=False, default=None)
-answer_list_parser.add_argument('ids', type=str, required=False, default=None)
+answer_list_parser.add_argument('ids', required=False, default=None)
 
 user_answer_list_parser = RequestParser()
 user_answer_list_parser.add_argument('draft', type=bool, required=False, default=False)
 user_answer_list_parser.add_argument('unsaved', type=bool, required=False, default=False)
-
-answer_comparison_list_parser = pagination_parser.copy()
-answer_comparison_list_parser.add_argument('group', type=str, required=False, default=None)
-answer_comparison_list_parser.add_argument('author', type=str, required=False, default=None)
 
 flag_parser = RequestParser()
 flag_parser.add_argument('flagged', type=bool, required=True,
@@ -68,10 +64,6 @@ on_answer_delete = event.signal('ANSWER_DELETE')
 on_answer_flag = event.signal('ANSWER_FLAG')
 on_set_top_answer = event.signal('SET_TOP_ANSWER')
 on_user_answer_get = event.signal('USER_ANSWER_GET')
-on_answer_comparisons_get = event.signal('ANSWER_COMPARISONS_GET')
-
-# messages
-answer_deadline_message = 'Answer deadline has passed.'
 
 # /
 class AnswerRootAPI(Resource):
@@ -89,7 +81,9 @@ class AnswerRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
-        require(READ, assignment)
+        require(READ, assignment,
+            title="Assignment Answers Unavailable",
+            message="Answers are visible only to those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
         params = answer_list_parser.parse_args()
@@ -102,7 +96,7 @@ class AnswerRootAPI(Resource):
         query = Answer.query \
             .options(joinedload('file')) \
             .options(joinedload('user')) \
-            .options(joinedload('scores')) \
+            .options(joinedload('score')) \
             .options(undefer_group('counts')) \
             .join(UserCourse, and_(
                 Answer.user_id == UserCourse.user_id,
@@ -133,25 +127,19 @@ class AnswerRootAPI(Resource):
         if params['top']:
             query = query.filter(Answer.top_answer == True)
 
-        if params['orderBy']:
-            criterion = Criterion.get_active_by_uuid_or_404(params['orderBy'])
-
-            # order answer ids by one criterion and pagination, in case there are multiple criteria in assignment
-            # does not include answers without a score (Note: ta and instructor never have a score)
-            query = query.join(Score) \
-                .filter(Score.criterion_id == criterion.id) \
-                .order_by(Score.score.desc(), Answer.created.desc())
+        if params['orderBy'] == 'score':
+            query = query.join(AnswerScore) \
+                .order_by(AnswerScore.score.desc(), Answer.created.desc())
 
             # limit answers up to rank if rank_display_limit is set and current_user is restricted (student)
             if assignment.rank_display_limit and restrict_user:
-                score_for_rank = Score.get_score_for_rank(
-                    assignment.id, criterion.id, assignment.rank_display_limit)
+                score_for_rank = AnswerScore.get_score_for_rank(assignment.id, assignment.rank_display_limit)
 
                 # display answers with score >= score_for_rank
                 if score_for_rank != None:
                     # will get all answer with a score greater than or equal to the score for a given rank
                     # the '- 0.00001' fixes floating point precision problems
-                    query = query.filter(Score.score >= score_for_rank - 0.00001)
+                    query = query.filter(AnswerScore.score >= score_for_rank - 0.00001)
 
         else:
             query = query.order_by(Answer.created.desc())
@@ -177,9 +165,11 @@ class AnswerRootAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
         if not assignment.answer_grace and not allow(MANAGE, assignment):
-            return {'error': answer_deadline_message}, 403
+            abort(403, title="Answer Not Saved", message="The answer deadline has passed. No answers can be saved beyond the deadline unless the instructor saves it on your behalf.")
 
-        require(CREATE, Answer(course_id=course.id))
+        require(CREATE, Answer(course_id=course.id),
+            title="Answers Not Saved",
+            message="Answers can be saved only to those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
         answer = Answer(assignment_id=assignment.id)
@@ -190,19 +180,19 @@ class AnswerRootAPI(Resource):
 
         file_uuid = params.get('file_id')
         if file_uuid:
-            uploaded_file = File.get_by_uuid_or_404(file_uuid)
-            answer.file_id = uploaded_file.id
+            attachment = File.get_by_uuid_or_404(file_uuid)
+            answer.file_id = attachment.id
         else:
             answer.file_id = None
 
         # non-drafts must have content
         if not answer.draft and not answer.content and not file_uuid:
-            return {"error": "The answer content is empty!"}, 400
+            abort(400, title="Answer Not Saved", message="Please provide content in the text editor or upload a file to save this answer.")
 
         user_uuid = params.get("user_id")
         # we allow instructor and TA to submit multiple answers for other users in the class
         if user_uuid and not allow(MANAGE, Answer(course_id=course.id)):
-            return {"error": "Only instructors and teaching assistants can submit an answer on behalf of another user."}, 400
+            abort(400, title="Answer Not Saved", message="Only instructors and teaching assistants can submit an answer on behalf of another.")
 
         if user_uuid:
             user = User.get_by_uuid_or_404(user_uuid)
@@ -224,7 +214,7 @@ class AnswerRootAPI(Resource):
             # only system admin can add answers for themselves to a class without being enrolled in it
             # required for managing comparison examples as system admin
             if current_user.id != answer.user_id or current_user.system_role != SystemRole.sys_admin:
-                return {"error": "You are not enrolled in the course."}, 400
+                abort(400, title="Answer Not Saved", message="Answers can be saved only to those enrolled in the course. Please double-check your enrollment in this course.")
 
         elif user_course.course_role.value not in instructors_and_tas:
             # check if there is a previous answer submitted for the student
@@ -236,7 +226,7 @@ class AnswerRootAPI(Resource):
                 ). \
                 first()
             if prev_answer:
-                return {"error": "An answer has already been submitted."}, 400
+                abort(400, title="Answer Not Saved", message="An answer has already been submitted for this assignment by you or on your behalf.")
 
         db.session.add(answer)
         db.session.commit()
@@ -268,9 +258,11 @@ class AnswerIdAPI(Resource):
 
         answer = Answer.get_active_by_uuid_or_404(
             answer_uuid,
-            joinedloads=['file', 'user', 'scores']
+            joinedloads=['file', 'user', 'score']
         )
-        require(READ, answer)
+        require(READ, answer,
+            title="Answer Unavailable",
+            message="Your role in this course does not allow you to view this answer.")
         restrict_user = not allow(MANAGE, assignment)
 
         on_answer_get.send(
@@ -288,21 +280,23 @@ class AnswerIdAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
         if not assignment.answer_grace and not allow(MANAGE, assignment):
-            return {'error': answer_deadline_message}, 403
+            abort(403, title="Answer Not Updated", message="The answer deadline has passed. No answers can be updated beyond the deadline unless the instructor updates it on your behalf.")
 
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
-        require(EDIT, answer)
+        require(EDIT, answer,
+            title="Answer Not Updated",
+            message="Your role in this course does not allow you to update this answer.")
         restrict_user = not allow(MANAGE, assignment)
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
             if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS and answer.user_id in DemoDataFixture.DEFAULT_STUDENT_IDS:
-                return {"error": "Sorry, you cannot edit the default student demo answers."}, 400
+                abort(400, title="Answer Not Updated", message="Sorry, you cannot edit the default student demo answers.")
 
         params = existing_answer_parser.parse_args()
         # make sure the answer id in the url and the id matches
         if params['id'] != answer_uuid:
-            return {"error": "Answer id does not match the URL."}, 400
+            abort(400, title="Answer Not Updated", message="The answer's ID does not match the URL, which is required in order to update the answer.")
 
         # modify answer according to new values, preserve original values if values not passed
         answer.content = params.get("content")
@@ -311,7 +305,8 @@ class AnswerIdAPI(Resource):
         # we allow instructor and TA to submit multiple answers for other users in the class
         if user_uuid and user_uuid != answer.user_uuid:
             if not allow(MANAGE, answer) or not answer.draft:
-                return {"error": "Only instructors and teaching assistants can submit an answer on behalf of another user."}, 400
+                abort(400, title="Answer Not Updated",
+                    message="Only instructors and teaching assistants can update an answer on behalf of another.")
             user = User.get_by_uuid_or_404(user_uuid)
             answer.user_id = user.id
 
@@ -333,7 +328,7 @@ class AnswerIdAPI(Resource):
                     ) \
                     .first()
                 if prev_answer:
-                    return {"error": "An answer has already been submitted."}, 400
+                    abort(400, title="Answer Not Updated", message="An answer has already been submitted for this assignment by you or on your behalf.")
 
         # can only change draft status while a draft
         if answer.draft:
@@ -342,13 +337,14 @@ class AnswerIdAPI(Resource):
 
         file_uuid = params.get('file_id')
         if file_uuid:
-            answer.file = File.get_by_uuid_or_404(file_uuid)
+            attachment = File.get_by_uuid_or_404(file_uuid)
+            answer.file_id = attachment.id
         else:
             answer.file_id = None
 
         # non-drafts must have content
         if not answer.draft and not answer.content and not file_uuid:
-            return {"error": "The answer content is empty!"}, 400
+            abort(400, title="Answer Not Updated", message="Please provide content in the text editor or upload a file to update this answer.")
 
         db.session.add(answer)
         db.session.commit()
@@ -374,16 +370,16 @@ class AnswerIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
-        require(DELETE, answer)
+        require(DELETE, answer,
+            title="Answer Not Deleted",
+            message="Your role in this course does not allow you to delete this answer.")
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
             if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS and answer.user_id in DemoDataFixture.DEFAULT_STUDENT_IDS:
-                return {"error": "Sorry, you cannot remove the default student demo answers."}, 400
+                abort(400, title="Answer Not Deleted", message="Sorry, you cannot remove the default student demo answers.")
 
         answer.active = False
-        if answer.file:
-            answer.file.active = False
         db.session.commit()
 
         # update course & assignment grade for user if answer was fully submitted
@@ -405,139 +401,6 @@ class AnswerIdAPI(Resource):
 api.add_resource(AnswerIdAPI, '/<answer_uuid>')
 
 
-# /comparisons
-class AnswerComparisonsAPI(Resource):
-    @login_required
-    def get(self, course_uuid, assignment_uuid):
-        course = Course.get_active_by_uuid_or_404(course_uuid)
-        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(READ, assignment)
-
-        can_read = allow(READ, Comparison(course_id=course.id))
-        restrict_user = is_user_access_restricted(current_user)
-
-        params = answer_comparison_list_parser.parse_args()
-
-        # each pagination entry would be one comparison set by a user for the assignment
-        comparison_sets = Comparison.query \
-            .with_entities(Comparison.user_id, Comparison.answer1_id, Comparison.answer2_id) \
-            .filter_by(assignment_id=assignment.id, completed=True) \
-            .group_by(Comparison.user_id, Comparison.answer1_id, Comparison.answer2_id)
-
-        if not can_read:
-            comparison_sets = comparison_sets.filter_by(user_id=current_user.id)
-        elif params['author']:
-            comparison_sets = comparison_sets.filter_by(user_uuid=params['author'])
-        elif params['group']:
-            subquery = User.query \
-                .with_entities(User.id) \
-                .join('user_courses') \
-                .filter_by(group_name=params['group']) \
-                .subquery()
-            comparison_sets = comparison_sets.filter(Comparison.user_id.in_(subquery))
-
-        page = comparison_sets.paginate(params['page'], params['perPage'])
-
-        results = []
-
-        if page.total:
-
-            # retrieve the comparisons
-            conditions = []
-            for user_id, answer1_id, answer2_id in page.items:
-                conditions.append(and_(
-                    Comparison.user_id == user_id,
-                    Comparison.answer1_id == answer1_id,
-                    Comparison.answer2_id == answer2_id
-                ))
-            comparisons = Comparison.query \
-                .options(joinedload('answer1')) \
-                .options(joinedload('answer2')) \
-                .options(joinedload('criterion')) \
-                .filter_by(completed=True) \
-                .filter(or_(*conditions)) \
-                .order_by(Comparison.user_id, Comparison.created) \
-                .all()
-
-            # retrieve the answer comments
-            user_comparioson_answers = {}
-            for (user_id, answer1_id, answer2_id), group_set in groupby(comparisons, attrgetter('user_id', 'answer1_id', 'answer2_id')):
-                user_answers = user_comparioson_answers.setdefault(user_id, set())
-                user_answers.add(answer1_id)
-                user_answers.add(answer2_id)
-
-            conditions = []
-            for user_id, answer_set in user_comparioson_answers.items():
-                conditions.append(and_(
-                        AnswerComment.user_id == user_id,
-                        AnswerComment.comment_type == AnswerCommentType.evaluation,
-                        AnswerComment.answer_id.in_(list(answer_set))
-                ))
-                conditions.append(and_(
-                    AnswerComment.comment_type == AnswerCommentType.self_evaluation,
-                    AnswerComment.user_id == user_id,
-                    AnswerComment.assignment_id == assignment.id
-                ))
-
-            answer_comments = AnswerComment.query \
-                .filter(or_(*conditions)) \
-                .filter_by(draft=False) \
-                .all()
-
-            for (user_id, answer1_id, answer2_id), group_set in groupby(comparisons, attrgetter('user_id', 'answer1_id', 'answer2_id')):
-                group = list(group_set)
-                default = group[0]
-
-                comparison_set = {
-                    'course_uuid': default.course_uuid,
-                    'assignment_uuid': default.assignment_uuid,
-                    'user_uuid': default.user_uuid,
-
-                    'comparisons': [comparison for comparison in group],
-                    'answer1_uuid': default.answer1_uuid,
-                    'answer2_uuid': default.answer2_uuid,
-                    'answer1': default.answer1,
-                    'answer2': default.answer2,
-
-                    'user_fullname': default.user_fullname,
-                    'user_displayname': default.user_displayname,
-                    'user_avatar': default.user_avatar,
-
-                    'answer1_feedback': [comment for comment in answer_comments if
-                        comment.user_id == user_id and
-                        comment.answer_id == default.answer1_id and
-                        comment.comment_type == AnswerCommentType.evaluation
-                    ],
-                    'answer2_feedback': [comment for comment in answer_comments if
-                        comment.user_id == user_id and
-                        comment.answer_id == default.answer2_id and
-                        comment.comment_type == AnswerCommentType.evaluation
-                    ],
-                    'self_evaluation': [comment for comment in answer_comments if
-                        comment.user_id == user_id and
-                        comment.comment_type == AnswerCommentType.self_evaluation
-                    ],
-
-                    'created': default.created
-                }
-
-                results.append(comparison_set)
-
-        on_answer_comparisons_get.send(
-            self,
-            event_name=on_answer_comparisons_get.name,
-            user=current_user,
-            course_id=course.id,
-            data={'assignment_id': assignment.id}
-        )
-
-        return {'objects': marshal(results, dataformat.get_comparison_set(restrict_user)), "page": page.page,
-                "pages": page.pages, "total": page.total, "per_page": page.per_page}
-
-
-api.add_resource(AnswerComparisonsAPI, '/comparisons')
-
-
 # /user
 class AnswerUserIdAPI(Resource):
     @login_required
@@ -552,7 +415,9 @@ class AnswerUserIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
-        require(READ, Answer(user_id=current_user.id))
+        require(READ, Answer(user_id=current_user.id),
+            title="Answers Unavailable",
+            message="Your role in this course does not allow you to view answers for this assignment.")
         restrict_user = not allow(MANAGE, assignment)
 
         params = user_answer_list_parser.parse_args()
@@ -561,7 +426,7 @@ class AnswerUserIdAPI(Resource):
             .options(joinedload('comments')) \
             .options(joinedload('file')) \
             .options(joinedload('user')) \
-            .options(joinedload('scores')) \
+            .options(joinedload('score')) \
             .filter_by(
                 active=True,
                 assignment_id=assignment.id,
@@ -582,7 +447,7 @@ class AnswerUserIdAPI(Resource):
             course_id=course.id,
             data={'assignment_id': assignment.id})
 
-        return {"objects": marshal( answers, dataformat.get_answer(restrict_user))}
+        return {"objects": marshal(answers, dataformat.get_answer(restrict_user))}
 
 
 api.add_resource(AnswerUserIdAPI, '/user')
@@ -602,14 +467,16 @@ class AnswerFlagAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
 
-        require(READ, answer)
+        require(READ, answer,
+            title="Answer Not Flagged",
+            message="Your role in this course does not allow you to flag answers.")
         restrict_user = not allow(MANAGE, answer)
 
         # anyone can flag an answer, but only the original flagger or someone who can manage
         # the answer can unflag it
         if answer.flagged and answer.flagger_user_id != current_user.id and \
                 not allow(MANAGE, answer):
-            return {"error": "You do not have permission to unflag this answer."}, 400
+            abort(400, title="Answer Update Failed", message="You do not have permission to unflag this answer.")
 
         params = flag_parser.parse_args()
         answer.flagged = params['flagged']
@@ -645,7 +512,9 @@ class TopAnswerAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
 
-        require(MANAGE, answer)
+        require(MANAGE, answer,
+            title="Answer Not Selected",
+            message="Your role in this course does not allow you to select top answers.")
 
         params = top_answer_parser.parse_args()
         answer.top_answer = params.get('top_answer')
@@ -660,6 +529,7 @@ class TopAnswerAPI(Resource):
             data={'answer_id': answer.id, 'top_answer': answer.top_answer})
 
         db.session.commit()
+
         return marshal(answer, dataformat.get_answer(restrict_user=False))
 
 api.add_resource(TopAnswerAPI, '/<answer_uuid>/top')

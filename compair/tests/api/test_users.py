@@ -1,7 +1,8 @@
 import json
 import datetime
 
-from flask_bouncer import ensure
+from flask_bouncer import MANAGE, CREATE, EDIT, DELETE, READ
+from compair.authorization import allow
 from flask_login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 
@@ -9,7 +10,7 @@ from data.fixtures import DefaultFixture, UserFactory, AssignmentFactory
 from data.fixtures.test_data import BasicTestData, LTITestData, ThirdPartyAuthTestData, ComparisonTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, AnswerComment, AnswerCommentType, Comparison, \
-    LTIContext, ThirdPartyUser, ThirdPartyType
+    LTIContext, ThirdPartyUser, ThirdPartyType, WinningAnswer, EmailNotificationMethod
 from compair.core import db
 
 
@@ -77,7 +78,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertEqual(users['total'], 7)
             self.assertEqual(users['objects'][0]['username'], 'root')
 
-            rv = self.client.get('/api/users?search={}'.format(self.data.get_unauthorized_instructor().firstname))
+            rv = self.client.get('/api/users?search='+self.data.get_unauthorized_instructor().firstname)
             self.assert200(rv)
             users = rv.json
             self.assertEqual(users['total'], 1)
@@ -87,19 +88,28 @@ class UsersAPITests(ComPAIRAPITestCase):
         url = '/api/users'
 
         # test login required
-        expected = UserFactory.stub(system_role=SystemRole.student.value)
+        expected = UserFactory.stub(
+            system_role=SystemRole.student.value,
+            email_notification_method=EmailNotificationMethod.enable.value
+        )
         rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
         self.assert401(rv)
 
         # test unauthorized user
         with self.login(self.data.get_authorized_student().username):
-            expected = UserFactory.stub(system_role=SystemRole.student.value)
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_instructor().username):
-            expected = UserFactory.stub(system_role=SystemRole.student.value)
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assert403(rv)
@@ -109,35 +119,50 @@ class UsersAPITests(ComPAIRAPITestCase):
             # test duplicate username
             expected = UserFactory.stub(
                 system_role=SystemRole.student.value,
-                username=self.data.get_authorized_student().username)
+                username=self.data.get_authorized_student().username,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual("This username already exists. Please pick another.", rv.json['error'])
+            self.assertEqual("Account Not Saved", rv.json['title'])
+            self.assertEqual("This username already exists. Please pick another.", rv.json['message'])
 
             # test duplicate student number
             expected = UserFactory.stub(
                 system_role=SystemRole.student.value,
-                student_number=self.data.get_authorized_student().student_number)
+                student_number=self.data.get_authorized_student().student_number,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual("This student number already exists. Please pick another.", rv.json['error'])
+            self.assertEqual("Account Not Saved", rv.json['title'])
+            self.assertEqual("This student number already exists. Please pick another.", rv.json['message'])
 
             # test creating student
-            expected = UserFactory.stub(system_role=SystemRole.student.value)
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
 
             # test creating instructor
-            expected = UserFactory.stub(system_role=SystemRole.instructor.value)
+            expected = UserFactory.stub(
+                system_role=SystemRole.instructor.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
 
             # test creating admin
-            expected = UserFactory.stub(system_role=SystemRole.sys_admin.value)
+            expected = UserFactory.stub(
+                system_role=SystemRole.sys_admin.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -147,7 +172,10 @@ class UsersAPITests(ComPAIRAPITestCase):
         lti_data = LTITestData()
 
         # test login required when LTI and oauth_create_user_link are not present
-        expected = UserFactory.stub(system_role=SystemRole.student.value)
+        expected = UserFactory.stub(
+            system_role=SystemRole.student.value,
+            email_notification_method=EmailNotificationMethod.enable.value
+        )
         rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
         self.assert401(rv)
 
@@ -158,7 +186,10 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(lti_response)
 
             # test create instructor via lti session
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -178,7 +209,10 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(lti_response)
 
             # test create instructor via lti session
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -203,7 +237,10 @@ class UsersAPITests(ComPAIRAPITestCase):
             db.session.commit()
 
             # test create instructor via lti session
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -223,7 +260,10 @@ class UsersAPITests(ComPAIRAPITestCase):
                 roles="Student") as lti_response:
             self.assert200(lti_response)
 
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -239,7 +279,10 @@ class UsersAPITests(ComPAIRAPITestCase):
                 roles="TeachingAssistant") as lti_response:
             self.assert200(lti_response)
 
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -261,7 +304,10 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertIsNone(sess.get('LTI'))
 
         # test login required when LTI and oauth_create_user_link are not present (even when CAS params are present)
-        expected = UserFactory.stub(system_role=SystemRole.student.value)
+        expected = UserFactory.stub(
+            system_role=SystemRole.student.value,
+            email_notification_method=EmailNotificationMethod.enable.value
+        )
         rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
         self.assert401(rv)
 
@@ -276,7 +322,10 @@ class UsersAPITests(ComPAIRAPITestCase):
                 sess['CAS_UNIQUE_IDENTIFIER'] = "some_unique_identifier"
                 self.assertTrue(sess.get('LTI'))
 
-            expected = UserFactory.stub(system_role=None)
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
@@ -311,6 +360,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             'username': user.username,
             'student_number': user.student_number,
             'system_role': user.system_role.value,
+            'email_notification_method': user.email_notification_method.value,
             'firstname': user.firstname,
             'lastname': user.lastname,
             'displayname': user.displayname,
@@ -323,6 +373,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             'username': instructor.username,
             'student_number': instructor.student_number,
             'system_role': instructor.system_role.value,
+            'email_notification_method': instructor.email_notification_method.value,
             'firstname': instructor.firstname,
             'lastname': instructor.lastname,
             'displayname': instructor.displayname,
@@ -353,14 +404,16 @@ class UsersAPITests(ComPAIRAPITestCase):
             duplicate['username'] = self.data.get_unauthorized_student().username
             rv = self.client.post(url, data=json.dumps(duplicate), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual("This username already exists. Please pick another.", rv.json['error'])
+            self.assertEqual("Account Not Updated", rv.json['title'])
+            self.assertEqual("This username already exists. Please pick another.", rv.json['message'])
 
             # test duplicate student number
             duplicate = expected.copy()
             duplicate['student_number'] = self.data.get_unauthorized_student().student_number
             rv = self.client.post(url, data=json.dumps(duplicate), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual("This student number already exists. Please pick another.", rv.json['error'])
+            self.assertEqual("Account Not Updated", rv.json['title'])
+            self.assertEqual("This student number already exists. Please pick another.", rv.json['message'])
 
             # test successful update by admin
             valid = expected.copy()
@@ -406,6 +459,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(user.system_role.value, rv.json['system_role'])
 
+            valid = expected.copy()
+            valid['email_notification_method'] = EmailNotificationMethod.disable.value
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(user.email_notification_method.value, rv.json['email_notification_method'])
+
             # for instructor
             valid = expected_instructor.copy()
             valid['username'] = "wrongUsername"
@@ -425,6 +484,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(instructor.system_role.value, rv.json['system_role'])
+
+            valid = expected_instructor.copy()
+            valid['email_notification_method'] = EmailNotificationMethod.disable.value
+            rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(instructor.email_notification_method.value, rv.json['email_notification_method'])
 
         # test updating username, student number, usertype for system - admin
         with self.login('root'):
@@ -447,6 +512,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(user.system_role.value, rv.json['system_role'])
 
+            valid = expected.copy()
+            valid['email_notification_method'] = EmailNotificationMethod.disable.value
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(user.email_notification_method.value, rv.json['email_notification_method'])
+
             # for instructor
             valid = expected_instructor.copy()
             valid['username'] = "wrongUsername"
@@ -467,6 +538,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(instructor.system_role.value, rv.json['system_role'])
 
+            valid = expected_instructor.copy()
+            valid['email_notification_method'] = EmailNotificationMethod.disable.value
+            rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(instructor.email_notification_method.value, rv.json['email_notification_method'])
+
         # test edit user with no compair login
         auth_data = ThirdPartyAuthTestData()
         cas_user_auth = auth_data.create_cas_user_auth(SystemRole.student)
@@ -482,6 +559,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             'firstname': user.firstname,
             'lastname': user.lastname,
             'displayname': user.displayname,
+            'email_notification_method': EmailNotificationMethod.enable.value,
             'email': user.email
         }
 
@@ -523,7 +601,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertEqual(user.username, "valid_username")
 
 
-    def test_get_course_list(self):
+    def test_get_current_user_course_list(self):
         # test login required
         url = '/api/users/courses'
         rv = self.client.get(url)
@@ -561,6 +639,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             url = '/api/users/courses'
 
             self.data.get_course().start_date = None
+            self.data.get_course().created = datetime.datetime.now() - datetime.timedelta(days=10)
 
             course_2 = self.data.create_course()
             course_2.start_date = datetime.datetime.now()
@@ -617,6 +696,98 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
 
+    def test_get_user_course_list(self):
+        # test login required
+        url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses'
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        with self.login('root'):
+            # test invalid data
+            url = '/api/users/999/courses'
+            rv = self.client.get(url)
+            self.assert404(rv)
+
+            # test admin
+            url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses'
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(self.data.get_course().name, rv.json['objects'][0]['name'])
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(self.data.get_course().name, rv.json['objects'][0]['name'])
+
+            # test search filter
+            url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses?search='+self.data.get_course().name
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(self.data.get_course().name, rv.json['objects'][0]['name'])
+
+            # test search filter
+            url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses?search=notfounds'+self.data.get_course().name
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
+            # test sort order (when some courses have start_dates and other do not)
+            url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses'
+
+            self.data.get_course().start_date = None
+            self.data.get_course().created = datetime.datetime.now() - datetime.timedelta(days=10)
+
+            course_2 = self.data.create_course()
+            course_2.start_date = datetime.datetime.now()
+            self.data.enrol_instructor(self.data.get_authorized_instructor(), course_2)
+
+            course_3 = self.data.create_course()
+            course_3.start_date = datetime.datetime.now() + datetime.timedelta(days=10)
+            self.data.enrol_instructor(self.data.get_authorized_instructor(), course_3)
+
+            courses = [course_3, course_2, self.data.get_course()]
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(3, len(rv.json['objects']))
+            for index, result in enumerate(rv.json['objects']):
+                self.assertEqual(courses[index].uuid, result['id'])
+
+            # test sort order (when course with no start date has assignment)
+            assignment = AssignmentFactory(
+                user=self.data.get_authorized_instructor(),
+                course=self.data.get_course(),
+                answer_start=(datetime.datetime.now() + datetime.timedelta(days=5))
+            )
+            db.session.commit()
+
+            courses = [course_3, self.data.get_course(), course_2]
+
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(3, len(rv.json['objects']))
+            for index, result in enumerate(rv.json['objects']):
+                self.assertEqual(courses[index].uuid, result['id'])
+
+        # test authorized instructor
+        with self.login(self.data.get_authorized_instructor().username):
+            url = '/api/users/'+ self.data.get_authorized_instructor().uuid +'/courses'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test authorized student
+        with self.login(self.data.get_authorized_student().username):
+            url = '/api/users/'+ self.data.get_authorized_student().uuid +'/courses'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test authorized teaching assistant
+        with self.login(self.data.get_authorized_ta().username):
+            url = '/api/users/'+ self.data.get_authorized_ta().uuid +'/courses'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
     def test_get_teaching_course(self):
         url = '/api/users/courses/teaching'
 
@@ -648,6 +819,80 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(2, len(rv.json['courses']))
 
+    def test_update_notification(self):
+        url = '/api/users/{}/notification'
+        data = {
+            'email_notification_method': EmailNotificationMethod.disable.value,
+        }
+
+        # test login required
+        rv = self.client.post(
+            url.format(self.data.authorized_instructor.uuid),
+            data=json.dumps(data), content_type='application/json')
+        self.assert401(rv)
+
+        # test student update notification settings
+        with self.login(self.data.authorized_student.username):
+            # test incorrect email notification method
+            invalid_input = data.copy()
+            invalid_input['email_notification_method'] = 'wrong'
+            rv = self.client.post(
+                url.format(self.data.authorized_student.uuid),
+                data=json.dumps(invalid_input), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual('Notification Settings Not Updated', rv.json['title'])
+            self.assertEqual('Please select a valid email notification method from the list provided.', rv.json['message'])
+
+            # test success
+            rv = self.client.post(
+                url.format(self.data.authorized_student.uuid),
+                data=json.dumps(data),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_student().uuid, rv.json['id'])
+            self.assertEqual(self.data.get_authorized_student().email_notification_method.value, data['email_notification_method'])
+
+        # test instructor update notification settings
+        with self.login(self.data.get_authorized_instructor().username):
+            rv = self.client.post(url.format("999"), data=json.dumps(data), content_type='application/json')
+            self.assert404(rv)
+
+            # test instructor changes the notification settings of a student in the course
+            rv = self.client.post(
+                url.format(self.data.get_authorized_student().uuid), data=json.dumps(data),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_student().uuid, rv.json['id'])
+            self.assertEqual(self.data.get_authorized_student().email_notification_method.value, data['email_notification_method'])
+
+            # test changing own notification settings
+            rv = self.client.post(
+                url.format(self.data.get_authorized_instructor().uuid),
+                data=json.dumps(data), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_instructor().uuid, rv.json['id'])
+            self.assertEqual(self.data.get_authorized_student().email_notification_method.value, data['email_notification_method'])
+
+        # test instructor changes the notification settings of a student not in the course
+        with self.login(self.data.get_unauthorized_instructor().username):
+            rv = self.client.post(
+                url.format(self.data.get_authorized_student().uuid), data=json.dumps(data),
+                content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual('Notification Settings Not Updated', rv.json['title'])
+            self.assertEqual("Your system role does not allow you to update notification settings for this account.",
+                rv.json['message'])
+
+        # test admin update notification settings
+        with self.login('root'):
+            # test admin changes student notification settings
+            rv = self.client.post(
+                url.format(self.data.get_authorized_student().uuid),
+                data=json.dumps(data), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(self.data.get_authorized_student().uuid, rv.json['id'])
+            self.assertEqual(self.data.get_authorized_student().email_notification_method.value, data['email_notification_method'])
+
     def test_update_password(self):
         url = '/api/users/{}/password'
         data = {
@@ -668,10 +913,9 @@ class UsersAPITests(ComPAIRAPITestCase):
                 url.format(self.data.authorized_student.uuid),
                 data=json.dumps({'newpassword': '123456'}),
                 content_type='application/json')
-            self.assert403(rv)
-            self.assertEqual(
-                'The old password is incorrect or you do not have permission to change password.',
-                rv.json['error'])
+            self.assert400(rv)
+            self.assertEqual('Password Not Updated', rv.json['title'])
+            self.assertEqual('The old password is missing.', rv.json['message'])
 
             # test incorrect old password
             invalid_input = data.copy()
@@ -679,10 +923,9 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(
                 url.format(self.data.authorized_student.uuid),
                 data=json.dumps(invalid_input), content_type='application/json')
-            self.assert403(rv)
-            self.assertEqual(
-                'The old password is incorrect or you do not have permission to change password.',
-                rv.json['error'])
+            self.assert400(rv)
+            self.assertEqual('Password Not Updated', rv.json['title'])
+            self.assertEqual('The old password is incorrect.', rv.json['message'])
 
             # test with old password
             rv = self.client.post(
@@ -694,7 +937,7 @@ class UsersAPITests(ComPAIRAPITestCase):
 
         # test instructor update password
         with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.post(url.format(str(999)), data=json.dumps(data), content_type='application/json')
+            rv = self.client.post(url.format("999"), data=json.dumps(data), content_type='application/json')
             self.assert404(rv)
 
             # test instructor changes the password of a student in the course
@@ -717,9 +960,8 @@ class UsersAPITests(ComPAIRAPITestCase):
                 url.format(self.data.get_authorized_student().uuid), data=json.dumps(data),
                 content_type='application/json')
             self.assert403(rv)
-            self.assertEqual(
-                '<p>{} does not have edit access to {}</p>'.format(self.data.get_unauthorized_instructor().username,
-                                                                   self.data.get_authorized_student().username),
+            self.assertEqual("Password Not Updated", rv.json['title'])
+            self.assertEqual("Your system role does not allow you to update passwords for this account.",
                 rv.json['message'])
 
         # test admin update password
@@ -744,7 +986,8 @@ class UsersAPITests(ComPAIRAPITestCase):
             # cannot change password
             rv = self.client.post(url, data=json.dumps(data), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual("Cannot update password. User does not use ComPAIR account login authentication method.", rv.json['error'])
+            self.assertEqual("Password Not Updated", rv.json['title'])
+            self.assertEqual("Cannot update password. User does not use the ComPAIR account login authentication method.", rv.json['message'])
 
     def test_get_edit_button(self):
         url = '/api/users/' + self.data.get_authorized_student().uuid + '/edit'
@@ -771,22 +1014,24 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertTrue(rv.json['available'])
 
     def _verify_permissions(self, user_id, permissions):
+        operations = [MANAGE, CREATE, EDIT, DELETE, READ]
+
         user = User.query.get(user_id)
         with self.app.app_context():
             # can't figure out how to get into logged in app context, so just force a login here
             login_user(user, force=True)
             admin = user.system_role == SystemRole.sys_admin
-            for model_name, operations in permissions.items():
-                for operation, permission in operations.items():
-                    expected = True
-                    try:
-                        ensure(operation, model_name)
-                    except Unauthorized:
-                        expected = False
-                    expected = expected or admin
-                    self.assertEqual(
-                        permission['global'], expected,
-                        "Expected permission " + operation + " on " + model_name + " to be " + str(expected))
+
+            for model_name, permission_scopes in permissions.items():
+                global_permissions = set(permission_scopes['global'])
+
+                expected_operations = set()
+                for operation in operations:
+                    if admin or allow(operation, model_name):
+                        expected_operations.add(operation)
+
+                self.assertEqual(global_permissions, expected_operations)
+
             # undo the forced login earlier
             logout_user()
 
@@ -816,22 +1061,28 @@ class UsersCourseStatusAPITests(ComPAIRAPITestCase):
         submit_count = 0
 
         for comparison_example in assignment.comparison_examples:
-            comparisons = Comparison.create_new_comparison_set(assignment.id, user_id, False)
-            self.assertEqual(comparisons[0].answer1_id, comparison_example.answer1_id)
-            self.assertEqual(comparisons[0].answer2_id, comparison_example.answer2_id)
-            for comparison in comparisons:
-                comparison.completed = True
-                comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                db.session.add(comparison)
+            comparison = Comparison.create_new_comparison(assignment.id, user_id, False)
+            self.assertEqual(comparison.answer1_id, comparison_example.answer1_id)
+            self.assertEqual(comparison.answer2_id, comparison_example.answer2_id)
+
+            comparison.completed = True
+            comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+            for comparison_criterion in comparison.comparison_criteria:
+                comparison_criterion.winner = comparison.winner
+            db.session.add(comparison)
+
             submit_count += 1
             db.session.commit()
 
         for i in range(assignment.number_of_comparisons):
-            comparisons = Comparison.create_new_comparison_set(assignment.id, user_id, False)
-            for comparison in comparisons:
-                comparison.completed = True
-                comparison.winner_id = min([comparisons[0].answer1_id, comparisons[0].answer2_id])
-                db.session.add(comparison)
+            comparison = Comparison.create_new_comparison(assignment.id, user_id, False)
+
+            comparison.completed = True
+            comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
+            for comparison_criterion in comparison.comparison_criteria:
+                comparison_criterion.winner = comparison.winner
+            db.session.add(comparison)
+
             submit_count += 1
             db.session.commit()
 

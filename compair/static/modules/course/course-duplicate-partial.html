@@ -2,7 +2,7 @@
 
 <form name="duplicateCourseForm" class="form" ng-submit="duplicate()" novalidate>
 
-    <h2 class="text-center">Duplicate: {{originalCourse.name}}</h2>
+    <h1 class="text-center">Duplicate: {{originalCourse.name}}</h1>
     <br />
     <p class="intro-text">Please provide the required fields below to duplicate your course and its assignments. All assignments will be editable after duplication. This process will <em>not</em> copy enrolled students, submitted answers, or comparisons.</p>
 
@@ -38,38 +38,42 @@
                 <label>Course Begins</label><br />
                 <div class="assignment-date">
                     <span class="input-group">
-                        <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_start.date" is-open="duplicateCourse.date.course_start.opened" />
+                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_start.date"
+                            max-date="duplicateCourse.date.course_end.date"
+                            is-open="duplicateCourse.date.course_start.opened" />
                         <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="duplicateCourse.date.course_start.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, duplicateCourse.date.course_start)"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </span>
                 </div>
                 <div class="assignment-date">
-                    <timepicker ng-model="duplicateCourse.date.course_start.time" minute-step="1" mousewheel="false"></timepicker>
+                    <uib-timepicker ng-model="duplicateCourse.date.course_start.time" minute-step="1" mousewheel="false"></uib-timepicker>
                 </div>
             </div>
             <div class="col-md-6 form-group">
                 <label>Course Ends</label><br />
                 <div class="assignment-date">
                     <span class="input-group">
-                        <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_end.date" is-open="duplicateCourse.date.course_end.opened" />
+                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_end.date"
+                            min-date="duplicateCourse.date.course_start.date"
+                            is-open="duplicateCourse.date.course_end.opened" />
                         <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="duplicateCourse.date.course_end.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, duplicateCourse.date.course_end)"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
                     </span>
                 </div>
                 <div class="assignment-date">
-                    <timepicker ng-model="duplicateCourse.date.course_end.time" minute-step="1" mousewheel="false"></timepicker>
+                    <uib-timepicker ng-model="duplicateCourse.date.course_end.time" minute-step="1" mousewheel="false"></uib-timepicker>
                 </div>
             </div>
         </div>
     </fieldset>
 
     <div ng-class="{'text-center': !showAssignments}">
-        <a class="btn btn-primary btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
+        <a class="btn btn-success btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
             ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
         <br ng-show="!showAssignments" /><br ng-show="!showAssignments" />
-        <a class="btn btn-default btn-md" value="Next" ng-click="showAssignments=!showAssignments"
+        <a class="btn btn-default btn-md" value="Back" ng-click="showAssignments=!showAssignments"
             ng-show="showAssignments">&laquo; Back</a>
     </div>
 
@@ -86,14 +90,14 @@
         <div ng-show="duplicateAssignments.length" class="each-assignment" ng-class="{'first-child': $first}"
             ng-repeat="assignment in duplicateAssignments | orderBy:'':true">
 
-            <hr />
+            <hr ng-hide="$first" />
 
             <h3 class="media-heading">
                 Assignment: "{{assignment.name}}"
             </h3>
             <div class="form-group">
                 <input id="availableCheck-{{assignment.id}}" type="checkbox" ng-model="assignment.availableCheck">
-                <label for="availableCheck-{{assignment.id}}">Set a comparison period for this assignment below</label>
+                <label for="availableCheck-{{assignment.id}}">Set a comparison period for this assignment below<span ng-show="assignment.availableCheck">:</span></label>
             </div>
 
             <div class="row">
@@ -106,14 +110,17 @@
                     </label><br />
                     <div class="assignment-date">
                         <span class="input-group">
-                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="assignment.date.astart.date" is-open="assignment.date.astart.opened" required />
+                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.astart.date"
+                                min-date="datePickerMinDate(duplicateCourse.date.course_start.date)"
+                                max-date="datePickerMaxDate(assignment.date.aend.date, duplicateCourse.date.course_end.date)"
+                                is-open="assignment.date.astart.opened" required />
                             <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="assignment.date.astart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.astart)"><i class="glyphicon glyphicon-calendar"></i></button>
                             </span>
                         </span>
                     </div>
                     <div class="assignment-date">
-                        <timepicker ng-model="assignment.date.astart.time" minute-step="1" mousewheel="false"></timepicker>
+                        <uib-timepicker ng-model="assignment.date.astart.time" minute-step="1" mousewheel="false"></uib-timepicker>
                     </div>
                 </div>
                 <div class="col-md-6 form-group">
@@ -125,14 +132,17 @@
                     </label><br />
                     <div class="assignment-date">
                         <span class="input-group">
-                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="assignment.date.aend.date" is-open="assignment.date.aend.opened" required />
+                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.aend.date"
+                                min-date="datePickerMinDate(assignment.date.astart.date, duplicateCourse.date.course_start.date)"
+                                max-date="datePickerMaxDate(duplicateCourse.date.course_end.date)"
+                                is-open="assignment.date.aend.opened" required />
                             <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="assignment.date.aend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.aend)"><i class="glyphicon glyphicon-calendar"></i></button>
                             </span>
                         </span>
                     </div>
                     <div class="assignment-date">
-                        <timepicker ng-model="assignment.date.aend.time" minute-step="1" mousewheel="false"></timepicker>
+                        <uib-timepicker ng-model="assignment.date.aend.time" minute-step="1" mousewheel="false"></uib-timepicker>
                     </div>
                 </div>
             </div>
@@ -147,14 +157,17 @@
                     </label><br />
                     <div class="assignment-date">
                         <span class="input-group">
-                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="assignment.date.cstart.date" is-open="assignment.date.cstart.opened" ng-required="assignment.availableCheck" />
+                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.cstart.date"
+                                min-date="datePickerMinDate(assignment.date.astart.date, duplicateCourse.date.course_start.date)"
+                                max-date="datePickerMaxDate(assignment.date.cend.date, duplicateCourse.date.course_end.date)"
+                                is-open="assignment.date.cstart.opened" ng-required="assignment.availableCheck" />
                             <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="assignment.date.cstart.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.cstart)"><i class="glyphicon glyphicon-calendar"></i></button>
                             </span>
                         </span>
                     </div>
                     <div class="assignment-date">
-                        <timepicker ng-model="assignment.date.cstart.time" minute-step="1" mousewheel="false"></timepicker>
+                        <uib-timepicker ng-model="assignment.date.cstart.time" minute-step="1" mousewheel="false"></uib-timepicker>
                     </div>
                 </div>
                 <div class="col-md-6 form-group">
@@ -166,14 +179,17 @@
                     </label><br />
                     <div class="assignment-date">
                         <span class="input-group">
-                            <input type="text" class="form-control" datepicker-popup="{{format}}" ng-model="assignment.date.cend.date" is-open="assignment.date.cend.opened" ng-required="assignment.availableCheck" />
+                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.cend.date"
+                                min-date="datePickerMinDate(assignment.date.cstart.date, duplicateCourse.date.course_start.date)"
+                                max-date="datePickerMaxDate(duplicateCourse.date.course_end.date)"
+                                is-open="assignment.date.cend.opened" ng-required="assignment.availableCheck" />
                             <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="assignment.date.cend.open($event)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.cend)"><i class="glyphicon glyphicon-calendar"></i></button>
                             </span>
                         </span>
                     </div>
                     <div class="assignment-date">
-                        <timepicker ng-model="assignment.date.cend.time" minute-step="1" mousewheel="false"></timepicker>
+                        <uib-timepicker ng-model="assignment.date.cend.time" minute-step="1" mousewheel="false"></uib-timepicker>
                     </div>
                 </div>
             </div>

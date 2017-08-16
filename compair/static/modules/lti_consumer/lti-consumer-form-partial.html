@@ -1,0 +1,35 @@
+<h1 ng-if="method == 'create'">Add LTI Consumer</h1>
+<h1 ng-if="method == 'edit'">Edit LTI Consumer</h1>
+
+<form name="consumerForm" class="form" ng-submit="save()" novalidate>
+    <fieldset>
+        <legend>Consumer Details</legend>
+        <compair-field-with-feedback form-control="consumerForm.oauth_consumer_key">
+            <label for="oauth_consumer_key" class="required-star">Consumer Key</label>
+            <input class="form-control" id="oauth_consumer_key" type="text"
+                name="oauth_consumer_key" ng-model="consumer.oauth_consumer_key"
+                ng-minlength="10" ng-maxlength="255"
+                required />
+        </compair-field-with-feedback>
+        <compair-field-with-feedback form-control="consumerForm.oauth_consumer_secret">
+            <label for="oauth_consumer_secret" class="required-star">Consumer Secret</label>
+            <input class="form-control" id="oauth_consumer_secret" type="text"
+                name="oauth_consumer_secret" ng-model="consumer.oauth_consumer_secret"
+                ng-minlength="10" ng-maxlength="255"
+                required />
+        </compair-field-with-feedback>
+        <compair-field-with-feedback form-control="consumerForm.user_id_override">
+            <label for="user_id_override">LTI User ID Override</label>
+            <input class="form-control" id="user_id_override" type="text"
+                name="user_id_override" ng-model="consumer.user_id_override"
+                ng-maxlength="255" />
+        </compair-field-with-feedback>
+        <compair-field-with-feedback form-control="consumerForm.active" ng-if="method == 'edit'">
+            <input id="active" type="checkbox" ng-model="consumer.active">
+            <label class="not-bold" for="active">Active</label>
+        </compair-field-with-feedback>
+    </fieldset>
+
+    <input type="submit" class="btn btn-success center-block btn-lg" value="Save"
+        ng-disabled="consumerForm.$invalid || submitted" />
+</form>

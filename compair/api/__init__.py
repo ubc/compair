@@ -1,17 +1,17 @@
 import mimetypes
 import os
 
-from flask import redirect, render_template
+from flask import redirect, render_template, jsonify
 from flask_login import login_required, current_user, current_app
 from flask import make_response
-from flask import send_file
+from flask import send_file, url_for
 from flask_restful.reqparse import RequestParser
 
 from compair.core import event
 on_get_file = event.signal('GET_FILE')
 
 attachment_download_parser = RequestParser()
-attachment_download_parser.add_argument('name', type=str, default=None)
+attachment_download_parser.add_argument('name', default=None)
 
 def register_api_blueprints(app):
     # Initialize rest of the api modules
@@ -42,6 +42,11 @@ def register_api_blueprints(app):
     app.register_blueprint(
         lti_api,
         url_prefix='/api/lti')
+
+    from .lti_consumers import lti_consumer_api
+    app.register_blueprint(
+        lti_consumer_api,
+        url_prefix='/api/lti/consumers')
 
     from .users import user_api
     app.register_blueprint(
@@ -78,11 +83,6 @@ def register_api_blueprints(app):
         criterion_api,
         url_prefix='/api/criteria')
 
-    from .assignment_criterion import assignment_criterion_api
-    app.register_blueprint(
-        assignment_criterion_api,
-        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>/criteria')
-
     from .comparison import comparison_api
     app.register_blueprint(
         comparison_api,
@@ -113,14 +113,18 @@ def register_api_blueprints(app):
 
     @app.route('/app/')
     def route_app():
-        if app.debug:
+        if app.debug or app.config.get('TESTING', False):
             return render_template(
                 'index-dev.html',
                 ga_tracking_id=app.config['GA_TRACKING_ID'],
                 attachment_extensions=list(app.config['ATTACHMENT_ALLOWED_EXTENSIONS']),
+                attachment_upload_limit=app.config['ATTACHMENT_UPLOAD_LIMIT'],
                 app_login_enabled=app.config['APP_LOGIN_ENABLED'],
                 cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],
                 lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
+                kaltura_enabled=app.config['KALTURA_ENABLED'],
+                kaltura_extensions=list(app.config['KALTURA_ATTACHMENT_EXTENSIONS']),
+                notifications_enabled=app.config['MAIL_NOTIFICATION_ENABLED'],
                 xapi_enabled=app.config['XAPI_ENABLED'],
                 xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
                 demo=app.config.get('DEMO_INSTALLATION'),
@@ -128,24 +132,23 @@ def register_api_blueprints(app):
 
         # running in prod mode, figure out asset location
         assets = app.config['ASSETS']
-        prefix = ''
-        if app.config['ASSET_LOCATION'] == 'cloud':
-            prefix = app.config['ASSET_CLOUD_URI_PREFIX']
-        elif app.config['ASSET_LOCATION'] == 'local':
-            prefix = app.static_url_path + '/dist/'
-        else:
-            app.logger.error('Invalid ASSET_LOCATION value ' + app.config['ASSET_LOCATION'] + '.')
+        prefix = app.config['ASSET_PREFIX']
 
         return render_template(
             'index.html',
             bower_js_libs=prefix + assets['bowerJsLibs.js'],
             compair_js=prefix + assets['compair.js'],
             compair_css=prefix + assets['compair.css'],
+            static_img_path=prefix,
             ga_tracking_id=app.config['GA_TRACKING_ID'],
             attachment_extensions=list(app.config['ATTACHMENT_ALLOWED_EXTENSIONS']),
+            attachment_upload_limit=app.config['ATTACHMENT_UPLOAD_LIMIT'],
             app_login_enabled=app.config['APP_LOGIN_ENABLED'],
             cas_login_enabled=app.config['CAS_LOGIN_ENABLED'],
             lti_login_enabled=app.config['LTI_LOGIN_ENABLED'],
+            kaltura_enabled=app.config['KALTURA_ENABLED'],
+            kaltura_extensions=list(app.config['KALTURA_ATTACHMENT_EXTENSIONS']),
+            notifications_enabled=app.config['MAIL_NOTIFICATION_ENABLED'],
             xapi_enabled=app.config['XAPI_ENABLED'],
             xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
             demo=app.config.get('DEMO_INSTALLATION'),
@@ -154,6 +157,23 @@ def register_api_blueprints(app):
     @app.route('/')
     def route_root():
         return redirect("/app/")
+
+    @app.route('/app/pdf')
+    def route_pdf_viewer():
+        if app.debug or app.config.get('TESTING', False):
+            return render_template(
+                'pdf-viewer.html',
+                pdf_lib_folder=url_for('static', filename='lib/pdf.js-viewer')
+            )
+
+        # running in prod mode, figure out asset location
+        assets = app.config['ASSETS']
+        prefix = app.config['ASSET_PREFIX']
+
+        return render_template(
+            'pdf-viewer.html',
+            pdf_lib_folder=prefix + 'pdf.js-viewer'
+        )
 
     @app.route('/app/<regex("attachment|report"):file_type>/<file_name>')
     @login_required
@@ -209,7 +229,7 @@ def register_demo_api_blueprints(app):
 def log_events(log):
     # user events
     from .users import on_user_modified, on_user_get, on_user_list_get, on_user_create, on_user_course_get, \
-        on_user_password_update, on_user_edit_button_get, on_teaching_course_get
+        on_user_password_update, on_user_edit_button_get, on_teaching_course_get, on_user_notifications_update
     on_user_modified.connect(log)
     on_user_get.connect(log)
     on_user_list_get.connect(log)
@@ -217,6 +237,7 @@ def log_events(log):
     on_user_course_get.connect(log)
     on_teaching_course_get.connect(log)
     on_user_edit_button_get.connect(log)
+    on_user_notifications_update.connect(log)
     on_user_password_update.connect(log)
 
     # course events
@@ -231,7 +252,8 @@ def log_events(log):
 
     # assignment events
     from .assignment import on_assignment_modified, on_assignment_get, on_assignment_list_get, on_assignment_create, \
-        on_assignment_delete, on_assignment_list_get_status, on_assignment_get_status
+        on_assignment_delete, on_assignment_list_get_status, on_assignment_get_status, \
+        on_assignment_user_comparisons_get, on_assignment_users_comparisons_get
     on_assignment_modified.connect(log)
     on_assignment_get.connect(log)
     on_assignment_list_get.connect(log)
@@ -239,6 +261,8 @@ def log_events(log):
     on_assignment_delete.connect(log)
     on_assignment_list_get_status.connect(log)
     on_assignment_get_status.connect(log)
+    on_assignment_user_comparisons_get.connect(log)
+    on_assignment_users_comparisons_get.connect(log)
 
     # assignment comment events
     from .assignment_comment import on_assignment_comment_modified, on_assignment_comment_get, \
@@ -251,7 +275,7 @@ def log_events(log):
 
     # answer events
     from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag, \
-        on_set_top_answer, on_answer_delete, on_user_answer_get, on_answer_comparisons_get
+        on_set_top_answer, on_answer_delete, on_user_answer_get
     on_answer_modified.connect(log)
     on_answer_get.connect(log)
     on_answer_list_get.connect(log)
@@ -260,7 +284,6 @@ def log_events(log):
     on_set_top_answer.connect(log)
     on_answer_delete.connect(log)
     on_user_answer_get.connect(log)
-    on_answer_comparisons_get.connect(log)
 
     # answer comment events
     from .answer_comment import on_answer_comment_modified, on_answer_comment_get, on_answer_comment_list_get, \
@@ -277,10 +300,6 @@ def log_events(log):
     on_criterion_update.connect(log)
     on_criterion_list_get.connect(log)
     on_criterion_create.connect(log)
-
-    # assignment criterion events
-    from .assignment_criterion import on_assignment_criterion_get
-    on_assignment_criterion_get.connect(log)
 
     # comparison events
     from .comparison import on_comparison_get, on_comparison_create, on_comparison_update
@@ -310,9 +329,8 @@ def log_events(log):
     on_classlist_update_users_course_roles.connect(log)
 
     # course group events
-    from .course_group import on_course_group_get, on_course_group_import, on_course_group_members_get
+    from .course_group import on_course_group_get, on_course_group_members_get
     on_course_group_get.connect(log)
-    on_course_group_import.connect(log)
     on_course_group_members_get.connect(log)
 
     # course user group events
@@ -328,20 +346,29 @@ def log_events(log):
     on_export_report.connect(log)
 
     # file attachment event
-    from .file import on_save_file, on_file_get, on_file_delete
+    from .file import on_save_file, on_get_kaltura_token, on_save_kaltura_file
     on_save_file.connect(log)
-    on_file_get.connect(log)
-    on_file_delete.connect(log)
+    on_get_kaltura_token.connect(log)
+    on_save_kaltura_file.connect(log)
 
     # gradebook event
     from .gradebook import on_gradebook_get
     on_gradebook_get.connect(log)
 
+    # lti launch event
     from .lti_launch import on_lti_course_link, on_lti_course_membership_update, \
         on_lti_course_membership_status_get
     on_lti_course_link.connect(log)
     on_lti_course_membership_update.connect(log)
     on_lti_course_membership_status_get.connect(log)
+
+    # lti consumer event
+    from .lti_consumers import on_consumer_create, on_consumer_get, \
+        on_consumer_list_get, on_consumer_update
+    on_consumer_create.connect(log)
+    on_consumer_get.connect(log)
+    on_consumer_list_get.connect(log)
+    on_consumer_update.connect(log)
 
     # misc
     on_get_file.connect(log)

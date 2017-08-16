@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <!--[if IE 9]><html ng-app = "myApp" auth-login class="ie9"><![endif]-->
-<html ng-app = "myApp" auth-login>
+<html ng-app="myApp" auth-login>
     <head>
         <base href="/app/">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- add empty favicon.ico to prevent browser errors -->
-        <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-        <title>ComPAIR</title>
+        <link rel="icon" type="image/png" href="{{ static_img_path }}/black-favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="{{ static_img_path }}/black-favicon-16x16.png" sizes="16x16" />
+        <title>ComPAIR Learning Application</title>
+        <meta name="description" content="The ComPAIR learning application pairs student answers for deeper learning through comparison of peer work. This is the site for live courses at UBC.">
 
         <!-- Javascript Libraries -->
         <!-- font awesome CDN -->
         <script src="https://use.fontawesome.com/5896577a49.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.11/ckeditor.js"></script>
+        <script src="//platform.twitter.com/widgets.js"></script>
 
         <!-- build:prod_minify_js_libs -->
         <script src="{{ bower_js_libs }}"></script>
@@ -27,6 +29,27 @@
 
         <!-- MathJax, should figure out how to bower manage this -->
         <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_HTMLorMML&delayStartupUntil=configured"></script>
+        <script>
+            // config MathJax
+            MathJax.Hub.Config({
+                skipStartupTypeset: true
+            });
+            MathJax.Hub.Configured();
+
+            // config CKEDITOR
+            CKEDITOR.plugins.addExternal( 'combinedmath', '/app/lib_extension/ckeditor/plugins/combinedmath/' );
+            CKEDITOR.plugins.addExternal( 'autolink', '/app/lib_extension/ckeditor/plugins/autolink/' );
+            CKEDITOR.on('dialogDefinition', function(ev) {
+                var dialogName = ev.data.name;
+                var dialog = ev.data.definition.dialog;
+                var dialogDefinition = ev.data.definition;
+
+                if (dialogName === 'link') {
+                    var target = dialogDefinition.getContents('target');
+                    target.get('linkTargetType')['default'] = '_blank';
+                }
+            });
+        </script>
 
         <!-- build:prod_minify_js -->
         <script src="{{ compair_js }}"></script>
@@ -42,8 +65,12 @@
                     AuthTypesEnabled.demo = {{ 'true' if demo else 'false' }};
                 }]);
                 angular.module('ubc.ctlt.compair.attachment')
-                .run( ['FileExtensions', function(FileExtensions) {
-                    FileExtensions.attachment = {{ attachment_extensions|string|safe if attachment_extensions else [] }};
+                .run( ['UploadSettings', function(UploadSettings) {
+                    UploadSettings.attachmentExtensions = {{ attachment_extensions|string|safe if attachment_extensions else [] }};
+                    UploadSettings.attachmentUploadLimit = {{ attachment_upload_limit if attachment_upload_limit else 262144000 }};
+                    {% if kaltura_enabled %}
+                    UploadSettings.kalturaExtensions = {{ kaltura_extensions|string|safe if attachment_extensions else [] }};
+                    {% endif %}
                 }]);
                 angular.module('ubc.ctlt.compair.common.xapi')
                 .run( ['$location', 'xAPISettings', function($location, xAPISettings) {
@@ -52,6 +79,16 @@
                     if (baseUrl == '') { baseUrl = $location.absUrl().replace("app/#"+$location.url(), ""); }
                     xAPISettings.baseUrl = baseUrl;
                 }]);
+                angular.module('ubc.ctlt.compair.user')
+                .run( ['UserSettings', function(UserSettings) {
+                    UserSettings.notifications = {{ 'true' if notifications_enabled else 'false' }};
+                }]);
+                angular.module('ubc.ctlt.compair.common')
+                {% if static_img_path %}
+                .run( ['logoSettings', function(logoSettings) {
+                    logoSettings.path = '{{ static_img_path }}';
+                }]);
+                {% endif %}
             })();
         </script>
         {% if ga_tracking_id %}
@@ -77,15 +114,16 @@
     <![endif]-->
 
     <!-- Main Navbar -->
-    <ng-include src="'modules/navbar/navbar-partial.html'"></ng-include>
+    <navbar-component></navbar-component>
+    <ng-include src="'modules/route/route-error-partial.html'"></ng-include>
 
     <!-- Toast Messages from AngularJS-Toaster -->
-    <toaster-container toaster-options="{'limit': 1, 'position-class': 'toast-top-full-width-opaque'}"></toaster-container>
+    <toaster-container toaster-options="{'limit': 1, 'position-class': 'toast-top-full-width-opaque',  'prevent-duplicates': true}"></toaster-container>
 
     <!-- Main Viewport, where all the module partials are shown -->
     <div class="container">
         <!-- ngView, should have it's own row and column css organization -->
-        <div ng-view=""></div>
+        <div ng-view="" autoscroll></div>
     </div>
     </body>
 </html>

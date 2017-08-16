@@ -1,21 +1,21 @@
 <div>
     <div class="pull-right" ng-if="canManageUser || showEditButton.available || ownProfile">
         <a id="edit-profile-btn" ng-href="#/user/{{user.id}}/edit" class="btn btn-primary">
-            <i class="fa fa-edit"></i> Edit
+            <i class="fa fa-edit"></i> Edit User
         </a>
     </div>
     <h1><i class="fa fa-user"></i> {{user.displayname}}'s Profile</h1>
-    <p ng-if="!(canManageUsers || loggedInUserIsInstructor) && ownProfile" class="intro-text">Instructors can always see your complete profile information, if you are enrolled in their course. Students can only see your display name, anonymous icon, and the last time you logged in. To make yourself fully anonymous to other students, click the "Edit" button and change what appears in the "Display Name" field.</p>
-    <p ng-if="canManageUsers || loggedInUserIsInstructor" class="intro-text">Instructors can always see complete student profile information, if the student enrolls in a course that instructor is teaching. Students can only see each other's display name, anonymous icon, and the last time a student logged in. To ensure student anonymity, have your students check what appears as their display name. (To edit student information in bulk, use the "Manage Users" option found on the course page.)</p>
+    <p ng-if="!(canManageUsers || loggedInUserIsInstructor) && ownProfile" class="intro-text">Instructors can always see your complete profile information, if you are enrolled in their ComPAIR course. Students can only see your display name, anonymous icon, and the last time you logged in. To make yourself fully anonymous to other students, click the "Edit" button and change what appears in the "Display Name" field.</p>
+    <p ng-if="canManageUsers || loggedInUserIsInstructor" class="intro-text">Instructors can always see complete student profile information, if the student is enrolled in their ComPAIR course. Students can only see each other's display name, anonymous icon, and the last time a student logged in. To ensure student anonymity, have your students check what appears as their display name. (To edit student information in bulk, use the "Manage Users" option found on the course page.)</p>
     <p ng-if="(canManageUsers || loggedInUserIsInstructor) && ownProfile" class="intro-text">Instructors may use personalized icons, which can be added and managed through <a href="https://en.gravatar.com/">Gravatar</a>.</p>
     <hr>
-    <div class="col-md-4 gravatar-img">
+    <div class="col-md-3 gravatar-img">
         <a ng-if="canManageUsers || loggedInUserIsInstructor" href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
            <img id="user_avatar" class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
         </a>
         <img ng-if="!(canManageUsers || loggedInUserIsInstructor)" id="user_avatar" class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
     </div>
-    <div class="col-md-8 user-details">
+    <div class="col-md-9 user-details">
         <div class="row">
             <strong class="col-md-3">Display Name:</strong>
             <div id="user_displayname" class="col-md-9">{{ user.displayname }}</div>
@@ -31,6 +31,16 @@
         <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
             <strong class="col-md-3">Email:</strong>
             <div id="user_email"  class="col-md-9">{{ user.email }}</div>
+        </div>
+        <div class="row" ng-if="UserSettings.notifications && (canManageUser || showEditButton.available || ownProfile)">
+            <strong class="col-md-3">Notifications:</strong>
+		    <div class="col-md-9" ng-show="!user.email">N/A</div>
+		    <div id="user_email_notification_method" class="col-md-9" ng-show="user.email">
+                <input id="email_notification_method" type="checkbox" ng-model="user.email_notification_method" ng-disabled="!user.email || submitted"
+                    ng-true-value="'{{EmailNotificationMethod.enable}}'" ng-false-value="'{{EmailNotificationMethod.disable}}'"
+                    ng-change="updateNotificationSettings()">
+                Receive email notifications from ComPAIR about assignments
+            </div>
         </div>
 	    <div class="row" ng-if="(canManageUsers || loggedInUserIsInstructor || ownProfile) && user.uses_compair_login">
             <strong class="col-md-3">Username:</strong>

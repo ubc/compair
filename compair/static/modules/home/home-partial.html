@@ -1,11 +1,20 @@
-<div ng-controller="HomeController" class="home-screen">
+<div class="home-screen">
 
-    <h1 id="view-title">ComPAIR</h1>
+    <div class="row">
 
-    <p class="intro-text">Welcome to the ComPAIR tool! With this tool,
-        <span ng-show="!canAddCourse">you will show your understanding of course content by answering the assignments posted by your instructor and then comparing pairs of your peers' answers and offering constructive feedback on how they can improve.</span>
-        <span ng-show="canAddCourse">you can 1) post assignments for students to answer, 2) see how students compare and offer feedback on pairs of their peers' answers, and 3) give individual feedback to each student or to the class as a whole.</span>
-    </p>
+        <div class="col-sm-4 col-lg-3">
+            <compair-logo type="'large'"></compair-logo>
+        </div>
+
+        <div class="col-sm-8 col-lg-9">
+            <h1>ComPAIR Learning Application</h1>
+            <p class="intro-text">Welcome to the ComPAIR tool! With this tool,
+                <span ng-show="!canAddCourse">you will show your understanding of course content by answering the assignments posted by your instructor and then comparing pairs of your peers' answers and offering constructive feedback on how they can improve.</span>
+                <span ng-show="canAddCourse">you can 1) post assignments for students to answer, 2) see how students compare and offer feedback on pairs of their peers' answers, and 3) give individual feedback to each student or to the class as a whole.</span>
+            </p>
+        </div>
+
+    </div>
 
     <div class="row">
 
@@ -43,12 +52,11 @@
                     <ul class="list-inline course-metadata-list">
                         <!-- Edit Link (instructors only) -->
                         <li ng-if="course.canEditCourse">
-                            <a ng-href="#/course/{{course.id}}/configure" title="Edit">
+                            <a ng-href="#/course/{{course.id}}/edit" title="Edit">
                                 Edit
                             </a>
                         </li>
                         <!-- Duplicate Link (instructors only) -->
-                         <!-- TO DO: enable duplication -->
                         <li ng-if="course.canEditCourse">
                             <a ng-click="duplicateCourse(course)" title="Duplicate" href="">
                                 Duplicate
@@ -79,7 +87,7 @@
                         </li>
                         <!-- Delete Link -->
                         <li ng-if="course.canDeleteCourse">
-                            <a confirmation-needed="deleteCourse(course)" keyword="course and assignments" title="Delete" href="">
+                            <a confirmation-needed="deleteCourse(course)" keyword="course and its assignments" title="Delete" href="">
                                 <i class="fa fa-trash-o"></i>
                             </a>
                         </li>
@@ -103,17 +111,16 @@
     </div>
 
     <div class="text-center" ng-if="courses.length">
-        <pagination total-items="totalNumCourses" ng-model="courseFilters.page"
-                    max-size="10" class="pagination-sm" boundary-links="true"
-                    direction-links="false" items-per-page="courseFilters.perPage"
-                    num-pages="numPages" ng-hide="numPages == 1"></pagination>
+        <ul uib-pagination total-items="totalNumCourses" ng-model="courseFilters.page"
+            max-size="10" class="pagination-sm" boundary-links="true"
+            direction-links="false" items-per-page="courseFilters.perPage"
+            num-pages="numPages" ng-hide="numPages == 1"></ul>
     </div>
 
     <div ng-if="!courses.length">
         <hr />
-        <p ng-if="!courseFilters.search">No courses currently available.</p>
+        <p ng-if="!courseFilters.search">No courses currently available. <span ng-if="canAddCourse">Would you like to <a href="#/course/create">add a course</a>?</span></p>
         <p ng-if="courseFilters.search">No courses found for this search. Please try another search term above.</p>
-        <p ng-if="canAddCourse && !courseFilters.search">Would you like to <a href="#/course/new">add a course</a>?</p>
     </div>
 
 </div>

@@ -2,6 +2,7 @@ import json
 
 from data.fixtures.test_data import AssignmentCommentsTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
+from compair.core import mail
 
 
 class AssignmentCommentsAPITests(ComPAIRAPITestCase):
@@ -82,10 +83,33 @@ class AssignmentCommentsAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
             self.assert400(rv)
 
-            # test authorized user
-            rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(content['content'], rv.json['content'])
+            # test authorized student
+            with mail.record_messages() as outbox:
+                rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(content['content'], rv.json['content'])
+
+                self.assertEqual(len(outbox), 1)
+                self.assertEqual(outbox[0].subject, "New Help Comment in "+self.data.get_course().name)
+                self.assertEqual(outbox[0].recipients, [self.data.get_authorized_instructor().email])
+
+        # test authorized instructor
+        with self.login(self.data.get_authorized_instructor().username):
+            with mail.record_messages() as outbox:
+                rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(content['content'], rv.json['content'])
+
+                self.assertEqual(len(outbox), 0)
+
+        # test authorized teaching assistant
+        with self.login(self.data.get_authorized_ta().username):
+            with mail.record_messages() as outbox:
+                rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+                self.assert200(rv)
+                self.assertEqual(content['content'], rv.json['content'])
+
+                self.assertEqual(len(outbox), 0)
 
     def test_get_single_assignment_comment(self):
         comment = self.data.get_student_assignment_comment()
@@ -153,7 +177,9 @@ class AssignmentCommentsAPITests(ComPAIRAPITestCase):
             invalid['id'] = self.data.get_instructor_assignment_comment().uuid
             rv = self.client.post(url, data=json.dumps(invalid), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual("Comment id does not match URL.", rv.json['error'])
+            self.assertEqual("Help Comment Not Updated", rv.json['title'])
+            self.assertEqual("The comment's ID does not match the URL, which is required in order to update the comment.",
+                rv.json['message'])
 
             # test invalid course id
             rv = self.client.post(
@@ -181,7 +207,8 @@ class AssignmentCommentsAPITests(ComPAIRAPITestCase):
             empty['content'] = ''
             rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual("The comment content is empty!", rv.json['error'])
+            self.assertEqual("Help Comment Not Updated", rv.json['title'])
+            self.assertEqual("Please provide content in the text editor to update this comment.", rv.json['message'])
 
             # test authorized instructor
             rv = self.client.post(url, data=json.dumps(content), content_type='application/json')

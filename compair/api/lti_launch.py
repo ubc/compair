@@ -1,12 +1,12 @@
 from bouncer.constants import CREATE, READ, EDIT, DELETE, MANAGE
 from flask import Blueprint, jsonify, request, current_app, url_for, redirect, session as sess
 from flask_login import login_required, current_user, logout_user
-from flask_restful import Resource, marshal, abort
+from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
 
 from . import dataformat
-from compair.core import event, db
+from compair.core import event, db, abort
 from compair.authorization import require, allow
 from .login import authenticate
 from compair.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
@@ -23,6 +23,9 @@ from oauthlib.oauth1 import RequestValidator
 lti_api = Blueprint("lti_api", __name__)
 api = new_restful_api(lti_api)
 
+lti_launch_parser = RequestParser()
+lti_launch_parser.add_argument('assignment', default=None)
+
 # events
 on_lti_course_link = event.signal('LTI_CONTEXT_COURSE_LINKED')
 on_lti_course_membership_update = event.signal('LTI_CONTEXT_COURSE_MEMBERSHIP_UPDATE')
@@ -35,88 +38,93 @@ class LTIAuthAPI(Resource):
         Kickstarts the LTI integration flow.
         """
         if not current_app.config.get('LTI_LOGIN_ENABLED'):
-            return abort(403)
+            abort(403, title="Not Logged In",
+                message="Please use a valid way to log in. You are not able to use LTI login based on the current settings.")
 
         tool_provider = FlaskToolProvider.from_flask_request(request=request)
         validator = ComPAIRRequestValidator()
         ok = tool_provider.is_valid_request(validator)
 
-        if ok and tool_provider.user_id != None:
-            # log current user out if needed
-            logout_user()
-            sess.clear()
-
-            sess['LTI'] = True
-
+        if ok:
             lti_consumer = LTIConsumer.get_by_tool_provider(tool_provider)
-            sess['lti_consumer'] = lti_consumer.id
+            # override user_id if set to override
+            if lti_consumer.user_id_override and lti_consumer.user_id_override in tool_provider.launch_params:
+                tool_provider.user_id = tool_provider.launch_params[lti_consumer.user_id_override]
 
-            lti_user = LTIUser.get_by_tool_provider(lti_consumer, tool_provider)
-            sess['lti_user'] = lti_user.id
+            params = lti_launch_parser.parse_args()
+            # override custom_assignment if not set in launch body but is in querystring
+            if not tool_provider.custom_assignment and params.get('assignment'):
+                tool_provider.custom_assignment = params.get('assignment')
 
-            lti_context = LTIContext.get_by_tool_provider(lti_consumer, tool_provider)
-            if lti_context:
-                sess['lti_context'] = lti_context.id
+            # chec
+            if tool_provider.user_id != None:
+                # log current user out if needed
+                logout_user()
+                sess.clear()
 
-            lti_resource_link = LTIResourceLink.get_by_tool_provider(lti_consumer, tool_provider, lti_context)
-            sess['lti_resource_link'] = lti_resource_link.id
+                sess['LTI'] = True
 
-            lti_user_resource_link = LTIUserResourceLink.get_by_tool_provider(lti_resource_link, lti_user, tool_provider)
-            sess['lti_user_resource_link'] = lti_user_resource_link.id
+                sess['lti_consumer'] = lti_consumer.id
 
-            setup_required = False
-            angular_route = None
+                lti_user = LTIUser.get_by_tool_provider(lti_consumer, tool_provider)
+                sess['lti_user'] = lti_user.id
 
-            # if user linked
-            if lti_user.is_linked_to_user():
-                authenticate(lti_user.compair_user, login_method='LTI')
+                lti_context = LTIContext.get_by_tool_provider(lti_consumer, tool_provider)
+                if lti_context:
+                    sess['lti_context'] = lti_context.id
 
-                # create/update enrollment if context exists
-                if lti_context and lti_context.is_linked_to_course():
-                    lti_context.update_enrolment(lti_user.compair_user_id, lti_user_resource_link.course_role)
-            else:
-                # need to create user link
-                sess['oauth_create_user_link'] = True
-                setup_required = True
+                lti_resource_link = LTIResourceLink.get_by_tool_provider(lti_consumer, tool_provider, lti_context)
+                sess['lti_resource_link'] = lti_resource_link.id
 
-            if not lti_context:
-                # no context, redriect to home page
-                angular_route = "/"
-            elif lti_context.is_linked_to_course():
-                # redirect to course page or assignment page if available
-                angular_route = "/course/"+lti_context.compair_course_uuid
-                if lti_resource_link.is_linked_to_assignment():
-                    angular_route += "/assignment/"+lti_resource_link.compair_assignment_uuid
-            else:
-                # instructors can select course, students will recieve a warning message
-                setup_required = True
+                lti_user_resource_link = LTIUserResourceLink.get_by_tool_provider(lti_resource_link, lti_user, tool_provider)
+                sess['lti_user_resource_link'] = lti_user_resource_link.id
 
-            if setup_required:
-                # if account/course setup required, redirect to lti controller
-                angular_route = "/lti"
-            elif angular_route == None:
-                # set angular route to home page by default
-                angular_route = "/"
+                setup_required = False
+                angular_route = None
 
-            # clear cookies in case they exist from previous user
-            response = current_app.make_response(redirect("/app/#"+angular_route))
-            response.set_cookie('current.permissions', value='', path='/static')
-            response.set_cookie('current.lti.status', value='', path='/static')
-            response.set_cookie('current.user', value='', path='/static')
+                # if user linked
+                if lti_user.is_linked_to_user():
+                    authenticate(lti_user.compair_user, login_method='LTI')
 
-            return response
+                    # create/update enrollment if context exists
+                    if lti_context and lti_context.is_linked_to_course():
+                        lti_context.update_enrolment(lti_user.compair_user_id, lti_user_resource_link.course_role)
+                else:
+                    # need to create user link
+                    sess['oauth_create_user_link'] = True
+                    setup_required = True
+
+                if not lti_context:
+                    # no context, redriect to home page
+                    angular_route = "/"
+                elif lti_context.is_linked_to_course():
+                    # redirect to course page or assignment page if available
+                    angular_route = "/course/"+lti_context.compair_course_uuid
+                    if lti_resource_link.is_linked_to_assignment():
+                        angular_route += "/assignment/"+lti_resource_link.compair_assignment_uuid
+                else:
+                    # instructors can select course, students will recieve a warning message
+                    setup_required = True
+
+                if setup_required:
+                    # if account/course setup required, redirect to lti controller
+                    angular_route = "/lti"
+                elif angular_route == None:
+                    # set angular route to home page by default
+                    angular_route = "/"
+
+                return current_app.make_response(redirect("/app/#"+angular_route))
+
+        display_message = "Invalid Request"
+        if ok and tool_provider.user_id == None:
+            display_message = "ComPAIR requires the LTI tool consumer to provide a user_id."
+
+        tool_provider.lti_errormsg = display_message
+        return_url = tool_provider.build_return_url()
+        if return_url:
+            return redirect(return_url)
         else:
-            display_message = "Invalid Request"
-
-            if ok and tool_provider.user_id == None:
-                display_message = "ComPAIR requires the LTI tool consumer to provide a user_id."
-
-            tool_provider.lti_errormsg = display_message
-            return_url = tool_provider.build_return_url()
-            if return_url:
-                return redirect(return_url)
-            else:
-                return display_message, 400
+            return display_message, 400
 
 api.add_resource(LTIAuthAPI, '/auth')
 
@@ -170,20 +178,24 @@ class LTICourseLinkAPI(Resource):
         link current session's lti context with a course
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, course)
+        require(EDIT, course,
+            title="Course Not Linked",
+            message="You do not have permission to link this course since you are not its instructor.")
 
         if not sess.get('LTI'):
-            return {'error': "Your LTI session has expired." }, 404
+            abort(400, title="Course Not Linked",
+                message="Your LTI session has expired. Please login via LTI again.")
 
         if not sess.get('lti_context'):
-            return {'error': "Your LTI session has no context." }, 404
+            abort(400, title="Course Not Linked",
+                message="Your LTI link settings has no course context. Please edit your LTI link settings and try again.")
 
         lti_context = LTIContext.query.get_or_404(sess.get('lti_context'))
         lti_context.compair_course_id = course.id
         db.session.commit()
 
         # automatically fetch membership if enabled for context
-        if lti_context.ext_ims_lis_memberships_url and lti_context.ext_ims_lis_memberships_id:
+        if lti_context.membership_enabled:
             update_lti_course_membership.delay(course.id)
 
         on_lti_course_link.send(
@@ -204,19 +216,25 @@ class LTICourseMembershipAPI(Resource):
         refresh the course membership if able
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, course)
+        require(EDIT, course,
+            title="Membership Not Updated",
+            message="Your role in this course does not allow you to update membership.")
 
         if not course.lti_linked:
-            return {'error': "Course not linked to lti context" }, 400
+            abort(400, title="Membership Not Updated",
+                message="Your LTI link settings has no course context. Please edit your LTI link settings and try again.")
 
         try:
             LTIMembership.update_membership_for_course(course)
         except MembershipNoValidContextsException as err:
-            return {'error': "LTI membership service is not supported for this course" }, 400
+            abort(400, title="Membership Not Updated",
+                message="The LTI link does not support the membership extension. Please edit your LTI link settings or contact your system administrator and try again.")
         except MembershipNoResultsException as err:
-            return {'error': "LTI membership service did not return any users" }, 400
+            abort(400, title="Membership Not Updated",
+                message="The membership service did not return any users. Please check your LTI course and try again.")
         except MembershipInvalidRequestException as err:
-            return {'error': "LTI membership request was invalid. Please relaunch the ComPAIR course from the LTI consumer and try again" }, 400
+            abort(400, title="Membership Not Updated",
+                message="The membership request was invalid. Please relaunch the LTI link and try again.")
 
         on_lti_course_membership_update.send(
             self,
@@ -237,14 +255,17 @@ class LTICourseMembershipStatusAPI(Resource):
         refresh the course membership if able
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, course)
+        require(EDIT, course,
+            title="Membership Status Unavailable",
+            message="Your role in this course does not allow you to view LTI membership status.")
 
         if not course.lti_linked:
-            return {'error': "Course not linked to lti context" }, 400
+            abort(400, title="Membership Status Unavailable",
+                message="The course is not linked to a lti context yet. Launch an LTI link to link this course first.")
 
         valid_membership_contexts = [
             lti_context for lti_context in course.lti_contexts \
-            if lti_context.ext_ims_lis_memberships_url and lti_context.ext_ims_lis_memberships_id
+            if lti_context.membership_enabled
         ]
 
         pending = 0
@@ -287,7 +308,7 @@ class ComPAIRRequestValidator(RequestValidator):
 
     @property
     def request_token_length(self):
-        return 10, 50
+        return 10, 255
 
     @property
     def access_token_length(self):
@@ -299,11 +320,19 @@ class ComPAIRRequestValidator(RequestValidator):
 
     @property
     def nonce_length(self):
-        return 10, 50
+        return 10, 255
 
     @property
     def verifier_length(self):
-        return 20, 30
+        return 10, 255
+
+    def check_client_key(self, client_key):
+        """
+        Check that the client key is no shorter than lower and no longer than upper.
+        removed bit about safe characters since it doesn't allow common special characters like '_' or '.'
+        """
+        lower, upper = self.client_key_length
+        return lower <= len(client_key) <= upper
 
     def validate_timestamp_and_nonce(self, client_key, timestamp, nonce,
                                      request, request_token=None, access_token=None):

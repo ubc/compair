@@ -36,8 +36,7 @@ class CourseXAPITests(ComPAIRXAPITestCase):
             'id': 'https://localhost:8888/app/xapi/course/'+self.course.uuid,
             'definition': {
                 'type': 'http://adlnet.gov/expapi/activities/course',
-                'name': {'en-US': self.course.name },
-                'description': {'en-US': self.course.description }
+                'name': {'en-US': self.course.name }
             },
             'objectType': 'Activity'
         })
@@ -65,8 +64,7 @@ class CourseXAPITests(ComPAIRXAPITestCase):
             'id': 'https://localhost:8888/app/xapi/course/'+self.course.uuid,
             'definition': {
                 'type': 'http://adlnet.gov/expapi/activities/course',
-                'name': {'en-US': self.course.name },
-                'description': {'en-US': self.course.description }
+                'name': {'en-US': self.course.name }
             },
             'objectType': 'Activity'
         })
@@ -93,8 +91,7 @@ class CourseXAPITests(ComPAIRXAPITestCase):
             'id': 'https://localhost:8888/app/xapi/course/'+self.course.uuid,
             'definition': {
                 'type': 'http://adlnet.gov/expapi/activities/course',
-                'name': {'en-US': self.course.name },
-                'description': {'en-US': self.course.description }
+                'name': {'en-US': self.course.name }
             },
             'objectType': 'Activity'
         })

@@ -2,6 +2,7 @@ import json
 import datetime
 from enum import Enum
 from hashlib import md5
+from six import text_type
 
 from flask import session as sess
 from flask_login import user_logged_in, user_logged_out
@@ -57,6 +58,6 @@ class JSONDateTimeEncoder(json.JSONEncoder):
         if isinstance(obj, (datetime.date, datetime.datetime)):
             return obj.isoformat()
         elif isinstance(obj, Enum):
-            return str(obj.value)
+            return text_type(obj.value)
         else:
             return json.JSONEncoder.default(self, obj)

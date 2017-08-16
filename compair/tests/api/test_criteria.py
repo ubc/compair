@@ -17,11 +17,11 @@ class CriterionAPITests(ComPAIRAPITestCase):
             criterion_expected.description, criterion_actual['description'],
             'Expected criterion description does not match actual')
 
-    def _build_assignment_criterion_url(self, course_id, assignment_id, criterion_id = None):
-        if criterion_id == None:
-            return '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/criteria'
+    def _build_assignment_criterion_url(self, course_uuid, assignment_uuid, criterion_uuid = None):
+        if criterion_uuid == None:
+            return '/api/courses/' + course_uuid + '/assignments/' + assignment_uuid + '/criteria'
         else:
-            return '/api/courses/' + str(course_id) + '/assignments/' + str(assignment_id) + '/criteria/' + str(criterion_id)
+            return '/api/courses/' + course_uuid + '/assignments/' + assignment_uuid + '/criteria/' + criterion_uuid
 
     def test_create_criterion(self):
         criterion_api_url = '/api/criteria'

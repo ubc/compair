@@ -30,6 +30,7 @@ var admin = userFactory.generateUser("1abcABC123-abcABC123_Z", "System Administr
     firstname: "JaNy",
     lastname: "bwsV",
     fullname: "JaNy bwsV",
+    email: "admin@exmple.com"
 });
 storage.users[admin.id] = admin;
 
@@ -66,16 +67,14 @@ storage.users[student2.id] = student2;
 var course = courseFactory.generateCourse("1abcABC123-abcABC123_Z", {
     name: "CHEM 111",
     year: 2015,
-    term: "Winter",
-    description: "<p>CHEM 111 description<p>",
+    term: "Winter"
 });
 storage.courses[course.id] = course;
 
 var course2 = courseFactory.generateCourse("2abcABC123-abcABC123_Z", {
     name: "PHYS 101",
     year: 2015,
-    term: "Winter",
-    description: "<p>PHYS 101  description<p>",
+    term: "Winter"
 });
 storage.courses[course2.id] = course2;
 
@@ -172,18 +171,33 @@ storage.course_assignments[course.id].push(assignment_upcoming.id);
 storage.loginDetails = { id: instructor.id, username: instructor.username, password: "password" };
 var session = sessionFactory.generateSession(instructor.id, instructor.system_role, {
     "Course": {
-        "delete": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false},
-        "edit": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true},
-        "manage": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false},
-        "read": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true},
+        "1abcABC123-abcABC123_Z": [
+            "delete",
+            "edit",
+            "read"
+        ],
+        "2abcABC123-abcABC123_Z": [
+            "delete",
+            "edit",
+            "read"
+        ]
     },
     "Assignment": {
-        "create": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true, '3abcABC123-abcABC123_Z': true, '4abcABC123-abcABC123_Z': true},
-        "delete": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true, '3abcABC123-abcABC123_Z': true, '4abcABC123-abcABC123_Z': true},
-        "edit": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true, '3abcABC123-abcABC123_Z': true, '4abcABC123-abcABC123_Z': true},
-        "manage": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true, '3abcABC123-abcABC123_Z': true, '4abcABC123-abcABC123_Z': true},
-        "read": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true, '3abcABC123-abcABC123_Z': true, '4abcABC123-abcABC123_Z': true}
-    },
+        "1abcABC123-abcABC123_Z": [
+            "create",
+            "delete",
+            "edit",
+            "manage",
+            "read"
+        ],
+        "2abcABC123-abcABC123_Z": [
+            "create",
+            "delete",
+            "edit",
+            "manage",
+            "read"
+        ]
+    }
 });
 storage.session = session;
 

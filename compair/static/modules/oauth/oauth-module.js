@@ -9,7 +9,6 @@
 var module = angular.module('ubc.ctlt.compair.oauth', [
     'ngResource',
     'ngRoute',
-    'ng-breadcrumbs',
     'ubc.ctlt.compair.session',
     'ubc.ctlt.compair.authorization'
 ]);
@@ -20,8 +19,10 @@ module.constant('ThirdPartyAuthType', {
 
 /***** Controllers *****/
 module.controller("OAuthController",
-    ['$rootScope', '$scope', '$route', '$location', 'breadcrumbs', 'Session', 'LTI', 'AuthenticationService',
-    function($rootScope, $scope, $route, $location, breadcrumbs, Session, LTI, AuthenticationService) {
+    ['$rootScope', '$scope', '$route', '$location', 'Session', 'LTI',
+     'AuthenticationService', 'resolvedData',
+    function($rootScope, $scope, $route, $location, Session, LTI,
+             AuthenticationService, resolvedData) {
 
         $rootScope.$emit(AuthenticationService.AUTH_LOGIN_REQUIRED_EVENT);
         Session.getUser().then(function(user) {

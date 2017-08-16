@@ -6,36 +6,35 @@ from flask import Blueprint, current_app
 from flask_restful import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required, current_user
 from sqlalchemy import exc, func
+from six import text_type
 
 from . import dataformat
 from compair.authorization import require
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.models import Course, CourseRole, UserCourse, Answer, \
     Assignment, AssignmentCriterion, File, ComparisonExample
 from .util import pagination, new_restful_api, get_model_changes
-from .file import duplicate_file
 
 course_api = Blueprint('course_api', __name__)
 api = new_restful_api(course_api)
 
 new_course_parser = reqparse.RequestParser()
-new_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
+new_course_parser.add_argument('name', required=True, help='Course name is required.')
 new_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
-new_course_parser.add_argument('term', type=str, required=True, help='Course term/semester is required.')
-new_course_parser.add_argument('description', type=str)
-new_course_parser.add_argument('start_date', type=str, default=None)
-new_course_parser.add_argument('end_date', type=str, default=None)
+new_course_parser.add_argument('term', required=True, help='Course term/semester is required.')
+new_course_parser.add_argument('start_date', default=None)
+new_course_parser.add_argument('end_date', default=None)
 
 existing_course_parser = new_course_parser.copy()
-existing_course_parser.add_argument('id', type=str, required=True, help='Course id is required.')
+existing_course_parser.add_argument('id', required=True, help='Course id is required.')
 
 
 duplicate_course_parser = reqparse.RequestParser()
-duplicate_course_parser.add_argument('name', type=str, required=True, help='Course name is required.')
+duplicate_course_parser.add_argument('name', required=True, help='Course name is required.')
 duplicate_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
-duplicate_course_parser.add_argument('term', type=str, required=True, help='Course term/semester is required.')
-duplicate_course_parser.add_argument('start_date', type=str, default=None)
-duplicate_course_parser.add_argument('end_date', type=str, default=None)
+duplicate_course_parser.add_argument('term', required=True, help='Course term/semester is required.')
+duplicate_course_parser.add_argument('start_date', default=None)
+duplicate_course_parser.add_argument('end_date', default=None)
 # has to add location parameter, otherwise MultiDict will screw up the list
 duplicate_course_parser.add_argument('assignments', type=list, default=[], location='json') #only ids and dates
 
@@ -54,14 +53,15 @@ class CourseListAPI(Resource):
         """
         Create new course
         """
-        require(CREATE, Course)
+        require(CREATE, Course,
+            title="Course Not Saved",
+            message="Your role in the system does not allow you to add courses.")
         params = new_course_parser.parse_args()
 
         new_course = Course(
             name=params.get("name"),
             year=params.get("year"),
             term=params.get("term"),
-            description=params.get("description", None),
             start_date=params.get('start_date', None),
             end_date=params.get('end_date', None)
         )
@@ -74,6 +74,9 @@ class CourseListAPI(Resource):
             new_course.end_date = datetime.datetime.strptime(
                 new_course.end_date,
                 '%Y-%m-%dT%H:%M:%S.%fZ')
+
+        if new_course.start_date and new_course.end_date and new_course.start_date > new_course.end_date:
+            abort(400, title="Course Not Saved", message="Course end time must be after course start time.")
 
         try:
             # create the course
@@ -111,7 +114,9 @@ class CourseAPI(Resource):
     @login_required
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(READ, course)
+        require(READ, course,
+            title="Course Unavailable",
+            message="Courses can be seen only by those enrolled in it. Please double-check your enrollment in this course.")
 
         on_course_get.send(
             self,
@@ -123,24 +128,26 @@ class CourseAPI(Resource):
     @login_required
     def post(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, course)
+        require(EDIT, course,
+            title="Course Not Updated",
+            message="Your role in this course does not allow you to update it.")
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
             if course.id == DemoDataFixture.DEFAULT_COURSE_ID:
-                return {"error": "Sorry, you cannot edit the default demo course."}, 400
+                abort(400, title="Course Not Updated", message="Sorry, you cannot edit the default demo course.")
 
         params = existing_course_parser.parse_args()
 
         # make sure the course id in the url and the course id in the params match
         if params['id'] != course_uuid:
-            return {"error": "Course id does not match URL."}, 400
+            abort(400, title="Course Not Updated",
+                message="The course's ID does not match the URL, which is required in order to update the course.")
 
         # modify course according to new values, preserve original values if values not passed
         course.name = params.get("name", course.name)
         course.year = params.get("year", course.year)
         course.term = params.get("term", course.term)
-        course.description = params.get("description", course.description)
 
         course.start_date = params.get("start_date", None)
         if course.start_date is not None:
@@ -153,6 +160,9 @@ class CourseAPI(Resource):
             course.end_date = datetime.datetime.strptime(
                 course.end_date,
                 '%Y-%m-%dT%H:%M:%S.%fZ')
+
+        if course.start_date and course.end_date and course.start_date > course.end_date:
+            abort(400, title="Course Not Updated", message="Course end time must be after course start time.")
 
         db.session.commit()
 
@@ -168,12 +178,14 @@ class CourseAPI(Resource):
     @login_required
     def delete(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(DELETE, course)
+        require(DELETE, course,
+            title="Course Not Deleted",
+            message="Your role in this course does not allow you to delete it.")
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
             if course.id == DemoDataFixture.DEFAULT_COURSE_ID:
-                return {"error": "Sorry, you cannot remove the default demo course."}, 400
+                abort(400, title="Course Not Deleted", message="Sorry, you cannot remove the default demo course.")
 
         course.active = False
         db.session.commit()
@@ -197,35 +209,11 @@ class CourseDuplicateAPI(Resource):
         Duplicate a course
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, course)
+        require(EDIT, course,
+            title="Course Not Saved",
+            message="Your role in this course does not allow you to copy it.")
 
         params = duplicate_course_parser.parse_args()
-
-        assignments = [assignment for assignment in course.assignments if assignment.active]
-        assignments_copy_data = params.get("assignments")
-
-        if len(assignments) != len(assignments_copy_data):
-            return {"error": "Not enough assignment data provided to duplication course"}, 400
-
-        for assignment_copy_data in assignments_copy_data:
-            if not assignment_copy_data.get('answer_start'):
-                return {"error": "No answer start date provided for assignment "+assignment_copy_data.id}, 400
-
-            if not assignment_copy_data.get('answer_end'):
-                return {"error": "No answer end date provided for assignment "+assignment_copy_data.id}, 400
-
-            assignment_copy_data['answer_start'] = datetime.datetime.strptime(
-                assignment_copy_data.get('answer_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
-            assignment_copy_data['answer_end'] = datetime.datetime.strptime(
-                assignment_copy_data.get('answer_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
-
-            if assignment_copy_data.get('compare_start'):
-                assignment_copy_data['compare_start'] = datetime.datetime.strptime(
-                    assignment_copy_data.get('compare_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
-
-            if assignment_copy_data.get('compare_end'):
-                assignment_copy_data['compare_end'] = datetime.datetime.strptime(
-                    assignment_copy_data.get('compare_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
 
         start_date = datetime.datetime.strptime(
             params.get("start_date"), '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -235,12 +223,44 @@ class CourseDuplicateAPI(Resource):
             params.get("end_date"), '%Y-%m-%dT%H:%M:%S.%fZ'
         ) if params.get("end_date") else None
 
+        if start_date and end_date and start_date > end_date:
+            abort(400, title="Course Not Saved", message="Course end time must be after course start time.")
+
+        assignments = [assignment for assignment in course.assignments if assignment.active]
+        assignments_copy_data = params.get("assignments")
+
+        if len(assignments) != len(assignments_copy_data):
+            abort(400, title="Course Not Saved", message="The course is missing assignments. Please reload the page and try again.")
+
+        for assignment_copy_data in assignments_copy_data:
+            if assignment_copy_data.get('answer_start'):
+                assignment_copy_data['answer_start'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('answer_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+            if assignment_copy_data.get('answer_end'):
+                assignment_copy_data['answer_end'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('answer_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+            if assignment_copy_data.get('compare_start'):
+                assignment_copy_data['compare_start'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('compare_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+            if assignment_copy_data.get('compare_end'):
+                assignment_copy_data['compare_end'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('compare_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+            valid, error_message = Assignment.validate_periods(start_date, end_date,
+                assignment_copy_data.get('answer_start'), assignment_copy_data.get('answer_end'),
+                assignment_copy_data.get('compare_start'), assignment_copy_data.get('compare_end'))
+            if not valid:
+                error_message = error_message.replace(".", "") + " for assignment "+text_type(assignment_copy_data.get('name', ''))+"."
+                abort(400, title="Course Not Saved", message=error_message)
+
         # duplicate course
         duplicate_course = Course(
             name=params.get("name"),
             year=params.get("year"),
             term=params.get("term"),
-            description=course.description,
             start_date=start_date,
             end_date=end_date
         )
@@ -254,9 +274,6 @@ class CourseDuplicateAPI(Resource):
         )
         db.session.add(new_user_course)
 
-        assignment_files_to_duplicate = []
-        answer_files_to_duplicate = []
-
         # duplicate assignments
         for assignment in assignments:
             # this should never be null due
@@ -267,11 +284,12 @@ class CourseDuplicateAPI(Resource):
             )
 
             if not assignment_copy_data:
-                return {"error": "No assignment data provided for assignment "+assignment.uuid}, 400
+                abort(400, title="Course Not Saved", message="Missing information for assignment "+assignment.name+".")
 
             duplicate_assignment = Assignment(
                 course=duplicate_course,
                 user_id=current_user.id,
+                file=assignment.file,
                 name=assignment.name,
                 description=assignment.description,
 
@@ -290,15 +308,9 @@ class CourseDuplicateAPI(Resource):
                 enable_self_evaluation=assignment.enable_self_evaluation,
                 pairing_algorithm=assignment.pairing_algorithm
             )
-
-            # register assignemnt files for later
-            if assignment.file and assignment.file.active:
-                assignment_files_to_duplicate.append(
-                    (assignment.file, duplicate_assignment)
-                )
             db.session.add(duplicate_assignment)
 
-            # duplicate assignemnt criteria
+            # duplicate assignment criteria
             for assignment_criterion in assignment.assignment_criteria:
                 if not assignment_criterion.active:
                     continue
@@ -309,7 +321,7 @@ class CourseDuplicateAPI(Resource):
                 )
                 db.session.add(duplicate_assignment_criterion)
 
-            # duplicate assignemnt comparisons examples
+            # duplicate assignment comparisons examples
             for comparison_example in assignment.comparison_examples:
                 answer1 = comparison_example.answer1
                 answer2 = comparison_example.answer2
@@ -318,32 +330,24 @@ class CourseDuplicateAPI(Resource):
                 duplicate_answer1 = Answer(
                     assignment=duplicate_assignment,
                     user_id=current_user.id,
+                    file=answer1.file,
                     content=answer1.content,
                     practice=answer1.practice,
                     active=answer1.active,
                     draft=answer1.draft
                 )
-                # register assignemnt files for later
-                if answer1.file and answer1.file.active:
-                    answer_files_to_duplicate.append(
-                        (answer1.file, duplicate_answer1)
-                    )
                 db.session.add(duplicate_answer1)
 
                 # duplicate assignemnt comparisons example answers
                 duplicate_answer2 = Answer(
                     assignment=duplicate_assignment,
                     user_id=current_user.id,
+                    file=answer2.file,
                     content=answer2.content,
                     practice=answer2.practice,
                     active=answer2.active,
                     draft=answer2.draft
                 )
-                # register assignemnt files for later
-                if answer2.file and answer2.file.active:
-                    answer_files_to_duplicate.append(
-                        (answer2.file, duplicate_answer2)
-                    )
                 db.session.add(duplicate_answer2)
 
                 duplicate_comparison_example = ComparisonExample(
@@ -353,20 +357,7 @@ class CourseDuplicateAPI(Resource):
                 )
                 db.session.add(duplicate_comparison_example)
 
-
         db.session.commit()
-
-        for (file, duplicate_assignment) in assignment_files_to_duplicate:
-            duplicate_assignment.file = duplicate_file(
-                file, Assignment.__name__, duplicate_assignment.id)
-
-            db.session.commit()
-
-        for (file, duplicate_answer) in answer_files_to_duplicate:
-            duplicate_answer.file = duplicate_file(
-                file, Answer.__name__, duplicate_answer.id)
-
-            db.session.commit()
 
         on_course_duplicate.send(
             self,

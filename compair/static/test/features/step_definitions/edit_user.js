@@ -32,7 +32,8 @@ var editUserStepDefinitionsWrapper = function () {
         expect(element(by.model('user.displayname')).isPresent()).to.eventually.equal(true);
         expect(element(by.model('user.firstname')).isPresent()).to.eventually.equal(true);
         expect(element(by.model('user.lastname')).isPresent()).to.eventually.equal(true);
-        return expect(element(by.model('user.email')).isPresent()).to.eventually.equal(true);
+        expect(element(by.model('user.email')).isPresent()).to.eventually.equal(true);
+        return expect(element(by.model('user.email_notification_method')).isPresent()).to.eventually.equal(true);
     });
 
     this.Then("I should see the Account Login section", function() {

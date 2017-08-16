@@ -229,20 +229,36 @@
     "ECSCluster": {
       "Type": "AWS::ECS::Cluster"
     },
+
     "TaskDefinition": {
       "Type": "AWS::ECS::TaskDefinition",
       "Properties" : {
         "ContainerDefinitions": [ {
+          "Name": "redis",
+          "Image": "redis:3.2.4",
+          "Command": ["redis-server", "--appendonly","yes"],
+          "Essential": true,
+          "Memory": 256,
+          "MountPoints": [
+            {
+              "SourceVolume": "redis-pv",
+              "ContainerPath": "/data",
+              "ReadOnly": false
+            }
+          ]
+        },
+        {
           "Name": "compair-app",
           "Image": "ubcctlt/compair-app",
           "Essential": true,
-          "Memory": 128,
+          "Memory": 256,
           "PortMappings": [
             {
               "HostPort": {"Ref" : "AppServerPort"},
               "ContainerPort": {"Ref" : "AppServerPort"}
             }
           ],
+          "Links": ["redis"],
           "Environment": [
             {
                 "Name": "DB_HOST",
@@ -259,11 +275,56 @@
             {
                 "Name": "DB_NAME",
                 "Value": { "Ref" : "DBName" }
+            },
+            {
+                "Name": "CELERY_BROKER_URL",
+                "Value": "redis://redis:6379"
             }
           ],
           "MountPoints": [
             {
-              "SourceVolume": "compair-app-pv",
+              "SourceVolume": "compair-pv",
+              "ContainerPath": "/code/persistent",
+              "ReadOnly": false
+            }
+          ]
+        },
+        {
+          "Name": "compair-worker",
+          "Image": "ubcctlt/compair-app",
+          "Command": ["celery", "worker", "--app=celery_worker.celery"],
+          "Essential": true,
+          "Memory": 256,
+          "Links": ["redis"],
+          "Environment": [
+            {
+                "Name": "DB_HOST",
+                "Value": { "Fn::GetAtt" : [ "DBInstance", "Endpoint.Address" ] }
+            },
+            {
+                "Name": "DB_USER",
+                "Value": { "Ref" : "DBUser" }
+            },
+            {
+                "Name": "DB_PASSWORD",
+                "Value": { "Ref" : "DBPassword" }
+            },
+            {
+                "Name": "DB_NAME",
+                "Value": { "Ref" : "DBName" }
+            },
+            {
+                "Name": "CELERY_BROKER_URL",
+                "Value": "redis://redis:6379"
+            },
+            {
+                "Name": "C_FORCE_ROOT",
+                "Value": "1"
+            }
+          ],
+          "MountPoints": [
+            {
+              "SourceVolume": "compair-pv",
               "ContainerPath": "/code/persistent",
               "ReadOnly": false
             }
@@ -271,9 +332,15 @@
         }],
         "Volumes": [
           {
-            "Name": "compair-app-pv",
+            "Name": "compair-pv",
             "Host": {
-              "SourcePath": "/efs"
+              "SourcePath": "/efs/persistent"
+            }
+          },
+          {
+            "Name": "redis-pv",
+            "Host": {
+              "SourcePath": "/efs/redis"
             }
           }
         ]
@@ -375,6 +442,7 @@
 
     "ECSAutoScalingGroup" : {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn": ["CompairEFSMount", "GatewayToInternet"],
       "Properties" : {
         "VPCZoneIdentifier" : [ { "Ref" : "Subnet" } ],
         "LaunchConfigurationName" : { "Ref" : "ContainerInstances" },
@@ -559,7 +627,13 @@
                 ] ] }
               },
               "02_permissions" : {
-                "command" : {"Fn::Join" : [ "", [ "chown ec2-user:ec2-user /", { "Ref" : "MountPoint" }]]}
+                "command" : {"Fn::Join" : [ "", [ "chown ec2-user:ec2-user -R /", { "Ref" : "MountPoint" }]]}
+              },
+              "03_createdir" : {
+                "command" : {"Fn::Join" : [ "", [ "mkdir -p /", { "Ref" : "MountPoint" }, "/persistent"]]}
+              },
+              "04_createdir" : {
+                "command" : {"Fn::Join" : [ "", [ "mkdir -p /", { "Ref" : "MountPoint" }, "/redis"]]}
               }
             }
           }

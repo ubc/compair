@@ -34,16 +34,16 @@
 
 /* item lists (courses, assignments) */
 .item-list() {
-  
+
   padding: 1.5em 0;
   .gray-box();
   border-top: none;
-  
+
   /* alternating rows */
   &:nth-child(odd) {
     background: #fff;
   }
-  
+
   /* h3 header (course/assignment name) to be underlined for improved clickability */
   a h3 {
     text-decoration: underline;
@@ -51,12 +51,12 @@
       margin-right: .3em;
     }
   }
-  
+
 }//closes item-list
 
 /* metadata below each item in the list */
 .metadata() {
- 
+
   margin-bottom: .5em;
   padding-top: .5em;
   color: @breadcrumb-gray;
@@ -73,5 +73,9 @@
 
   .label {
     font-size: 100%;
+
+    .label-link {
+        color: #fff;
+    }
   }
 }//closes metadata

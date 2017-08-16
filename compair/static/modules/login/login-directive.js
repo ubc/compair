@@ -5,10 +5,10 @@
         .module('ubc.ctlt.compair.login')
 
         .directive('loginCreateUserForm',
-            ['$route', '$log', 'Session', 'UserResource', 'SystemRole', 'Toaster',
-             'AuthenticationService', 'LTI',
-            function ($route, $log, Session, UserResource, SystemRole, Toaster,
-                      AuthenticationService, LTI) {
+            ['$route', '$log', 'UserResource', 'SystemRole', 'Toaster',
+             'AuthenticationService', 'LTI', 'UserSettings', 'EmailNotificationMethod',
+            function ($route, $log, UserResource, SystemRole, Toaster,
+                      AuthenticationService, LTI, UserSettings, EmailNotificationMethod) {
             return {
                 restrict: 'E',
                 scope: {
@@ -16,18 +16,21 @@
                 },
                 templateUrl: 'modules/user/user-form-partial.html',
                 link: function (scope, element, attrs) {
-		        scope.method = 'new';
+		            scope.method = 'create';
                     scope.canManageUsers = false;
                     scope.submitted = false;
 
                     scope.password = {};
+                    scope.UserSettings = UserSettings;
+                    scope.EmailNotificationMethod = EmailNotificationMethod;
                     scope.SystemRole = SystemRole;
                     scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin];
 
                     scope.user = {
                         // required parameter that will be ignored by backend
                         system_role: SystemRole.student,
-                        uses_compair_login: scope.uses_compair_login
+                        uses_compair_login: scope.uses_compair_login,
+                        email_notification_method: EmailNotificationMethod.enable
                     }
 
                     LTI.getStatus().then(function(status) {
@@ -36,6 +39,7 @@
                             // overwrite user with LTI user info
                             scope.user = LTI.getLTIUser();
                             scope.user.uses_compair_login = scope.uses_compair_login;
+                            scope.user.email_notification_method = EmailNotificationMethod.enable;
                         }
                     });
 

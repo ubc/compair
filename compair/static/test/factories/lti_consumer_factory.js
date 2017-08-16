@@ -1,0 +1,24 @@
+var objectAssign = require('object-assign');
+
+var ltiConsumerTemplate = {
+    "id": null,
+    "oauth_consumer_key": null,
+    "oauth_consumer_secret": null,
+    "active": true,
+    "user_id_override": null,
+    "created": "Mon, 18 Apr 2016 17:38:23 -0000",
+    "modified": "Mon, 18 Apr 2016 17:38:23 -0000"
+}
+
+function LTIConsumerFactory() {};
+
+LTIConsumerFactory.prototype.generateConsumer = function (id, oauth_consumer_key, oauth_consumer_secret, parameters) {
+    var newConsumer = objectAssign({}, ltiConsumerTemplate, parameters);
+    newConsumer.id = id;
+    newConsumer.oauth_consumer_key = oauth_consumer_key;
+    newConsumer.oauth_consumer_secret = oauth_consumer_secret;
+
+    return newConsumer;
+};
+
+module.exports = LTIConsumerFactory;

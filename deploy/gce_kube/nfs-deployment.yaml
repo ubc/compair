@@ -1,4 +1,21 @@
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-server-pv-claim
+  annotations:
+    volume.beta.kubernetes.io/storage-class: gce-slow
+  labels:
+    app: compair
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+
+apiVersion: v1
 kind: Service
 metadata:
   name: compair-nfs-server
@@ -15,22 +32,9 @@ spec:
   selector:
     app: compair
     tier: nfs
+
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nfs-server-pv-claim
-  annotations:
-    volume.alpha.kubernetes.io/storage-class: foo
-  labels:
-    app: compair
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
----
+
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -49,7 +53,7 @@ spec:
     spec:
       containers:
       - name: nfs-server
-        image: gcr.io/google-samples/nfs-server:1.1
+        image: gcr.io/google_containers/volume-nfs:0.8
         ports:
           - name: nfs
             containerPort: 2049

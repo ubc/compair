@@ -20,14 +20,11 @@ class CoursesAPITests(ComPAIRAPITestCase):
             course_expected.uuid, course_actual['id'],
             "Expected course id does not match actual.")
         self.assertEqual(
-            course_expected.description, course_actual['description'],
-            "Expected course description does not match actual.")
-        self.assertEqual(
             course_expected.year, course_actual['year'],
-            "Expected course description does not match actual.")
+            "Expected course year does not match actual.")
         self.assertEqual(
             course_expected.term, course_actual['term'],
-            "Expected course description does not match actual.")
+            "Expected course term does not match actual.")
         self.assertEqual(
             course_expected.available, course_actual['available'],
             "Expected course availability does not match actual.")
@@ -76,8 +73,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'year': 2015,
             'term': 'Winter',
             'start_date': None,
-            'end_date': None,
-            'description': 'Test Course One Description Test'
+            'end_date': None
         }
         # Test login required
         rv = self.client.post(
@@ -102,7 +98,6 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(course_expected['name'], course_actual['name'])
             self.assertEqual(course_expected['year'], course_actual['year'])
             self.assertEqual(course_expected['term'], course_actual['term'])
-            self.assertEqual(course_expected['description'], course_actual['description'])
             self.assertTrue(course_actual['available'])
 
             # Verify the course is created in db
@@ -110,7 +105,6 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(course_in_db.name, course_actual['name'])
             self.assertEqual(course_in_db.year, course_actual['year'])
             self.assertEqual(course_in_db.term, course_actual['term'])
-            self.assertEqual(course_in_db.description, course_actual['description'])
             self.assertTrue(course_in_db.available)
 
             # Verify instructor added to course
@@ -148,7 +142,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             rv = self.client.post(
                 '/api/courses',
-                data=json.dumps({'description': 'd'}), content_type='application/json')
+                data=json.dumps({'year': 'd'}), content_type='application/json')
             self.assert400(rv)
 
     def test_edit_course(self):
@@ -158,8 +152,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'year': 2015,
             'term': 'Winter',
             'start_date': None,
-            'end_date': None,
-            'description': 'Test Description'
+            'end_date': None
         }
         url = '/api/courses/' + self.data.get_course().uuid
 
@@ -189,7 +182,6 @@ class CoursesAPITests(ComPAIRAPITestCase):
             db.session.expire_all()
             self.assertEqual(expected['id'], rv.json['id'])
             self.assertEqual(expected['name'], rv.json['name'])
-            self.assertEqual(expected['description'], rv.json['description'])
             self.assertTrue(rv.json['available'])
 
             # Starts in the future
@@ -312,7 +304,6 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(expected['term'], rv.json['term'])
             self.assertEqual(expected['start_date'], rv.json['start_date'])
             self.assertEqual(expected['end_date'], rv.json['end_date'])
-            self.assertEqual(original_course.description, rv.json['description'])
 
             # verify instructor added to duplicate course
             user_course = UserCourse.query \
@@ -332,6 +323,16 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
         # add start_date
         self.course.start_date = datetime.datetime.utcnow()
         self.course.end_date = datetime.datetime.utcnow() + datetime.timedelta(days=90)
+
+        index = 0
+        for assignment in self.course.assignments:
+            assignment.answer_start = self.course.start_date + datetime.timedelta(days=index)
+            assignment.answer_end = self.course.start_date + datetime.timedelta(days=index+7)
+            if assignment.compare_start != None:
+                assignment.compare_start = self.course.start_date + datetime.timedelta(days=index+14)
+            if assignment.compare_end != None:
+                assignment.compare_end = self.course.start_date + datetime.timedelta(days=index+21)
+            index+=1
         db.session.commit()
 
         self.url = '/api/courses/' + self.course.uuid + '/duplicate'
@@ -352,6 +353,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
 
             assignment_data = {
                 'id': assignment.uuid,
+                'name': assignment.name,
                 'answer_start': (assignment.answer_start + self.date_delta).isoformat() + 'Z',
                 'answer_end': (assignment.answer_end + self.date_delta).isoformat() + 'Z'
             }
@@ -364,11 +366,142 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
 
             self.expected['assignments'].append(assignment_data)
 
+        now = datetime.datetime.utcnow()
+        self.valid_course = self.data.create_course()
+        self.data.enrol_instructor(self.data.get_authorized_instructor(), self.valid_course)
+        self.valid_assignment = self.data.create_assignment_in_answer_period(self.valid_course, self.data.get_authorized_instructor())
+
+        self.valid_start_date = now.isoformat() + 'Z'
+        self.valid_end_date = (now + datetime.timedelta(days=90)).isoformat() + 'Z'
+
+        self.invalid_end_date = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+
+        self.valid_answer_start = now.isoformat() + 'Z'
+        self.valid_answer_end = (now + datetime.timedelta(days=90)).isoformat() + 'Z'
+
+        self.invalid_answer_start = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+        self.invalid_answer_end = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+        self.invalid_answer_end2 = (now + datetime.timedelta(days=91)).isoformat() + 'Z'
+
+        self.valid_compare_start = now.isoformat() + 'Z'
+        self.valid_compare_end = (now + datetime.timedelta(days=90)).isoformat() + 'Z'
+
+        self.invalid_compare_start = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+        self.invalid_compare_end = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
+        self.invalid_compare_end2 = (now + datetime.timedelta(days=91)).isoformat() + 'Z'
+
+        self.validation_url = '/api/courses/' + self.valid_course.uuid + '/duplicate'
+        self.validate_expected_assignment = {
+            'id': self.valid_assignment.uuid,
+            'name': self.valid_assignment.name,
+            'answer_start': self.valid_answer_start,
+            'answer_end': self.valid_answer_end,
+            'compare_start': self.valid_compare_start,
+            'compare_end': self.valid_compare_end
+        }
+        self.validate_expected_course = {
+            'name': 'duplicate validation course',
+            'year': 2015,
+            'term': 'Winter',
+            'start_date': self.valid_start_date,
+            'end_date': self.valid_end_date,
+            'assignments': [self.validate_expected_assignment]
+        }
+
     def test_duplicate_course_complex(self):
         original_course = self.data.get_course()
 
         # test authorized user
         with self.login(self.data.get_authorized_instructor().username):
+            # test valid expected
+            rv = self.client.post(self.validation_url, data=json.dumps(self.validate_expected_course), content_type='application/json')
+            self.assert200(rv)
+
+            # test invalid course start/end dates
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['end_date'] = self.invalid_end_date
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Course end time must be after course start time.")
+
+            # test invalid assignment answer start
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['answer_start'] = None
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "No answer period start time provided for assignment "+self.valid_assignment.name+".")
+
+            # test invalid assignment answer end
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['answer_end'] = None
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "No answer period end time provided for assignment "+self.valid_assignment.name+".")
+
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['answer_end'] = self.invalid_answer_end
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Answer period end time must be after the answer start time for assignment "+self.valid_assignment.name+".")
+
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['answer_end'] = self.invalid_answer_end2
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Answer period end time must be before the course end time for assignment "+self.valid_assignment.name+".")
+
+            # test invalid assignment compare start
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['compare_start'] = None
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "No compare period start time provided for assignment "+self.valid_assignment.name+".")
+
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['compare_start'] = self.invalid_compare_start
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Compare period start time must be after the answer start time for assignment "+self.valid_assignment.name+".")
+
+            # test invalid assignment compare end
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['compare_end'] = None
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "No compare period end time provided for assignment "+self.valid_assignment.name+".")
+
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['compare_end'] = self.invalid_compare_end
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Compare period end time must be after the compare start time for assignment "+self.valid_assignment.name+".")
+
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['compare_end'] = self.invalid_compare_end2
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Compare period end time must be before the course end time for assignment "+self.valid_assignment.name+".")
+
+            # test deep copy assignments
             rv = self.client.post(self.url, data=json.dumps(self.expected), content_type='application/json')
             self.assert200(rv)
 
@@ -383,7 +516,6 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             self.assertEqual(self.expected['term'], duplicate_course.term)
             self.assertEqual(self.expected['start_date'].replace('Z', ''), rv.json['start_date'].replace('+00:00', ''))
             self.assertEqual(self.expected['end_date'].replace('Z', ''), rv.json['end_date'].replace('+00:00', ''))
-            self.assertEqual(original_course.description, duplicate_course.description)
 
             # verify instructor added to duplicate course
             user_course = UserCourse.query \

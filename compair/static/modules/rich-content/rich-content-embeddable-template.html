@@ -1,0 +1,27 @@
+<div ng-if="content.type == 'pdf'" class="embed-responsive embed-responsive-pdf">
+    <div ng-bind-html="content.embed"></div>
+</div>
+<div ng-if="content.type == 'image'">
+    <img ng-src="{{content.url}}" ng-alt="{{content.title}}" class="content-item" />
+</div>
+<div ng-if="content.type == 'video'" class="embed-responsive embed-responsive-16by9">
+    <video ng-src="{{content.url}}" controls class="content-item embed-responsive-item"></video>
+</div>
+<div ng-if="content.type == 'audio'">
+    <audio ng-src="{{content.url}}" controls class="content-item"></audio>
+</div>
+<div ng-if="content.type == 'youtube'" class="embed-responsive embed-responsive-16by9">
+    <div ng-bind-html="content.embed"></div>
+</div>
+<div ng-if="content.type == 'vimeo'" class="embed-responsive embed-responsive-16by9">
+    <div ng-bind-html="content.embed"></div>
+</div>
+<div ng-if="content.type == 'soundCloud'">
+    <div ng-bind-html="content.embed"></div>
+</div>
+<div ng-if="content.type == 'spotify'">
+    <div ng-bind-html="content.embed"></div>
+</div>
+<div ng-if="content.type == 'twitter'">
+    <div twttr="{{content}}" ng-bind-html="content.embed" class="twttr-content-item"></div>
+</div>

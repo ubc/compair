@@ -13,17 +13,14 @@ var module = angular.module('ubc.ctlt.compair.authorization',
 // normally, there would be a "Service" at the end of the name, but it seems
 // too much to type if it's going to be used a lot
 module.factory('Authorize',
-    ["$log", "$q", "Session",
-    function($log, $q, Session)
+    ["$q", "Session",
+    function($q, Session)
     {
-        var _allow_operation = function(operation, resource, courseId, permissions) {
+        var _allow_operation = function(operation, resource, resource_scope, permissions) {
             if (resource in permissions)
             {
-                if (operation in permissions[resource])
-                {
-                    if (courseId in permissions[resource][operation]) {
-                        return permissions[resource][operation][courseId];
-                    }
+                if (resource_scope in permissions[resource]) {
+                    return permissions[resource][resource_scope].indexOf(operation) != -1;
                 }
             }
             return false;
@@ -47,8 +44,8 @@ module.factory('Authorize',
                     }
 
                     return Session.getPermissions().then(function(permissions) {
-                        var course_id = courseId || 'global';
-                        return $q.when(_allow_operation(operation, resource, course_id, permissions));
+                        var resource_scope = courseId || 'global';
+                        return $q.when(_allow_operation(operation, resource, resource_scope, permissions));
                     });
                 });
             }

@@ -35,6 +35,7 @@ var admin = userFactory.generateUser("1abcABC123-abcABC123_Z", "System Administr
     firstname: "JaNy",
     lastname: "bwsV",
     fullname: "JaNy bwsV",
+    email: "admin@exmple.com"
 });
 storage.users[admin.id] = admin;
 
@@ -61,16 +62,14 @@ storage.users[student.id] = student;
 var course = courseFactory.generateCourse("1abcABC123-abcABC123_Z", {
     name: "CHEM 111",
     year: 2015,
-    term: "Winter",
-    description: "<p>CHEM 111 description<p>",
+    term: "Winter"
 });
 storage.courses[course.id] = course;
 
 var course2 = courseFactory.generateCourse("2abcABC123-abcABC123_Z", {
     name: "PHYS 101",
     year: 2015,
-    term: "Winter",
-    description: "<p>PHYS 101  description<p>",
+    term: "Winter"
 });
 storage.courses[course2.id] = course2;
 
@@ -168,17 +167,20 @@ storage.course_assignments[course.id].push(assignment_being_answered.id);
 storage.loginDetails = { id: student.id, username: student.username, password: "password" };
 var session = sessionFactory.generateSession(student.id, student.system_role, {
     "Course": {
-        "delete": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false},
-        "edit": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false},
-        "manage": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false},
-        "read": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true},
+        "1abcABC123-abcABC123_Z": [
+            "read"
+        ],
+        "2abcABC123-abcABC123_Z": [
+            "read"
+        ]
     },
     "Assignment": {
-        "create": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false, '3abcABC123-abcABC123_Z': false, '4abcABC123-abcABC123_Z': false},
-        "delete": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false, '3abcABC123-abcABC123_Z': false, '4abcABC123-abcABC123_Z': false},
-        "edit": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false, '3abcABC123-abcABC123_Z': false, '4abcABC123-abcABC123_Z': false},
-        "manage": {'1abcABC123-abcABC123_Z': false, '2abcABC123-abcABC123_Z': false, '3abcABC123-abcABC123_Z': false, '4abcABC123-abcABC123_Z': false},
-        "read": {'1abcABC123-abcABC123_Z': true, '2abcABC123-abcABC123_Z': true, '3abcABC123-abcABC123_Z': true, '4abcABC123-abcABC123_Z': true}
+        "1abcABC123-abcABC123_Z": [
+            "read"
+        ],
+        "2abcABC123-abcABC123_Z": [
+            "read"
+        ]
     },
 });
 storage.session = session;

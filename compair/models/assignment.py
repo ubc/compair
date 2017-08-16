@@ -43,6 +43,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     answer_grade_weight = db.Column(db.Integer, default=1, nullable=False)
     comparison_grade_weight = db.Column(db.Integer, default=1, nullable=False)
     self_evaluation_grade_weight = db.Column(db.Integer, default=1, nullable=False)
+    peer_feedback_prompt = db.Column(db.Text)
 
     # relationships
     # user via User Model
@@ -58,7 +59,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     comments = db.relationship("AssignmentComment", backref="assignment", lazy="dynamic")
     comparisons = db.relationship("Comparison", backref="assignment", lazy="dynamic")
     comparison_examples = db.relationship("ComparisonExample", backref="assignment", lazy="dynamic")
-    scores = db.relationship("Score", backref="assignment", lazy="dynamic")
+    scores = db.relationship("AnswerScore", backref="assignment", lazy="dynamic")
+    criteria_scores = db.relationship("AnswerCriterionScore", backref="assignment", lazy="dynamic")
     grades = db.relationship("AssignmentGrade", backref="assignment", lazy='dynamic')
 
     # lti
@@ -77,23 +79,25 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def criteria(self):
-        return [assignment_criterion.criterion \
-            for assignment_criterion in self.assignment_criteria \
-            if assignment_criterion.active and assignment_criterion.criterion.active]
+        criteria = []
+        for assignment_criterion in self.assignment_criteria:
+            if assignment_criterion.active and assignment_criterion.criterion.active:
+                criterion = assignment_criterion.criterion
+                criterion.weight = assignment_criterion.weight
+                criteria.append(criterion)
+        return criteria
 
     @hybrid_property
     def compared(self):
         return self.all_compare_count > 0
 
     def completed_comparison_count_for_user(self, user_id):
-        comparison_count = self.comparisons \
+        return self.comparisons \
             .filter_by(
                 user_id=user_id,
                 completed=True
             ) \
             .count()
-
-        return comparison_count / self.criteria_count if self.criteria_count else 0
 
     @hybrid_property
     def available(self):
@@ -148,8 +152,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def evaluation_count(self):
-        evaluation_count = self.compare_count / self.criteria_count if self.criteria_count else 0
-        return evaluation_count + self.self_evaluation_count
+        return self.compare_count + self.self_evaluation_count
 
     @hybrid_property
     def total_comparisons_required(self):
@@ -159,12 +162,6 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     def total_steps_required(self):
         return self.total_comparisons_required + (1 if self.enable_self_evaluation else 0)
 
-    def __repr__(self):
-        if self.uuid:
-            return "assignment " + self.uuid
-        else:
-            return "assignment"
-
     def calculate_grade(self, user):
         from . import AssignmentGrade
         AssignmentGrade.calculate_grade(self, user)
@@ -172,6 +169,62 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     def calculate_grades(self):
         from . import AssignmentGrade
         AssignmentGrade.calculate_grades(self)
+
+    @classmethod
+    def validate_periods(cls, course_start, course_end, answer_start, answer_end, compare_start, compare_end):
+        # validate answer period
+        if answer_start == None:
+            return (False, "No answer period start time provided.")
+        elif answer_end == None:
+            return (False, "No answer period end time provided.")
+
+        course_start = course_start.replace(tzinfo=pytz.utc) if course_start else None
+        course_end = course_end.replace(tzinfo=pytz.utc) if course_end else None
+        answer_start = answer_start.replace(tzinfo=pytz.utc)
+        answer_end = answer_end.replace(tzinfo=pytz.utc)
+
+        # course start <= answer start < answer end <= course end
+        if course_start and course_start > answer_start:
+            return (False, "Answer period start time must be after the course start time.")
+        elif answer_start >= answer_end:
+            return (False, "Answer period end time must be after the answer start time.")
+        elif course_end and course_end < answer_end:
+            return (False, "Answer period end time must be before the course end time.")
+
+        # validate compare period
+        if compare_start == None and compare_end != None:
+            return (False, "No compare period start time provided.")
+        elif compare_start != None and compare_end == None:
+            return (False, "No compare period end time provided.")
+        elif compare_start != None and compare_end != None:
+            compare_start = compare_start.replace(tzinfo=pytz.utc)
+            compare_end = compare_end.replace(tzinfo=pytz.utc)
+
+            # answer start < compare start < compare end <= course end
+            if answer_start > compare_start:
+                return (False, "Compare period start time must be after the answer start time.")
+            elif compare_start > compare_end:
+                return (False, "Compare period end time must be after the compare start time.")
+            elif course_end and course_end < compare_end:
+                return (False, "Compare period end time must be before the course end time.")
+
+        return (True, None)
+
+    @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Assignment Unavailable"
+        if not message:
+            message = "The assignment was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Assignment Unavailable"
+        if not message:
+            message = "The assignment was removed from the system or is no longer accessible."
+        return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
     def __declare_last__(cls):
@@ -234,16 +287,6 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             group="counts"
         )
 
-        cls.criteria_count = column_property(
-            select([func.count(AssignmentCriterion.id)]).
-            where(and_(
-                AssignmentCriterion.assignment_id == cls.id,
-                AssignmentCriterion.active == True
-            )),
-            deferred=True,
-            group="counts"
-        )
-
         cls.comparison_example_count = column_property(
             select([func.count(ComparisonExample.id)]).
             where(and_(
@@ -256,7 +299,19 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
         cls.all_compare_count = column_property(
             select([func.count(Comparison.id)]).
-            where(Comparison.assignment_id == cls.id),
+            where(and_(
+                Comparison.assignment_id == cls.id
+            )),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.all_compare_count = column_property(
+            select([func.count(Comparison.id)]).
+            where(and_(
+                Comparison.assignment_id == cls.id,
+                Comparison.completed == True
+            )),
             deferred=True,
             group="counts"
         )

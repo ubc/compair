@@ -18,7 +18,6 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     name = db.Column(db.String(255), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     term = db.Column(db.String(255), nullable=False)
-    description = db.Column(db.Text)
     start_date = db.Column(db.DateTime(timezone=True), nullable=True)
     end_date = db.Column(db.DateTime(timezone=True), nullable=True)
     # relationships
@@ -52,13 +51,19 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def start_date_order(self):
-        return self.start_date if self.start_date else self.min_assignment_answer_start
+        if self.start_date:
+            return self.start_date
+        elif self.min_assignment_answer_start:
+            return self.min_assignment_answer_start
+        else:
+            return self.created
 
     @start_date_order.expression
     def start_date_order(cls):
         return case([
-            (cls.start_date != None, cls.start_date)
-        ], else_ = cls.min_assignment_answer_start)
+            (cls.start_date != None, cls.start_date),
+            (cls.min_assignment_answer_start != None, cls.min_assignment_answer_start)
+        ], else_ = cls.created)
 
     def calculate_grade(self, user):
         from . import CourseGrade
@@ -67,6 +72,22 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     def calculate_grades(self):
         from . import CourseGrade
         CourseGrade.calculate_grades(self)
+
+    @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Course Unavailable"
+        if not message:
+            message = "The course was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Course Unavailable"
+        if not message:
+            message = "The course was removed from the system or is no longer accessible."
+        return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
     def __declare_last__(cls):

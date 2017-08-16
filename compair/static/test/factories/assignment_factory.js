@@ -19,6 +19,9 @@ var assignmentTemplate = {
     "answer_count": 0,
     "top_answer_count": 0,
     "self_evaluation_count": 0,
+    "answer_grade_weight": 1,
+    "comparison_grade_weight": 1,
+    "self_evaluation_grade_weight": 1,
     "answer_period": false,
     "answer_end": "Thu, 28 Apr 2016 06:59:00 -0000",
     "answer_start": "Wed, 20 Apr 2016 07:00:00 -0000",
@@ -27,6 +30,7 @@ var assignmentTemplate = {
     "total_steps_required": 3,
     "compare_end": null,
     "compare_start": null,
+    "peer_feedback_prompt": null,
     "modified": "Tue, 19 Apr 2016 20:06:43 -0000",
     "user": {
         "id": null,

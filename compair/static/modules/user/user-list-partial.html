@@ -1,0 +1,77 @@
+<div class="users-screen">
+    <div class="row">
+        <h1 class="col-sm-8">Manage Users</h1>
+
+        <form class="col-sm-4 search-users text-right" role="search" ng-show="canManageUsers && (users.length || userFilters.search)">
+            <div class="form-group">
+                <input class="form-control" type="text" name="search" placeholder="Filter users by keyword"
+                       ng-model="userFilters.search">
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive" ng-if="users.length">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Actions</th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('displayname')">Display Name</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('firstname')">First Name</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('lastname')">Last Name</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('student_number')">Student Number</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('email')">Email</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('system_role')">System Role</a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="user in users">
+                    <td class="nowrap">
+                        <a href="#/user/{{user.id}}/edit" target="_blank">Edit</a>
+                        <span>&nbsp;|&nbsp;</span>
+                        <a href="#/users/{{user.id}}/course">Manage Courses</a>
+                    </td>
+                    <td><i class="fa fa-user"></i> {{user.displayname}}</td>
+                    <td>{{user.firstname}}</td>
+                    <td>{{user.lastname}}</td>
+                    <td>{{user.student_number}}</td>
+                    <td>{{user.email}}</td>
+                    <td>
+                        {{ user.system_role }}
+                        <!--
+                        <select ng-if="user.system_role != SystemRole.sys_admin" ng-model="user.system_role"
+                                ng-options="system_role as system_role for system_role in system_roles"
+                                ng-change="updateUser(user)"></select>
+                        <span ng-if="user.system_role == SystemRole.sys_admin">{{ user.system_role }}</span>
+                        -->
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center" ng-if="users.length">
+        <ul uib-pagination total-items="totalNumUsers" ng-model="userFilters.page"
+            max-size="10" class="pagination-sm" boundary-links="true"
+            direction-links="false" items-per-page="userFilters.perPage"
+            num-pages="numPages" ng-hide="numPages == 1"></ul>
+    </div>
+
+    <div ng-if="!users.length">
+        <hr />
+        <p ng-if="!userFilters.search">No users found.</p>
+        <p ng-if="userFilters.search">No users found for this search. Please try another search term above.</p>
+    </div>
+
+</div>

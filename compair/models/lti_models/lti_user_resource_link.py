@@ -1,3 +1,5 @@
+from six import text_type
+
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import func, select, and_, or_
@@ -26,6 +28,9 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
     # lti_resource_link via LTIResourceLink Model
 
     # hyprid and other functions
+    context_id = association_proxy('lti_resource_link', 'context_id')
+    resource_link_id = association_proxy('lti_resource_link', 'resource_link_id')
+    user_id = association_proxy('lti_user', 'user_id')
     compair_user_id = association_proxy('lti_user', 'compair_user_id')
 
     @classmethod
@@ -51,7 +56,7 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
             )
             db.session.add(lti_user_resource_link)
 
-        lti_user_resource_link.roles = str(tool_provider.roles)
+        lti_user_resource_link.roles = text_type(tool_provider.roles)
         lti_user_resource_link.lis_result_sourcedid = tool_provider.lis_result_sourcedid
 
         # set course role every time

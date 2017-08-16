@@ -28,18 +28,17 @@ module.factory(
 
 /***** Controllers *****/
 module.controller("GradebookController",
-    ["$scope", "$log", "$routeParams", "CourseResource", "GradebookResource",
-        "GroupResource", "AssignmentResource", "Authorize", "Toaster", "AssignmentCriterionResource",
+    ["$scope", "$window", "$routeParams", "CourseResource", "GradebookResource",
+        "GroupResource", "AssignmentResource", "Authorize", "Toaster",
         "xAPIStatementHelper", "$filter",
-    function($scope, $log, $routeParams, CourseResource, GradebookResource,
-        GroupResource, AssignmentResource, Authorize, Toaster, AssignmentCriterionResource,
+    function($scope, $window, $routeParams, CourseResource, GradebookResource,
+        GroupResource, AssignmentResource, Authorize, Toaster,
         xAPIStatementHelper, $filter)
     {
         $scope.users = [];
         $scope.gradebookFilters = {
             student: null,
-            group: null,
-            sortby: null
+            group: null
         };
         var userIds = {};
         $scope.isNumber = angular.isNumber;
@@ -50,9 +49,6 @@ module.controller("GradebookController",
                 $scope.allStudents = ret.objects;
                 $scope.users = ret.objects;
                 userIds = $scope.getUserIds(ret.objects);
-            },
-            function (ret) {
-                Toaster.reqerror("Class list retrieval failed", ret);
             }
         );
 
@@ -60,6 +56,18 @@ module.controller("GradebookController",
             function(ret)
             {
                 $scope.gradebook = ret['gradebook'];
+                $scope.showAttachments = false;
+                $scope.gradebook.forEach(function(entry) {
+                    if (entry.file) {
+                        $scope.showAttachments = true;
+                    }
+                    // download file name is student number + full name (if student number is set)
+                    entry.download_file_name = ""
+                    if (entry.user.student_number) {
+                        entry.download_file_name = entry.user.student_number + " ";
+                    }
+                    entry.download_file_name += entry.user.fullname;
+                });
                 $scope.totalComparisonsRequired=ret['total_comparisons_required'];
                 $scope.includeScores = ret['include_scores'];
                 $scope.includeSelfEval = ret['include_self_evaluation'];
@@ -76,29 +84,20 @@ module.controller("GradebookController",
                 GroupResource.get({'courseId': $scope.courseId}).$promise.then(
                     function (ret) {
                         $scope.groups = ret.objects;
-                    },
-                    function (ret) {
-                        Toaster.reqerror("Unable to retrieve the groups in the course.", ret);
                     }
                 );
             }
         });
 
-        AssignmentCriterionResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
-            function (ret) {
-                $scope.criteria = ret['objects'];
-                $scope.gradebookFilters.sortby = ret['objects'][0]['id'];
-                $scope.$watchCollection('gradebookFilters', filterWatcher);
-            },
-            function (ret) {
-                Toaster.reqerror("Unable to retrieve the criteria.", ret);
-            }
-        );
-
         $scope.groupFilter = function() {
             return function (entry) {
-                return entry.user_id in userIds;
+                return entry.user && entry.user.id in userIds;
             }
+        };
+
+        $scope.openAttachment = function (file, downloadName) {
+            var filepath = '/app/attachment/' + file.name + "?name="+encodeURIComponent(downloadName+'.'+file.extension);
+            $window.open(filepath);
         };
 
         var filterWatcher = function(newValue, oldValue) {
@@ -114,9 +113,6 @@ module.controller("GradebookController",
                         function (ret) {
                             $scope.users = ret.students;
                             userIds = $scope.getUserIds(ret.students);
-                        },
-                        function (ret) {
-                            Toaster.reqerror("Unable to retrieve the group members", ret);
                         }
                     );
                 }
@@ -133,6 +129,7 @@ module.controller("GradebookController",
 
             $scope.updateAnswerList();
         };
+        $scope.$watchCollection('gradebookFilters', filterWatcher);
 
         $scope.updateTableOrderBy = function(predicate) {
             $scope.reverse = $scope.predicate == predicate && !$scope.reverse;

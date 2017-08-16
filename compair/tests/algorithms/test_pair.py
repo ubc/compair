@@ -44,7 +44,7 @@ class TestPair(unittest.TestCase):
         # round zero items should be selected
         self.assertEqual(min_key, 3)
         self.assertEqual(max_key, 4)
-        self.assertEqual(results.winning_key, None)
+        self.assertEqual(results.winner, None)
 
         # test random pair algorithm
         self.package_name = "random"
@@ -62,4 +62,4 @@ class TestPair(unittest.TestCase):
         # round zero items should be selected
         self.assertEqual(min_key, 3)
         self.assertEqual(max_key, 4)
-        self.assertEqual(results.winning_key, None)
+        self.assertEqual(results.winner, None)

@@ -11,12 +11,12 @@ describe('home', function() {
     });
 
     it('should show the home page ', function() {
-        expect(element(by.css('div[ng-controller=HomeController] h2')).getText()).toMatch('Select a course');
+        expect(element(by.css('div.home-screen h2')).getText()).toMatch('Select a course');
 
     });
 
     it('should not list course when no course available', function() {
-        expect(element(by.css('div[ng-controller=HomeController] div p')).getText()).toMatch('No courses currently available.');
+        expect(element(by.css('div.home-screen div p')).getText()).toMatch('No courses currently available.');
         addCourseButton = element(by.css('#create-course-btn'));
     });
 });

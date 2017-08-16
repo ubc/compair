@@ -94,9 +94,6 @@
     padding: 1em 1em 2em 1em;
     border-bottom: 1px solid @border-gray;
   }
-    .each-evaluation:nth-child(odd){
-      background: @bkgrd-gray;
-    }
 
     /* class for h4 that = student name */
     .evaluator-heading {
@@ -109,12 +106,11 @@
     .evaluator-answer {
       margin: -1.3em -1em 1em -1em;
       padding: 1em;
-      background: #fff;
+      background: @bkgrd-gray;
       border-bottom: 1px solid @border-gray;
 
       > .answer > div {
-        padding: 1em 0 1em 2em;
-        border-left: 5px solid @border-gray;
+        &:extend(.collapsible-content);
       }
 
     }//closes evaluator-answer
@@ -133,11 +129,6 @@
       border-bottom: 2px solid @border-gray;
     }
 
-    /* class for p tag answer toggle */
-    .show-answers {
-      margin-bottom: 2em;
-    }
-
     /* class for input for all answer toggle */
     .show-all {
       margin-top: 2.5em;
@@ -145,7 +136,7 @@
 
     /* answer text */
     .answer-choice {
-      margin: 0 0 1em 2em;
+      margin: 0 0 1em 0;
       font-size: .9em;
     }
 

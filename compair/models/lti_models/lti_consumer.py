@@ -6,17 +6,18 @@ from . import *
 
 from compair.core import db
 
-class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
+class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'lti_consumer'
 
     # table columns
     oauth_consumer_key = db.Column(db.String(255), unique=True, nullable=False)
     oauth_consumer_secret = db.Column(db.String(255), nullable=False)
-    lti_version = db.Column(db.String(20), nullable=False)
+    lti_version = db.Column(db.String(20), nullable=True)
     tool_consumer_instance_guid = db.Column(db.String(255), unique=True, nullable=True)
     tool_consumer_instance_name = db.Column(db.String(255), nullable=True)
     tool_consumer_instance_url = db.Column(db.Text, nullable=True)
     lis_outcome_service_url = db.Column(db.Text, nullable=True)
+    user_id_override = db.Column(db.String(255), nullable=True)
 
     # relationships
     lti_nonces = db.relationship("LTINonce", backref="lti_consumer", lazy="dynamic")
@@ -46,11 +47,32 @@ class LTIConsumer(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
         lti_consumer.tool_consumer_instance_guid = tool_provider.tool_consumer_instance_guid
         lti_consumer.tool_consumer_instance_name = tool_provider.tool_consumer_instance_name
         lti_consumer.tool_consumer_instance_url = tool_provider.tool_consumer_instance_url
-        lti_consumer.lis_outcome_service_url = tool_provider.lis_outcome_service_url
+
+        # do no overwrite lis_outcome_service_url if value is None
+        # some LTI consumers do not always send the lis_outcome_service_url
+        # ex: Canvas when linking from module instead of an assignment
+        if tool_provider.lis_outcome_service_url:
+            lti_consumer.lis_outcome_service_url = tool_provider.lis_outcome_service_url
 
         db.session.commit()
 
         return lti_consumer
+
+    @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "LTI Consumer Unavailable"
+        if not message:
+            message = "The LTI consumer was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "LTI Consumer Unavailable"
+        if not message:
+            message = "The LTI consumer was removed from the system or is no longer accessible."
+        return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
     def __declare_last__(cls):

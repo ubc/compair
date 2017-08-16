@@ -1,7 +1,8 @@
 from flask import Blueprint
 from flask_restful import Resource, reqparse
 from flask_login import login_required, current_user
-from compair.core import db, event
+
+from compair.core import db, event, abort
 from compair.xapi import XAPI, XAPIStatement
 
 from .util import new_restful_api
@@ -15,7 +16,7 @@ statement_parser.add_argument('verb', type=dict, location='json', required=True)
 statement_parser.add_argument('object', type=dict, location='json', required=True)
 statement_parser.add_argument('context', type=dict, location='json', required=False)
 statement_parser.add_argument('result', type=dict, location='json', required=False)
-statement_parser.add_argument('timestamp', type=str, required=False)
+statement_parser.add_argument('timestamp', required=False)
 
 class StatementAPI(Resource):
     @login_required

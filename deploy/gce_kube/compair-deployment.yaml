@@ -12,20 +12,9 @@ spec:
     app: compair
     tier: frontend
   type: LoadBalancer
+
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: nfs-pv-claim
-  labels:
-    app: compair
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 10Gi
----
+
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -45,8 +34,6 @@ spec:
       - name: compair-app
         image: ubcctlt/compair-app
         env:
-#        - name: DATABASE_URI
-#          value: "mysql+pymysql://compair:thisiscompairpassword@compair-mysql:3306/compair"
         - name: DB_HOST
           value: compair-mysql
         - name: DB_PORT
@@ -60,6 +47,8 @@ spec:
               key: password.txt
         - name: DB_NAME
           value: compair
+        - name: CELERY_BROKER_URL
+          value: redis://compair-redis:6379
         ports:
         - containerPort: 3031
           name: compair-app

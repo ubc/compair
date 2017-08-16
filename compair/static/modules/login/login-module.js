@@ -54,7 +54,7 @@ module.constant('AuthTypesEnabled', {
 // it only works before onload, so it doesn't do anything if we pop the login modal
 // after the entire page has been loaded.
 // The timeout forces a wait for the loginbox to be rendered.
-module.directive('autoFocus', ["$timeout", "$log", function($timeout, $log) {
+module.directive('autoFocus', ["$timeout", function($timeout) {
     return {
         restrict: 'AC',
         link: function(scope, _element, attr) {
@@ -68,9 +68,9 @@ module.directive('autoFocus', ["$timeout", "$log", function($timeout, $log) {
 /***** Listeners *****/
 // display the login page if user is not logged in
 module.run(
-    ["$rootScope", "$route", "$location", "$log", "$modal", "$cacheFactory", "AuthenticationService",
+    ["$rootScope", "$route", "$location", "$log", "$uibModal", "$cacheFactory", "AuthenticationService",
      "Toaster", "$http",
-    function ($rootScope, $route, $location, $log, $modal, $cacheFactory, AuthenticationService,
+    function ($rootScope, $route, $location, $log, $uibModal, $cacheFactory, AuthenticationService,
               Toaster, $http) {
     // Create a modal dialog box for containing the login form
     var loginBox;
@@ -92,9 +92,10 @@ module.run(
 
     $rootScope.showLogin = function() {
         if (isOpen) return;
-        loginBox = $modal.open({
-            templateUrl: 'modules/login/login-partial.html',
+        loginBox = $uibModal.open({
             backdrop: 'static', // can't close login on backdrop click
+            controller: "LoginController",
+            templateUrl: 'modules/login/login-partial.html',
             keyboard: false, // can't close login on pressing Esc key
             scope: modalScope
         });
@@ -121,8 +122,6 @@ module.run(
             Toaster.error('Login Failed!', rejection.data.message);
             $rootScope.$broadcast(AuthenticationService.LOGIN_REQUIRED_EVENT);
         }
-        // invalid session cache, looks like we don't need it. I'll just leave it here in case we need it in the future
-        //$cacheFactory.get('$http').removeAll();
     });
     $rootScope.$on(AuthenticationService.LOGOUT_EVENT, function () {
         $cacheFactory.get('$http').removeAll();
@@ -131,18 +130,6 @@ module.run(
             cache.removeAll();
         }
     });
-
-    // Requires the user to be logged in for every single route
-//	$rootScope.$on('$locationChangeStart', function(event, next) {
-//		if (!AuthenticationService.isAuthenticated())
-//		{
-//			event.preventDefault();
-//			// user needs to be logged in
-//			$rootScope.$broadcast(AuthenticationService.LOGIN_REQUIRED_EVENT);
-//			// wipe out current data displayed on screen
-//			$route.reload();
-//		}
-//	});
 }]);
 
 
@@ -238,12 +225,7 @@ module.controller(
                 function(ret) {
                     // login failed
                     $log.debug("Login authentication failed.");
-                    if (ret.data.error) {
-                        $scope.login_err = ret.data.error;
-                    }
-                    else {
-                        $scope.login_err = "Server error during authentication.";
-                    }
+                    $scope.login_err = ret.data.message ? ret.data.message : "Server error during authentication.";
                     $scope.submitted = false;
                 }
             );

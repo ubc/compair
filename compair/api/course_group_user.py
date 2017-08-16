@@ -10,7 +10,7 @@ from sqlalchemy import and_, or_
 
 from . import dataformat
 from compair.authorization import require
-from compair.core import db, event
+from compair.core import db, event, abort
 from compair.models import UserCourse, User, Course, CourseRole
 from .util import new_restful_api
 
@@ -40,7 +40,9 @@ class GroupUserIdAPI(Resource):
             )) \
             .first_or_404()
 
-        require(EDIT, user_course)
+        require(EDIT, user_course,
+            title="Group Not Updated",
+            message="Your role in this course does not allow you to update groups.")
 
         user_course.group_name = group_name
         db.session.commit()
@@ -67,7 +69,9 @@ class GroupUserAPI(Resource):
                 user_id=user.id
             ) \
             .first_or_404()
-        require(EDIT, user_course)
+        require(EDIT, user_course,
+            title="Group Not Updated",
+            message="Your role in this course does not allow you to update groups.")
 
         user_course.group_name = None
         db.session.commit()
@@ -88,12 +92,14 @@ class GroupUserListGroupNameAPI(Resource):
     @login_required
     def post(self, course_uuid, group_name):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, UserCourse(course_id=course.id))
+        require(EDIT, UserCourse(course_id=course.id),
+            title="Group Not Updated",
+            message="Your role in this course does not allow you to update groups.")
 
         params = user_list_parser.parse_args()
 
         if len(params.get('ids')) == 0:
-            return {"error": "Please select at least one user below"}, 400
+            abort(400, title="Group Not Updated", message="Please select at least one user below and then try to update the group again.")
 
         user_courses = UserCourse.query \
             .join(User, UserCourse.user_id == User.id) \
@@ -105,7 +111,7 @@ class GroupUserListGroupNameAPI(Resource):
             .all()
 
         if len(params.get('ids')) != len(user_courses):
-            return {"error": "One or more users are not enrolled in the course"}, 400
+            abort(400, title="Group Not Updated", message="One or more users selected are not enrolled in the course yet.")
 
         for user_course in user_courses:
             user_course.group_name = group_name
@@ -127,12 +133,14 @@ class GroupUserListAPI(Resource):
     @login_required
     def post(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(EDIT, UserCourse(course_id=course.id))
+        require(EDIT, UserCourse(course_id=course.id),
+            title="Group Not Updated",
+            message="Your role in this course does not allow you to update groups.")
 
         params = user_list_parser.parse_args()
 
         if len(params.get('ids')) == 0:
-            return {"error": "Please select at least one user below"}, 400
+            abort(400, title="Group Not Updated", message="Please select at least one user below and then try to update the group again.")
 
         user_courses = UserCourse.query \
             .join(User, UserCourse.user_id == User.id) \
@@ -144,7 +152,7 @@ class GroupUserListAPI(Resource):
             .all()
 
         if len(params.get('ids')) != len(user_courses):
-            return {"error": "One or more users are not enrolled in the course"}, 400
+            abort(400, title="Group Not Updated", message="One or more users selected are not enrolled in the course yet.")
 
         for user_course in user_courses:
             user_course.group_name = None

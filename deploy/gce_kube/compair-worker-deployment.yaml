@@ -1,0 +1,45 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: compair-worker
+  labels:
+    app: compair
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: compair
+        tier: worker
+    spec:
+      containers:
+      - image: ubcctlt/compair-app
+        name: compair-worker
+        command: ["celery", "worker", "--app=celery_worker.celery"]
+        env:
+        - name: DB_HOST
+          value: compair-mysql
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_USERNAME
+          value: compair
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-pass
+              key: password.txt
+        - name: DB_NAME
+          value: compair
+        - name: CELERY_BROKER_URL
+          value: redis://compair-redis:6379
+        - name: C_FORCE_ROOT
+          value: "1"
+        volumeMounts:
+        - name: nfs-persistent-storage
+          mountPath: /code/persistent
+      volumes:
+      - name: nfs-persistent-storage
+        persistentVolumeClaim:
+          claimName: nfs-pv-claim

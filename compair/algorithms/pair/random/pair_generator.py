@@ -3,6 +3,7 @@ import math
 
 from compair.algorithms.pair.pair_generator import PairGenerator
 from compair.algorithms.comparison_pair import ComparisonPair
+from compair.algorithms.comparison_winner import ComparisonWinner
 from compair.algorithms.scored_object import ScoredObject
 from compair.algorithms.exceptions import InsufficientObjectsForPairException, \
     UserComparedAllObjectsException, UnknownPairGeneratorException
@@ -107,7 +108,9 @@ class RandomPairGenerator(PairGenerator):
             raise UnknownPairGeneratorException
 
         return ComparisonPair(
-            score_object_1.key, score_object_2.key, winning_key=None
+            key1=score_object_1.key,
+            key2=score_object_2.key,
+            winner=None
         )
 
 

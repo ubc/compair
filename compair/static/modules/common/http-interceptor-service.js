@@ -1,5 +1,4 @@
 // Holds service used by requests that can change the GET response cached in the $cacheFactory
-
 (function() {
 
 var module = angular.module('ubc.ctlt.compair.common.interceptor', []);
@@ -26,6 +25,11 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
             if(cache) {
                 var url = response.config.url.match(/\/api\/courses\/[A-Za-z0-9_-]{22}/g);
                 cache.remove(url[0] + '/users');
+            }
+            cache = $cacheFactory.get('$http');
+            if(cache) {
+                var url = response.config.url.match(/\/api\/courses\/[A-Za-z0-9_-]{22}/g);
+                cache.remove(url[0] + '/groups');
             }
             return response.data;
         }

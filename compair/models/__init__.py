@@ -2,8 +2,9 @@
 from .mixins import ActiveMixin, DefaultTableMixin, WriteTrackingMixin, UUIDMixin
 
 # enums
-from .custom_types import AnswerCommentType, CourseRole, PairingAlgorithm, \
-    ScoringAlgorithm, SystemRole, ThirdPartyType
+from .custom_types import AnswerCommentType, CourseRole, \
+    PairingAlgorithm, ScoringAlgorithm, SystemRole, \
+    ThirdPartyType, WinningAnswer, EmailNotificationMethod
 
 # models
 from .activity_log import ActivityLog
@@ -12,6 +13,7 @@ from .answer import Answer
 from .assignment_criterion import AssignmentCriterion
 from .assignment_comment import AssignmentComment
 from .comparison import Comparison
+from .comparison_criterion import ComparisonCriterion
 from .comparison_example import ComparisonExample
 from .assignment_grade import AssignmentGrade
 from .assignment import Assignment
@@ -19,7 +21,8 @@ from .course_grade import CourseGrade
 from .course import Course
 from .criterion import Criterion
 from .file import File
-from .score import Score
+from .answer_score import AnswerScore
+from .answer_criterion_score import AnswerCriterionScore
 from .user import User
 from .user_course import UserCourse
 from .third_party_user import ThirdPartyUser
@@ -28,6 +31,8 @@ from .xapi_log import XAPILog
 # LTI models
 from .lti_models import LTIConsumer, LTIContext, LTIMembership, \
     LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce, LTIOutcome
+
+from .kaltura_models import KalturaMedia
 
 from compair.core import db
 convention = {

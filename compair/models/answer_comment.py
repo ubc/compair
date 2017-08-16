@@ -20,7 +20,7 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixi
     content = db.Column(db.Text)
     comment_type = db.Column(EnumType(AnswerCommentType, name="comment_type"),
         nullable=False, index=True)
-    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False)
+    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False, index=True)
 
     # relationships
     # answer via Answer Model
@@ -43,6 +43,22 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixi
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
     user_system_role = association_proxy('user', 'system_role')
+
+    @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Reply Unavailable"
+        if not message:
+            message = "The reply was removed from the system or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+    @classmethod
+    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Reply Unavailable"
+        if not message:
+            message = "The reply was removed from the system or is no longer accessible."
+        return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
     def __declare_last__(cls):
