@@ -1,3 +1,4 @@
+import json
 from six import text_type
 
 # sqlalchemy
@@ -16,9 +17,15 @@ from oauthlib.oauth1 import SIGNATURE_TYPE_BODY, SIGNATURE_TYPE_AUTH_HEADER, SIG
 from .helpers import LTIMemerbshipServiceOauthClient
 
 from requests_oauthlib import OAuth1
-from lti.utils import parse_qs
+from lti.utils import parse_qs, urlparse
 import requests
 from xml.etree import ElementTree
+
+import urllib
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
 
 class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'lti_membership'
@@ -30,6 +37,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     roles = db.Column(db.String(255), nullable=True)
     lis_result_sourcedid = db.Column(db.String(255), nullable=True)
+    lis_result_sourcedids = db.Column(db.Text, nullable=True)
     course_role = db.Column(EnumType(CourseRole, name="course_role"),
         nullable=False)
 
@@ -40,8 +48,10 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     # lti_conext via LTIContext Model
     # lti_user via LTIUser Model
 
-
     # hyprid and other functions
+    context_id = association_proxy('lti_context', 'context_id')
+    user_id = association_proxy('lti_user', 'user_id')
+
     @classmethod
     def update_membership_for_course(cls, course):
         from . import MembershipNoValidContextsException
@@ -62,7 +72,10 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def _update_membership_for_context(cls, lti_context, members):
-        from compair.models import LTIUser, SystemRole, CourseRole
+        from compair.models import SystemRole, CourseRole, \
+            LTIUser, LTIUserResourceLink
+
+        lti_resource_links = lti_context.lti_resource_links
 
         # remove old membership rows
         LTIMembership.query \
@@ -71,7 +84,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             ) \
             .delete()
 
-        # retreive existing lti_user rows
+        # retrieve existing lti_user rows
         user_ids = []
         for member in members:
             user_ids.append(member['user_id'])
@@ -83,7 +96,20 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             )) \
             .all()
 
+        # get existing lti_user_resource_link if there there exists lti users and known resource links for context
+        existing_lti_user_resource_links = []
+        if len(existing_lti_users) > 0 and len(lti_resource_links) > 0:
+            lti_resource_link_ids = [lti_resource_link.id for lti_resource_link in lti_resource_links]
+            existing_lti_user_ids = [existing_lti_user.id for existing_lti_user in existing_lti_users]
+            existing_lti_user_resource_links = LTIUserResourceLink.query \
+                .filter(and_(
+                    LTIUserResourceLink.lti_resource_link_id.in_(lti_resource_link_ids),
+                    LTIUserResourceLink.lti_user_id.in_(existing_lti_user_ids)
+                )) \
+                .all()
+
         new_lti_users = []
+        new_lti_user_resource_links = []
         lti_memberships = []
         for member in members:
             # get lti user if exists
@@ -120,12 +146,47 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 lti_context=lti_context,
                 roles=text_type(roles),
                 lis_result_sourcedid=member.get('lis_result_sourcedid'),
+                lis_result_sourcedids=json.dumps(member.get('lis_result_sourcedids')) if member.get('lis_result_sourcedids') else None,
                 course_role=course_role
             )
             lti_memberships.append(lti_membership)
 
+            # if membership includes lis_result_sourcedids, create/update lti user resoruce links
+            if member.get('lis_result_sourcedids'):
+                for lis_result_sourcedid_set in member.get('lis_result_sourcedids'):
+                    lti_resource_link = next(
+                        lti_resource_link for lti_resource_link in lti_resource_links
+                        if lti_resource_link.resource_link_id == lis_result_sourcedid_set['resource_link_id']
+                    )
+
+                    if not lti_resource_link:
+                        continue
+
+                    lti_user_resource_link = None
+                    if len(existing_lti_user_resource_links) > 0 and lti_user.id:
+                        # get lti user resource link if exists
+                        lti_user_resource_link = next(
+                            (lti_user_resource_link for lti_user_resource_link in existing_lti_user_resource_links
+                            if lti_user_resource_link.lti_user_id == lti_user.id and lti_user_resource_link.lti_resource_link_id == lti_resource_link.id),
+                            None
+                        )
+
+                    # create new lti user resource link if needed
+                    if not lti_user_resource_link:
+                        lti_user_resource_link = LTIUserResourceLink(
+                            lti_resource_link=lti_resource_link,
+                            lti_user=lti_user,
+                            roles=text_type(roles),
+                            course_role=course_role
+                        )
+                        new_lti_user_resource_links.append(lti_user_resource_link)
+
+                    # finally update the lis_result_sourcedid value for the user resource link
+                    lti_user_resource_link.lis_result_sourcedid = lis_result_sourcedid_set['lis_result_sourcedid']
+
         db.session.add_all(new_lti_users)
         db.session.add_all(lti_memberships)
+        db.session.add_all(new_lti_user_resource_links)
 
         # save new lti users
         db.session.commit()
@@ -220,6 +281,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             member = {
                 'user_id': record.findtext('user_id'),
                 'roles': roles_text.split(",") if roles_text != None else [],
+                'lis_result_sourcedid': record.findtext('lis_result_sourcedid'),
                 'person_contact_email_primary': record.findtext('person_contact_email_primary'),
                 'person_name_given': record.findtext('person_name_given'),
                 'person_name_family': record.findtext('person_name_family'),
@@ -238,6 +300,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         # possible parameters are role, lis_result_sourcedid, limit
         lti_consumer = lti_context.lti_consumer
         memberships_url = lti_context.custom_context_memberships_url
+        lti_resource_links = lti_context.lti_resource_links
 
         members = []
 
@@ -295,6 +358,65 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             memberships_url = data.get('nextPage')
             if not memberships_url:
                 break
+
+        # get lis_result_sourcedid for all resource links known to the system
+        for lti_resource_link in lti_resource_links:
+            # add rlid ot membership url query string
+            parts = urlparse.urlsplit(lti_context.custom_context_memberships_url)
+            query = urlparse.parse_qs(parts.query)
+            query['rlid'] = lti_resource_link.resource_link_id
+
+            memberships_url = urlparse.urlunsplit((
+                parts.scheme,
+                parts.netloc,
+                parts.path,
+                urlencode(query),
+                parts.fragment
+            ))
+
+            while True:
+                headers = { 'Accept': 'application/vnd.ims.lis.v2.membershipcontainer+json' }
+                request = requests.Request('GET', memberships_url, headers=headers).prepare()
+                # Note: need to use LTIMemerbshipServiceOauthClient since normal client will
+                #       not include oauth_body_hash if there is not content type or the body is None
+                sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
+                    signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC,
+                    client_class=LTIMemerbshipServiceOauthClient)
+                signed_request = sign(request)
+                headers = signed_request.headers
+                data = LTIMembership._get_membership_request(memberships_url, headers)
+
+                membership = data['pageOf']['membershipSubject']['membership']
+
+                if len(membership) == 0:
+                    continue
+
+                for record in membership:
+                    if record.get('status').find("Inactive") >= 0:
+                        continue
+
+                    member = next(
+                        (member for member in members if member['user_id'] == record['member'].get('userId')),
+                        None
+                    )
+
+                    if not member or not 'message' in record:
+                        continue
+
+                    for message in record['message']:
+                        if not message['message_type'] == 'basic-lti-launch-request' or not 'lis_result_sourcedid' in message:
+                            continue
+
+                        lis_result_sourcedid_array = member.setdefault('lis_result_sourcedids', [])
+                        lis_result_sourcedid_array.append({
+                            'resource_link_id': lti_resource_link.resource_link_id,
+                            'lis_result_sourcedid': message['lis_result_sourcedid']
+                        })
+
+                # check if another page or else finish
+                memberships_url = data.get('nextPage')
+                if not memberships_url:
+                    break
 
         return members
 

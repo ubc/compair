@@ -29,6 +29,7 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
     lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_resource_link", lazy="dynamic")
 
     # hyprid and other functions
+    context_id = association_proxy('lti_context', 'context_id')
     compair_assignment_uuid = association_proxy('compair_assignment', 'uuid')
 
     def is_linked_to_assignment(self):
