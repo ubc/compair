@@ -12,10 +12,10 @@ from six import text_type
 
 from . import dataformat
 from compair.core import db, event, abort
-from compair.authorization import allow, require
+from compair.authorization import allow, require, is_user_access_restricted
 from compair.models import Assignment, Course, Criterion, AssignmentCriterion, Answer, Comparison, \
-    AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File
-from .util import new_restful_api, get_model_changes
+    AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File, User, UserCourse, CourseRole
+from .util import new_restful_api, get_model_changes, pagination_parser
 
 assignment_api = Blueprint('assignment_api', __name__)
 api = new_restful_api(assignment_api)
@@ -50,6 +50,10 @@ new_assignment_parser.add_argument('self_evaluation_grade_weight', type=int, def
 existing_assignment_parser = new_assignment_parser.copy()
 existing_assignment_parser.add_argument('id', required=True, help="Assignment id is required.")
 
+assignment_users_comparison_list_parser = pagination_parser.copy()
+assignment_users_comparison_list_parser.add_argument('group', required=False, default=None)
+assignment_users_comparison_list_parser.add_argument('author', required=False, default=None)
+
 # events
 on_assignment_modified = event.signal('ASSIGNMENT_MODIFIED')
 on_assignment_get = event.signal('ASSIGNMENT_GET')
@@ -58,6 +62,8 @@ on_assignment_create = event.signal('ASSIGNMENT_CREATE')
 on_assignment_delete = event.signal('ASSIGNMENT_DELETE')
 on_assignment_list_get_status = event.signal('ASSIGNMENT_LIST_GET_STATUS')
 on_assignment_get_status = event.signal('ASSIGNMENT_GET_STATUS')
+on_assignment_user_comparisons_get = event.signal('ASSIGNMENT_USER_COMPARISONS_GET')
+on_assignment_users_comparisons_get = event.signal('ASSIGNMENT_USERS_COMPARISONS_GET')
 
 def check_valid_pairing_algorithm(pairing_algorithm, title=None):
     pairing_algorithms = [
@@ -648,3 +654,237 @@ class AssignmentRootStatusAPI(Resource):
         return {"statuses": statuses}
 
 api.add_resource(AssignmentRootStatusAPI, '/status')
+
+
+# /user/comparisons
+class AssignmentUserComparisonsAPI(Resource):
+    @login_required
+    def get(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        require(READ, assignment,
+            title="Assignment Comparisons Unavailable",
+            message="Your role in this course does not allow you to view comparisons for this assignment.")
+
+        restrict_user = is_user_access_restricted(current_user)
+
+        # get comparisons for current user
+        comparisons = Comparison.query \
+            .filter(and_(
+                Comparison.completed == True,
+                Comparison.assignment_id == assignment.id,
+                Comparison.user_id == current_user.id
+            )) \
+            .all()
+
+        # get all self-evaluations and evaluation comments for current user
+        answer_comments = AnswerComment.query \
+            .join("answer") \
+            .filter(and_(
+                AnswerComment.active == True,
+                AnswerComment.comment_type.in_([AnswerCommentType.self_evaluation, AnswerCommentType.evaluation]),
+                AnswerComment.draft == False,
+                Answer.active == True,
+                Answer.draft == False,
+                Answer.assignment_id == assignment.id,
+                AnswerComment.user_id == current_user.id
+            )) \
+            .all()
+
+        # add comparison answer evaluation comments to comparison object
+        for comparison in comparisons:
+            comparison.answer1_feedback = [comment for comment in answer_comments if
+                comment.user_id == comparison.user_id and
+                comment.answer_id == comparison.answer1_id and
+                comment.comment_type == AnswerCommentType.evaluation
+            ]
+
+            comparison.answer2_feedback = [comment for comment in answer_comments if
+                comment.user_id == comparison.user_id and
+                comment.answer_id == comparison.answer2_id and
+                comment.comment_type == AnswerCommentType.evaluation
+            ]
+
+        on_assignment_user_comparisons_get.send(
+            self,
+            event_name=on_assignment_user_comparisons_get.name,
+            user=current_user,
+            course_id=course.id,
+            data={'assignment_id': assignment.id}
+        )
+
+        comparison_set = {
+            'comparisons': [comparison for comparison in comparisons if
+                comparison.user_id == current_user.id
+            ],
+            'self_evaluations': [comment for comment in answer_comments if
+                comment.user_id == current_user.id and
+                comment.comment_type == AnswerCommentType.self_evaluation
+            ]
+        }
+
+        return marshal(comparison_set, dataformat.get_comparison_set(restrict_user, with_user=False))
+
+api.add_resource(AssignmentUserComparisonsAPI, '/<assignment_uuid>/user/comparisons')
+
+# /users/comparisons
+class AssignmentUsersComparisonsAPI(Resource):
+    @login_required
+    def get(self, course_uuid, assignment_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        require(READ, Comparison(course_id=course.id),
+            title="Assignment Comparisons Unavailable",
+            message="Your role in this course does not allow you to view all comparisons for this assignment.")
+
+        restrict_user = is_user_access_restricted(current_user)
+        params = assignment_users_comparison_list_parser.parse_args()
+
+        # only get users who have at least made one comparison
+        # each paginated item is a user (with a set of comparisons and self-evaluations)
+        user_query = User.query \
+            .join(UserCourse, and_(
+                User.id == UserCourse.user_id,
+                UserCourse.course_id == course.id
+            )) \
+            .join(Comparison, and_(
+                Comparison.user_id == User.id,
+                Comparison.assignment_id == assignment.id
+            )) \
+            .filter(and_(
+                UserCourse.course_role != CourseRole.dropped,
+                Comparison.completed == True
+            )) \
+            .group_by(User) \
+            .order_by(User.firstname, User.lastname)
+
+        self_evaluation_total = AnswerComment.query \
+            .join("answer") \
+            .with_entities(
+                func.count(Answer.assignment_id).label('self_evaluation_count')
+            ) \
+            .filter(and_(
+                AnswerComment.active == True,
+                AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                AnswerComment.draft == False,
+                Answer.active == True,
+                Answer.practice == False,
+                Answer.draft == False,
+                Answer.assignment_id == assignment.id
+            ))
+
+        comparison_total = Comparison.query \
+            .with_entities(
+                func.count(Comparison.assignment_id).label('comparison_count')
+            ) \
+            .filter(and_(
+                Comparison.completed == True,
+                Comparison.assignment_id == assignment.id
+            ))
+
+        if params['author']:
+            user = User.get_by_uuid_or_404(params['author'])
+
+            user_query = user_query.filter(User.id == user.id)
+            self_evaluation_total = self_evaluation_total.filter(AnswerComment.user_id == user.id)
+            comparison_total = comparison_total.filter(Comparison.user_id == user.id)
+        elif params['group']:
+            user_query = user_query.filter(UserCourse.group_name == params['group'])
+
+            self_evaluation_total = self_evaluation_total \
+                .join(UserCourse, and_(
+                    AnswerComment.user_id == UserCourse.user_id,
+                    UserCourse.course_id == course.id
+                )) \
+                .filter(UserCourse.group_name == params['group'])
+
+            comparison_total = comparison_total \
+                .join(UserCourse, and_(
+                    Comparison.user_id == UserCourse.user_id,
+                    UserCourse.course_id == course.id
+                )) \
+                .filter(UserCourse.group_name == params['group'])
+
+        page = user_query.paginate(params['page'], params['perPage'])
+        self_evaluation_total = self_evaluation_total.scalar()
+        comparison_total = comparison_total.scalar()
+
+        comparison_sets = []
+        if page.total:
+            user_ids = [user.id for user in page.items]
+
+            # get all comparisons that group of users created
+            comparisons = Comparison.query \
+                .filter(and_(
+                    Comparison.completed == True,
+                    Comparison.assignment_id == assignment.id,
+                    Comparison.user_id.in_(user_ids)
+                )) \
+                .all()
+
+            # retrieve the answer comments
+            user_comparison_answers = {}
+            for comparison in comparisons:
+                user_answers = user_comparison_answers.setdefault(comparison.user_id, set())
+                user_answers.add(comparison.answer1_id)
+                user_answers.add(comparison.answer2_id)
+
+            conditions = []
+            for user_id, answer_set in user_comparison_answers.items():
+                conditions.append(and_(
+                        AnswerComment.comment_type == AnswerCommentType.evaluation,
+                        AnswerComment.user_id == user_id,
+                        AnswerComment.answer_id.in_(list(answer_set)),
+                        AnswerComment.assignment_id == assignment.id
+                ))
+                conditions.append(and_(
+                    AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                    AnswerComment.user_id == user_id,
+                    AnswerComment.assignment_id == assignment.id
+                ))
+
+            answer_comments = AnswerComment.query \
+                .filter(or_(*conditions)) \
+                .filter_by(draft=False) \
+                .all()
+
+            # add comparison answer evaluation comments to comparison object
+            for comparison in comparisons:
+                comparison.answer1_feedback = [comment for comment in answer_comments if
+                    comment.user_id == comparison.user_id and
+                    comment.answer_id == comparison.answer1_id and
+                    comment.comment_type == AnswerCommentType.evaluation
+                ]
+
+                comparison.answer2_feedback = [comment for comment in answer_comments if
+                    comment.user_id == comparison.user_id and
+                    comment.answer_id == comparison.answer2_id and
+                    comment.comment_type == AnswerCommentType.evaluation
+                ]
+
+            for user in page.items:
+                comparison_sets.append({
+                    'user': user,
+                    'comparisons': [comparison for comparison in comparisons if
+                        comparison.user_id == user.id
+                    ],
+                    'self_evaluations': [comment for comment in answer_comments if
+                        comment.user_id == user.id and
+                        comment.comment_type == AnswerCommentType.self_evaluation
+                    ]
+                })
+
+
+        on_assignment_users_comparisons_get.send(
+            self,
+            event_name=on_assignment_users_comparisons_get.name,
+            user=current_user,
+            course_id=course.id,
+            data={'assignment_id': assignment.id}
+        )
+
+        return {"objects": marshal(comparison_sets, dataformat.get_comparison_set(restrict_user, with_user=True)),
+                "comparison_total": comparison_total, "self_evaluation_total": self_evaluation_total,
+                "page": page.page, "pages": page.pages, "total": page.total, "per_page": page.per_page}
+
+api.add_resource(AssignmentUsersComparisonsAPI, '/<assignment_uuid>/users/comparisons')

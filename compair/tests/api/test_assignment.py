@@ -1531,3 +1531,153 @@ class AssignmentDemoAPITests(ComPAIRAPIDemoTestCase):
                 self.app.config['DEMO_INSTALLATION'] = False
                 rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
                 self.assert200(rv)
+
+class AssignmentUserComparisonsAPITests(ComPAIRAPITestCase):
+    def setUp(self):
+        super(AssignmentUserComparisonsAPITests, self).setUp()
+        self.fixtures = TestFixture().add_course(num_students=10, num_groups=2, with_comparisons=True, with_self_eval=True)
+
+    def test_get_all_user_comparisons(self):
+        url = '/api/courses/'+self.fixtures.course.uuid+'/assignments/'+self.fixtures.assignment.uuid+'/users/comparisons'
+
+        # Test login required
+        rv = self.client.get(url, data=json.dumps({}))
+        self.assert401(rv)
+
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            rv = self.client.get(url, data=json.dumps({}))
+            self.assert403(rv)
+
+        with self.login(self.fixtures.unauthorized_student.username):
+            rv = self.client.get(url, data=json.dumps({}))
+            self.assert403(rv)
+
+        # authorized student
+        with self.login(self.fixtures.students[1].username):
+            rv = self.client.get(url, data=json.dumps({}))
+            self.assert403(rv)
+
+        # authorized instructor
+        with self.login(self.fixtures.instructor.username):
+            # test invalid course id
+            rv = self.client.get('/api/courses/999/assignments/'+self.fixtures.assignment.uuid+'/users/comparisons', data=json.dumps({}), content_type='application/json')
+            self.assert404(rv)
+
+            # test invalid assignment id
+            rv = self.client.get('/api/courses/'+self.fixtures.course.uuid+'/assignments/999/users/comparisons', data=json.dumps({}), content_type='application/json')
+            self.assert404(rv)
+
+            # get paginated list of all users with comparisons in assignment
+            rv = self.client.get(url, data=json.dumps({}), content_type='application/json')
+            self.assert200(rv)
+
+            total_number_of_students = len(self.fixtures.students)
+            total_comparisons = len(self.fixtures.students) * self.fixtures.assignment.total_comparisons_required
+            total_self_evaluations = len(self.fixtures.students)
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['total'], total_number_of_students)
+            self.assertEqual(rv.json['comparison_total'], total_comparisons)
+            self.assertEqual(rv.json['self_evaluation_total'], total_self_evaluations)
+
+            # get paginated list of all users in group with comparisons in assignment
+            group_filter = { 'group': self.fixtures.groups[0] }
+            rv = self.client.get(url, data=json.dumps(group_filter), content_type='application/json')
+            self.assert200(rv)
+
+            # note there are 2 groups with half the students in each group
+            total_number_of_students_for_group = total_number_of_students / 2
+            total_comparisons_for_group = total_comparisons / 2
+            total_self_evaluations_for_group = total_self_evaluations / 2
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['total'], total_number_of_students_for_group)
+            self.assertEqual(rv.json['comparison_total'], total_comparisons_for_group)
+            self.assertEqual(rv.json['self_evaluation_total'], total_self_evaluations_for_group)
+
+            # get paginated list of all comparisons in assignment for a user
+            author_filter = { 'author': self.fixtures.students[0].uuid }
+            rv = self.client.get(url, data=json.dumps(author_filter), content_type='application/json')
+            self.assert200(rv)
+
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['objects'][0]['user']['id'], self.fixtures.students[0].uuid)
+            self.assertEqual(rv.json['total'], 1)
+            self.assertEqual(rv.json['comparison_total'], self.fixtures.assignment.total_comparisons_required)
+            self.assertEqual(rv.json['self_evaluation_total'], 1)
+
+            # add comparisons for instructor
+            self.fixtures.add_comparisons_for_user(self.fixtures.assignment, self.fixtures.instructor,
+                with_comments=True, with_self_eval=False)
+
+            rv = self.client.get(url, data=json.dumps({}), content_type='application/json')
+            self.assert200(rv)
+
+            total_number_of_students = len(self.fixtures.students)+1
+            total_comparisons = (len(self.fixtures.students)+1) * self.fixtures.assignment.total_comparisons_required
+            total_self_evaluations = len(self.fixtures.students)
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['total'], total_number_of_students)
+            self.assertEqual(rv.json['comparison_total'], total_comparisons)
+            self.assertEqual(rv.json['self_evaluation_total'], total_self_evaluations)
+
+        # authorized teaching assistant
+        with self.login(self.fixtures.ta.username):
+            # get paginated list of all comparisons in assignment
+            rv = self.client.get(url, data=json.dumps({}), content_type='application/json')
+            self.assert200(rv)
+
+            self.assertEqual(rv.json['page'], 1)
+            self.assertEqual(rv.json['total'], total_number_of_students)
+            self.assertEqual(rv.json['comparison_total'], total_comparisons)
+            self.assertEqual(rv.json['self_evaluation_total'], total_self_evaluations)
+
+    def test_get_current_user_comparisons(self):
+        url = '/api/courses/'+self.fixtures.course.uuid+'/assignments/'+self.fixtures.assignment.uuid+'/user/comparisons'
+
+        # Test login required
+        rv = self.client.get(url, data=json.dumps({}))
+        self.assert401(rv)
+
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            rv = self.client.get(url, data=json.dumps({}))
+            self.assert403(rv)
+
+        with self.login(self.fixtures.unauthorized_student.username):
+            rv = self.client.get(url, data=json.dumps({}))
+            self.assert403(rv)
+
+        for user in [self.fixtures.instructor, self.fixtures.ta, self.fixtures.students[1]]:
+            # authorized user
+            with self.login(user.username):
+
+                # test invalid course id
+                rv = self.client.get('/api/courses/999/assignments/'+self.fixtures.assignment.uuid+'/user/comparisons', data=json.dumps({}), content_type='application/json')
+                self.assert404(rv)
+
+                # test invalid assignment id
+                rv = self.client.get('/api/courses/'+self.fixtures.course.uuid+'/assignments/999/user/comparisons', data=json.dumps({}), content_type='application/json')
+                self.assert404(rv)
+
+                # get list of user comparisons in assignment
+                rv = self.client.get(url, data=json.dumps({}), content_type='application/json')
+                self.assert200(rv)
+
+                comparisons = [comparison for comparison in self.fixtures.comparisons if
+                    comparison.user_id == user.id and
+                    comparison.assignment_id == self.fixtures.assignment.id and
+                    comparison.completed == True
+                ]
+                comparison_uuids = [comparison.uuid for comparison in comparisons]
+
+                self.assertEqual(len(rv.json['comparisons']), len(comparisons))
+                for comparison in rv.json['comparisons']:
+                    self.assertIn(comparison['id'], comparison_uuids)
+
+                self_evaluations = [comment for comment in self.fixtures.self_evaluations if
+                    comment.user_id == user.id and
+                    comment.answer.assignment_id == self.fixtures.assignment.id
+                ]
+                self_evaluation_uuids = [comment.uuid for comment in self_evaluations]
+
+                self.assertEqual(len(rv.json['self_evaluations']), len(self_evaluations))
+                for self_evaluation in rv.json['self_evaluations']:
+                    self.assertIn(self_evaluation['id'], self_evaluation_uuids)

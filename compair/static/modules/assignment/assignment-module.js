@@ -187,7 +187,9 @@ module.factory(
                 'get': {url: url}, //, cache: true},
                 'save': {method: 'POST', url: url, interceptor: Interceptors.cache},
                 'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
-                'getCurrentUserStatus': {url: '/api/courses/:courseId/assignments/:assignmentId/status'}
+                'getCurrentUserStatus': {url: '/api/courses/:courseId/assignments/:assignmentId/status'},
+                'getCurrentUserComparisons': {url: '/api/courses/:courseId/assignments/:assignmentId/user/comparisons'},
+                'getUserComparisons': {url: '/api/courses/:courseId/assignments/:assignmentId/users/comparisons'}
             }
         );
         ret.MODEL = "Assignment";
@@ -277,6 +279,15 @@ module.controller("AssignmentViewController",
             top: null,
             anonymous: null,
             orderBy: null
+        };
+        $scope.totalNumComparisonsShown = {
+            count: $scope.assignment.evaluation_count
+        };
+        $scope.comparisonFilters = {
+            page: 1,
+            perPage: 5,
+            group: null,
+            author: null
         };
         $scope.self_evaluation_needed = false;
         $scope.rankLimit = null;
@@ -372,9 +383,9 @@ module.controller("AssignmentViewController",
         });
 
         $scope.loadTabData = function() {
-            // tabs: answers, help, participation, comparisons, feedback
-            if (tab == "comparisons") {
-                $scope.comparisons = AnswerResource.comparisons(params);
+            // tabs: answers, help, participation, your_work, comparisons
+            if (tab == "your_work") {
+                $scope.comparison_set = AssignmentResource.getCurrentUserComparisons(params);
                 var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
                 $scope.user_answers = AnswerResource.get(answer_params,
                     function (ret) {
@@ -389,7 +400,7 @@ module.controller("AssignmentViewController",
                         $scope.comments = ret;
                     }
                 )
-            };
+            }
             xAPIStatementHelper.opened_page_section(tab + " tab");
         };
         $scope.loadTabData();
@@ -580,11 +591,11 @@ module.controller("AssignmentViewController",
             });
             $scope.modalInstance.result.then(function (newComment) {
                 $scope.comments.objects.push(newComment);
+                $scope.assignment.comment_count++;
                 xAPIStatementHelper.closed_modal("Create Assignment Comment");
             }, function() {
                 xAPIStatementHelper.closed_modal("Create Assignment Comment");
             });
-            $scope.assignment.comment_count++;
         };
 
         $scope.editAssignmentComment = function(comment) {

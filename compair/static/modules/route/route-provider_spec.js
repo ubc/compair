@@ -719,53 +719,6 @@ describe('user-module', function () {
             });
         });
 
-        describe('"/course/:courseId/assignment/:assignmentId/comparisons"', function() {
-            var path = '/course/'+mockCourseId+'/assignment/'+mockAssignmentId+'/comparisons';
-
-            it('should handle pre-loading errors', function() {
-                $httpBackend.expectGET('/api/courses/'+mockCourseId).respond(404, '');
-                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId).respond({});
-                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/users/students').respond({});
-                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/groups').respond({});
-                $httpBackend.expectGET('modules/comparison/comparison-view-partial.html').respond('');
-
-                expect($route.current).toBeUndefined();
-                $location.path(path);
-
-                expect($route.current).toBeUndefined();
-                $httpBackend.flush();
-
-                expect(Session.getUser).not.toHaveBeenCalled();
-                expect(Authorize.can).not.toHaveBeenCalled();
-
-                expect(toaster.error).toHaveBeenCalled();
-                expect($rootScope.routeResolveLoadError).not.toBeUndefined();
-                expect($route.current.templateUrl).toBe('modules/comparison/comparison-view-partial.html');
-                expect($route.current.controller).toBe('ComparisonViewController');
-            });
-
-            it('should load correctly', function() {
-                $httpBackend.expectGET('/api/courses/'+mockCourseId).respond({});
-                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId).respond({});
-                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/users/students').respond({});
-                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/groups').respond({});
-                $httpBackend.expectGET('modules/comparison/comparison-view-partial.html').respond('');
-
-                expect($route.current).toBeUndefined();
-                $location.path(path);
-                expect($route.current).toBeUndefined();
-                $httpBackend.flush();
-
-                expect(Session.getUser).not.toHaveBeenCalled();
-                expect(Authorize.can).not.toHaveBeenCalled();
-
-                expect(toaster.error).not.toHaveBeenCalled();
-                expect($rootScope.routeResolveLoadError).toBeUndefined();
-                expect($route.current.templateUrl).toBe('modules/comparison/comparison-view-partial.html');
-                expect($route.current.controller).toBe('ComparisonViewController');
-            });
-        });
-
         describe('"/report"', function() {
             var path = '/report';
 

@@ -387,27 +387,33 @@ module.controller(
 module.controller(
     "ComparisonViewController",
     ['$scope', '$routeParams', 'breadcrumbs', 'CourseResource', 'AssignmentResource', "WinningAnswer",
-        'AnswerResource', 'AnswerCommentResource', 'GroupResource', 'Toaster', "xAPIStatementHelper", "resolvedData",
+        'AnswerResource', 'AnswerCommentResource', 'GroupResource', 'Toaster', "xAPIStatementHelper",
     function ($scope, $routeParams, breadcrumbs, CourseResource, AssignmentResource, WinningAnswer,
-        AnswerResource, AnswerCommentResource, GroupResource, Toaster, xAPIStatementHelper, resolvedData)
+        AnswerResource, AnswerCommentResource, GroupResource, Toaster, xAPIStatementHelper)
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId;
 
-        $scope.course = resolvedData.course;
-        $scope.assignment = resolvedData.assignment;
-        $scope.students = resolvedData.students.objects;
-        $scope.groups = resolvedData.groups.objects;
-
-        $scope.listFilters = {
+        $scope.totalNumComparisonSets = 0;
+        $scope.totalNumComparisonsShown.count = null;
+        $scope.comparisonFilters = $scope.comparisonFilters || {
             page: 1,
-            perPage: 20,
+            perPage: 5,
             group: null,
             author: null
-        };
+        }; //initialized from assignment view controller
+        $scope.users = [];
         $scope.answers = [];
         $scope.WinningAnswer = WinningAnswer;
         breadcrumbs.options = {'Course assignments': $scope.course.name};
+
+        CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
+            function (ret) {
+                $scope.allStudents = ret.objects;
+                $scope.users = ret.objects;
+                userIds = $scope.getUserIds(ret.objects);
+            }
+        );
 
         $scope.loadAnswerByAuthor = function(author_id) {
             if (_.find($scope.answers, {user_id: author_id})) return;
@@ -417,25 +423,36 @@ module.controller(
             });
         };
 
-        $scope.$watchCollection('listFilters', function(newValue, oldValue) {
+        $scope.$watchCollection('comparisonFilters', function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
             if (oldValue.group != newValue.group) {
-                $scope.listFilters.author = null;
-                $scope.listFilters.page = 1;
+                $scope.comparisonFilters.author = null;
+                $scope.comparisonFilters.page = 1;
+                if ($scope.comparisonFilters.group == null) {
+                    $scope.users = $scope.allStudents;
+                } else {
+                    GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.comparisonFilters.group}).$promise.then(
+                        function (ret) {
+                            $scope.users = ret.students;
+                        }
+                    );
+                }
             }
             if (oldValue.author != newValue.author) {
-                $scope.listFilters.page = 1;
+                $scope.comparisonFilters.page = 1;
             }
-            xAPIStatementHelper.filtered_page($scope.listFilters);
+            xAPIStatementHelper.filtered_page($scope.comparisonFilters);
             $scope.updateList();
         });
 
         $scope.updateList = function() {
-            var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.listFilters);
+            var params = angular.merge({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.comparisonFilters);
+            $scope.comparisonFiltersName = $("#comparison-filter option:selected").text();
 
-            AnswerResource.comparisons(params, function(ret) {
-                $scope.comparisons = ret;
-                $scope.comparisons.grouped = _.groupBy($scope.comparisons.objects, 'user_id');
+            AssignmentResource.getUserComparisons(params, function(ret) {
+                $scope.comparison_sets = ret.objects;
+                $scope.totalNumComparisonSets = ret.total;
+                $scope.totalNumComparisonsShown.count = ret.comparison_total + ret.self_evaluation_total;
             });
         };
         $scope.updateList();

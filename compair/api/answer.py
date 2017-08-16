@@ -43,10 +43,6 @@ user_answer_list_parser = RequestParser()
 user_answer_list_parser.add_argument('draft', type=bool, required=False, default=False)
 user_answer_list_parser.add_argument('unsaved', type=bool, required=False, default=False)
 
-answer_comparison_list_parser = pagination_parser.copy()
-answer_comparison_list_parser.add_argument('group', required=False, default=None)
-answer_comparison_list_parser.add_argument('author', required=False, default=None)
-
 flag_parser = RequestParser()
 flag_parser.add_argument('flagged', type=bool, required=True,
     help="Expected boolean value 'flagged' is missing."
@@ -68,7 +64,6 @@ on_answer_delete = event.signal('ANSWER_DELETE')
 on_answer_flag = event.signal('ANSWER_FLAG')
 on_set_top_answer = event.signal('SET_TOP_ANSWER')
 on_user_answer_get = event.signal('USER_ANSWER_GET')
-on_answer_comparisons_get = event.signal('ANSWER_COMPARISONS_GET')
 
 # /
 class AnswerRootAPI(Resource):
@@ -404,107 +399,6 @@ class AnswerIdAPI(Resource):
 
 
 api.add_resource(AnswerIdAPI, '/<answer_uuid>')
-
-
-# /comparisons
-class AnswerComparisonsAPI(Resource):
-    @login_required
-    def get(self, course_uuid, assignment_uuid):
-        course = Course.get_active_by_uuid_or_404(course_uuid)
-        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        require(READ, assignment,
-            title="Assignment Comparisons Unavailable",
-            message="Your role in this course does not allow you to view comparisons for this assignment.")
-
-        can_read = allow(READ, Comparison(course_id=course.id))
-        restrict_user = is_user_access_restricted(current_user)
-
-        params = answer_comparison_list_parser.parse_args()
-
-        # each pagination entry would be one comparison set by a user for the assignment
-        query = Comparison.query \
-            .options(joinedload('answer1')) \
-            .options(joinedload('answer2')) \
-            .options(joinedload('comparison_criteria')) \
-            .filter_by(assignment_id=assignment.id, completed=True) \
-            .order_by(Comparison.user_id, Comparison.created)
-
-        if not can_read:
-            query = query.filter_by(user_id=current_user.id)
-        elif params['author']:
-            query = query.filter_by(user_uuid=params['author'])
-        elif params['group']:
-            subquery = User.query \
-                .with_entities(User.id) \
-                .join('user_courses') \
-                .filter_by(group_name=params['group']) \
-                .subquery()
-            query = query.filter(Comparison.user_id.in_(subquery))
-
-        page = query.paginate(params['page'], params['perPage'])
-
-        results = []
-        if page.total:
-            # retrieve the answer comments
-            user_comparison_answers = {}
-
-            for comparison in page.items:
-                user_answers = user_comparison_answers.setdefault(comparison.user_id, set())
-                user_answers.add(comparison.answer1_id)
-                user_answers.add(comparison.answer2_id)
-
-            conditions = []
-            for user_id, answer_set in user_comparison_answers.items():
-                conditions.append(and_(
-                        AnswerComment.comment_type == AnswerCommentType.evaluation,
-                        AnswerComment.user_id == user_id,
-                        AnswerComment.answer_id.in_(list(answer_set)),
-                        AnswerComment.assignment_id == assignment.id
-                ))
-                conditions.append(and_(
-                    AnswerComment.comment_type == AnswerCommentType.self_evaluation,
-                    AnswerComment.user_id == user_id,
-                    AnswerComment.assignment_id == assignment.id
-                ))
-
-            answer_comments = AnswerComment.query \
-                .filter(or_(*conditions)) \
-                .filter_by(draft=False) \
-                .all()
-
-            for comparison in page.items:
-                comparison.answer1_feedback = [comment for comment in answer_comments if
-                    comment.user_id == comparison.user_id and
-                    comment.answer_id == comparison.answer1_id and
-                    comment.comment_type == AnswerCommentType.evaluation
-                ]
-
-                comparison.answer2_feedback = [comment for comment in answer_comments if
-                    comment.user_id == comparison.user_id and
-                    comment.answer_id == comparison.answer2_id and
-                    comment.comment_type == AnswerCommentType.evaluation
-                ]
-
-                comparison.self_evaluation = [comment for comment in answer_comments if
-                    comment.user_id == comparison.user_id and
-                    comment.comment_type == AnswerCommentType.self_evaluation
-                ]
-
-                results.append(comparison)
-
-        on_answer_comparisons_get.send(
-            self,
-            event_name=on_answer_comparisons_get.name,
-            user=current_user,
-            course_id=course.id,
-            data={'assignment_id': assignment.id}
-        )
-
-        return {"objects": marshal(results, dataformat.get_comparison(restrict_user, with_feedback=True, with_self_evaluation=True)),
-                "page": page.page, "pages": page.pages, "total": page.total, "per_page": page.per_page}
-
-
-api.add_resource(AnswerComparisonsAPI, '/comparisons')
 
 
 # /user
