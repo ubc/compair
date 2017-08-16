@@ -28,6 +28,9 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
     # lti_resource_link via LTIResourceLink Model
 
     # hyprid and other functions
+    context_id = association_proxy('lti_resource_link', 'context_id')
+    resource_link_id = association_proxy('lti_resource_link', 'resource_link_id')
+    user_id = association_proxy('lti_user', 'user_id')
     compair_user_id = association_proxy('lti_user', 'compair_user_id')
 
     @classmethod
