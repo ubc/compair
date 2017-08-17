@@ -484,6 +484,18 @@ class ReportAPITest(ComPAIRAPITestCase):
                         # skip user with no comments
                         row = next(reader)
 
+        # test file unsafe course name
+        with self.login(self.fixtures.instructor.username):
+            self.fixtures.course.name = self.fixtures.course.name + " 2016/2017"
+            db.session.commit()
+            input = {
+                'group_name': None,
+                'type': "participation",
+                'assignment': None
+            }
+            rv = self.client.post(self.url, data=json.dumps(input), content_type='application/json')
+            self.assert200(rv)
+
     def _check_participation_stat_report_heading_rows(self, heading):
         expected_heading = ['Assignment', 'User UUID', 'Last Name', 'First Name',
             'Answer Submitted', 'Answer ID', 'Evaluations Submitted', 'Evaluations Required',

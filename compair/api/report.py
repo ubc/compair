@@ -3,6 +3,7 @@ import os
 import time
 import unicodecsv as csv
 import re
+import string
 
 from bouncer.constants import MANAGE
 from flask import Blueprint, current_app
@@ -38,7 +39,11 @@ def name_generator(course, report_name, group_name, file_type="csv"):
     group_name_output = ""
     if group_name:
         group_name_output = group_name + '-'
-    return course.name + "-" + group_name_output + report_name + "--" + date + "." + file_type
+    # from https://gist.github.com/seanh/93666
+    # return a file system safe filename
+    valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+    filename = course.name + "-" + group_name_output + report_name + "--" + date + "." + file_type
+    return ''.join(char for char in filename if char in valid_chars)
 
 
 class ReportRootAPI(Resource):
