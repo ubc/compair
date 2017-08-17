@@ -73,6 +73,14 @@ ComPAIR is accessible at
 
     docker build -t ubcctlt/compair-app .
 
+### Upgrade
+
+    docker-compose down
+    docker pull ubcctlt/compair-app # download latest ComPAIR image
+    docker-compose up
+    docker exec -it compair_app_1 alembic upgrade head # upgrade database
+
+
 Generate Production Release
 ---------------------------
 Run `gulp prod` to generate the production version. This currently just does two things:
