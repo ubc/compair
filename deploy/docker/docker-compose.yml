@@ -1,0 +1,89 @@
+version: '2.1'
+services:
+  db:
+    image: mariadb:10.1
+    environment:
+      - MYSQL_ROOT_PASSWORD=randompassword
+      - MYSQL_DATABASE=compair
+      - MYSQL_USER=compair
+      - MYSQL_PASSWORD=compair
+    volumes:
+      - ./.data/mysql:/var/lib/mysql
+    restart: always
+  redis:
+    image: redis:3.2.4
+    command: redis-server --appendonly yes
+    volumes:
+      - ./.data/redis:/data
+    ports:
+      - "16379:6379"
+    restart: always
+  app: &app
+    image: "ubcctlt/compair-app:${COMPAIR_VERSION:-latest}"
+    environment:
+      - DB_DRIVER=mysql+pymysql
+      - DB_USERNAME=compair
+      - DB_PASSWORD=compair
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=compair
+      - SQLALCHEMY_POOL_RECYCLE=299
+      - DEV=0
+      - CELERY_BROKER_URL=redis://redis:6379
+      #- GA_TRACKING_ID=12345
+      - ENFORCE_SSL=0
+      - MAIL_NOTIFICATION_ENABLED=1
+      - MAIL_SERVER=mail
+      - MAIL_PORT=1025
+      - MAIL_USERNAME=compair
+      - MAIL_PASSWORD=compair
+      - MAIL_DEFAULT_SENDER=compair@example.com
+    volumes:
+      - ../../.data/persistent:/code/persistent
+    depends_on:
+      - db
+      - redis
+      - mail
+    restart: always
+  worker: &worker
+    <<: *app
+    command: celery worker --app=celery_worker.celery --loglevel=INFO
+    environment:
+      - DB_DRIVER=mysql+pymysql
+      - DB_USERNAME=compair
+      - DB_PASSWORD=compair
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_NAME=compair
+      - SQLALCHEMY_POOL_RECYCLE=299
+      - DEV=0
+      - CELERY_BROKER_URL=redis://redis:6379
+      - C_FORCE_ROOT=1
+      - ENFORCE_SSL=0
+      - MAIL_NOTIFICATION_ENABLED=1
+      - MAIL_SERVER=mail
+      - MAIL_PORT=1025
+      - MAIL_USERNAME=compair
+      - MAIL_PASSWORD=compair
+      - MAIL_DEFAULT_SENDER=compair@example.com
+  worker_scheduler:
+    <<: *worker
+    command: celery beat --app=celery_worker.celery --loglevel=INFO
+  web:
+    image: nginx:1.11
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../../compair/static:/compair/app:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    restart: always
+  worker_monitor:
+    image: mher/flower
+    command: flower --port=5555 --broker=redis://redis:6379 --basic_auth=user1:password1
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    restart: always
