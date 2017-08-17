@@ -29,7 +29,7 @@ aws cloudformation describe-stack-events --stack-name compair
 
 ### Initializing App
 
-Once the stack is stared, login to the ec2 instance to run the initializing command. To find the instance external domain:
+Once the stack is started, login to the ec2 instance to run the initializing command. To find the instance external domain:
 ```
 aws ec2 describe-instances
 ```
