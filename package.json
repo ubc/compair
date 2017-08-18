@@ -11,7 +11,6 @@
     "gulp": "latest",
     "gulp-angular-templatecache": "^1.9.1",
     "gulp-bower": "latest",
-    "gulp-clean-css": "latest",
     "gulp-concat": "latest",
     "gulp-concat-vendor": "latest",
     "gulp-connect": "latest",
@@ -24,6 +23,7 @@
     "less": "latest",
     "main-bower-files": "latest",
     "proxy-middleware": "latest",
+    "gulp-clean-css": "~3.0.4",
     "streamqueue": "^1.1.1",
     "wiredep": "latest"
   },

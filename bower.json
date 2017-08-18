@@ -54,20 +54,6 @@
       "main": [
         "dist/css/bootstrap.css"
       ]
-    },
-    "highlightjs": {
-      "main": [
-          "highlight.pack.js",
-          "styles/foundation.css"
-      ]
-    },
-    "chosen": {
-      "main": [
-        "chosen.jquery.js",
-        "chosen.css",
-        "chosen-sprite.png",
-        "chosen-sprite@2x.png"
-      ]
     }
   }
 }

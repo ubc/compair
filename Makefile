@@ -19,7 +19,7 @@ env:
 
 prod:
 	$(DOCKERRUN_PY) pip install -r requirements.txt
-	$(DOCKERRUN_NODE) npm install --production
+	$(DOCKERRUN_NODE) npm install
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js prod
 
