@@ -405,11 +405,11 @@ module.controller("AssignmentViewController",
         };
         $scope.loadTabData();
 
-        // revealAnswer function shows full answer content for abbreviated answers (determined by getHeight directive)
-        $scope.revealAnswer = function(answer) {
-            var thisClass = '.content.'+answer.id;      // class for the answer to show is "content" plus the answer's ID
-            $(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this answer
-            this.showReadMore = false;                 // and hide the read more button for this answer
+        // revealContent function shows full answer content for abbreviated answers (determined by getHeight directive)
+        $scope.revealContent = function(contentItem) {
+            var thisClass = '.content.'+contentItem.id;      // class for the content item to show is "content" plus the content item's ID
+            $(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this content item
+            this.showReadMore = false;                 // and hide the read more button for this content item
         };
 
         // assignment delete function

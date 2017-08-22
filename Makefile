@@ -18,9 +18,7 @@ env:
 	make deps
 
 prod:
-	$(DOCKERRUN_PY) pip install -r requirements.txt
-	$(DOCKERRUN_NODE) npm install
-	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js
+	make deps
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js prod
 
 deps:

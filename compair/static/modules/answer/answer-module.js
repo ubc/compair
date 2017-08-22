@@ -226,10 +226,14 @@ module.controller(
                 $scope.answer.file_id = null;
             }
 
-            $scope.answer.tracking = $scope.tracking.toParams();
-            AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
+            // copy answer so we don't lose draft state on failed submit
+            var answer = angular.copy($scope.answer);
+            answer.draft = $scope.saveDraft;
+            answer.tracking = $scope.tracking.toParams();
+
+            AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, answer).$promise.then(
                 function (ret) {
-                    $scope.submitted = false;
+                    $scope.answer = ret;
                     $scope.preventExit = false; //user has saved answer, does not need warning when leaving page
 
                     if (ret.draft) {
@@ -245,7 +249,9 @@ module.controller(
                         $location.path('/course/' + $scope.courseId + '/assignment/' +$scope.assignmentId);
                     }
                 }
-            );
+            ).finally(function() {
+                $scope.submitted = false;
+            });
         };
     }
 ]);

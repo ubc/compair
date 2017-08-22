@@ -89,16 +89,16 @@
     </fieldset>
     <div class="text-center" ng-show="answer.draft && (!canManageAssignment || answer.user_id == loggedInUserId)">
         <input type="submit" class="btn btn-default btn-lg" value="Save Draft"
-            ng-click="answer.draft = true"
+            ng-click="saveDraft = true"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
         &nbsp; &nbsp;
         <input type="submit" class="btn btn-success btn-lg" value="Submit"
-            ng-click="answer.draft = false"
+            ng-click="saveDraft = false"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
     </div>
     <div ng-show="!answer.draft || (canManageAssignment && answer.user_id != loggedInUserId)">
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-            ng-click="answer.draft = false"
+            ng-click="saveDraft = false"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
     </div>
 </form>

@@ -308,10 +308,10 @@
 
                     <!-- Student Answer -->
                     <div class="content {{answer.id}}" get-height>
-                        <rich-content content="answer.content" attachment="answer.file" ng-click="revealAnswer(answer)"></rich-content>
+                        <rich-content content="answer.content" attachment="answer.file" ng-click="revealContent(answer)"></rich-content>
                     </div>
                     <!-- Student Answer Read More Button (not used for instructor answers) -->
-                    <p ng-show="showReadMore" class="read-more" ng-click="revealAnswer(answer)"><a href="" class="btn btn-sm btn-info"><i class="fa fa-long-arrow-down"></i> Read More</a></p>
+                    <p ng-show="showReadMore" class="read-more" ng-click="revealContent(answer)"><a href="" class="btn btn-sm btn-info"><i class="fa fa-long-arrow-down"></i> Read More</a></p>
                     <!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
 
                     <!-- Student Answer Replies Section -->
@@ -430,7 +430,7 @@
 
                 <!-- Student Answer -->
                 <div class="content {{answer.id}}">
-                    <rich-content content="answer.content" attachment="answer.file" ng-click="revealAnswer(answer)"></rich-content>
+                    <rich-content content="answer.content" attachment="answer.file" ng-click="revealContent(answer)"></rich-content>
                 </div>
 
                 <!-- Student Answer Replies Section -->
@@ -597,8 +597,13 @@
                 </div>
 
                 <!-- Comment -->
-                <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
-
+                <!-- Student Answer -->
+                <div class="content {{comment.id}}" get-height>
+                    <rich-content content="comment.content" ng-click="revealContent(comment)"></rich-content>
+                </div>
+                <!-- Student Answer Read More Button (not used for instructor answers) -->
+                <p ng-show="showReadMore" class="read-more" ng-click="revealContent(comment)"><a href="" class="btn btn-sm btn-info"><i class="fa fa-long-arrow-down"></i> Read More</a></p>
+                <!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
             </div><!-- closes each-comment -->
 
         </div><!-- closes comments-tab -->

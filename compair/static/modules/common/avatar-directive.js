@@ -11,7 +11,7 @@
                 me: '=?'
             },
             template: '<a ng-href="#/user/{{ userId }}">' +
-                        '<img src="//www.gravatar.com/avatar/{{ avatar }}?s=32&d=retro" /> ' +
+                        '<img src="//www.gravatar.com/avatar/{{ avatar }}?s=32&d=retro" alt="" /> ' +
                       '</a>' +
                       '<a ng-href="#/user/{{ userId }}">' +
                         '{{ displayName }}' +
