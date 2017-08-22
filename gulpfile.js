@@ -29,15 +29,16 @@ var gulp = require('gulp'),
     templateCache = require('gulp-angular-templatecache');
 
     var cssFilenames = [
-        './compair/static/lib/bootstrap/dist/css/bootstrap.css',
-        './compair/static/lib/highlightjs/styles/foundation.css',
-        './compair/static/lib/angular-loading-bar/build/loading-bar.css',
-        './compair/static/lib/AngularJS-Toaster/toaster.css',
-        './compair/static/lib/chosen/chosen.css',
-        './compair/static/lib/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css',
+        './bower_components/bootstrap/dist/css/bootstrap.css',
+        './bower_components/highlightjs/styles/foundation.css',
+        './bower_components/angular-loading-bar/build/loading-bar.css',
+        './bower_components/AngularJS-Toaster/toaster.css',
+        './bower_components/chosen/chosen.css',
+        './bower_components/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css',
         './compair/static/build/compair.css'
     ],
     targetCssFilename = 'compair.css',
+    targetEmailCssFilename = 'email.css',
     jsLibsFilename = 'bowerJsLibs.js',
     jsFilename = 'compair.js',
     karmaCommonConf = 'compair/static/test/config/karma.conf.js';
@@ -66,13 +67,31 @@ gulp.task('less', function () {
         .pipe(less())
         .pipe(gulp.dest('./compair/static/build'));
 });
-
 gulp.task('prod_compile_minify_css', ['less'], function() {
     return gulp.src(cssFilenames)
         .pipe(cleanCss())
         .pipe(concat(targetCssFilename))
-        .pipe(gulp.dest('./compair/templates/static'))
         .pipe(gulp.dest('./compair/static/build'));
+});
+
+/*!
+ * Bootstrap v3.3.7 (http://getbootstrap.com)
+ * Copyright 2011-2016 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ */
+
+gulp.task('email_less', function () {
+    return gulp.src([
+            './compair/static/less/email.less'
+        ])
+        .pipe(less())
+        .pipe(gulp.dest('./compair/static/build'));
+});
+gulp.task('prod_compile_email_css', ['email_less'], function() {
+    return gulp.src('./compair/static/build/email.css')
+        .pipe(cleanCss())
+        .pipe(concat(targetEmailCssFilename))
+        .pipe(gulp.dest('./compair/templates/static'));
 });
 // don't sort bower files as bower handles order and dependency
 gulp.task('prod_minify_js_libs', function() {
@@ -143,8 +162,8 @@ gulp.task('prod_pdf_viewer_files', function() {
         ], {base: './compair/static/lib/pdf.js-viewer/'})
         .pipe(gulp.dest('./compair/static/dist/pdf.js-viewer'));
 });
-gulp.task('prod', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_minify_js',
-        'prod_copy_fonts', 'prod_copy_images', 'prod_pdf_viewer_files'], function() {
+gulp.task('prod', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_compile_email_css',
+        'prod_minify_js', 'prod_copy_fonts', 'prod_copy_images', 'prod_pdf_viewer_files'], function() {
     return gulp.src([
             './compair/static/build/*.css',
             './compair/static/build/*.js',

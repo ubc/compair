@@ -1,31 +1,19 @@
 {% extends "notification_base.html" %}
 {% block body %}
-<div class="assignment-screen">
-    <div class="standalone-assignment">
-        <!-- Assignment -->
-        <p class="intro-text">
-            You've received a new help comment on the following assignment: <strong>{{assignment.name}}</strong>
-            <br />
-            <a href="{{ url_for('route_app', _external=True, _anchor='/course/'+course.uuid+'/assignment/'+assignment.uuid) }}?tab=help">View in ComPAIR</a>
-        </p>
-    </div>
-
-    <div class="tab-content">
-        <div id="comments-tab">
-            <div class="each-comment">
-                <div class="each-header">
-                    <a href="{{ url_for('route_app', _external=True, _anchor='/user/'+author.uuid) }}">
-                        <img src="//www.gravatar.com/avatar/{{ author.avatar }}?s=32&d=retro" />
-                    </a>
-                    <a href="{{ url_for('route_app', _external=True, _anchor='/user/'+author.uuid) }}">
-                        {{ author.displayname }} ({{ author.fullname }})
-                    </a>
-                    <strong>commented</strong> on {{ comment.created.strftime('%b %d @ %I:%M %p') }}:
-                </div>
-
-                <div class="content">{{ clean_html(comment.content) | safe }}</div>
-            </div>
-        </div>
-    </div>
+<div class="standalone-assignment">
+    <!-- Assignment -->
+    <p class="intro-text">
+        You've received a new help comment on the following assignment: <strong>{{assignment.name}}</strong>
+        <br />
+        <a href="{{ url_for('route_app', _external=True, _anchor='/course/'+course.uuid+'/assignment/'+assignment.uuid) }}?tab=help">View in ComPAIR</a>
+    </p>
 </div>
+
+<div class="each-header">
+    <a href="{{ url_for('route_app', _external=True, _anchor='/user/'+author.uuid) }}"><img src="//www.gravatar.com/avatar/{{ author.avatar }}?s=32&d=retro" alt="" /></a>
+    <a href="{{ url_for('route_app', _external=True, _anchor='/user/'+author.uuid) }}">{{ author.displayname }} ({{ author.fullname }})</a>
+    <strong>commented</strong> on {{ comment.created.strftime('%b %d @ %I:%M %p') }}:
+</div>
+
+<div class="content">{{ clean_html(comment.content) | safe }}</div>
 {% endblock %}
