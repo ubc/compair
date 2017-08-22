@@ -10,7 +10,6 @@
 </div>
 
 <div class="each-header">
-    <a href="{{ url_for('route_app', _external=True, _anchor='/user/'+author.uuid) }}"><img src="//www.gravatar.com/avatar/{{ author.avatar }}?s=32&d=retro" alt="" /></a>
     <a href="{{ url_for('route_app', _external=True, _anchor='/user/'+author.uuid) }}">{{ author.displayname }} ({{ author.fullname }})</a>
     <strong>commented</strong> on {{ comment.created.strftime('%b %d @ %I:%M %p') }}:
 </div>
