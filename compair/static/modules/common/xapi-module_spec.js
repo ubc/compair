@@ -13,6 +13,7 @@ describe('xapi-module', function () {
 
     describe('xAPIStatementHelper', function () {
         var $rootScope, $location, Session, xAPIStatementHelper, xAPI, xAPISettings;
+        var absUrlSpy, pathSpy;
         var mockCourse = {
             "available": true,
             "start_date": null,
@@ -305,8 +306,9 @@ describe('xapi-module', function () {
             spyOn(TinCan.Utils, 'getUUID').and.returnValue(mockStatementId);
             spyOn(window, 'Date').and.returnValue({ toISOString: function() { return mockTimestamp; } });
             spyOn(Session, 'isLoggedIn').and.returnValue(true);
-            spyOn($location, 'absUrl').and.returnValue(mockLocationAbsUrl);
-            spyOn($location, 'path').and.returnValue(mockLocationPath);
+
+            absUrlSpy = spyOn($location, 'absUrl').and.returnValue(mockLocationAbsUrl);
+            pathSpy = spyOn($location, 'path').and.returnValue(mockLocationPath);
         }));
 
         describe('interacted_answer_solution:', function() {
@@ -635,6 +637,45 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.viewed_page();
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://id.tincanapi.com/verb/viewed",
+                            "display":{"en-US":"viewed"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath,
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://activitystrea.ms/schema/1.0/page"
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.viewed_page();
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('filtered_page:', function() {
@@ -669,6 +710,48 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.filtered_page(mockFilters);
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://xapi.learninganalytics.ubc.ca/verb/filter",
+                            "display":{"en-US":"filtered"}
+                        },
+                        "context":{
+                            "extensions": {
+                                "http://xapi.learninganalytics.ubc.ca/extension/filters": mockFilters
+                            },
+                            "contextActivities":{
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath,
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://activitystrea.ms/schema/1.0/page"
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.filtered_page(mockFilters);
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('sorted_page:', function() {
@@ -702,6 +785,48 @@ describe('xapi-module', function () {
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
                 xAPIStatementHelper.sorted_page(mockSortOrder);
                 $httpBackend.flush();
+            });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://xapi.learninganalytics.ubc.ca/verb/sort",
+                            "display":{"en-US":"sorted"}
+                        },
+                        "context":{
+                            "extensions": {
+                                "http://xapi.learninganalytics.ubc.ca/extension/sort-order": mockSortOrder
+                            },
+                            "contextActivities":{
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath,
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://activitystrea.ms/schema/1.0/page"
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.sorted_page(mockSortOrder);
+                    $httpBackend.flush();
+                });
             });
         });
 
@@ -739,6 +864,50 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.opened_page_section(sectionName);
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/open",
+                            "display":{"en-US":"opened"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?section="+encodeURIComponent(sectionName),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://id.tincanapi.com/activitytype/section",
+                                "name": { "en-US": sectionName }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.opened_page_section(sectionName);
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('closed_page_section:', function() {
@@ -774,6 +943,50 @@ describe('xapi-module', function () {
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
                 xAPIStatementHelper.closed_page_section(sectionName);
                 $httpBackend.flush();
+            });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/close",
+                            "display":{"en-US":"closed"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?section="+encodeURIComponent(sectionName),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://id.tincanapi.com/activitytype/section",
+                                "name": { "en-US": sectionName }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.closed_page_section(sectionName);
+                    $httpBackend.flush();
+                });
             });
         });
 
@@ -814,6 +1027,53 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.filtered_page_section(sectionName, mockFilters);
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://xapi.learninganalytics.ubc.ca/verb/filter",
+                            "display":{"en-US":"filtered"}
+                        },
+                        "context":{
+                            "extensions": {
+                                "http://xapi.learninganalytics.ubc.ca/extension/filters": mockFilters
+                            },
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?section="+encodeURIComponent(sectionName),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://id.tincanapi.com/activitytype/section",
+                                "name": { "en-US": sectionName }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.filtered_page_section(sectionName, mockFilters);
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('sorted_page_section:', function() {
@@ -853,6 +1113,53 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.sorted_page_section(sectionName, mockSortOrder);
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://xapi.learninganalytics.ubc.ca/verb/sort",
+                            "display":{"en-US":"sorted"}
+                        },
+                        "context":{
+                            "extensions": {
+                                "http://xapi.learninganalytics.ubc.ca/extension/sort-order": mockSortOrder
+                            },
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?section="+encodeURIComponent(sectionName),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://id.tincanapi.com/activitytype/section",
+                                "name": { "en-US": sectionName }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.sorted_page_section(sectionName, mockSortOrder);
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('opened_modal:', function() {
@@ -889,6 +1196,50 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.opened_modal(modalName);
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/open",
+                            "display":{"en-US":"opened"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?modal="+encodeURIComponent(modalName),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                                "name": { "en-US": modalName }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.opened_modal(modalName);
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('closed_modal:', function() {
@@ -924,6 +1275,50 @@ describe('xapi-module', function () {
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
                 xAPIStatementHelper.closed_modal(modalName);
                 $httpBackend.flush();
+            });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/close",
+                            "display":{"en-US":"closed"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?modal="+encodeURIComponent(modalName),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                                "name": { "en-US": modalName }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.closed_modal(modalName);
+                    $httpBackend.flush();
+                });
             });
         });
 
@@ -964,6 +1359,53 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.filtered_modal(modalName, mockFilters);
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://xapi.learninganalytics.ubc.ca/verb/filter",
+                            "display":{"en-US":"filtered"}
+                        },
+                        "context":{
+                            "extensions": {
+                                "http://xapi.learninganalytics.ubc.ca/extension/filters": mockFilters
+                            },
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?modal="+encodeURIComponent(modalName),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                                "name": { "en-US": modalName }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.filtered_modal(modalName, mockFilters);
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('sorted_modal:', function() {
@@ -1002,6 +1444,53 @@ describe('xapi-module', function () {
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
                 xAPIStatementHelper.sorted_modal(modalName, mockSortOrder);
                 $httpBackend.flush();
+            });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://xapi.learninganalytics.ubc.ca/verb/sort",
+                            "display":{"en-US":"sorted"}
+                        },
+                        "context":{
+                            "extensions": {
+                                "http://xapi.learninganalytics.ubc.ca/extension/sort-order": mockSortOrder
+                            },
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?modal="+encodeURIComponent(modalName),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                                "name": { "en-US": modalName }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.sorted_modal(modalName, mockSortOrder);
+                    $httpBackend.flush();
+                });
             });
         });
 
@@ -1042,6 +1531,53 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.opened_inline_kaltura_media(mockFile.name);
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/open",
+                            "display":{"en-US":"opened"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                },{
+                                    "id": "https://localhost:8888/app/attachment/1abcABC123-abcABC123_Z.pdf",
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?section="+encodeURIComponent("Inline Kaltura Media Attachment"),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://id.tincanapi.com/activitytype/section",
+                                "name": { "en-US": "Inline Kaltura Media Attachment" }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.opened_inline_kaltura_media(mockFile.name);
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('closed_inline_kaltura_media:', function() {
@@ -1080,6 +1616,53 @@ describe('xapi-module', function () {
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
                 xAPIStatementHelper.closed_inline_kaltura_media(mockFile.name);
                 $httpBackend.flush();
+            });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/close",
+                            "display":{"en-US":"closed"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                },{
+                                    "id": "https://localhost:8888/app/attachment/1abcABC123-abcABC123_Z.pdf",
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?section="+encodeURIComponent("Inline Kaltura Media Attachment"),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://id.tincanapi.com/activitytype/section",
+                                "name": { "en-US": "Inline Kaltura Media Attachment" }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.closed_inline_kaltura_media(mockFile.name);
+                    $httpBackend.flush();
+                });
             });
         });
 
@@ -1120,6 +1703,53 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.opened_attachment_modal(mockFile.name);
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/open",
+                            "display":{"en-US":"opened"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                },{
+                                    "id": "https://localhost:8888/app/attachment/1abcABC123-abcABC123_Z.pdf",
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?modal="+encodeURIComponent("View Attachment"),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                                "name": { "en-US": "View Attachment" }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.opened_attachment_modal(mockFile.name);
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('closed_attachment_modal:', function() {
@@ -1158,6 +1788,53 @@ describe('xapi-module', function () {
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
                 xAPIStatementHelper.closed_attachment_modal(mockFile.name);
                 $httpBackend.flush();
+            });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/close",
+                            "display":{"en-US":"closed"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                },{
+                                    "id": "https://localhost:8888/app/attachment/1abcABC123-abcABC123_Z.pdf",
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?modal="+encodeURIComponent("View Attachment"),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                                "name": { "en-US": "View Attachment" }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.closed_attachment_modal(mockFile.name);
+                    $httpBackend.flush();
+                });
             });
         });
 
@@ -1198,6 +1875,53 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.opened_embeddable_content_modal("https://mock.com/url");
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/open",
+                            "display":{"en-US":"opened"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                },{
+                                    "id": "https://mock.com/url",
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?modal="+encodeURIComponent("View Embeddable Content"),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                                "name": { "en-US": "View Embeddable Content" }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.opened_embeddable_content_modal("https://mock.com/url");
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('closed_embeddable_content_modal:', function() {
@@ -1236,6 +1960,53 @@ describe('xapi-module', function () {
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
                 xAPIStatementHelper.closed_embeddable_content_modal("https://mock.com/url");
                 $httpBackend.flush();
+            });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/close",
+                            "display":{"en-US":"closed"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                },{
+                                    "id": "https://mock.com/url",
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?modal="+encodeURIComponent("View Embeddable Content"),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://xapi.learninganalytics.ubc.ca/activitytype/modal",
+                                "name": { "en-US": "View Embeddable Content" }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.closed_embeddable_content_modal("https://mock.com/url");
+                    $httpBackend.flush();
+                });
             });
         });
 
@@ -1282,6 +2053,53 @@ describe('xapi-module', function () {
                 xAPIStatementHelper.opened_answer_replies_section(mockAnswer1);
                 $httpBackend.flush();
             });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/open",
+                            "display":{"en-US":"opened"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                },{
+                                    "id": "https://localhost:8888/app/xapi/answer/407cABC123-abcABC123_Z",
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?section="+encodeURIComponent("Answer replies"),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://id.tincanapi.com/activitytype/section",
+                                "name": { "en-US": "Answer replies" }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.opened_answer_replies_section(mockAnswer1);
+                    $httpBackend.flush();
+                });
+            });
         });
 
         describe('closed_answer_replies_section:', function() {
@@ -1326,6 +2144,53 @@ describe('xapi-module', function () {
                 $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
                 xAPIStatementHelper.closed_answer_replies_section(mockAnswer1);
                 $httpBackend.flush();
+            });
+
+            describe('with additional pound "#":', function() {
+                beforeEach(function () {
+                    absUrlSpy.and.returnValue(mockLocationAbsUrl+"#answer");
+                    pathSpy.and.returnValue(mockLocationPath+"#answer");
+                });
+
+                it('should generate a valid statement', function() {
+                    expectedLocationPath  = mockLocationPath+"%23answer"
+                    expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
+
+                    var expectedStatement = {
+                        "id": mockStatementId,
+                        "timestamp": mockTimestamp,
+                        "verb":{
+                            "id":"http://activitystrea.ms/schema/1.0/close",
+                            "display":{"en-US":"closed"}
+                        },
+                        "context":{
+                            "contextActivities":{
+                                "parent":[{
+                                    "id": "https://localhost:8888/app/#"+expectedLocationPath,
+                                    "objectType":"Activity"
+                                }],
+                                "other":[{
+                                    "id": expectedLocationAbsUrl,
+                                    "objectType":"Activity"
+                                },{
+                                    "id": "https://localhost:8888/app/xapi/answer/407cABC123-abcABC123_Z",
+                                    "objectType":"Activity"
+                                }]
+                            }
+                        },
+                        "object":{
+                            "id":"https://localhost:8888/app/#"+expectedLocationPath+"?section="+encodeURIComponent("Answer replies"),
+                            "objectType":"Activity",
+                            "definition":{
+                                "type":"http://id.tincanapi.com/activitytype/section",
+                                "name": { "en-US": "Answer replies" }
+                            }
+                        }
+                    };
+                    $httpBackend.expectPOST(/\/api\/statements$/, expectedStatement).respond({});
+                    xAPIStatementHelper.closed_answer_replies_section(mockAnswer1);
+                    $httpBackend.flush();
+                });
             });
         });
 

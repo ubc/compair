@@ -265,6 +265,22 @@ module.service('xAPI',
             });
         };
 
+        this.relativePathSaveEncode = function(relativePath) {
+            return relativePath.replace(/#/g, "%23");
+        };
+
+        this.urlSaveEncode = function(url) {
+            var first = true;
+            return url.replace(/#/g, function(value) {
+                if (first) {
+                    first = false;
+                    return value;
+                } else {
+                    return "%23";
+                }
+            });
+        };
+
         this._resourceIRI = {
             _appPageUrl: function() {
                 return xAPISettings.baseUrl + "app/#";
@@ -309,13 +325,15 @@ module.service('xAPI',
                 return _this._resourceIRI._attachmentUrl() + fileName;
             },
             page: function(relativePath) {
-                return _this._resourceIRI._appPageUrl() + relativePath;
+                return _this._resourceIRI._appPageUrl() + _this.relativePathSaveEncode(relativePath);
             },
             page_section: function(relativePath, sectionName) {
-                return _this._resourceIRI.page(relativePath) + "?section="+encodeURIComponent(sectionName);
+                var safeRelativePath = _this.relativePathSaveEncode(relativePath);
+                return _this._resourceIRI.page(safeRelativePath) + "?section="+encodeURIComponent(sectionName);
             },
             modal: function(relativePath, modalName) {
-                return _this._resourceIRI.page(relativePath) + "?modal="+encodeURIComponent(modalName);
+                var safeRelativePath = _this.relativePathSaveEncode(relativePath);
+                return _this._resourceIRI.page(safeRelativePath) + "?modal="+encodeURIComponent(modalName);
             }
         };
 
@@ -762,7 +780,7 @@ module.service('xAPI',
                     contextActivities: {
                         // other page's url unrelated to baseUrl
                         other: [{
-                            id: locationUrl
+                            id: _this.urlSaveEncode(locationUrl)
                         }]
                     }
                 }, _this.context.basic(options));
@@ -781,7 +799,7 @@ module.service('xAPI',
                         }],
                         // other page's url unrelated to baseUrl
                         other: [{
-                            id: locationUrl
+                            id: _this.urlSaveEncode(locationUrl)
                         }]
                     }
                 }, _this.context.basic(options));
@@ -800,7 +818,7 @@ module.service('xAPI',
                         }],
                         // other page's url unrelated to baseUrl
                         other: [{
-                            id: locationUrl
+                            id: _this.urlSaveEncode(locationUrl)
                         }]
                     }
                 }, _this.context.basic(options));
