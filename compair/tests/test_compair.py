@@ -117,25 +117,28 @@ class ComPAIRXAPITestCase(ComPAIRTestCase):
 
         return tracking
 
+    def _validate_and_cleanup_statement(self, statement):
+        # check categories
+        categories = statement['context']['contextActivities']['category']
+        self.assertIn(self.compair_source_category, categories)
+        categories.remove(self.compair_source_category)
+
+        if len(categories) == 0:
+            del statement['context']['contextActivities']['category']
+        if len(statement['context']['contextActivities']) == 0:
+            del statement['context']['contextActivities']
+        if len(statement['context']) == 0:
+            del statement['context']
+
+        # check timestamp
+        self.assertIsNotNone(statement['timestamp'])
+
     def get_and_clear_statement_log(self, has_request=False):
         statements = []
         for xapi_log in XAPILog.query.all():
             statement = json.loads(xapi_log.statement)
 
-            # check categories
-            categories = statement['context']['contextActivities']['category']
-            self.assertIn(self.compair_source_category, categories)
-            categories.remove(self.compair_source_category)
-
-            if len(categories) == 0:
-                del statement['context']['contextActivities']['category']
-            if len(statement['context']['contextActivities']) == 0:
-                del statement['context']['contextActivities']
-            if len(statement['context']) == 0:
-                del statement['context']
-
-            # check timestamp
-            self.assertIsNotNone(statement['timestamp'])
+            self._validate_and_cleanup_statement(statement)
 
             statements.append(statement)
         XAPILog.query.delete()

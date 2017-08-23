@@ -87,7 +87,7 @@ env_bool_overridables = [
 
 env_int_overridables = [
     'SQLALCHEMY_POOL_RECYCLE',
-    'ATTACHMENT_UPLOAD_LIMIT',
+    'ATTACHMENT_UPLOAD_LIMIT', 'LRS_USER_INPUT_FIELD_SIZE_LIMIT',
     'MAIL_PORT', 'MAIL_MAX_EMAILS'
 ]
 

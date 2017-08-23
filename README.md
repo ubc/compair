@@ -119,6 +119,8 @@ xAPI statements require an actor (currently logged in user) account information.
 
 `LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER`: Optionally set a param to set as the actor's unique key for the CAS account. (uses CAS username by default)
 
+`LRS_USER_INPUT_FIELD_SIZE_LIMIT`: Set the byte limit on xAPI statement fields containing user input. Set this in order to prevent sending large statements to the LRS that it can't handle (1048576 by default or 1MB)
+
 Restart server after making any changes to settings
 
 (Optional) Setting up Background Tasks

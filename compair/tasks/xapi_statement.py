@@ -7,10 +7,9 @@ from flask import current_app
 
 @celery.task(bind=True, autoretry_for=(Exception,),
     ignore_result=True, store_errors_even_if_ignored=True)
-def send_lrs_statements(self, statements):
+def send_lrs_statement(self, statement_string):
     try:
-        statements = [json.loads(statement) for statement in statements]
-        XAPI._send_lrs_statements(statements)
+        XAPI._send_lrs_statement(json.loads(statement_string))
     except socket.error as error:
         # don't raise connection refused error when in eager mode
         if error.errno != socket.errno.ECONNREFUSED:
