@@ -151,7 +151,7 @@ class LTIStatusAPI(Resource):
                 'exists': lti_resource_link.compair_assignment_id != None
             },
             'course': {
-                'name': lti_context.context_title if lti_context and lti_context.compair_course_id else None,
+                'name': lti_context.context_title if lti_context else None,
                 'id': lti_context.compair_course_uuid if lti_context and lti_context.compair_course_id else None,
                 'exists': lti_context and lti_context.compair_course_id != None,
                 'course_role': lti_user_resource_link.course_role.value if lti_user_resource_link else None
