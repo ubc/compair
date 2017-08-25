@@ -33,7 +33,10 @@
              *     });
              * ```
              */
-            getUser: function () {
+            getUser: function (options) {
+                // options include:
+                // - bypassErrorsInterceptor to bypass user fetch errors in navbar and lti+oauth flows
+                options = options || {};
                 if (this._user.hasOwnProperty('id')) {
                     return $q.when(this._user);
                 }
@@ -48,20 +51,22 @@
                 $log.debug('Getting user from server');
                 var scope = this;
                 var deferred = $q.defer();
-                return $http.get('/api/session', { cache:true })
-                    .then(function (result) {
-                        // retrieve logged in user's information
-                        // return a promise for chaining
-                        var u = UserResource.get({"id": result.data.id}, function(user) {
-                            localStorageService.set('user', user);
-                            angular.extend(scope._user, user);
-                            deferred.resolve(scope._user);
-                        });
-                        angular.extend(scope._user, u);
-                        scope._permissions = result.data.permissions;
-                        localStorageService.set('permissions', scope._permissions);
-                        return deferred.promise;
+                return $http.get('/api/session', {
+                    cache:true,
+                    bypassErrorsInterceptor: options.bypassErrorsInterceptor
+                }).then(function (result) {
+                    // retrieve logged in user's information
+                    // return a promise for chaining
+                    var u = UserResource.get({"id": result.data.id}, function(user) {
+                        localStorageService.set('user', user);
+                        angular.extend(scope._user, user);
+                        deferred.resolve(scope._user);
                     });
+                    angular.extend(scope._user, u);
+                    scope._permissions = result.data.permissions;
+                    localStorageService.set('permissions', scope._permissions);
+                    return deferred.promise;
+                });
             },
 
             /**

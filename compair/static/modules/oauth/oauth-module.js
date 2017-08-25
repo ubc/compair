@@ -25,7 +25,7 @@ module.controller("OAuthController",
              AuthenticationService, resolvedData) {
 
         $rootScope.$emit(AuthenticationService.AUTH_LOGIN_REQUIRED_EVENT);
-        Session.getUser().then(function(user) {
+        Session.getUser({bypassErrorsInterceptor: true}).then(function(user) {
             if (LTI.isLTISession()) {
                 $location.path("/lti");
             } else {
