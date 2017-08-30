@@ -60,6 +60,8 @@ LRS_STATEMENT_ENDPOINT = 'local' #url for LRS xAPI statements
 LRS_AUTH = None
 LRS_USERNAME = None
 LRS_PASSWORD = None
+# limit user generated content field text size limit
+LRS_USER_INPUT_FIELD_SIZE_LIMIT = 1048576 #1024 * 1024 -> max 1MB
 
 LRS_ACTOR_ACCOUNT_USE_CAS = False # set to True to use CAS account information if available
 LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER = None # set to a param field value to use or None to use unique_identifier

@@ -220,7 +220,8 @@ def xapi_on_answer_comment_modified(sender, user, **extra):
         )
         statements.append(statement)
 
-        XAPI.send_statements(statements)
+        for statement in statements:
+            XAPI.send_statement(statement)
     else:
         # (public or private)
         statement = XAPIStatement.generate(
@@ -300,7 +301,8 @@ def xapi_on_answer_modified(sender, user, **extra):
     )
     statements.append(statement)
 
-    XAPI.send_statements(statements)
+    for statement in statements:
+        XAPI.send_statement(statement)
 
 # on_answer_delete
 # deleted answer_solution
@@ -494,7 +496,8 @@ def xapi_on_comparison_update(sender, user, **extra):
                     )
                     statements.append(statement)
 
-    XAPI.send_statements(statements)
+    for statement in statements:
+        XAPI.send_statement(statement)
 
 
 # on_course_create
