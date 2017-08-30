@@ -10,6 +10,7 @@ var module = angular.module('ubc.ctlt.compair.user', [
     'ngResource',
     'ngRoute',
     'ng-breadcrumbs',
+    'ubc.ctlt.compair.login',
     'ubc.ctlt.compair.session',
     'ubc.ctlt.compair.authorization',
     'ubc.ctlt.compair.toaster'
@@ -60,9 +61,9 @@ module.constant('CourseRole', {
 
 /***** Controllers *****/
 module.controller("UserWriteController",
-    ['$scope', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session',
+    ['$scope', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session', 'AuthTypesEnabled',
      'UserResource', 'SystemRole', 'Toaster', 'resolvedData', 'UserSettings', 'EmailNotificationMethod',
-    function($scope, $route, $routeParams, $location, breadcrumbs, Session,
+    function($scope, $route, $routeParams, $location, breadcrumbs, Session, AuthTypesEnabled,
              UserResource, SystemRole, Toaster, resolvedData, UserSettings, EmailNotificationMethod)
     {
         $scope.userId = $routeParams.userId;
@@ -78,6 +79,7 @@ module.controller("UserWriteController",
 
         $scope.UserSettings = UserSettings;
         $scope.EmailNotificationMethod = EmailNotificationMethod;
+        $scope.AuthTypesEnabled = AuthTypesEnabled;
         $scope.SystemRole = SystemRole;
         $scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]
         // remove system admin from system roles if current_user is not an admin

@@ -49,7 +49,7 @@
         </compair-field-with-feedback>
     </fieldset>
 
-    <fieldset ng-if="canManageUsers || user.uses_compair_login">
+    <fieldset ng-if="(canManageUsers || user.uses_compair_login) && AuthTypesEnabled.app">
         <legend>ComPAIR Login</legend>
         <p class="instructional-text">
             This information will set the <strong>ComPAIR username <span ng-if="method == 'create'">and password</span></strong> for logging in without an external login (like CWL).
