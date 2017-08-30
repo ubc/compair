@@ -5,9 +5,9 @@
         .module('ubc.ctlt.compair.login')
 
         .directive('loginCreateUserForm',
-            ['$route', '$log', 'UserResource', 'SystemRole', 'Toaster',
+            ['$route', '$log', 'UserResource', 'SystemRole', 'Toaster', 'AuthTypesEnabled',
              'AuthenticationService', 'LTI', 'UserSettings', 'EmailNotificationMethod',
-            function ($route, $log, UserResource, SystemRole, Toaster,
+            function ($route, $log, UserResource, SystemRole, Toaster, AuthTypesEnabled,
                       AuthenticationService, LTI, UserSettings, EmailNotificationMethod) {
             return {
                 restrict: 'E',
@@ -23,6 +23,7 @@
                     scope.password = {};
                     scope.UserSettings = UserSettings;
                     scope.EmailNotificationMethod = EmailNotificationMethod;
+                    scope.AuthTypesEnabled = AuthTypesEnabled;
                     scope.SystemRole = SystemRole;
                     scope.system_roles = [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin];
 
