@@ -35,22 +35,23 @@ module.controller(
 
         // determine if we're in a course so we know whether to show
         // the course settings
-        $scope.getPermissions = function() {
-            Session.getUser().then(function(user) {
+         $scope.getPermissions = function() {
+            Session.getUser({bypassErrorsInterceptor: true}).then(function(user) {
                 $scope.loggedInUser = user;
                 $log.debug("Logged in as " + $scope.loggedInUser.username);
-            });
-            Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function (result) {
-                $scope.canCreateUsers = result;
-            });
-            Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function (result) {
-                $scope.canManageUsers = result;
-            });
-            Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function (result) {
-                $scope.canCreateCourses = result;
-            });
-            Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL).then(function (result) {
-                $scope.canManageAssignments = result;
+
+                Authorize.can(Authorize.CREATE, UserResource.MODEL).then(function (result) {
+                    $scope.canCreateUsers = result;
+                });
+                Authorize.can(Authorize.MANAGE, UserResource.MODEL).then(function (result) {
+                    $scope.canManageUsers = result;
+                });
+                Authorize.can(Authorize.CREATE, CourseResource.MODEL).then(function (result) {
+                    $scope.canCreateCourses = result;
+                });
+                Authorize.can(Authorize.MANAGE, AssignmentResource.MODEL).then(function (result) {
+                    $scope.canManageAssignments = result;
+                });
             });
         };
         $scope.setInCourse = function() {

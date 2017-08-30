@@ -371,7 +371,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # setup lti session with context id
             with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
-                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    context_title="lti_context_title") as rv:
                 self.assert200(rv)
 
             rv = self.client.get(url, data={}, content_type='application/json')
@@ -381,12 +382,13 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             self.assertFalse(status['course']['exists'])
             self.assertIsNone(status['course']['id'])
-            self.assertEqual(status['course']['name'], lti_context.context_title)
+            self.assertEqual(status['course']['name'], "lti_context_title")
             self.assertEqual(status['course']['course_role'], course_role.value)
 
             # setup lti session with custom assignment id
             with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
-                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    context_title="lti_context_title") as rv:
                 self.assert200(rv)
 
             rv = self.client.get(url, data={}, content_type='application/json')
@@ -396,7 +398,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             self.assertFalse(status['course']['exists'])
             self.assertIsNone(status['course']['id'])
-            self.assertEqual(status['course']['name'], lti_context.context_title)
+            self.assertEqual(status['course']['name'], "lti_context_title")
             self.assertEqual(status['course']['course_role'], course_role.value)
 
             # setup with existing user
@@ -406,7 +408,9 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # setup lti session with existing user
             with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
-                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    lis_person_name_given="lti_given", lis_person_name_family="lti_family",
+                    lis_person_contact_email_primary="lti_email") as rv:
                 self.assert200(rv)
 
             rv = self.client.get(url, data={}, content_type='application/json')
@@ -415,10 +419,10 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertTrue(status['valid'])
 
             self.assertTrue(status['user']['exists'])
-            self.assertEqual(status['user']['firstname'], lti_user.lis_person_name_given)
-            self.assertEqual(status['user']['lastname'], lti_user.lis_person_name_family)
+            self.assertEqual(status['user']['firstname'], "lti_given")
+            self.assertEqual(status['user']['lastname'], "lti_family")
             self.assertIsNotNone(status['user']['displayname'])
-            self.assertEqual(status['user']['email'], lti_user.lis_person_contact_email_primary)
+            self.assertEqual(status['user']['email'], "lti_email")
             self.assertEqual(status['user']['system_role'], system_role.value)
 
             # setup with existing course
@@ -428,7 +432,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # setup lti session with existing course
             with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
-                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    context_title="lti_context_title") as rv:
                 self.assert200(rv)
 
             rv = self.client.get(url, data={}, content_type='application/json')
@@ -438,12 +443,13 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             self.assertTrue(status['course']['exists'])
             self.assertEqual(status['course']['id'], course.uuid)
-            self.assertEqual(status['course']['name'], lti_context.context_title)
+            self.assertEqual(status['course']['name'], "lti_context_title")
             self.assertEqual(status['course']['course_role'], course_role.value)
 
             # setup lti session with existing course
             with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
-                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    context_title="lti_context_title") as rv:
                 self.assert200(rv)
 
             rv = self.client.get(url, data={}, content_type='application/json')
@@ -453,7 +459,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             self.assertTrue(status['course']['exists'])
             self.assertEqual(status['course']['id'], course.uuid)
-            self.assertEqual(status['course']['name'], lti_context.context_title)
+            self.assertEqual(status['course']['name'], "lti_context_title")
             self.assertEqual(status['course']['course_role'], course_role.value)
 
             # with no custom assignment param
