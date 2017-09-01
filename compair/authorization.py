@@ -126,10 +126,6 @@ def define_authorization(user, they):
 def get_logged_in_user_permissions():
     user = User.query.get(current_user.id)
     require(READ, user)
-    courses = UserCourse.query \
-        .filter_by(user_id=current_user.id) \
-        .filter(UserCourse.course_role != CourseRole.dropped) \
-        .all()
 
     is_admin = user.system_role == SystemRole.sys_admin
     permissions = {}
@@ -158,13 +154,15 @@ def get_logged_in_user_permissions():
     mod_operations = [MANAGE, READ, EDIT, DELETE]
     course_global_permissions = set()
 
-    for course in courses:
+    for user_course in user.user_courses:
+        if user_course.course_role == CourseRole.dropped:
+            continue
         course_permissions = set()
         for operation in mod_operations:
-            if allow(operation, Course(id=course.course_id)):
+            if allow(operation, Course(id=user_course.course_id)):
                 course_permissions.add(operation)
                 course_global_permissions.add(operation)
-        permissions['Course'][course.course_uuid] = list(course_permissions)
+        permissions['Course'][user_course.course_uuid] = list(course_permissions)
 
     if allow(CREATE, Course):
         course_global_permissions.add(CREATE)
@@ -178,13 +176,15 @@ def get_logged_in_user_permissions():
     permissions['Assignment'] = {}
     assignment_global_permissions = set()
 
-    for course in courses:
+    for user_course in user.user_courses:
+        if user_course.course_role == CourseRole.dropped:
+            continue
         assignment_permissions = set()
         for operation in operations:
-            if allow(operation, Assignment(course_id=course.course_id)):
+            if allow(operation, Assignment(course_id=user_course.course_id)):
                 assignment_permissions.add(operation)
                 assignment_global_permissions.add(operation)
-        permissions['Assignment'][course.course_uuid] = list(assignment_permissions)
+        permissions['Assignment'][user_course.course_uuid] = list(assignment_permissions)
 
     if is_admin:
         for operation in operations:

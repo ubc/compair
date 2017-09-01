@@ -118,8 +118,8 @@ Feature: Edit Profile
     And I submit modal form with the 'Save' button
     Then I should see a success message
 
-  Scenario: Loading edit own profile as CAS instructor
-    Given I'm a CAS Instructor
+  Scenario: Loading edit own profile as SAML instructor
+    Given I'm a SAML Instructor
     And I'm on 'user' page for user with id '2abcABC123-abcABC123_Z'
     When I select the 'Edit' button
     Then I should be on the 'edit profile' page
@@ -130,8 +130,8 @@ Feature: Edit Profile
     And I should not see the Account Login section
     And I should not see the 'Edit Password' button
 
-  Scenario: Edit own profile as CAS instructor
-    Given I'm a CAS Instructor
+  Scenario: Edit own profile as SAML instructor
+    Given I'm a SAML Instructor
     And I'm on 'edit user' page for user with id '2abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'instructor123'
     And I fill form item 'user.firstname' in with 'instructor'
@@ -141,8 +141,8 @@ Feature: Edit Profile
     Then I should be on the 'profile' page
     And I should see 'instructor123's Profile' in 'h1' on the page
 
-  Scenario: Loading edit another user's profile as CAS instructor
-    Given I'm a CAS Instructor
+  Scenario: Loading edit another user's profile as SAML instructor
+    Given I'm a SAML Instructor
     And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
     When I select the 'Edit' button
     Then I should be on the 'edit profile' page
@@ -153,8 +153,8 @@ Feature: Edit Profile
     And I should not see the Account Login section
     And I should not see the 'Edit Password' button
 
-  Scenario: Edit another user's profile as CAS instructor
-    Given I'm a CAS Instructor
+  Scenario: Edit another user's profile as SAML instructor
+    Given I'm a SAML Instructor
     And I'm on 'edit user' page for user with id '3abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'student123'
     And I fill form item 'user.firstname' in with 'student'
@@ -164,8 +164,8 @@ Feature: Edit Profile
     Then I should be on the 'profile' page
     And I should see 'student123's Profile' in 'h1' on the page
 
-  Scenario: Loading edit another user's profile as CAS admin
-    Given I'm a CAS System Administrator
+  Scenario: Loading edit another user's profile as SAML admin
+    Given I'm a SAML System Administrator
     And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
     When I select the 'Edit' button
     Then I should be on the 'edit profile' page
@@ -176,8 +176,8 @@ Feature: Edit Profile
     And I should see the Account Login section
     And I should not see the 'Edit Password' button
 
-  Scenario: Edit another user's profile as CAS admin
-    Given I'm a CAS System Administrator
+  Scenario: Edit another user's profile as SAML admin
+    Given I'm a SAML System Administrator
     And I'm on 'edit user' page for user with id '3abcABC123-abcABC123_Z'
     When I fill form item 'user.displayname' in with 'student123'
     And I fill form item 'user.firstname' in with 'student'

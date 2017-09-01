@@ -14,7 +14,8 @@ var module = angular.module('ubc.ctlt.compair.oauth', [
 ]);
 
 module.constant('ThirdPartyAuthType', {
-    cas: "CAS"
+    cas: "CAS",
+    saml: 'SAML'
 });
 
 /***** Controllers *****/

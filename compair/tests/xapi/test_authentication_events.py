@@ -38,7 +38,7 @@ class AuthenticationXAPITests(ComPAIRXAPITestCase):
         self.assertNotIn('context', statements[0])
 
         # test with login method
-        login_method = "CAS"
+        login_method = "SAML"
         on_login_with_method.send(
             current_app._get_current_object(),
             event_name=on_login_with_method.name,

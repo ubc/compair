@@ -24,6 +24,7 @@ def generate_index():
         attachment_upload_limit=current_app.config['ATTACHMENT_UPLOAD_LIMIT'],
         app_login_enabled=current_app.config['APP_LOGIN_ENABLED'],
         cas_login_enabled=current_app.config['CAS_LOGIN_ENABLED'],
+        saml_login_enabled=current_app.config['SAML_LOGIN_ENABLED'],
         lti_login_enabled=current_app.config['LTI_LOGIN_ENABLED'],
         kaltura_enabled=current_app.config['KALTURA_ENABLED'],
         kaltura_extensions=list(current_app.config['KALTURA_ATTACHMENT_EXTENSIONS'])

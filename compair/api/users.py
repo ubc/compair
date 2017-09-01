@@ -272,8 +272,9 @@ class UserListAPI(Resource):
         check_valid_email_notification_method(email_notification_method)
         user.email_notification_method = EmailNotificationMethod(email_notification_method)
 
-        # if creating a cas user, do not set username or password
-        if sess.get('oauth_create_user_link') and sess.get('LTI') and sess.get('CAS_CREATE'):
+        # if creating a saml or cas user, do not set username or password
+        if sess.get('oauth_create_user_link') and sess.get('LTI') and \
+                (sess.get('CAS_CREATE') or sess.get('SAML_CREATE')):
             user.username = None
             user.password = None
         elif not current_app.config.get('APP_LOGIN_ENABLED'):
@@ -330,6 +331,17 @@ class UserListAPI(Resource):
                     )
                     login_method = ThirdPartyType.cas.value
                     db.session.add(thirdpartyuser)
+
+                elif sess.get('SAML_CREATE'):
+                    thirdpartyuser = ThirdPartyUser(
+                        third_party_type=ThirdPartyType.saml,
+                        unique_identifier=sess.get('SAML_UNIQUE_IDENTIFIER'),
+                        params=sess.get('SAML_PARAMS'),
+                        user=user
+                    )
+                    login_method = ThirdPartyType.saml.value
+                    db.session.add(thirdpartyuser)
+
         else:
             system_role = params.get("system_role")
             check_valid_system_role(system_role)
@@ -372,6 +384,11 @@ class UserListAPI(Resource):
                 sess.pop('CAS_CREATE')
                 sess.pop('CAS_UNIQUE_IDENTIFIER')
                 sess['CAS_LOGIN'] = True
+
+            if sess.get('SAML_CREATE'):
+                sess.pop('SAML_CREATE')
+                sess.pop('SAML_UNIQUE_IDENTIFIER')
+                sess['SAML_LOGIN'] = True
 
         return marshal_user_data(user)
 

@@ -18,7 +18,7 @@ yum -y update
 yum -y install curl epel-release
 curl --silent --location https://rpm.nodesource.com/setup_7.x | bash -
 curl --silent --location https://bootstrap.pypa.io/get-pip.py | python -
-yum -y install nodejs mariadb-server git nginx gcc redis python-devel policycoreutils-python
+yum -y install nodejs mariadb-server git nginx gcc redis python-devel policycoreutils-python xmlsec1-devel
 ```
 
 Setup MariaDB

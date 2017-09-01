@@ -257,7 +257,10 @@ module.controller(
 
         $scope.ThirdPartyAuthType = ThirdPartyAuthType;
         $scope.importTypes = [];
-        if (AuthTypesEnabled.cas) {
+        //only allow one import type between CAS and SAML (priority given to SAML)
+        if (AuthTypesEnabled.saml) {
+            $scope.importTypes.push({'value': ThirdPartyAuthType.saml, 'name': 'CWL username'})
+        } else if (AuthTypesEnabled.cas) {
             $scope.importTypes.push({'value': ThirdPartyAuthType.cas, 'name': 'CWL username'})
         }
         if (AuthTypesEnabled.app) {
@@ -273,7 +276,7 @@ module.controller(
             importService.onComplete($scope.courseId, response);
         };
         $scope.uploader.onBeforeUploadItem = function(fileItem) {
-            if ($scope.importType == ThirdPartyAuthType.cas) {
+            if ($scope.importType == ThirdPartyAuthType.cas || $scope.importType == ThirdPartyAuthType.saml) {
                 fileItem.formData.push({ 'import_type': $scope.importType });
             }
         };
