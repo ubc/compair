@@ -211,7 +211,7 @@
                 </p>
 
                 <!-- Anyone sees during the answer period, if no answers provided yet -->
-                <p class="intro-text" ng-if="assignment.answer_period && !assignment.answer_count">
+                <p class="intro-text" ng-if="assignment.answer_period && !assignment.answer_count && (canManageAssignment || (!canManageAssignment && see_answers))">
                     No answers given for this assignment yet.
                 </p>
 
