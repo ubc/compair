@@ -57,6 +57,8 @@ def define_authorization(user, they):
     elif user.system_role == SystemRole.instructor:
         # instructors can create courses
         they.can(CREATE, Course)
+        # instructors can read the default criterion
+        they.can(READ, Criterion, public=True)
         they.can(CREATE, Criterion)
         they.can(EDIT, User, if_my_student)
         they.can(READ, USER_IDENTITY)
