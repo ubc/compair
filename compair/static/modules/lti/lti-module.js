@@ -121,6 +121,8 @@ module.controller("LTIController",
                 modalInstance.result.then(function (selectedCourseId) {
                     LTIResource.linkCourse({id: selectedCourseId}, {},
                         function(ret) {
+                            // refresh permissions
+                            Session.expirePermissions();
                             Toaster.success("Course Linked", "Successfully linked your course as requested.");
                             // reload to refresh status and check what to do next
                             $route.reload();
