@@ -227,9 +227,8 @@ module.controller(
             CourseResource.save({}, $scope.course, function (ret) {
                 Toaster.success("Course Saved");
                 // refresh permissions
-                Session.refresh().then(function() {
-                    $scope.selectCourse(ret.id);
-                });
+                Session.expirePermissions();
+                $scope.selectCourse(ret.id);
             }).$promise.finally(function() {
                 $scope.submitted = false;
             });
