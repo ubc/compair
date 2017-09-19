@@ -264,13 +264,14 @@
                                 Score: {{answer.score.normalized_score}}%
                             </span>
                             <!-- Student Rank (not used for instructor answers) -->
-                            <span class="label label-warning" ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score">
+                            <span class="students-ranked" ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score">
                                 <span ng-if="answer.score.rank <= rankLimit">
-                                    Students Ranked: <strong>{{answer.score.rank}} <span ng-if="rankCount[answer.score.rank] > 1">(tied)</span></strong>
+                                    Students Ranked: <strong>#{{answer.score.rank}} <span ng-if="rankCount[answer.score.rank] > 1">(tied)</span></strong>
                                 </span>
                                 <span class="score-tooltip" ng-if="answer.score.rank > 0 && answer.score.rank > rankLimit" uib-tooltip="Answers that are ranked outside the top {{rankLimit}} do not receive a rank number for this assignment." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
                                     Students Ranked: <strong>N/A</strong>
                                 </span>
+                                <i class="fa fa-arrow-down"></i>
                             </span>
                             <!-- No Student Score/Rank -->
                             <span ng-if="canManageAssignment && !answerFilters.anonymous && !answer.score">
@@ -289,15 +290,14 @@
                                 </a>
                             </span>
                             -->
-                            <span ng-show="canManageAssignment">
-                                <a href="" ng-if="!answer.top_answer" title="Add to instructor's top answers" ng-click="setTopAnswer(answer, true)">
+
+                            <span ng-if="(canManageAssignment && !answerFilters.anonymous) || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
+                                <a href="" ng-if="canManageAssignment && !answerFilters.anonymous && !answer.top_answer" title="Add to instructor's top answers" ng-click="setTopAnswer(answer, true)">
                                     <i class="fa fa-star-o"></i>
                                 </a>
-                                <a href="" ng-if="answer.top_answer" title="Remove from instructor's top answers" ng-click="setTopAnswer(answer, false)">
+                                <a href="" ng-if="canManageAssignment && !answerFilters.anonymous && answer.top_answer" title="Remove from instructor's top answers" ng-click="setTopAnswer(answer, false)">
                                     <i class="fa fa-star"></i>
                                 </a>
-                            </span>
-                            <span ng-if="(canManageAssignment && !answerFilters.anonymous) || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
                                 <a href="" title="Delete this answer" confirmation-needed="deleteAnswer(answer)" keyword="answer">
                                     <i class="fa fa-trash-o"></i>
                                 </a>
