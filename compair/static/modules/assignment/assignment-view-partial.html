@@ -258,7 +258,7 @@
                         <compair-avatar ng-show="!answerFilters.anonymous" user-id="answer.user_id" avatar="answer.user.avatar" display-name="answer.user.displayname" full-name="answer.user.fullname" me="!canManageAssignment && answer.user_id == loggedInUserId"></compair-avatar>
                         <span ng-show="answerFilters.anonymous">Student</span>
                         <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
-                        <div class="manager-actions pull-right" ng-if="(canManageAssignment && !answerFilters.anonymous) || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
+                        <div class="manager-actions pull-right">
                             <!-- Student Score (not used for instructor answers) -->
                             <span ng-if="canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score" class="label label-warning score-tooltip" uib-tooltip="Scores are normalized, so the top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
                                 Score: {{answer.score.normalized_score}}%
@@ -266,7 +266,7 @@
                             <!-- Student Rank (not used for instructor answers) -->
                             <span class="label label-warning" ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score">
                                 <span ng-if="answer.score.rank <= rankLimit">
-                                    Students Ranked: <strong>{{score.rank}} <span ng-if="rankCount[answer.score.rank] > 1">(tied)</span></strong>
+                                    Students Ranked: <strong>{{answer.score.rank}} <span ng-if="rankCount[answer.score.rank] > 1">(tied)</span></strong>
                                 </span>
                                 <span class="score-tooltip" ng-if="answer.score.rank > 0 && answer.score.rank > rankLimit" uib-tooltip="Answers that are ranked outside the top {{rankLimit}} do not receive a rank number for this assignment." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
                                     Students Ranked: <strong>N/A</strong>
@@ -297,12 +297,14 @@
                                     <i class="fa fa-star"></i>
                                 </a>
                             </span>
-                            <a href="" title="Delete this answer" confirmation-needed="deleteAnswer(answer)" keyword="answer">
-                                <i class="fa fa-trash-o"></i>
-                            </a>
-                            <a href="" title="Edit this answer" ng-click="editAnswer(answer)">
-                                Edit
-                            </a>
+                            <span ng-if="(canManageAssignment && !answerFilters.anonymous) || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
+                                <a href="" title="Delete this answer" confirmation-needed="deleteAnswer(answer)" keyword="answer">
+                                    <i class="fa fa-trash-o"></i>
+                                </a>
+                                <a href="" title="Edit this answer" ng-click="editAnswer(answer)">
+                                    Edit
+                                </a>
+                            </span>
                         </div>
                     </div>
 
