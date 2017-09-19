@@ -124,26 +124,10 @@ describe('xapi-module', function () {
             "public_comment_count": 0,
             "assignment_id": "9abcABC123-abcABC123_Z",
             "course_id": "1abcABC123-abcABC123_Z",
-            "scores": [
-                {
-                    "answer_id": "407cABC123-abcABC123_Z",
-                    "criterion_id": "12bcABC123-abcABC123_Z",
-                    "id": "645cABC123-abcABC123_Z",
-                    "normalized_score": 75,
-                    "rounds": 6,
-                    "score": 2.19318,
-                    "wins": 3
-                },
-                {
-                    "answer_id": "407cABC123-abcABC123_Z",
-                    "criterion_id": "13bcABC123-abcABC123_Z",
-                    "id": "646cABC123-abcABC123_Z",
-                    "normalized_score": 0,
-                    "rounds": 6,
-                    "score": 0.0,
-                    "wins": 0
-                }
-            ],
+            "score": {
+                "rank": 2,
+                "normalized_score": 75,
+            },
             "user": {
                 "id": "1abcABC123-abcABC123_Z",
                 "avatar": "63a9f0ea7bb98050796b649e85481845",
@@ -164,26 +148,10 @@ describe('xapi-module', function () {
             "public_comment_count": 0,
             "assignment_id": "9abcABC123-abcABC123_Z",
             "course_id": "1abcABC123-abcABC123_Z",
-            "scores": [
-                {
-                    "answer_id": "279cABC123-abcABC123_Z",
-                    "criterion_id": "12bcABC123-abcABC123_Z",
-                    "id": "445cABC123-abcABC123_Z",
-                    "normalized_score": 75,
-                    "rounds": 8,
-                    "score": 2.19318,
-                    "wins": 3
-                },
-                {
-                    "answer_id": "279cABC123-abcABC123_Z",
-                    "criterion_id": "13bcABC123-abcABC123_Z",
-                    "id": "446cABC123-abcABC123_Z",
-                    "normalized_score": 40,
-                    "rounds": 8,
-                    "score": 1.46212,
-                    "wins": 2
-                }
-            ],
+            "score": {
+                "rank": 2,
+                "normalized_score": 75,
+            },
             "user": {
                 "id": "162cABC123-abcABC123_Z",
                 "avatar": "25242646dab1876796ab95f036a8fc82",

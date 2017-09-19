@@ -144,7 +144,7 @@ class AnswerRootAPI(Resource):
         else:
             query = query.order_by(Answer.created.desc())
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(params['page'], params['perPage'], error_out=False)
         # remove label entities from results
         page.items = [answer for (answer, instructor_role, ta_role) in page.items]
 

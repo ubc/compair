@@ -279,7 +279,7 @@ describe('assignment-module', function () {
                 "id": "12bcABC123-abcABC123_Z",
                 "private_comment_count": 0,
                 "public_comment_count": 0,
-                "scores": [],
+                "score": null,
                 "user": {
                     "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                     "displayname": "root",
@@ -301,7 +301,7 @@ describe('assignment-module', function () {
                 "id": "100cABC123-abcABC123_Z",
                 "private_comment_count": 0,
                 "public_comment_count": 0,
-                "scores": [],
+                "score": null,
                 "user": {
                     "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                     "displayname": "root",
@@ -323,7 +323,7 @@ describe('assignment-module', function () {
                 "id": "101cABC123-abcABC123_Z",
                 "private_comment_count": 0,
                 "public_comment_count": 0,
-                "scores": [],
+                "score": null,
                 "user": {
                     "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                     "displayname": "root",
@@ -345,7 +345,7 @@ describe('assignment-module', function () {
                 "id": "11bcABC123-abcABC123_Z",
                 "private_comment_count": 0,
                 "public_comment_count": 0,
-                "scores": [],
+                "score": null,
                 "user": {
                     "avatar": "b4cd29f38b87efce1490b0755785e237",
                     "displayname": "Instructor One",
@@ -367,20 +367,10 @@ describe('assignment-module', function () {
                 "id": "6abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
-                "scores": [
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 100
-                    },
-                    {
-                        "criterion_id": "2abcABC123-abcABC123_Z",
-                        "normalized_score": 100
-                    },
-                    {
-                        "criterion_id": "3abcABC123-abcABC123_Z",
-                        "normalized_score": 100
-                    }
-                ],
+                "score": {
+                    "rank": 1,
+                    "normalized_score": 100
+                },
                 "user": {
                     "avatar": "7c8cd5da17441ff04bf445736964dd16",
                     "displayname": "student9",
@@ -402,20 +392,10 @@ describe('assignment-module', function () {
                 "id": "4abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
-                "scores": [
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 78
-                    },
-                    {
-                        "criterion_id": "2abcABC123-abcABC123_Z",
-                        "normalized_score": 78
-                    },
-                    {
-                        "criterion_id": "3abcABC123-abcABC123_Z",
-                        "normalized_score": 100
-                    }
-                ],
+                "score": {
+                    "rank": 2,
+                    "normalized_score": 78
+                },
                 "user": {
                     "avatar": "27e062bf3df59edebb5db9f89952c8b3",
                     "displayname": "student6",
@@ -437,20 +417,10 @@ describe('assignment-module', function () {
                 "id": "3abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
-                "scores": [
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 78
-                    },
-                    {
-                        "criterion_id": "2abcABC123-abcABC123_Z",
-                        "normalized_score": 78
-                    },
-                    {
-                        "criterion_id": "3abcABC123-abcABC123_Z",
-                        "normalized_score": 78
-                    }
-                ],
+                "score": {
+                    "rank": 2,
+                    "normalized_score": 78
+                },
                 "user": {
                     "avatar": "2c62e6068c765179e1aed9bc2bfd4689",
                     "displayname": "student10",
@@ -472,20 +442,10 @@ describe('assignment-module', function () {
                 "id": "9abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
-                "scores": [
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 68
-                    },
-                    {
-                        "criterion_id": "2abcABC123-abcABC123_Z",
-                        "normalized_score": 68
-                    },
-                    {
-                        "criterion_id": "3abcABC123-abcABC123_Z",
-                        "normalized_score": 68
-                    }
-                ],
+                "score": {
+                    "rank": 4,
+                    "normalized_score": 68
+                },
                 "user": {
                     "avatar": "8aa7fb36a4efbbf019332b4677b528cf",
                     "displayname": "student8",
@@ -507,20 +467,10 @@ describe('assignment-module', function () {
                 "id": "7abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
-                "scores": [
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 68
-                    },
-                    {
-                        "criterion_id": "2abcABC123-abcABC123_Z",
-                        "normalized_score": 36
-                    },
-                    {
-                        "criterion_id": "3abcABC123-abcABC123_Z",
-                        "normalized_score": 36
-                    }
-                ],
+                "score": {
+                    "rank": 4,
+                    "normalized_score": 68
+                },
                 "user": {
                     "avatar": "9fd9280a7aa3578c8e853745a5fcc18a",
                     "displayname": "student5",
@@ -542,20 +492,10 @@ describe('assignment-module', function () {
                 "id": "5abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
-                "scores": [
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 68
-                    },
-                    {
-                        "criterion_id": "2abcABC123-abcABC123_Z",
-                        "normalized_score": 68
-                    },
-                    {
-                        "criterion_id": "3abcABC123-abcABC123_Z",
-                        "normalized_score": 36
-                    }
-                ],
+                "score": {
+                    "rank": 4,
+                    "normalized_score": 68
+                },
                 "user": {
                     "avatar": "213ee683360d88249109c2f92789dbc3",
                     "displayname": "student2",
@@ -577,20 +517,10 @@ describe('assignment-module', function () {
                 "id": "2abcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
-                "scores": [
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 68
-                    },
-                    {
-                        "criterion_id": "2abcABC123-abcABC123_Z",
-                        "normalized_score": 68
-                    },
-                    {
-                        "criterion_id": "3abcABC123-abcABC123_Z",
-                        "normalized_score": 36
-                    }
-                ],
+                "score": {
+                    "rank": 4,
+                    "normalized_score": 68
+                },
                 "user": {
                     "avatar": "8e4947690532bc44a8e41e9fb365b76a",
                     "displayname": "student3",
@@ -612,20 +542,10 @@ describe('assignment-module', function () {
                 "id": "10bcABC123-abcABC123_Z",
                 "private_comment_count": 2,
                 "public_comment_count": 0,
-                "scores": [
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 57
-                    },
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 36
-                    },
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 78
-                    }
-                ],
+                "score": {
+                    "rank": 9,
+                    "normalized_score": 57
+                },
                 "user": {
                     "avatar": "72e8744fc2faa17a83dec9bed06b8b65",
                     "displayname": "student7",
@@ -647,20 +567,10 @@ describe('assignment-module', function () {
                 "id": "8abcABC123-abcABC123_Z",
                 "private_comment_count": 3,
                 "public_comment_count": 0,
-                "scores": [
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 57
-                    },
-                    {
-                        "criterion_id": "2abcABC123-abcABC123_Z",
-                        "normalized_score": 57
-                    },
-                    {
-                        "criterion_id": "3abcABC123-abcABC123_Z",
-                        "normalized_score": 36
-                    }
-                ],
+                "score": {
+                    "rank": 9,
+                    "normalized_score": 57
+                },
                 "user": {
                     "avatar": "5e5545d38a68148a2d5bd5ec9a89e327",
                     "displayname": "student1",
@@ -682,20 +592,10 @@ describe('assignment-module', function () {
                 "id": "1abcABC123-abcABC123_Z",
                 "private_comment_count": 3,
                 "public_comment_count": 0,
-                "scores": [
-                    {
-                        "criterion_id": "1abcABC123-abcABC123_Z",
-                        "normalized_score": 36
-                    },
-                    {
-                        "criterion_id": "2abcABC123-abcABC123_Z",
-                        "normalized_score": 100
-                    },
-                    {
-                        "criterion_id": "3abcABC123-abcABC123_Z",
-                        "normalized_score": 100
-                    }
-                ],
+                "score": {
+                    "rank": 11,
+                    "normalized_score": 36
+                },
                 "user": {
                     "avatar": "166a50c910e390d922db4696e4c7747b",
                     "displayname": "student4",
@@ -758,7 +658,7 @@ describe('assignment-module', function () {
                     "id": "100cABC123-abcABC123_Z",
                     "private_comment_count": 0,
                     "public_comment_count": 0,
-                    "scores": [],
+                    "score": null,
                     "user": {
                         "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                         "displayname": "root",
@@ -781,7 +681,7 @@ describe('assignment-module', function () {
                     "id": "101cABC123-abcABC123_Z",
                     "private_comment_count": 0,
                     "public_comment_count": 0,
-                    "scores": [],
+                    "score": null,
                     "user": {
                         "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                         "displayname": "root",
@@ -973,20 +873,7 @@ describe('assignment-module', function () {
 
                 $rootScope.deleteAnswer(answer);
                 $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/'+answer.id).respond({id: answer.id});
-                $httpBackend.flush();
-
-                expect($rootScope.assignment.answer_count).toEqual(11);
-                expect($rootScope.assignment.status.answers.answered).toBe(false);
-            });
-
-            it('should be able to delete answers', function () {
-                answer = mockAnswers.objects[0];
-
-                expect($rootScope.assignment.answer_count).toEqual(12);
-                expect($rootScope.assignment.status.answers.answered).toBe(true);
-
-                $rootScope.deleteAnswer(answer);
-                $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/'+answer.id).respond({id: answer.id});
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers?page=1&perPage=20').respond(mockAnswers);
                 $httpBackend.flush();
 
                 expect($rootScope.assignment.answer_count).toEqual(11);

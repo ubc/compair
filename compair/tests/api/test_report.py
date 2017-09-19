@@ -551,7 +551,8 @@ class ReportAPITest(ComPAIRAPITestCase):
                 user_id=student.id,
                 assignment_id=assignment.id,
                 draft=False,
-                practice=False
+                practice=False,
+                active=True
             ) \
             .first()
 
@@ -626,7 +627,8 @@ class ReportAPITest(ComPAIRAPITestCase):
                 .filter(
                     Answer.user_id == student.id,
                     Answer.assignment_id == assignment.id,
-                    Answer.draft == False
+                    Answer.draft == False,
+                    Answer.active == True
                 ) \
                 .first()
 

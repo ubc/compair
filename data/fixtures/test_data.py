@@ -530,6 +530,7 @@ class TestFixture:
         self.comparison_examples = []
         self.answers = []
         self.dropped_answers = []
+        self.removed_answers = []
         self.draft_answers = []
         self.groups = []
         self.unauthorized_instructor = UserFactory(system_role=SystemRole.instructor)
@@ -582,6 +583,28 @@ class TestFixture:
                 "multiple by number of assignments({})".format(num_answers, len(self.students), len(self.assignments))
             )
         for assignment in self.assignments:
+            # add a scored removed answer for every student
+            # make sure system handles this properly
+            for student in self.students:
+                answer = AnswerFactory(
+                    assignment=assignment,
+                    user=student,
+                    active=False
+                )
+                AnswerScoreFactory(
+                    assignment=assignment,
+                    answer=answer,
+                    score=random.random() * 5
+                )
+                for criterion in assignment.criteria:
+                    AnswerCriterionScoreFactory(
+                        assignment=assignment,
+                        answer=answer,
+                        criterion=criterion,
+                        score=random.random() * 5
+                    )
+                self.removed_answers.append(answer)
+
             for i in range(num_answers):
                 student = self.students[i % len(self.students)]
                 answer = AnswerFactory(

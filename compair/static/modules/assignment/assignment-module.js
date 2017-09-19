@@ -430,12 +430,12 @@ module.controller("AssignmentViewController",
                 function (ret) {
                     Toaster.success("Answer Removed");
                     var authorId = answer['user_id'];
-                    $scope.answers.objects.splice($scope.answers.objects.indexOf(answer), 1);
                     $scope.assignment.answer_count -= 1;
                     if ($scope.loggedInUserId == authorId) {
                         $scope.assignment.status.answers.count--;
                         $scope.assignment.status.answers.answered = $scope.assignment.status.answers.count > 0;
                     }
+                    $scope.updateAnswerList();
                 }
             );
         };

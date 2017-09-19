@@ -273,10 +273,13 @@ def participation_report(course, assignments, group_name):
     answers = Answer.query \
         .options(joinedload('score')) \
         .options(joinedload('criteria_scores')) \
-        .filter(Answer.assignment_id.in_(assignment_ids)) \
-        .filter(Answer.user_id.in_(user_ids)) \
-        .filter(Answer.draft == False) \
-        .filter(Answer.practice == False) \
+        .filter(and_(
+            Answer.assignment_id.in_(assignment_ids),
+            Answer.user_id.in_(user_ids),
+            Answer.draft == False,
+            Answer.practice == False,
+            Answer.active == True
+        )) \
         .all()
 
     scores = {} # structure - user_id/assignment_id/normalized_score
