@@ -59,16 +59,11 @@ class CriterionAPITests(ComPAIRAPITestCase):
 
     def test_get_criterion(self):
         criterion_api_url = '/api/criteria/' + self.data.get_criterion().uuid
+        default_criterion_api_url = '/api/criteria/' + self.data.get_default_criterion().uuid
 
         # Test login required
         rv = self.client.get(criterion_api_url)
         self.assert401(rv)
-
-        # Test author access
-        with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get(criterion_api_url)
-            self.assert200(rv)
-            self._verify_critera(self.data.get_criterion(), rv.json)
 
         # Test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):
@@ -77,13 +72,31 @@ class CriterionAPITests(ComPAIRAPITestCase):
 
         # Test admin access
         with self.login('root'):
+            # Test invalid criterion id
+            rv = self.client.get('/api/criteria/999')
+            self.assert404(rv)
+
             rv = self.client.get(criterion_api_url)
             self.assert200(rv)
             self._verify_critera(self.data.get_criterion(), rv.json)
 
-            # Test invalid criterion id
-            rv = self.client.get('/api/criteria/999')
-            self.assert404(rv)
+            # Test instructor default criterion access
+            rv = self.client.get(default_criterion_api_url)
+            self.assert200(rv)
+            self._verify_critera(self.data.get_default_criterion(), rv.json)
+
+        with self.login(self.data.get_authorized_instructor().username):
+
+            # Test author access
+            rv = self.client.get(criterion_api_url)
+            self.assert200(rv)
+            self._verify_critera(self.data.get_criterion(), rv.json)
+
+            # Test instructor default criterion access
+            rv = self.client.get(default_criterion_api_url)
+            self.assert200(rv)
+            self._verify_critera(self.data.get_default_criterion(), rv.json)
+
 
     def test_edit_criterion(self):
         criterion_api_url = '/api/criteria/' + self.data.get_criterion().uuid
