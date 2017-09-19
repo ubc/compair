@@ -873,20 +873,7 @@ describe('assignment-module', function () {
 
                 $rootScope.deleteAnswer(answer);
                 $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/'+answer.id).respond({id: answer.id});
-                $httpBackend.flush();
-
-                expect($rootScope.assignment.answer_count).toEqual(11);
-                expect($rootScope.assignment.status.answers.answered).toBe(false);
-            });
-
-            it('should be able to delete answers', function () {
-                answer = mockAnswers.objects[0];
-
-                expect($rootScope.assignment.answer_count).toEqual(12);
-                expect($rootScope.assignment.status.answers.answered).toBe(true);
-
-                $rootScope.deleteAnswer(answer);
-                $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/'+answer.id).respond({id: answer.id});
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers?page=1&perPage=20').respond(mockAnswers);
                 $httpBackend.flush();
 
                 expect($rootScope.assignment.answer_count).toEqual(11);

@@ -1,7 +1,7 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import column_property
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import func, select, and_, or_, join
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
 
@@ -77,7 +77,9 @@ class AnswerScore(DefaultTableMixin, WriteTrackingMixin):
     def get_assignment_scores(cls, assignment_id):
         return AnswerScore.query \
             .with_entities(AnswerScore.score) \
+            .join("answer") \
             .filter(and_(
+                Answer.active == True,
                 AnswerScore.assignment_id == assignment_id
             )) \
             .order_by(AnswerScore.score.desc()) \
@@ -100,7 +102,9 @@ class AnswerScore(DefaultTableMixin, WriteTrackingMixin):
             select([
                 (cls.score - func.min(s_alias.c.score)) / (func.max(s_alias.c.score) - func.min(s_alias.c.score)) * 100
             ]).
+            select_from(join(Answer, s_alias, s_alias.c.answer_id == Answer.id)).
             where(and_(
+                Answer.active == True,
                 s_alias.c.assignment_id == cls.assignment_id,
             ))
         )
