@@ -113,11 +113,11 @@
         <li ng-show="!canManageAssignment" id="your_work" ng-class="{active:showTab('your_work')}">
             <a ng-click="setTab('your_work')" href="">Your Work + Feedback <span ng-if="assignment.status.answers.feedback">({{assignment.status.answers.feedback}})</span></a>
         </li>
-        <li id="comments" ng-class="{active:showTab('help')}">
-            <a ng-click="setTab('help')" href="">Help Comments ({{assignment.comment_count}})</a>
-        </li>
         <li ng-show="canManageAssignment" id="comparisons" ng-class="{active:showTab('comparisons')}">
             <a ng-click="setTab('comparisons')" href="">Comparisons ({{totalNumComparisonsShown.count}})</span></a>
+        </li>
+        <li id="comments" ng-class="{active:showTab('help')}">
+            <a ng-click="setTab('help')" href="">Help Comments ({{assignment.comment_count}})</a>
         </li>
         <li ng-show="canManageAssignment" id="participation" ng-class="{active:showTab('participation')}">
             <a ng-click="setTab('participation')" href="">Participation</a>
@@ -211,7 +211,7 @@
                 </p>
 
                 <!-- Anyone sees during the answer period, if no answers provided yet -->
-                <p class="intro-text" ng-if="assignment.answer_period && !assignment.answer_count">
+                <p class="intro-text" ng-if="assignment.answer_period && !assignment.answer_count && (canManageAssignment || (!canManageAssignment && see_answers))">
                     No answers given for this assignment yet.
                 </p>
 

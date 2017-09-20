@@ -62,20 +62,23 @@
                                 Duplicate
                             </a>
                         </li>
-                        <!-- Total Assignments (all) -->
+                        <!-- Instructor Total Assignments (instructors only) -->
                         <li title="{{course.assignment_count}} assignments" ng-if="course.canManageAssignment">
                                 {{course.assignment_count}} assignment<span ng-if="course.assignment_count != 1">s</span>
                         </li>
-                        <!-- Student Total Assignments (all) -->
+                        <!-- Student Total Assignments (students only) -->
                         <li title="{{course.student_assignment_count}} assignments" ng-if="!course.canManageAssignment">
-                                {{course.student_assignment_count}} assignment<span ng-if="course.student_assignment_count != 1">s</span>
+                                {{course.student_assignment_count}} assignment<span ng-if="course.student_assignment_count != 1">s</span> posted
                         </li>
                         <!-- Total Unfinished (students only) -->
                         <!-- number of unfinished assignments for student user that can still be completed for each course, i.e.,
                              the student has not answered && the answer period is active ||
                              the student has not compared/self-eval'ed && the compare/eval period is active -->
                         <li ng-if="course.status && course.status.incomplete_assignments > 0" title="{{course.status.incomplete_assignments}} unfinished">
-                            <label class="label label-warning">{{course.status.incomplete_assignments}} unfinished assignment<span ng-if="course.status.incomplete_assignments != 1">s</span></label>
+                            <label class="label label-warning">{{course.status.incomplete_assignments}} assignment<span ng-if="course.status.incomplete_assignments != 1">s</span> to do</label>
+                        </li>
+                        <li ng-if="course.status && course.status.incomplete_assignments == 0" title="{{course.status.incomplete_assignments}} unfinished">
+                            No assignments to do
                         </li>
                         <!-- Total Users (instructors only) -->
                         <li ng-if="course.canEditCourse" title="{{course.student_count}} students">
