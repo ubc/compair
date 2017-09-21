@@ -2,16 +2,16 @@ import cProfile
 import contextlib
 from functools import wraps
 import pstats
+from enum import Enum
 from flask_restful.reqparse import RequestParser
 
-from six import BytesIO
+from six import BytesIO, text_type
 from flask import request, jsonify
 from flask_restful import Api
 from flask_sqlalchemy import Model
 from sqlalchemy import inspect
 
 from compair.core import db
-
 
 def pagination(model):
     """
@@ -109,9 +109,15 @@ def get_model_changes(model):
                 if attr.state.modified and history.has_changes():
                     changes[attr.key] = {}
                     if len(history.deleted) > 0:
-                        changes[attr.key]['before'] = history.deleted[0]
+                        before_value = history.deleted[0]
+                        if isinstance(before_value, Enum):
+                            before_value = text_type(before_value.value)
+                        changes[attr.key]['before'] = before_value
                     if len(history.added) > 0:
-                        changes[attr.key]['after'] = history.added[0]
+                        after_value = history.added[0]
+                        if isinstance(after_value, Enum):
+                            after_value = text_type(after_value.value)
+                        changes[attr.key]['after'] = after_value
 
     return changes
 
