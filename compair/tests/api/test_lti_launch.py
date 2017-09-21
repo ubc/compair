@@ -319,6 +319,44 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             db.session.commit()
             # done user_id_override ------
 
+        # test automatic upgrading of system role for existing accounts
+        for lti_role, (system_role, course_role) in roles.items():
+            for compair_system_role in [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]:
+                lti_context = self.lti_data.create_context(lti_consumer)
+                lti_user = self.lti_data.create_user(lti_consumer, system_role)
+                lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
+                lti_user_resource_link = self.lti_data.create_user_resource_link(
+                    lti_user, lti_resource_link, CourseRole.instructor)
+
+                user = self.data.create_user(compair_system_role)
+                lti_user.compair_user = user
+                course = self.data.create_course()
+                lti_context.compair_course = course
+
+                db.session.commit()
+
+                # valid request - user with account and existing context_id
+                with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                        user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                        follow_redirects=False) as rv:
+                    self.assertRedirects(rv, '/app/#/course/'+course.uuid)
+
+                # compair user system role will upgrade
+                if compair_system_role == SystemRole.student:
+                    if system_role == SystemRole.sys_admin:
+                        self.assertEqual(user.system_role, SystemRole.sys_admin)
+                    elif system_role == SystemRole.instructor:
+                        self.assertEqual(user.system_role, SystemRole.instructor)
+                    else:
+                        self.assertEqual(user.system_role, SystemRole.student)
+                elif compair_system_role == SystemRole.instructor:
+                    if system_role == SystemRole.sys_admin:
+                        self.assertEqual(user.system_role, SystemRole.sys_admin)
+                    else:
+                        self.assertEqual(user.system_role, SystemRole.instructor)
+                elif compair_system_role == SystemRole.sys_admin:
+                    self.assertEqual(user.system_role, SystemRole.sys_admin)
+
     def test_lti_status(self):
         url = '/api/lti/status'
 

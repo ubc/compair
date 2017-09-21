@@ -39,7 +39,8 @@ def login():
 
         if sess.get('LTI') and sess.get('oauth_create_user_link'):
             lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-            lti_user.compair_user_id = user.id
+            lti_user.compair_user = user
+            lti_user.upgrade_system_role()
             sess.pop('oauth_create_user_link')
 
         if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
@@ -155,7 +156,8 @@ def cas_auth():
 
                 if sess.get('LTI') and sess.get('oauth_create_user_link'):
                     lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-                    lti_user.compair_user_id = thirdpartyuser.user_id
+                    lti_user.compair_user = thirdpartyuser.user
+                    lti_user.upgrade_system_role()
                     sess.pop('oauth_create_user_link')
 
                 if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):

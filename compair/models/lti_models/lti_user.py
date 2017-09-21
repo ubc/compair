@@ -55,7 +55,7 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
             lti_user = LTIUser(
                 lti_consumer_id=lti_consumer.id,
                 user_id=tool_provider.user_id,
-                system_role= SystemRole.instructor  \
+                system_role=SystemRole.instructor  \
                     if tool_provider.is_instructor() \
                     else SystemRole.student
             )
@@ -69,6 +69,16 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
         db.session.commit()
 
         return lti_user
+
+    def upgrade_system_role(self):
+        # upgrade system role is needed
+        if self.is_linked_to_user():
+            if self.compair_user.system_role == SystemRole.student and self.system_role in [SystemRole.instructor, SystemRole.sys_admin]:
+                self.compair_user.system_role = self.system_role
+            elif self.compair_user.system_role == SystemRole.instructor and self.system_role == SystemRole.sys_admin:
+                self.compair_user.system_role = self.system_role
+
+            db.session.commit()
 
     @classmethod
     def __declare_last__(cls):
