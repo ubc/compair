@@ -147,9 +147,7 @@ module.service('EditorOptions', function() {
         height: "150px",
 
         // enable custom plugin that combines ASCIIMath and LaTeX math input and code highlighting
-        extraPlugins: 'codesnippet,combinedmath,autolink',
-        
-        contentsCss: ["body {font-size: 16px !important}"]
+        extraPlugins: 'codesnippet,combinedmath,autolink'
         
     };
 });
