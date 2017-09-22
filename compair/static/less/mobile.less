@@ -6,17 +6,37 @@
 
 @media (max-width: 768px) {
 
-    /* each assignment's metadata */
-    .assignment-metadata-list {
-        text-align: center;
+    /* titles */
+    h1,
+    .standalone-assignment h2 {
+        word-wrap: break-word;
     }
 
     /* arrow for dropping assignment criteria */
     .fa-arrow-down.visible-xs {
         display: inline-block !important;
     }
+    
+    /* action buttons (e.g., Answer, Compare Pairs) */
+    .action-btns {
+        margin: 1.5em 0 1em 0;
+    }
+    
+    .login-screen {
+        
+        /* login prompts */
+        h2 {
+            font-size: 1.3em;
+        }
+        
+    }//closes login-screen
 
     .home-screen {
+        
+        /* logo */
+        .compair-logo {
+            display: none;
+        }
 
         /* search box */
         .search-courses {
@@ -29,20 +49,14 @@
 
         /* assignment description content */
         .assignment-desc {
-
-            margin: 0;
-
-            > div {
+            
+            margin: 0 0 2em 0;
+            
+            div {
                 display: none;
             }
-
+            
         }//closes assignment-desc
-
-        /* right-aligned action buttons (e.g., Answer, Compare Pairs) */
-        .action-btns {
-            margin: 1.5em 0 1em 0;
-            text-align: left;
-        }
 
     }//closes course-screen
 
@@ -50,23 +64,42 @@
 
         /* multiple filters on top right of tabs */
         .multi-filters {
+            
             text-align: left;
-        }
+            
+            select {
+                width: 100%;
+            }
+            
+        }//closes multi-filters
 
         /* edit/delete buttons and answer scores */
         .manager-actions,
         .score-display {
-            margin-bottom: 1.2em;
+            margin: 1.2em 0 1em 0;
+        }
+        
+        /* navigation tab links */
+        .nav > li > a {
+            padding: 8px;
+            font-size: .8em;
         }
 
-        /* replies indented less */
+        /* replies/peer feedback */
         .tab-content .each-reply {
-            margin-left: 2em;
-        }
-
-        /* comment button */
-        .comment-btn {
-            text-align: center;
+            
+            margin-left: 1.2em;
+            
+            compair-avatar img {
+                display: none;
+            }
+            
+        }//closes tab-content each-reply
+        
+        /* answer score in paired viewing, instructor label */
+        .answer-choice .label,
+        .each-header .label {
+            font-size: .7em;
         }
 
     }//closes assignment-screen
@@ -97,7 +130,7 @@
             margin: .8em 0 .2em .4em;
         }
 
-    }//closese evaluations-screen
+    }//closes evaluations-screen
 
     .manage-screen {
 
@@ -124,14 +157,13 @@
 
     }//closes manage-screen
 
-
+    /* enable modal windows to fill screen */
     .modal-dialog {
         width: 100%;
         height: 100%;
         margin: 0;
         padding: 0;
     }
-
     .modal-content {
         height: auto;
         min-height: 100%;
@@ -181,16 +213,21 @@
 
 
 @media (max-width: 1200px) {
+    
+    //nothing added yet
 
 }//closes 1200px
 
-// force selectable/editable content font size on mobile devises
+
+// force selectable/editable content font size on mobile devices
 // iPhone & Safari has autozoom features that do not zoom back out
 // autozooming only happens when the font-size in less than 16px
 @media screen and (-webkit-min-device-pixel-ratio:0) {
+    
     select,
     textarea,
     input {
         font-size: 16px !important;
     }
-}//closes screen and -webkit-min-device-pixel-ratio:0
+    
+}//closes screen and (-webkit-min-device-pixel-ratio:0)
