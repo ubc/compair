@@ -44,11 +44,7 @@ module.controller(
                 function (ret) {
                     $scope.criterion = ret;
 
-                    if ($scope.method == 'create') {
-                        Toaster.success("Criterion Saved");
-                    } else {
-                        Toaster.success("Criterion Updated");
-                    }
+                    Toaster.success("Criterion Saved");
 
                     $uibModalInstance.close($scope.criterion);
                 }
