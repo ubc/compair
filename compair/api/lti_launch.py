@@ -86,6 +86,9 @@ class LTIAuthAPI(Resource):
                 if lti_user.is_linked_to_user():
                     authenticate(lti_user.compair_user, login_method='LTI')
 
+                    # upgrade user system role if needed
+                    lti_user.upgrade_system_role()
+
                     # create/update enrollment if context exists
                     if lti_context and lti_context.is_linked_to_course():
                         lti_context.update_enrolment(lti_user.compair_user_id, lti_user_resource_link.course_role)
