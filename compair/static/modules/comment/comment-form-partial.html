@@ -6,8 +6,9 @@
 
 <div ng-show="showAssignment" class="standalone-assignment">
     <h2 ng-if="parent.name"><i class="fa fa-comments"></i> {{parent.name}}</h2>
+    <rich-content ng-if="parent.name" content="parent.description" attachment="parent.file"></rich-content>
     <h2 ng-if="answerComment"><i class="fa fa-user"></i> {{parent.user.displayname}}'s Answer</h2>
-    <rich-content content="parent.content" attachment="parent.file"></rich-content>
+    <rich-content ng-if="answerComment" content="parent.content" attachment="parent.file"></rich-content>
 </div>
 
 <form name="commentForm" class="form" ng-submit="commentSubmit()" confirm-form-exit novalidate form-type="comment">

@@ -3,7 +3,7 @@
     <div class="row">
         <header class="col-sm-6">
             <h1>View Assignment</h1>
-            <br ng-if="!canManageAssignment" />
+            <br class="hidden-xs" ng-if="!canManageAssignment" />
         </header>
         <div class="col-sm-6 sub-nav">
             <span ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
@@ -108,16 +108,16 @@
     <!-- Tabs -->
     <ul class="nav nav-tabs" role="tablist">
         <li id="answers" ng-class="{active:showTab('answers')}">
-            <a ng-click="setTab('answers')" href="">Answers <span ng-show="canManageAssignment || (!assignment.answer_period && see_answers)">({{answers.total}})</span></a>
+            <a ng-click="setTab('answers')" href="">Answers <span class="hidden-xs" ng-show="canManageAssignment || (!assignment.answer_period && see_answers)">({{answers.total}})</span></a>
         </li>
         <li ng-show="!canManageAssignment" id="your_work" ng-class="{active:showTab('your_work')}">
-            <a ng-click="setTab('your_work')" href="">Your Work + Feedback <span ng-if="assignment.status.answers.feedback">({{assignment.status.answers.feedback}})</span></a>
+            <a ng-click="setTab('your_work')" href="">Your Work + Feedback <span class="hidden-xs" ng-if="assignment.status.answers.feedback">({{assignment.status.answers.feedback}})</span></a>
         </li>
         <li ng-show="canManageAssignment" id="comparisons" ng-class="{active:showTab('comparisons')}">
-            <a ng-click="setTab('comparisons')" href="">Comparisons ({{totalNumComparisonsShown.count}})</span></a>
+            <a ng-click="setTab('comparisons')" href="">Comparisons <span class="hidden-xs">({{totalNumComparisonsShown.count}})</span></a>
         </li>
         <li id="comments" ng-class="{active:showTab('help')}">
-            <a ng-click="setTab('help')" href="">Help Comments ({{assignment.comment_count}})</a>
+            <a ng-click="setTab('help')" href=""><span class="hidden-xs">Help</span> Comments <span class="hidden-xs">({{assignment.comment_count}})</span></a>
         </li>
         <li ng-show="canManageAssignment" id="participation" ng-class="{active:showTab('participation')}">
             <a ng-click="setTab('participation')" href="">Participation</a>
@@ -163,7 +163,7 @@
                                     <option value="score" ng-if="!canManageAssignment">Answer rank</option>
                                 </select>
                             </span><br />
-                            <span class="filter" ng-if="canManageAssignment">
+                            <span class="filter hidden-xs" ng-if="canManageAssignment">
                                  <a href="" uib-tooltip="Hide student names, scores, and replies when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="left">
                                     <i class="fa fa-question-circle"></i>
                                 </a>&nbsp;
@@ -406,7 +406,7 @@
 
             <!-- Student Answer Metadata Header -->
             <div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
-                <h3 ng-if="$first">Your answer and peer feedback</h3>
+                <h3 ng-if="$first" ng-class="{first: $first}">Your answer and peer feedback</h3>
                 <br ng-if="$first"/>
                 <div class="each-header clearfix">
                     <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" me="true"></compair-avatar>
@@ -502,6 +502,7 @@
                     </a></p>
                     <div class="collapsible-content row" ng-show="showAnswers">
                         <compair-answer-content answer="comparison.answer1" is-chosen="comparison.winner == WinningAnswer.answer1" name="Odd-Numbered Answer" show-score="false"></compair-answer-content>
+                        <hr class="visible-xs-block" />
                         <compair-answer-content answer="comparison.answer2" is-chosen="comparison.winner == WinningAnswer.answer2" name="Even-Numbered Answer" show-score="false"></compair-answer-content>
                     </div>
 

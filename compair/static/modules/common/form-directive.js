@@ -148,6 +148,7 @@ module.service('EditorOptions', function() {
 
         // enable custom plugin that combines ASCIIMath and LaTeX math input and code highlighting
         extraPlugins: 'codesnippet,combinedmath,autolink'
+        
     };
 });
 
