@@ -143,16 +143,6 @@ describe('user-module', function () {
                 expect($rootScope.submitted).toBe(false);
             });
 
-            it('should be able to change password', function () {
-                $rootScope.password = {oldpassword: 'old', newpassword: 'new'};
-                $httpBackend.expectPOST('/api/users/' + editUser.id + '/password', $rootScope.password).respond(editUser);
-                $rootScope.changePassword();
-                expect($rootScope.submitted).toBe(true);
-                $httpBackend.flush();
-                expect($location.path()).toEqual('/user/' + editUser.id);
-                expect($rootScope.submitted).toBe(false);
-            });
-
             it('should enable save button even if save failed', function() {
                 $rootScope.user = angular.copy(editUser);
                 $httpBackend.expectPOST('/api/users/2abcABC123-abcABC123_Z', $rootScope.user).respond(400, '');
@@ -160,6 +150,60 @@ describe('user-module', function () {
                 expect($rootScope.submitted).toBe(true);
                 $httpBackend.flush();
                 expect($rootScope.submitted).toBe(false);
+            });
+        });
+    });
+    
+    describe('UserPasswordModalController', function () {
+        var $rootScope, createController, $uibModal, $q;
+
+        beforeEach(inject(function ($controller, _$rootScope_, _$uibModal_, _$q_) {
+            $rootScope = _$rootScope_;
+            $uibModal = _$uibModal_;
+            $q = _$q_;
+            modalInstance = {
+                close: jasmine.createSpy('modalInstance.close'),
+                dismiss: jasmine.createSpy('modalInstance.dismiss'),
+                result: {
+                    then: jasmine.createSpy('modalInstance.result.then')
+                }
+            };
+            createController = function (params) {
+                return $controller('UserPasswordModalController', {
+                    $scope: $rootScope,
+                    $uibModalInstance: modalInstance,
+                    $routeParams: params || {}
+                });
+            }
+        }));
+
+        describe('update password', function () {
+            var controller;
+            var toaster;
+            beforeEach(inject(function (_Toaster_) {
+                toaster = _Toaster_;
+                spyOn(toaster, 'error');
+            }));
+
+            beforeEach(function () {
+                $rootScope.user = angular.copy(mockUser);
+                controller = createController();
+            });
+
+            it('should have correct initial states', function () {
+                expect($rootScope.password).toEqual({});
+                expect($rootScope.submitted).toBe(false);
+            });
+
+            it('should be able to change password and close modal', function() {
+                var editUser = angular.copy($rootScope.user);
+                $rootScope.password = {oldpassword: 'old', newpassword: 'new'};
+                $httpBackend.expectPOST('/api/users/' + editUser.id + '/password', $rootScope.password).respond(editUser);
+                $rootScope.changePassword();
+                expect($rootScope.submitted).toBe(true);
+                $httpBackend.flush();
+                expect($rootScope.submitted).toBe(false);
+                expect(modalInstance.close).toHaveBeenCalledWith();
             });
         });
     });

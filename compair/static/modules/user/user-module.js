@@ -61,10 +61,12 @@ module.constant('CourseRole', {
 
 /***** Controllers *****/
 module.controller("UserWriteController",
-    ['$scope', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session', 'AuthTypesEnabled',
-     'UserResource', 'SystemRole', 'Toaster', 'resolvedData', 'UserSettings', 'EmailNotificationMethod',
-    function($scope, $route, $routeParams, $location, breadcrumbs, Session, AuthTypesEnabled,
-             UserResource, SystemRole, Toaster, resolvedData, UserSettings, EmailNotificationMethod)
+    ['$scope', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session',
+     'AuthTypesEnabled', 'UserResource', 'SystemRole', 'Toaster', 'resolvedData',
+     'UserSettings', 'EmailNotificationMethod', "$uibModal",
+    function($scope, $route, $routeParams, $location, breadcrumbs, Session, 
+             AuthTypesEnabled, UserResource, SystemRole, Toaster, resolvedData, 
+             UserSettings, EmailNotificationMethod, $uibModal)
     {
         $scope.userId = $routeParams.userId;
 
@@ -114,11 +116,36 @@ module.controller("UserWriteController",
             });
         };
 
+        $scope.showPasswordModal = function() {
+            var modalScope = $scope.$new();
+            modalScope.user = angular.copy($scope.user);
+
+            $scope.modalInstance = $uibModal.open({
+                animation: true,
+                backdrop: 'static',
+                controller: "UserPasswordModalController",
+                templateUrl: 'modules/user/user-password-modal-partial.html',
+                scope: modalScope
+            });
+        };
+    }]
+);
+
+module.controller(
+    "UserPasswordModalController",
+    ['$scope', 'UserResource', 'Toaster', "$uibModalInstance",
+    function ($scope, UserResource, Toaster, $uibModalInstance)
+    {
+        $scope.modalInstance = $uibModalInstance;
+        $scope.submitted = false;
+        $scope.password = {};
+        
         $scope.changePassword = function() {
             $scope.submitted = true;
             UserResource.password({'id': $scope.user.id}, $scope.password, function (ret) {
-                Toaster.success("Password Updated", "Your password has been changed.");
-                $location.path('/user/' + ret.id);
+                Toaster.success("Password Updated", ($scope.ownProfile ? "Your" : "User") + " password has been changed.");
+                $scope.modalInstance.close();
+                $scope.password = {};
             }).$promise.finally(function() {
                 $scope.submitted = false;
             });
