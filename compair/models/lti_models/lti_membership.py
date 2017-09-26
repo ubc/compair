@@ -265,7 +265,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         params = parse_qs(signed_request.body.decode('utf-8'))
 
         data = LTIMembership._post_membership_request(memberships_url, params)
-        root = ElementTree.fromstring(data)
+        root = ElementTree.fromstring(data.encode('utf-8'))
 
         codemajor = root.find('statusinfo/codemajor')
         if codemajor is not None and codemajor.text in ['Failure', 'Unsupported']:
