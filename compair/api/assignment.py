@@ -71,7 +71,7 @@ def check_valid_pairing_algorithm(pairing_algorithm, title=None):
         PairingAlgorithm.random.value
     ]
     if pairing_algorithm not in pairing_algorithms:
-        abort(400, title=title, message="'"+pairing_algorithm+"' is not a valid pairing algorithm.")
+        abort(400, title="Assignment Not Saved", message="'"+pairing_algorithm+"' is not a valid answer pairing algorithm. Please select one of the pairing algorithm options listed.")
 
 # /id
 class AssignmentIdAPI(Resource):
@@ -81,11 +81,11 @@ class AssignmentIdAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, assignment,
             title="Assignment Unavailable",
-            message="Assignments can be saved only to those enrolled in the course. Please double-check your enrollment in this course.")
+            message="Assignments can be saved only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         now = datetime.datetime.utcnow()
         if assignment.answer_start and not allow(MANAGE, assignment) and not (assignment.answer_start <= now):
-            abort(403, title="Assignment Unavailable", message="This assignment is not yet open. Please check back after the start date the instructor has set.")
+            abort(403, title="Assignment Unavailable", message="This assignment is not yet open to students. Please check back after the start date the instructor has set.")
         restrict_user = not allow(MANAGE, assignment)
 
         on_assignment_get.send(
@@ -103,19 +103,19 @@ class AssignmentIdAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         assignment_criteria = assignment.assignment_criteria
         require(EDIT, assignment,
-            title="Assignment Not Updated",
-            message="Your role in this course does not allow you to update assignments.")
+            title="Assignment Not Saved",
+            message="Sorry, your role in this course does not allow you to save assignments.")
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
             if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS:
-                abort(400, title="Assignment Not Updated", message="Sorry, you cannot edit the default demo assignments.")
+                abort(400, title="Assignment Not Saved", message="Sorry, you cannot edit the default demo assignments.")
 
         params = existing_assignment_parser.parse_args()
 
         # make sure the assignment id in the url and the id matches
         if params['id'] != assignment_uuid:
-            abort(400, title="Assignment Not Updated", message="The assignment's ID does not match the URL, which is required in order to update the assignment.")
+            abort(400, title="Assignment Not Saved", message="The assignment's ID does not match the URL, which is required in order to update the assignment.")
 
         # make sure that file attachment exists
         file_uuid = params.get('file_id')
@@ -151,7 +151,7 @@ class AssignmentIdAPI(Resource):
         valid, error_message = Assignment.validate_periods(course.start_date, course.end_date,
              assignment.answer_start, assignment.answer_end, assignment.compare_start, assignment.compare_end)
         if not valid:
-            abort(400, title="Assignment Not Updated", message=error_message)
+            abort(400, title="Assignment Not Saved", message=error_message)
 
         assignment.students_can_reply = params.get('students_can_reply', False)
         assignment.number_of_comparisons = params.get(
@@ -167,13 +167,13 @@ class AssignmentIdAPI(Resource):
             'self_evaluation_grade_weight', assignment.self_evaluation_grade_weight)
 
         pairing_algorithm = params.get("pairing_algorithm")
-        check_valid_pairing_algorithm(pairing_algorithm, title="Assignment Not Updated")
+        check_valid_pairing_algorithm(pairing_algorithm, title="Assignment Not Saved")
         if not assignment.compared:
             assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
         elif assignment.pairing_algorithm != PairingAlgorithm(pairing_algorithm):
-            msg = 'The pair selection algorithm cannot be changed in the assignment ' + \
+            msg = 'The answer pair selection algorithm cannot be changed for this assignment ' + \
                     'because it has already been used in one or more comparisons.'
-            abort(403, title="Assignment Not Updated", message=msg)
+            abort(403, title="Assignment Not Saved", message=msg)
 
         assignment.educators_can_compare = params.get("educators_can_compare")
 
@@ -187,20 +187,20 @@ class AssignmentIdAPI(Resource):
             active_uuids = [c.uuid for c in assignment.criteria]
             active_data = {c.uuid: c.weight for c in assignment.criteria}
             if set(criterion_uuids) != set(active_uuids):
-                msg = 'The criteria cannot be changed in the assignment ' + \
+                msg = 'The criteria cannot be changed for this assignment ' + \
                       'because they have already been used in one or more comparisons.'
-                abort(403, title="Assignment Not Updated", message=msg)
+                abort(403, title="Assignment Not Saved", message=msg)
 
             for criterion in assignment.criteria:
                 if criterion_data.get(criterion.uuid) != criterion.weight:
-                    msg = 'The criteria weights cannot be changed in the assignment ' + \
+                    msg = 'The criteria weights cannot be changed for this assignment ' + \
                         'because they have already been used in one or more comparisons.'
-                    abort(403, title="Assignment Not Updated", message=msg)
+                    abort(403, title="Assignment Not Saved", message=msg)
         else:
             # assignment not compared yet, can change criteria
             if len(criterion_uuids) == 0:
                 msg = "Please add at least one criterion to the assignment and save again."
-                abort(403, title="Assignment Not Updated", message=msg)
+                abort(403, title="Assignment Not Saved", message=msg)
 
             existing_uuids = [c.criterion_uuid for c in assignment_criteria]
             # disable old ones
@@ -263,7 +263,7 @@ class AssignmentIdAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(DELETE, assignment,
             title="Assignment Not Deleted",
-            message="Your role in this course does not allow you to delete assignments.")
+            message="Sorry, your role in this course does not allow you to delete assignments.")
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
@@ -342,7 +342,7 @@ class AssignmentRootAPI(Resource):
         new_assignment = Assignment(course_id=course.id)
         require(CREATE, new_assignment,
             title="Assignment Not Saved",
-            message="Your role in this course does not allow you to add assignments.")
+            message="Sorry, your role in this course does not allow you to save assignments.")
 
         params = new_assignment_parser.parse_args()
 
@@ -403,7 +403,7 @@ class AssignmentRootAPI(Resource):
             .all()
 
         if len(criterion_uuids) != len(criteria):
-            abort(400, title="Assignment Not Saved", message="You selected an invalid criterion.")
+            abort(400, title="Assignment Not Saved", message="Please double-check the criteria you selected and save agaiin.")
 
         # add criteria to assignment in order
         for criterion_uuid in criterion_uuids:
@@ -663,8 +663,8 @@ class AssignmentUserComparisonsAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, assignment,
-            title="Assignment Comparisons Unavailable",
-            message="Your role in this course does not allow you to view comparisons for this assignment.")
+            title="Comparisons Unavailable",
+            message="Sorry, your role in this course does not allow you to view comparisons for this assignment.")
 
         restrict_user = is_user_access_restricted(current_user)
 
@@ -734,8 +734,8 @@ class AssignmentUsersComparisonsAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, Comparison(course_id=course.id),
-            title="Assignment Comparisons Unavailable",
-            message="Your role in this course does not allow you to view all comparisons for this assignment.")
+            title="Comparisons Unavailable",
+            message="Sorry, your role in this course does not allow you to view all comparisons for this assignment.")
 
         restrict_user = is_user_access_restricted(current_user)
         params = assignment_users_comparison_list_parser.parse_args()

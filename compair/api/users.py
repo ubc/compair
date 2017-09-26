@@ -89,7 +89,7 @@ def check_valid_system_role(system_role, title=None):
         SystemRole.student.value
     ]
     if system_role not in system_roles:
-        abort(400, title=title, message="Please select a valid system role from the list provided.")
+        abort(400, title="User Not Saved", message="Please try again with a system role from the list of roles provided.")
 
 
 def check_valid_email_notification_method(email_notification_method, title=None):
@@ -98,7 +98,7 @@ def check_valid_email_notification_method(email_notification_method, title=None)
         EmailNotificationMethod.disable.value
     ]
     if email_notification_method not in email_notification_methods:
-        abort(400, title=title, message="Please select a valid email notification method from the list provided.")
+        abort(400, title="User Not Saved", message="Please try again with an email notification checked or unchecked.")
 
 # /user_uuid
 class UserAPI(Resource):
@@ -119,23 +119,23 @@ class UserAPI(Resource):
         user = User.get_by_uuid_or_404(user_uuid)
 
         if is_user_access_restricted(user):
-            abort(403, title="Account Not Updated", message="Your system role does not allow you to update this account.")
+            abort(403, title="User Not Saved", message="Sorry, your role does not allow you to save this user.")
 
         params = existing_user_parser.parse_args()
 
         # make sure the user id in the url and the id matches
         if params['id'] != user_uuid:
-            abort(400, title="Account Not Updated",
-                message="The account's ID does not match the URL, which is required in order to update the account.")
+            abort(400, title="User Not Saved",
+                message="The user's ID does not match the URL, which is required in order to save the user.")
 
         # only update username if user uses compair login method
         if user.uses_compair_login:
             username = params.get("username")
             if username == None:
-                abort(400, title="Account Not Updated", message="The required field username is missing.")
+                abort(400, title="User Not Saved", message="A username is required. Please enter a username and try saving again.")
             username_exists = User.query.filter_by(username=username).first()
             if username_exists and username_exists.id != user.id:
-                abort(409, title="Account Not Updated", message="This username already exists. Please pick another.")
+                abort(409, title="User Not Saved", message="Sorry, this username already exists and usernames must be unique in ComPAIR. Please enter another username and try saving again.")
 
             user.username = username
         elif allow(MANAGE, user):
@@ -144,7 +144,7 @@ class UserAPI(Resource):
             if username:
                 username_exists = User.query.filter_by(username=username).first()
                 if username_exists and username_exists.id != user.id:
-                    abort(409, title="Account Not Updated", message="This username already exists. Please pick another.")
+                    abort(409, title="User Not Saved", message="Sorry, this username already exists and usernames must be unique in ComPAIR. Please enter another username and try saving again.")
             user.username = username
         else:
             user.username = None
@@ -159,7 +159,7 @@ class UserAPI(Resource):
             student_number = params.get("student_number", user.student_number)
             student_number_exists = User.query.filter_by(student_number=student_number).first()
             if student_number is not None and student_number_exists and student_number_exists.id != user.id:
-                abort(409, title="Account Not Updated", message="This student number already exists. Please pick another.")
+                abort(409, title="User Not Saved", message="Sorry, this student number already exists and student numbers must be unique in ComPAIR. Please enter another number and try saving again.")
             else:
                 user.student_number = student_number
         else:
@@ -188,7 +188,7 @@ class UserAPI(Resource):
                 data={'id': user.id, 'changes': changes})
         except exc.IntegrityError:
             db.session.rollback()
-            abort(409, title="Account Not Updated", message="A user with the same identifier already exists.")
+            abort(409, title="User Not Saved", message="Sorry, this ID already exists and IDs must be unique in ComPAIR. Please try addding another user.")
 
         return marshal(user, dataformat.get_user(restrict_user))
 
@@ -256,20 +256,20 @@ class UserListAPI(Resource):
             # else enforce required password and unique username
             user.password = params.get("password")
             if user.password == None:
-                abort(400, title="Account Not Saved", message="The required field password is missing.")
+                abort(400, title="User Not Saved", message="A password is required. Please enter a password and try saving again.")
 
             user.username = params.get("username")
             if user.username == None:
-                abort(400, title="Account Not Saved", message="The required field username is missing.")
+                abort(400, title="User Not Saved", message="A username is required. Please enter a username and try saving again.")
 
             username_exists = User.query.filter_by(username=user.username).first()
             if username_exists:
-                abort(409, title="Account Not Saved", message="This username already exists. Please pick another.")
+                abort(409, title="User Not Saved", message="Sorry, this username already exists and usernames must be unique in ComPAIR. Please enter another username and try saving again.")
 
         student_number_exists = User.query.filter_by(student_number=user.student_number).first()
         # if student_number is not left blank and it exists -> 409 error
         if user.student_number is not None and student_number_exists:
-            abort(409, title="Account Not Saved", message="This student number already exists. Please pick another.")
+            abort(409, title="User Not Saved", message="Sorry, this student number already exists and student numbers must be unique in ComPAIR. Please enter another number and try saving again.")
 
         # handle oauth_create_user_link setup for third party logins
         if sess.get('oauth_create_user_link'):
@@ -308,8 +308,8 @@ class UserListAPI(Resource):
             user.system_role = SystemRole(system_role)
 
             require(CREATE, user,
-                title="Account Not Saved",
-                message="Your system role does not allow you to create accounts.")
+                title="User Not Saved",
+                message="Sorry, your role does not allow you to save users.")
 
         # only students can have student numbers
         if user.system_role != SystemRole.student:
@@ -333,7 +333,7 @@ class UserListAPI(Resource):
         except exc.IntegrityError:
             db.session.rollback()
             current_app.logger.error("Failed to add new user. Duplicate.")
-            abort(409, title="Account Not Saved", message="A user with the same identifier already exists.")
+            abort(409, title="User Not Saved", message="Sorry, this ID already exists and IDs must be unique in ComPAIR. Please try addding another user.")
 
         # handle oauth_create_user_link teardown for third party logins
         if sess.get('oauth_create_user_link'):
@@ -398,7 +398,7 @@ class UserCourseListAPI(Resource):
 
         require(MANAGE, User,
             title="User's Courses Unavailable",
-            message="Your system role does not allow you to view courses for this user.")
+            message="Sorry, your system role does not allow you to view courses for this user.")
 
         params = user_id_course_list_parser.parse_args()
 
@@ -456,7 +456,7 @@ class UserCourseStatusListAPI(Resource):
         course_uuids = params['ids'].split(',')
 
         if params['ids'] == '' or len(course_uuids) == 0:
-            abort(400, title="Course Status Unavailable", message="Please select a valid course.")
+            abort(400, title="Course Status Unavailable", message="Please select a course from the list of courses to see that course's status.")
 
         query = Course.query \
             .filter(and_(
@@ -481,7 +481,7 @@ class UserCourseStatusListAPI(Resource):
 
         if len(course_uuids) != len(results):
             abort(400, title="Course Status Unavailable",
-                message="Your are not enrolled in one or more users selected courses yet.")
+                message="Sorry, you are not enrolled in one or more of the selected users' courses yet. Course status is not available until your are enrolled in the course.")
 
         statuses = {}
 
@@ -606,12 +606,12 @@ class UserUpdateNotificationAPI(Resource):
         user = User.get_by_uuid_or_404(user_uuid)
         # anyone who passes checking below should be an instructor or admin
         require(EDIT, user,
-            title="Notification Settings Not Updated",
-            message="Your system role does not allow you to update notification settings for this account.")
+            title="Notifications Not Updated",
+            message="Sorry, your system role does not allow you to update notification settings for this user.")
 
         if not user.email:
-            abort(400, title="Notification Settings Not Updated",
-                message="Cannot update notification settings. User does not have an email address.")
+            abort(400, title="Notifications Not Updated",
+                message="Sorry, you cannot update notification settings since this user does not have an email address in ComPAIR.")
 
         params = update_notification_settings_parser.parse_args()
 
@@ -633,20 +633,20 @@ class UserUpdatePasswordAPI(Resource):
         user = User.get_by_uuid_or_404(user_uuid)
         # anyone who passes checking below should be an instructor or admin
         require(EDIT, user,
-            title="Password Not Updated",
-            message="Your system role does not allow you to update passwords for this account.")
+            title="Password Not Saved",
+            message="Sorry, your system role does not allow you to update passwords for this user.")
 
         if not user.uses_compair_login:
-            abort(400, title="Password Not Updated",
-                message="Cannot update password. User does not use the ComPAIR account login authentication method.")
+            abort(400, title="Password Not Saved",
+                message="Sorry, you cannot update the password since this user does not use the ComPAIR account login method.")
 
         params = update_password_parser.parse_args()
         oldpassword = params.get('oldpassword')
 
         if current_user.id == user.id and not oldpassword:
-            abort(400, title="Password Not Updated", message="The old password is missing.")
+            abort(400, title="Password Not Saved", message="Sorry, the old password is required. Please enter the old password and try saving again.")
         elif current_user.id == user.id and not user.verify_password(oldpassword):
-            abort(400, title="Password Not Updated", message="The old password is incorrect.")
+            abort(400, title="Password Not Saved", message="Sorry, the old password is not correct. Please double-check the old password and try saving again.")
 
         user.password = params.get('newpassword')
         db.session.commit()

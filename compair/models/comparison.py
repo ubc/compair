@@ -67,7 +67,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         if not title:
             title = "Comparison Unavailable"
         if not message:
-            message = "The comparison was removed from the system or is no longer accessible."
+            message = "Sorry, this comparison was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod

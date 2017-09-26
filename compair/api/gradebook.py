@@ -33,8 +33,8 @@ class GradebookAPI(Resource):
             joinedloads=['assignment_criteria']
         )
         require(MANAGE, assignment,
-            title="Grade Book Unavailable",
-            message="Your role in this course does not allow you to view grades for this assignment.")
+            title="Participation Results Unavailable",
+            message="Sorry, your role in this course does not allow you to view student participation for this assignment.")
 
         # get all students in this course
         students = User.query \

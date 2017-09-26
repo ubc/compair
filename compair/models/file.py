@@ -46,7 +46,7 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         if not title:
             title = "Attachment Unavailable"
         if not message:
-            message = "The attachment was removed from the system or is no longer accessible."
+            message = "Sorry, this attachment was deleted or is no longer accessible."
 
         query = cls.query
         # load relationships if needed
@@ -63,7 +63,7 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         if not title:
             title = "Attachment Unavailable"
         if not message:
-            message = "The attachment was removed from the system or is no longer accessible."
+            message = "Sorry, this attachment was deleted or is no longer accessible."
 
         query = cls.query
         # load relationships if needed

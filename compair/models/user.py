@@ -172,7 +172,7 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         if not title:
             title = "User Unavailable"
         if not message:
-            message = "The user was removed from the system or is no longer accessible."
+            message = "Sorry, this user was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
@@ -180,7 +180,7 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         if not title:
             title = "User Unavailable"
         if not message:
-            message = "The user was removed from the system or is no longer accessible."
+            message = "Sorry, this user was deleted or is no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod

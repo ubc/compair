@@ -31,13 +31,13 @@ def check_valid_system_role(system_role, title):
         SystemRole.student.value
     ]
     if system_role not in system_roles:
-        abort(400, title=title, message="Please select a valid system role from the list provided.")
+        abort(400, title=title, message="Please try again with a system role from the list of roles provided.")
 
 # /
 class DemoListAPI(Resource):
     def post(self):
         if not current_app.config.get('DEMO_INSTALLATION', False):
-            abort(404, title="Demo Accounts Unavailable", message="The system settings do now allow the use of demo accounts.")
+            abort(404, title="Demo Accounts Unavailable", message="Sorry, the system settings do now allow the use of demo accounts.")
 
         params = new_user_demo_parser.parse_args()
 

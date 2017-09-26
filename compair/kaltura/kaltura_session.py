@@ -38,7 +38,7 @@ class KalturaSession(object):
             return result.json()
         else:
             current_app.logger.error(result)
-            abort(400, title="Attachment Not Uploaded",
+            abort(400, title="File Not Uploaded",
                 message="There was a problem with the Kaltura server. Please try again later.")
 
 
@@ -56,5 +56,5 @@ class KalturaSession(object):
             return result.json()
         else:
             current_app.logger.error(result)
-            abort(400, title="Attachment Not Uploaded",
+            abort(400, title="File Not Uploaded",
                 message="There was a problem with the Kaltura server. Please try again later.")

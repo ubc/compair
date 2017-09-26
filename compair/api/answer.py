@@ -82,7 +82,7 @@ class AnswerRootAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
         require(READ, assignment,
-            title="Assignment Answers Unavailable",
+            title="Answers Unavailable",
             message="Answers are visible only to those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
@@ -165,11 +165,11 @@ class AnswerRootAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
         if not assignment.answer_grace and not allow(MANAGE, assignment):
-            abort(403, title="Answer Not Saved", message="The answer deadline has passed. No answers can be saved beyond the deadline unless the instructor saves it on your behalf.")
+            abort(403, title="Answer Not Submitted", message="Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.")
 
         require(CREATE, Answer(course_id=course.id),
-            title="Answers Not Saved",
-            message="Answers can be saved only to those enrolled in the course. Please double-check your enrollment in this course.")
+            title="Answer Not Submitted",
+            message="Answers can be submitted only by those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
         answer = Answer(assignment_id=assignment.id)
@@ -187,12 +187,12 @@ class AnswerRootAPI(Resource):
 
         # non-drafts must have content
         if not answer.draft and not answer.content and not file_uuid:
-            abort(400, title="Answer Not Saved", message="Please provide content in the text editor or upload a file to save this answer.")
+            abort(400, title="Answer Not Submitted", message="Please provide content in the text editor or upload a file and try submitting again.")
 
         user_uuid = params.get("user_id")
         # we allow instructor and TA to submit multiple answers for other users in the class
         if user_uuid and not allow(MANAGE, Answer(course_id=course.id)):
-            abort(400, title="Answer Not Saved", message="Only instructors and teaching assistants can submit an answer on behalf of another.")
+            abort(400, title="Answer Not Submitted", message="Only instructors and teaching assistants can submit an answer on behalf of another.")
 
         if user_uuid:
             user = User.get_by_uuid_or_404(user_uuid)
@@ -214,7 +214,7 @@ class AnswerRootAPI(Resource):
             # only system admin can add answers for themselves to a class without being enrolled in it
             # required for managing comparison examples as system admin
             if current_user.id != answer.user_id or current_user.system_role != SystemRole.sys_admin:
-                abort(400, title="Answer Not Saved", message="Answers can be saved only to those enrolled in the course. Please double-check your enrollment in this course.")
+                abort(400, title="Answer Not Submitted", message="Answers can be submitted only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         elif user_course.course_role.value not in instructors_and_tas:
             # check if there is a previous answer submitted for the student
@@ -226,7 +226,7 @@ class AnswerRootAPI(Resource):
                 ). \
                 first()
             if prev_answer:
-                abort(400, title="Answer Not Saved", message="An answer has already been submitted for this assignment by you or on your behalf.")
+                abort(400, title="Answer Not Submitted", message="An answer has already been submitted for this assignment by you or on your behalf.")
 
         db.session.add(answer)
         db.session.commit()
@@ -262,7 +262,7 @@ class AnswerIdAPI(Resource):
         )
         require(READ, answer,
             title="Answer Unavailable",
-            message="Your role in this course does not allow you to view this answer.")
+            message="Sorry, your role in this course does not allow you to view this answer.")
         restrict_user = not allow(MANAGE, assignment)
 
         on_answer_get.send(
@@ -280,23 +280,23 @@ class AnswerIdAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
         if not assignment.answer_grace and not allow(MANAGE, assignment):
-            abort(403, title="Answer Not Updated", message="The answer deadline has passed. No answers can be updated beyond the deadline unless the instructor updates it on your behalf.")
+            abort(403, title="Answer Not Submitted", message="Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.")
 
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         require(EDIT, answer,
-            title="Answer Not Updated",
-            message="Your role in this course does not allow you to update this answer.")
+            title="Answer Not Saved",
+            message="Sorry, your role in this course does not allow you to save this answer.")
         restrict_user = not allow(MANAGE, assignment)
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
             if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS and answer.user_id in DemoDataFixture.DEFAULT_STUDENT_IDS:
-                abort(400, title="Answer Not Updated", message="Sorry, you cannot edit the default student demo answers.")
+                abort(400, title="Answer Not Saved", message="Sorry, you cannot edit the default student demo answers.")
 
         params = existing_answer_parser.parse_args()
         # make sure the answer id in the url and the id matches
         if params['id'] != answer_uuid:
-            abort(400, title="Answer Not Updated", message="The answer's ID does not match the URL, which is required in order to update the answer.")
+            abort(400, title="Answer Not Saved", message="The answer's ID does not match the URL, which is required in order to save the answer.")
 
         # modify answer according to new values, preserve original values if values not passed
         answer.content = params.get("content")
@@ -305,7 +305,7 @@ class AnswerIdAPI(Resource):
         # we allow instructor and TA to submit multiple answers for other users in the class
         if user_uuid and user_uuid != answer.user_uuid:
             if not allow(MANAGE, answer) or not answer.draft:
-                abort(400, title="Answer Not Updated",
+                abort(400, title="Answer Not Saved",
                     message="Only instructors and teaching assistants can update an answer on behalf of another.")
             user = User.get_by_uuid_or_404(user_uuid)
             answer.user_id = user.id
@@ -328,7 +328,7 @@ class AnswerIdAPI(Resource):
                     ) \
                     .first()
                 if prev_answer:
-                    abort(400, title="Answer Not Updated", message="An answer has already been submitted for this assignment by you or on your behalf.")
+                    abort(400, title="Answer Not Saved", message="An answer has already been submitted for this assignment by you or on your behalf.")
 
         # can only change draft status while a draft
         if answer.draft:
@@ -344,7 +344,7 @@ class AnswerIdAPI(Resource):
 
         # non-drafts must have content
         if not answer.draft and not answer.content and not file_uuid:
-            abort(400, title="Answer Not Updated", message="Please provide content in the text editor or upload a file to update this answer.")
+            abort(400, title="Answer Not Submitted", message="Please provide content in the text editor or upload a file and try submitting again.")
 
         db.session.add(answer)
         db.session.commit()
@@ -372,12 +372,12 @@ class AnswerIdAPI(Resource):
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         require(DELETE, answer,
             title="Answer Not Deleted",
-            message="Your role in this course does not allow you to delete this answer.")
+            message="Sorry, your role in this course does not allow you to delete this answer.")
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
             if assignment.id in DemoDataFixture.DEFAULT_ASSIGNMENT_IDS and answer.user_id in DemoDataFixture.DEFAULT_STUDENT_IDS:
-                abort(400, title="Answer Not Deleted", message="Sorry, you cannot remove the default student demo answers.")
+                abort(400, title="Answer Not Deleted", message="Sorry, you cannot delete the default student demo answers.")
 
         answer.active = False
         db.session.commit()
@@ -417,7 +417,7 @@ class AnswerUserIdAPI(Resource):
 
         require(READ, Answer(user_id=current_user.id),
             title="Answers Unavailable",
-            message="Your role in this course does not allow you to view answers for this assignment.")
+            message="Sorry, your role in this course does not allow you to view answers for this assignment.")
         restrict_user = not allow(MANAGE, assignment)
 
         params = user_answer_list_parser.parse_args()
@@ -469,14 +469,14 @@ class AnswerFlagAPI(Resource):
 
         require(READ, answer,
             title="Answer Not Flagged",
-            message="Your role in this course does not allow you to flag answers.")
+            message="Sorry, your role in this course does not allow you to flag answers.")
         restrict_user = not allow(MANAGE, answer)
 
         # anyone can flag an answer, but only the original flagger or someone who can manage
         # the answer can unflag it
         if answer.flagged and answer.flagger_user_id != current_user.id and \
                 not allow(MANAGE, answer):
-            abort(400, title="Answer Update Failed", message="You do not have permission to unflag this answer.")
+            abort(400, title="Answer Not Updated", message="Sorry, your role in this course does not allow you to unflag answers.")
 
         params = flag_parser.parse_args()
         answer.flagged = params['flagged']
@@ -513,8 +513,8 @@ class TopAnswerAPI(Resource):
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
 
         require(MANAGE, answer,
-            title="Answer Not Selected",
-            message="Your role in this course does not allow you to select top answers.")
+            title="Answer Not Added",
+            message="Your role in this course does not allow you to add to the list of instructor-picked answers.")
 
         params = top_answer_parser.parse_args()
         answer.top_answer = params.get('top_answer')
