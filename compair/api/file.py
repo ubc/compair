@@ -47,7 +47,7 @@ class FileAPI(Resource):
             extensions = [extension.upper() for extension in list(current_app.config['ATTACHMENT_ALLOWED_EXTENSIONS'])]
             extensions.sort()
             extensions = ", ".join(extensions)
-            abort(400, title="File Not Uploaded", message="Please try again with an approved file type, which includes:"+extensions+".")
+            abort(400, title="File Not Uploaded", message="Please try again with an approved file type, which includes: "+extensions+".")
 
         on_save_file.send(
             self,

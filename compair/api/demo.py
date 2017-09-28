@@ -24,14 +24,14 @@ new_user_demo_parser.add_argument('system_role', type=str, required=True)
 # events
 on_user_demo_create = event.signal('USER_DEMO_CREATE')
 
-def check_valid_system_role(system_role, title):
+def check_valid_system_role(system_role):
     system_roles = [
         SystemRole.sys_admin.value,
         SystemRole.instructor.value,
         SystemRole.student.value
     ]
     if system_role not in system_roles:
-        abort(400, title=title, message="Please try again with a system role from the list of roles provided.")
+        abort(400, title="Demo Account Not Saved", message="Please try again with a system role from the list of roles provided.")
 
 # /
 class DemoListAPI(Resource):
@@ -45,7 +45,7 @@ class DemoListAPI(Resource):
         user.password = "demo"
 
         system_role = params.get("system_role")
-        check_valid_system_role(system_role, title="Demo Account Not Saved")
+        check_valid_system_role(system_role)
         user.system_role = SystemRole(system_role)
 
         user_count = User.query \

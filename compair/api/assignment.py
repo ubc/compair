@@ -65,7 +65,7 @@ on_assignment_get_status = event.signal('ASSIGNMENT_GET_STATUS')
 on_assignment_user_comparisons_get = event.signal('ASSIGNMENT_USER_COMPARISONS_GET')
 on_assignment_users_comparisons_get = event.signal('ASSIGNMENT_USERS_COMPARISONS_GET')
 
-def check_valid_pairing_algorithm(pairing_algorithm, title=None):
+def check_valid_pairing_algorithm(pairing_algorithm):
     pairing_algorithms = [
         PairingAlgorithm.adaptive.value,
         PairingAlgorithm.random.value
@@ -167,7 +167,7 @@ class AssignmentIdAPI(Resource):
             'self_evaluation_grade_weight', assignment.self_evaluation_grade_weight)
 
         pairing_algorithm = params.get("pairing_algorithm")
-        check_valid_pairing_algorithm(pairing_algorithm, title="Assignment Not Saved")
+        check_valid_pairing_algorithm(pairing_algorithm)
         if not assignment.compared:
             assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
         elif assignment.pairing_algorithm != PairingAlgorithm(pairing_algorithm):
@@ -389,7 +389,7 @@ class AssignmentRootAPI(Resource):
         new_assignment.self_evaluation_grade_weight = params.get('self_evaluation_grade_weight')
 
         pairing_algorithm = params.get("pairing_algorithm", PairingAlgorithm.random)
-        check_valid_pairing_algorithm(pairing_algorithm, title="Assignment Not Saved")
+        check_valid_pairing_algorithm(pairing_algorithm)
         new_assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
 
         criterion_uuids = [c.get('id') for c in params.criteria]

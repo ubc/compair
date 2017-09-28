@@ -124,16 +124,16 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             filename = 'alias.pdf'
             rv = self.client.post(url, data=dict())
             self.assert400(rv)
-            self.assertEqual("Attachment Not Uploaded", rv.json['title'])
-            self.assertEqual("No file was found to upload. Please try again.", rv.json['message'])
+            self.assertEqual("File Not Uploaded", rv.json['title'])
+            self.assertEqual("Sorry, no file was found to upload. Please try uploading again.", rv.json['message'])
 
             # test no file uploaded
             filename = 'alias.xyz'
             uploaded_file = io.BytesIO(b"this is a test")
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert400(rv)
-            self.assertEqual("Attachment Not Uploaded", rv.json['title'])
-            self.assertEqual("Only JPEG, JPG, MP3, MP4, PDF, PNG, WEBM files can be uploaded. Please try again with a valid file.",
+            self.assertEqual("File Not Uploaded", rv.json['title'])
+            self.assertEqual("Please try again with an approved file type, which includes: JPEG, JPG, MP3, MP4, PDF, PNG, WEBM.",
                 rv.json['message'])
 
             for extension, mimetype in test_formats:

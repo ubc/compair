@@ -82,7 +82,7 @@ on_user_edit_button_get = event.signal('USER_EDIT_BUTTON_GET')
 on_user_notifications_update = event.signal('USER_NOTIFICATIONS_UPDATE')
 on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
 
-def check_valid_system_role(system_role, title=None):
+def check_valid_system_role(system_role):
     system_roles = [
         SystemRole.sys_admin.value,
         SystemRole.instructor.value,
@@ -92,7 +92,7 @@ def check_valid_system_role(system_role, title=None):
         abort(400, title="User Not Saved", message="Please try again with a system role from the list of roles provided.")
 
 
-def check_valid_email_notification_method(email_notification_method, title=None):
+def check_valid_email_notification_method(email_notification_method):
     email_notification_methods = [
         EmailNotificationMethod.enable.value,
         EmailNotificationMethod.disable.value
@@ -151,7 +151,7 @@ class UserAPI(Resource):
 
         if allow(MANAGE, user):
             system_role = params.get("system_role", user.system_role.value)
-            check_valid_system_role(system_role, title="Account Not Updated")
+            check_valid_system_role(system_role)
             user.system_role = SystemRole(system_role)
 
         # only students should have student numbers
@@ -172,7 +172,7 @@ class UserAPI(Resource):
         user.email = params.get("email", user.email)
 
         email_notification_method = params.get("email_notification_method")
-        check_valid_email_notification_method(email_notification_method, title="Account Not Updated")
+        check_valid_email_notification_method(email_notification_method)
         user.email_notification_method = EmailNotificationMethod(email_notification_method)
 
         changes = get_model_changes(user)
@@ -245,7 +245,7 @@ class UserListAPI(Resource):
         user.displayname = params.get("displayname")
 
         email_notification_method = params.get("email_notification_method")
-        check_valid_email_notification_method(email_notification_method, title="Account Not Saved")
+        check_valid_email_notification_method(email_notification_method)
         user.email_notification_method = EmailNotificationMethod(email_notification_method)
 
         # if creating a cas user, do not set username or password
@@ -304,7 +304,7 @@ class UserListAPI(Resource):
                     db.session.add(thirdpartyuser)
         else:
             system_role = params.get("system_role")
-            check_valid_system_role(system_role, title="Account Not Saved")
+            check_valid_system_role(system_role)
             user.system_role = SystemRole(system_role)
 
             require(CREATE, user,
@@ -616,7 +616,7 @@ class UserUpdateNotificationAPI(Resource):
         params = update_notification_settings_parser.parse_args()
 
         email_notification_method = params.get("email_notification_method")
-        check_valid_email_notification_method(email_notification_method, title="Notification Settings Not Updated")
+        check_valid_email_notification_method(email_notification_method)
         user.email_notification_method = EmailNotificationMethod(email_notification_method)
 
         db.session.commit()

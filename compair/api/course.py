@@ -76,7 +76,7 @@ class CourseListAPI(Resource):
                 '%Y-%m-%dT%H:%M:%S.%fZ')
 
         if new_course.start_date and new_course.end_date and new_course.start_date > new_course.end_date:
-            abort(400, title="Course Not Saved", message="Please set course end time after course start time and save again.")
+            abort(400, title="Course Not Saved", message="Course end time must be after course start time.")
 
         try:
             # create the course
@@ -162,7 +162,7 @@ class CourseAPI(Resource):
                 '%Y-%m-%dT%H:%M:%S.%fZ')
 
         if course.start_date and course.end_date and course.start_date > course.end_date:
-            abort(400, title="Course Not Saved", message="Please set course end time after course start time and save again.")
+            abort(400, title="Course Not Saved", message="Course end time must be after course start time.")
 
         db.session.commit()
 
@@ -224,7 +224,7 @@ class CourseDuplicateAPI(Resource):
         ) if params.get("end_date") else None
 
         if start_date and end_date and start_date > end_date:
-            abort(400, title="Course Not Saved", message="Please set course end time after course start time and save again.")
+            abort(400, title="Course Not Saved", message="Course end time must be after course start time.")
 
         assignments = [assignment for assignment in course.assignments if assignment.active]
         assignments_copy_data = params.get("assignments")
