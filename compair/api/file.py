@@ -42,12 +42,12 @@ class FileAPI(Resource):
         uploaded_file = request.files.get('file')
 
         if not uploaded_file:
-            abort(400, title="Attachment Not Uploaded", message="No file was found to upload. Please try again.")
+            abort(400, title="File Not Uploaded", message="Sorry, no file was found to upload. Please try uploading again.")
         elif not allowed_file(uploaded_file.filename, current_app.config['ATTACHMENT_ALLOWED_EXTENSIONS']):
             extensions = [extension.upper() for extension in list(current_app.config['ATTACHMENT_ALLOWED_EXTENSIONS'])]
             extensions.sort()
             extensions = ", ".join(extensions)
-            abort(400, title="Attachment Not Uploaded", message="Only "+extensions+" files can be uploaded. Please try again with a valid file.")
+            abort(400, title="File Not Uploaded", message="Please try again with an approved file type, which includes: "+extensions+".")
 
         on_save_file.send(
             self,
@@ -90,8 +90,8 @@ class FileKalturaAPI(Resource):
     @login_required
     def get(self):
         if not KalturaAPI.enabled():
-            abort(400, title="Attachment Not Uploaded",
-                message="Please use a valid upload method. You are not able to upload based on the current settings.")
+            abort(400, title="File Not Uploaded",
+                message="Please use a valid upload method to attach files. You are not able to upload with this method based on the current settings.")
 
         upload_url = KalturaAPI.generate_new_upload_token()
 
@@ -111,8 +111,8 @@ class FileKalturaUploadTokenAPI(Resource):
     @login_required
     def post(self, upload_token_id):
         if not KalturaAPI.enabled():
-            abort(400, title="Attachment Not Uploaded",
-                message="Please use a valid upload method. You are not able to upload based on the current settings.")
+            abort(400, title="File Not Uploaded",
+                message="Please use a valid upload method to attach files. You are not able to upload with this method based on the current settings.")
 
         kaltura_media = KalturaAPI.complete_upload_for_token(upload_token_id)
 

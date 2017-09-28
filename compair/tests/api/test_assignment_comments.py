@@ -177,8 +177,8 @@ class AssignmentCommentsAPITests(ComPAIRAPITestCase):
             invalid['id'] = self.data.get_instructor_assignment_comment().uuid
             rv = self.client.post(url, data=json.dumps(invalid), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual("Help Comment Not Updated", rv.json['title'])
-            self.assertEqual("The comment's ID does not match the URL, which is required in order to update the comment.",
+            self.assertEqual("Help Comment Not Saved", rv.json['title'])
+            self.assertEqual("The comment's ID does not match the URL, which is required in order to save the comment.",
                 rv.json['message'])
 
             # test invalid course id
@@ -207,8 +207,8 @@ class AssignmentCommentsAPITests(ComPAIRAPITestCase):
             empty['content'] = ''
             rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual("Help Comment Not Updated", rv.json['title'])
-            self.assertEqual("Please provide content in the text editor to update this comment.", rv.json['message'])
+            self.assertEqual("Help Comment Not Saved", rv.json['title'])
+            self.assertEqual("Please provide content in the text editor and try saving again.", rv.json['message'])
 
             # test authorized instructor
             rv = self.client.post(url, data=json.dumps(content), content_type='application/json')

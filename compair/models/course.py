@@ -78,7 +78,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         if not title:
             title = "Course Unavailable"
         if not message:
-            message = "The course was removed from the system or is no longer accessible."
+            message = "Sorry, this course was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
@@ -86,7 +86,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         if not title:
             title = "Course Unavailable"
         if not message:
-            message = "The course was removed from the system or is no longer accessible."
+            message = "Sorry, this course was deleted or is no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod

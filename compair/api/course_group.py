@@ -74,7 +74,7 @@ class GroupNameAPI(Resource):
             .all()
 
         if len(members) == 0:
-            abort(404, title="Group Unavailable", message="Group "+group_name+" was removed or is no longer available.")
+            abort(404, title="Group Unavailable", message="Group "+group_name+" was deleted or is no longer available.")
 
         on_course_group_members_get.send(
             current_app._get_current_object(),

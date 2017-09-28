@@ -215,7 +215,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         if not title:
             title = "Assignment Unavailable"
         if not message:
-            message = "The assignment was removed from the system or is no longer accessible."
+            message = "Sorry, this assignment was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
@@ -223,7 +223,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         if not title:
             title = "Assignment Unavailable"
         if not message:
-            message = "The assignment was removed from the system or is no longer accessible."
+            message = "Sorry, this assignment was deleted or is no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod

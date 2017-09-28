@@ -119,7 +119,7 @@ module.run(
     // listen to 403 response for CAS user that do not exist in the system
     $rootScope.$on(AuthenticationService.LOGIN_FORBIDDEN_EVENT, function(event, rejection) {
         if ('type' in rejection.data && rejection.data.type == 'CAS') {
-            Toaster.error('Login Failed!', rejection.data.message);
+            Toaster.warning('Log In Failed', 'Please double-check your username and password and try again.');
             $rootScope.$broadcast(AuthenticationService.LOGIN_REQUIRED_EVENT);
         }
     });
@@ -248,7 +248,6 @@ module.controller(
                     } else {
                         $location.path("/"); //redirect user to home screen
                         $route.reload();
-                        Toaster.success("Successfully Logged Out!");
                     }
                 }
                 // TODO do we care about logout failure? if so, handle it here

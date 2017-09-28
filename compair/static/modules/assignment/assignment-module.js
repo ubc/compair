@@ -416,7 +416,7 @@ module.controller("AssignmentViewController",
         $scope.deleteAssignment = function(assignment) {
             AssignmentResource.delete({'courseId': assignment.course_id, 'assignmentId': assignment.id},
                 function (ret) {
-                    Toaster.success("Assignment Removed");
+                    Toaster.success("Assignment Deleted");
                     $location.path('/course/'+$scope.courseId);
                 },
                 function (ret) {
@@ -428,7 +428,7 @@ module.controller("AssignmentViewController",
         $scope.deleteAnswer = function(answer) {
             AnswerResource.delete({'courseId': answer.course_id, 'assignmentId': answer.assignment_id, 'answerId':answer.id},
                 function (ret) {
-                    Toaster.success("Answer Removed");
+                    Toaster.success("Answer Deleted");
                     var authorId = answer['user_id'];
                     $scope.assignment.answer_count -= 1;
                     if ($scope.loggedInUserId == authorId) {
@@ -441,15 +441,15 @@ module.controller("AssignmentViewController",
         };
 
         // unflag a flagged answer
-        $scope.unflagAnswer = function(answer) {
-            var params = {'flagged': false};
-            AnswerResource.flagged({'courseId': answer.course_id, 'assignmentId': answer.assignment_id, 'answerId': answer.id}, params).$promise.then(
-                function () {
-                    answer['flagged'] = false;
-                    Toaster.success("Answer Unflagged");
-                }
-            );
-        };
+        //$scope.unflagAnswer = function(answer) {
+        //    var params = {'flagged': false};
+        //    AnswerResource.flagged({'courseId': answer.course_id, 'assignmentId': answer.assignment_id, 'answerId': answer.id}, params).$promise.then(
+        //        function () {
+        //            answer['flagged'] = false;
+        //            Toaster.success("Answer Unflagged");
+        //        }
+        //    );
+        //};
 
         // toggle top_answer state for answer
         $scope.setTopAnswer = function(answer, topAnswer) {
@@ -458,9 +458,9 @@ module.controller("AssignmentViewController",
                 function () {
                     answer.top_answer = topAnswer;
                     if (topAnswer) {
-                        Toaster.success("Answer Added to Top Answers", "Students will see this in the list of instructor-picked answers.");
+                        Toaster.success("Answer Added To Top Answers", "Students will see this in the list of instructor-picked answers.");
                     } else {
-                        Toaster.success("Answer Removed from Top Answers", "Students will no longer see this in the list of instructor-picked answers.");
+                        Toaster.success("Answer Removed From Top Answers", "Students will no longer see this in the list of instructor-picked answers.");
                     }
                     if ($scope.answerFilters.author == "top-picks") {
                         $scope.updateAnswerList();
@@ -647,7 +647,7 @@ module.controller("AssignmentViewController",
         $scope.deleteComment = function(key, course_id, assignment_id, comment_id) {
             AssignmentCommentResource.delete({'courseId': course_id, 'assignmentId': assignment_id, 'commentId': comment_id},
                 function (ret) {
-                    Toaster.success("Comment Removed");
+                    Toaster.success("Comment Deleted");
                     $scope.comments.objects.splice(key, 1);
                     $scope.assignment.comment_count--;
                 }
@@ -657,7 +657,7 @@ module.controller("AssignmentViewController",
         $scope.deleteReply = function(answer, commentKey, course_id, assignment_id, answer_id, comment_id) {
             AnswerCommentResource.delete({'courseId': course_id, 'assignmentId': assignment_id, 'answerId': answer_id, 'commentId': comment_id},
                 function (ret) {
-                    Toaster.success("Reply Removed");
+                    Toaster.success("Reply Deleted");
                     var comment = answer['comments'].splice(commentKey, 1)[0];
                     if (comment.comment_type == AnswerCommentType.public) {
                         answer.public_comment_count--;
@@ -1105,15 +1105,15 @@ module.controller("AssignmentWriteController",
 
             // answer end datetime has to be after answer start datetime
             if ($scope.assignment.answer_start >= $scope.assignment.answer_end) {
-                Toaster.error('Answer Period Error', 'Answer end time must be after answer start time.');
+                Toaster.warning('Assignment Not Saved', 'Please set answer end time after answer start time and save again.');
                 $scope.submitted = false;
                 return;
             } else if ($scope.assignment.availableCheck && $scope.assignment.answer_start > $scope.assignment.compare_start) {
-                Toaster.error("Time Period Error", 'Please double-check the answer and comparison period start and end times.');
+                Toaster.warning("Assignment Not Saved", 'Please double-check the answer and comparison start and end times for mismatches and save again.');
                 $scope.submitted = false;
                 return;
             } else if ($scope.assignment.availableCheck && $scope.assignment.compare_start >= $scope.assignment.compare_end) {
-                Toaster.error("Time Period Error", 'comparison end time must be after comparison start time.');
+                Toaster.warning("Assignment Not Saved", 'Please set comparison end time after comparison start time and save again.');
                 $scope.submitted = false;
                 return;
             }
@@ -1122,13 +1122,18 @@ module.controller("AssignmentWriteController",
                 var answer1 = $scope.comparison_example.answer1;
                 var answer2 = $scope.comparison_example.answer2;
 
+               if ( ((!answer1.content || answer1.content.trim() == "") && !answer1.file && (!answer1.file_alias || answer1.file_alias == "")) && ((!answer2.content || answer2.content.trim() == "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias == "")) ) {
+                    Toaster.warning("Assignment Not Saved", 'Please add content for answers in your practice pair and save again.');
+                    $scope.submitted = false;
+                    return;
+                }
                 if ((!answer1.content || answer1.content.trim() == "") && !answer1.file && (!answer1.file_alias || answer1.file_alias == "")) {
-                    Toaster.error("Practice Answer A Error", 'Practice answers needs to have content.');
+                    Toaster.warning("Assignment Not Saved", 'Please add content for the first answer in your practice pair and save again.');
                     $scope.submitted = false;
                     return;
                 }
                 if ((!answer2.content || answer2.content.trim() == "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias == "")) {
-                    Toaster.error("Practice Answer B Error", 'Practice answers needs to have content.');
+                    Toaster.warning("Assignment Not Saved", 'Please add content for the second answer in your practice pair and save again.');
                     $scope.submitted = false;
                     return;
                 }
@@ -1193,12 +1198,10 @@ module.controller("AssignmentWriteController",
 
                         $q.all(promises).then(function() {
                             $scope.submitted = false;
-                            if ($scope.method == "create") {
-                                Toaster.success("Assignment Saved");
-                            } else if ($scope.method == "copy") {
+                            if ($scope.method == "copy") {
                                 Toaster.success("Assignment Duplicated");
                             } else {
-                                Toaster.success("Assignment Updated");
+                                Toaster.success("Assignment Saved");
                             }
                             $location.path('/course/' + $scope.courseId);
                         }, function() {

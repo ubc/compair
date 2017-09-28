@@ -116,11 +116,7 @@ module.controller(
             .$promise.then(
                 function (ret) {
                     $scope.comment = ret;
-                    if ($scope.method == 'create') {
-                        Toaster.success("Comment Posted");
-                    } else {
-                        Toaster.success("Comment Updated");
-                    }
+                    Toaster.success("Comment Saved");
 
                     $uibModalInstance.close($scope.comment);
                 }
@@ -160,7 +156,7 @@ module.controller(
                 .$promise.then(
                     function (ret) {
                         if (!ret.students_can_reply) {
-                            Toaster.error("No replies can be made for answers in this assignment.");
+                            Toaster.error("Reply Not Saved", "Sorry, replies are not allowed for answers in this assignment.");
                             $uibModalInstance.dismiss();
                         }
                     }
@@ -192,12 +188,7 @@ module.controller(
             }, $scope.comment).$promise.then(
                 function(ret) {
                     $scope.comment = ret;
-
-                    if ($scope.method == 'create') {
-                        Toaster.success("Reply Posted");
-                    } else {
-                        Toaster.success("Reply Updated");
-                    }
+                    Toaster.success("Reply Saved");
 
                     $uibModalInstance.close($scope.comment);
                 }

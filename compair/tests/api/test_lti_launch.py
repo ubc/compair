@@ -1854,7 +1854,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
             self.assertEqual(rv.json['title'], "Membership Not Updated")
             self.assertEqual(rv.json['message'],
-                "Your LTI link settings has no course context. Please edit your LTI link settings and try again.")
+                "Sorry, your LTI link settings have no course context. Please edit your LTI link settings and try linking again.")
 
             # requires at least one linked lti context to support membership
             lti_context_2 = self.lti_data.create_context(lti_consumer, compair_course=course_2)

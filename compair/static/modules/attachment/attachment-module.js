@@ -102,18 +102,20 @@ module.service('importService',
         switch(model) {
             case 'users':
                 var count = results.success;
-                Toaster.success("Students Added", "Successfully added "+count+" students.");
                 if (results.invalids && results.invalids.length > 0) {
+                    Toaster.success("Some Users Enrolled", "Successfully enrolled "+count+" users.");
                     $location.path('/course/' + courseId + '/user/import/results');
                 } else {
+                    Toaster.success("All Users Enrolled", "Successfully enrolled "+count+" users.");
                     $location.path('/course/' + courseId + '/user');
                 }
                 break;
             case 'groups':
-                Toaster.success("Groups Added", "Successfully added "+ results.success +" groups.");
                 if (results.invalids && results.invalids.length > 0) {
+                    Toaster.success("Some Groups Added", "Successfully added "+ results.success +" groups.");
                     $location.path('/course/'+courseId+'/user/group/import/results');
                 } else {
+                    Toaster.success("All Groups Added", "Successfully added "+ results.success +" groups.");
                     $location.path('/course/'+courseId+'/user');
                 }
                 break;
@@ -146,7 +148,7 @@ module.service('importService',
 
                 if (!valid) {
                     var allowedExtensions = UploadValidator.getImportExtensionsForDisplay();
-                    Toaster.error("File Type Error", "Only "+allowedExtensions+" files are accepted.")
+                    Toaster.error("File Not Uploaded", "Please try again with an approved file type, which includes: "+allowedExtensions+".")
                 }
                 return valid;
             }
@@ -219,7 +221,7 @@ module.service('attachService',
             if (response == '413') {
                 var upload_limit = UploadValidator.getAttachmentUploadLimit();
                 var limit_size = upload_limit / 1048576; // convert to MB
-                Toaster.error("File Size Error", "The file is larger than "+limit_size.toFixed(0)+"MB. Please upload a smaller file.");
+                Toaster.error("File Not Uploaded", "The file is larger than the "+limit_size.toFixed(0)+"MB maximum. Please upload a smaller file instead.");
             }
         };
 
@@ -244,7 +246,7 @@ module.service('attachService',
                 var valid = UploadValidator.validAttachmentExtension(extension);
                 if (!valid) {
                     var allowedExtensions = UploadValidator.getAttachmentExtensionsForDisplay();
-                    Toaster.error("File Type Error", "Only "+allowedExtensions+" files are accepted.")
+                    Toaster.error("File Not Uploaded", "Please try again with an approved file type, which includes: "+allowedExtensions+".")
                 }
                 return valid;
             }
@@ -259,7 +261,7 @@ module.service('attachService',
                 if (!valid) {
                     var size = item.size / 1048576; // convert to MB
                     var limit_size = upload_limit / 1048576; // convert to MB
-                    Toaster.error("File Size Error", "The file size is "+size.toFixed(2)+"MB. The maximum allowed is "+limit_size.toFixed(0)+"MB.")
+                    Toaster.error("File Not Uploaded", "The file size is "+size.toFixed(2)+"MB, which exceeds the "+limit_size.toFixed(0)+"MB maximum. Please upload a smaller file instead.")
                 }
                 return valid;
             }
@@ -310,7 +312,7 @@ module.service('answerAttachService',
                 if (response == '413') {
                     var upload_limit = UploadValidator.getAttachmentUploadLimit();
                     var limit_size = upload_limit / 1048576; // convert to MB
-                    Toaster.error("File Size Error", "The file is larger than "+limit_size.toFixed(0)+"MB. Please upload a smaller file.");
+                    Toaster.error("File Not Uploaded", "The file is larger than the "+limit_size.toFixed(0)+"MB maximum. Please upload a smaller file instead.");
                 }
             };
         }
@@ -360,7 +362,7 @@ module.service('answerAttachService',
 
                 if (!valid) {
                     var allowedExtensions = UploadValidator.getAttachmentExtensionsForDisplay();
-                    Toaster.error("File Type Error", "Only "+allowedExtensions+" files are accepted.")
+                    Toaster.error("File Not Uploaded", "Please try again with an approved file type, which includes: "+allowedExtensions+".")
                 }
                 return valid;
             }
@@ -375,7 +377,7 @@ module.service('answerAttachService',
                 if (!valid) {
                     var size = item.size / 1048576; // convert to MB
                     var limit_size = upload_limit / 1048576; // convert to MB
-                    Toaster.error("File Size Error", "The file size is "+size.toFixed(2)+"MB. The maximum allowed is "+limit_size.toFixed(0)+"MB.")
+                    Toaster.error("File Not Uploaded", "The file is larger than the "+limit_size.toFixed(0)+"MB maximum. Please upload a smaller file instead.")
                 }
                 return valid;
             }

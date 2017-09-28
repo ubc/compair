@@ -149,7 +149,7 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
                 response = jsonify({'message': msg, 'status': 403, 'type': 'CAS'})
                 response.status_code = 403
                 return response
-            abort(401, title="Not Logged In", message="Authentication is required to access this area. Please log in to continue.")
+            abort(401, title="User Logged Out", message="You must be logged in to see this page. Please log in to continue.")
 
         # Flask-Bouncer initialization
         bouncer.init_app(app)

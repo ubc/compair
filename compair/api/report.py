@@ -52,8 +52,8 @@ class ReportRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment(course_id=course.id)
         require(MANAGE, assignment,
-            title="Report Not Generated",
-            message="Your system role does not allow you to generate reports.")
+            title="Report Not Run",
+            message="Sorry, your system role does not allow you to run reports.")
 
         params = report_parser.parse_args()
         group_name = params.get('group_name', None)
@@ -82,7 +82,7 @@ class ReportRootAPI(Resource):
                 ) \
                 .first()
             if group_exists == None:
-                abort(400, title="Report Not Generated", message="Please select a valid group from the list provided.")
+                abort(400, title="Report Not Run", message="Please try again with a group from the list of groups provided.")
 
         if report_type == "participation_stat":
             data = participation_stat_report(course, assignments, group_name, assignment_uuid is None)
@@ -135,7 +135,7 @@ class ReportRootAPI(Resource):
             data = peer_feedback_report(course, assignments, group_name)
             titles = [titles1, titles2]
         else:
-            abort(400, title="Report Not Generated", message="Please select a valid report type from the list provided.")
+            abort(400, title="Report Not Run", message="Please try again with a report type from the list of report types provided.")
 
         name = name_generator(course, report_type, group_name)
         tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], name)

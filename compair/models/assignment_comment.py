@@ -40,7 +40,7 @@ class AssignmentComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTracking
         if not title:
             title = "Help Comment Unavailable"
         if not message:
-            message = "The help comment was removed from the system or is no longer accessible."
+            message = "Sorry, this help comment was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
@@ -48,7 +48,7 @@ class AssignmentComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTracking
         if not title:
             title = "Help Comment Unavailable"
         if not message:
-            message = "The help comment was removed from the system or is no longer accessible."
+            message = "Sorry, this help comment was deleted or is no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod

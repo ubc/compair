@@ -158,7 +158,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 content_type='application/json')
             self.assert403(rv)
             self.assertEqual("Comparison Not Saved", rv.json['title'])
-            self.assertEqual("The comparison deadline has passed. No comparisons can be done beyond the deadline.",
+            self.assertEqual("Sorry, the comparison deadline has passed. No comparisons can be done after the deadline.",
                 rv.json['message'])
 
             # test within grace period

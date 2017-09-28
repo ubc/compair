@@ -45,8 +45,8 @@ class KalturaAPI(object):
             .first()
 
         if not kaltura_media:
-            abort(400, title="Attachment Not Uploaded",
-                message="Upload token does not exist or already used.")
+            abort(400, title="File Not Uploaded",
+                message="The upload token does not exist or is already used. Please contact support for assistance.")
 
         with KalturaSession.generate_api_session() as ks:
             # fetch upload, and update kaltura_media filename
