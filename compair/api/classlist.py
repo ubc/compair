@@ -306,7 +306,7 @@ class ClasslistRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(READ, UserCourse(course_id=course.id),
             title="Class List Unavailable",
-            message="Your role in this course does not allow you to view the class list.")
+            message="Sorry, your role in this course does not allow you to view the class list.")
         restrict_user = not allow(READ, USER_IDENTITY)
 
         # expire current_user from the session. When loading classlist from database, if the
@@ -363,7 +363,7 @@ class ClasslistRootAPI(Resource):
         user_course = UserCourse(course_id=course.id)
         require(EDIT, user_course,
             title="Class List Not Imported",
-            message="Your role in this course does not allow you to import or otherwise change the class list.")
+            message="Sorry, your role in this course does not allow you to import or otherwise change the class list.")
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
@@ -374,19 +374,19 @@ class ClasslistRootAPI(Resource):
         import_type = params.get('import_type')
 
         if import_type not in [ThirdPartyType.cas.value, None]:
-            abort(400, title="Class List Not Imported", message="Please select a valid way for students to log in.")
+            abort(400, title="Class List Not Imported", message="Please select a way for students to log in and try importing again.")
         elif import_type == ThirdPartyType.cas.value and not current_app.config.get('CAS_LOGIN_ENABLED'):
-            abort(400, title="Class List Not Imported", message="Please select a valid way for students to log in. Students are not able to use CWL based on the current settings.")
+            abort(400, title="Class List Not Imported", message="Please select another way for students to log in and try importing again. Students are not able to use CWL logins based on the current settings.")
         elif import_type is None and not current_app.config.get('APP_LOGIN_ENABLED'):
-            abort(400, title="Class List Not Imported", message="Please select a valid way for students to log in. Students are not able to use the ComPAIR logins based on the current settings.")
+            abort(400, title="Class List Not Imported", message="Please select another way for students to log in and try importing again. Students are not able to use the ComPAIR logins based on the current settings.")
 
         uploaded_file = request.files['file']
         results = {'success': 0, 'invalids': []}
 
         if not uploaded_file:
-            abort(400, title="Class List Not Imported", message="No file was found to upload. Please try again.")
+            abort(400, title="Class List Not Imported", message="No file was found to upload. Please try uploading again.")
         elif not allowed_file(uploaded_file.filename, current_app.config['UPLOAD_ALLOWED_EXTENSIONS']):
-            abort(400, title="Class List Not Imported", message="Only CSV files can be uploaded. Please try again with a valid CSV file.")
+            abort(400, title="Class List Not Imported", message="Sorry, only CSV files can be imported. Please try again with a CSV file.")
 
         unique = str(uuid.uuid4())
         filename = unique + secure_filename(uploaded_file.filename)
@@ -453,7 +453,7 @@ class EnrolAPI(Resource):
 
         require(EDIT, user_course,
             title="Enrollment Not Updated",
-            message="Your role in this course does not allow you to update enrollment.")
+            message="Sorry, your role in this course does not allow you to update enrollment.")
 
         params = new_course_user_parser.parse_args()
         role_name = params.get('course_role')
@@ -465,7 +465,7 @@ class EnrolAPI(Resource):
             CourseRole.instructor.value
         ]
         if role_name not in course_roles:
-            abort(400, title="Enrollment Not Updated", message="Please select a valid course role from the list provided.")
+            abort(400, title="Enrollment Not Updated", message="Please try again with a course role from the list of roles provided.")
         course_role = CourseRole(role_name)
         if user_course.course_role != course_role:
             user_course.course_role = course_role
@@ -497,7 +497,7 @@ class EnrolAPI(Resource):
             .first_or_404()
         require(EDIT, user_course,
             title="Enrollment Not Updated",
-            message="Your role in this course does not allow you to update enrollment.")
+            message="Sorry, your role in this course does not allow you to update enrollment.")
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
@@ -614,7 +614,7 @@ class UserCourseRoleAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, UserCourse(course_id=course.id),
             title="Enrollment Not Updated",
-            message="Your role in this course does not allow you to update enrollment.")
+            message="Sorry, your role in this course does not allow you to update enrollment.")
 
         params = update_users_course_role_parser.parse_args()
 
@@ -626,7 +626,7 @@ class UserCourseRoleAPI(Resource):
             CourseRole.instructor.value
         ]
         if role_name not in course_roles:
-            abort(400, title="Enrollment Not Updated", message="Please select a valid course role from the list provided.")
+            abort(400, title="Enrollment Not Updated", message="Please try again with a course role from the list of roles provided.")
         course_role = CourseRole(role_name)
 
         if len(params.get('ids')) == 0:
@@ -647,10 +647,10 @@ class UserCourseRoleAPI(Resource):
         if len(user_courses) == 1 and user_courses[0].user_id == current_user.id:
             if course_role == CourseRole.dropped:
                 abort(400, title="Enrollment Not Updated",
-                    message="You cannot drop yourself from the course. Please select only other users and try again.")
+                    message="Sorry, you cannot drop yourself from the course. Please select only other users and try again.")
             else:
                 abort(400, title="Enrollment Not Updated",
-                    message="You cannot change your own course role. Please select only other users and try again.")
+                    message="Sorry, you cannot change your own course role. Please select only other users and try again.")
 
         for user_course in user_courses:
             if current_app.config.get('DEMO_INSTALLATION', False):

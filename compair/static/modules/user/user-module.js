@@ -102,7 +102,7 @@ module.controller("UserWriteController",
 
             UserResource.save({'id': $scope.userId}, $scope.user, function(ret) {
                 if ($scope.method == 'edit') {
-                    Toaster.success('User Updated');
+                    Toaster.success('User Saved');
                 } else if ($scope.method == 'create') {
                     Toaster.success('User Saved', 'This user now has access to ComPAIR.');
                 }
@@ -143,7 +143,7 @@ module.controller(
         $scope.changePassword = function() {
             $scope.submitted = true;
             UserResource.password({'id': $scope.user.id}, $scope.password, function (ret) {
-                Toaster.success("Password Updated", ($scope.ownProfile ? "Your" : "User") + " password has been changed.");
+                Toaster.success("Password Saved");
                 $scope.modalInstance.close();
                 $scope.password = {};
             }).$promise.finally(function() {
@@ -177,7 +177,7 @@ module.controller("UserViewController",
             $scope.submitted = true;
 
             UserResource.updateNotifcations({'id': $scope.userId}, $scope.user, function(ret) {
-                Toaster.success('Notification Settings Updated', 'Your notification changes were saved.');
+                Toaster.success('Notifications Saved');
             }).$promise.finally(function() {
                 $scope.submitted = false;
             });
@@ -214,7 +214,7 @@ module.controller("UserListController",
         $scope.updateUser = function(user) {
             UserResource.save({'id': user.id}, user,
                 function (ret) {
-                    Toaster.success("User Updated");
+                    Toaster.success("User Saved");
                     $route.reload();
                 }
             );
@@ -315,7 +315,7 @@ module.controller("UserCourseController",
         $scope.dropCourse = function(course) {
             ClassListResource.unenrol({'courseId': course.id, 'userId': $scope.userId},
                 function (ret) {
-                    Toaster.success("User Removed", "Successfully unenrolled " + ret.fullname + " from the course.");
+                    Toaster.success("User Dropped");
                     $route.reload();
                 }
             )
@@ -324,7 +324,7 @@ module.controller("UserCourseController",
         $scope.updateRole = function(course) {
             ClassListResource.enrol({'courseId': course.id, 'userId': $scope.userId}, course,
                 function (ret) {
-                    Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
+                    Toaster.success("User Saved", 'Successfully changed the user\'s course role to ' + ret.course_role + ".");
                 }
             );
         };
@@ -333,13 +333,13 @@ module.controller("UserCourseController",
             if (course.group_name && course.group_name != "") {
                 GroupResource.enrol({'courseId': course.id, 'userId': $scope.userId, 'groupName': course.group_name}, {},
                     function (ret) {
-                        Toaster.success("Update Complete", "Successfully added the user to group " + ret.group_name);
+                        Toaster.success("User Saved", "Successfully added the user to group " + ret.group_name+".");
                     }
                 );
             } else {
                 GroupResource.unenrol({'courseId': course.id, 'userId': $scope.userId},
                     function (ret) {
-                        Toaster.success("User Removed", "Successfully removed the user from the group.");
+                        Toaster.success("User Removed From Group");
                     }
                 );
             }

@@ -353,7 +353,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 data=json.dumps(expected_answer),
                 content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json['title'], "Answer Not Saved")
+            self.assertEqual(rv.json['title'], "Answer Not Submitted")
             self.assertEqual(rv.json['message'], "An answer has already been submitted for this assignment by you or on your behalf.")
 
         self.fixtures.add_students(1)
@@ -416,8 +416,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 data=json.dumps(expected_answer),
                 content_type='application/json')
             self.assert403(rv)
-            self.assertEqual("Answer Not Saved", rv.json['title'])
-            self.assertEqual("The answer deadline has passed. No answers can be saved beyond the deadline unless the instructor saves it on your behalf.",
+            self.assertEqual("Answer Not Submitted", rv.json['title'])
+            self.assertEqual("Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.",
                 rv.json['message'])
 
             # test student can submit answers within answer grace period
@@ -720,8 +720,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 data=json.dumps(expected),
                 content_type='application/json')
             self.assert403(rv)
-            self.assertEqual("Answer Not Updated", rv.json['title'])
-            self.assertEqual("The answer deadline has passed. No answers can be updated beyond the deadline unless the instructor updates it on your behalf.",
+            self.assertEqual("Answer Not Submitted", rv.json['title'])
+            self.assertEqual("Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.",
                 rv.json['message'])
 
             # test student can submit answers within answer grace period

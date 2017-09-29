@@ -48,7 +48,7 @@
                         scope.submitted = true;
 
                         UserResource.save({}, scope.user, function(ret) {
-                            Toaster.success("Account Setup Complete", "You have successfully completed setting up your ComPAIR account.");
+                            Toaster.success("User Setup Complete");
                             AuthenticationService.login().then(function() {
                                 scope.submitted = false;
                                 $route.reload();

@@ -43,7 +43,7 @@ class ComparisonExample(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTracking
         if not title:
             title = "Comparison Example Unavailable"
         if not message:
-            message = "The comparison example was removed from the system or is no longer accessible."
+            message = "Sorry, these practice answers were deleted or are no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
@@ -51,7 +51,7 @@ class ComparisonExample(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTracking
         if not title:
             title = "Comparison Example Unavailable"
         if not message:
-            message = "The comparison example was removed from the system or is no longer accessible."
+            message = "Sorry, these practice answers were deleted or are no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod

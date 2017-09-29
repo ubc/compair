@@ -18,13 +18,13 @@ on_logout = event.signal('USER_LOGGED_OUT')
 @login_api.route('/login', methods=['POST'])
 def login():
     if not current_app.config.get('APP_LOGIN_ENABLED'):
-        abort(403, title="Not Logged In",
-            message="Please use a valid way to log in. You are not able to use the ComPAIR login based on the current settings.")
+        abort(403, title="Log In Failed",
+            message="Please try an alternate way of logging in. The ComPAIR login has been disabled by your system administrator.")
 
     # expecting login params to be in json format
     param = request.json
     if param is None:
-        abort(400, title="Not Logged In", message="Invalid login data. Please try again.")
+        abort(400, title="Log In Failed", message="The username and password data did not send as expected. Please try again.")
 
     username = param['username']
     password = param['password']
@@ -39,7 +39,8 @@ def login():
 
         if sess.get('LTI') and sess.get('oauth_create_user_link'):
             lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-            lti_user.compair_user_id = user.id
+            lti_user.compair_user = user
+            lti_user.upgrade_system_role()
             sess.pop('oauth_create_user_link')
 
         if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
@@ -51,7 +52,7 @@ def login():
         return jsonify({'user_id': user.uuid, 'permissions': permissions})
 
     # login unsuccessful
-    abort(400, title="Not Logged In", message="Sorry, unrecognized username or password. Please try again.")
+    abort(400, title="Log In Failed", message="Sorry, the username or password was not recognized. Please double-check both fields and try again.")
 
 @login_api.route('/logout', methods=['DELETE'])
 @login_required
@@ -93,8 +94,8 @@ def get_permission():
 @login_api.route('/cas/login')
 def cas_login():
     if not current_app.config.get('CAS_LOGIN_ENABLED'):
-        abort(403, title="Not Logged In",
-            message="Please use a valid way to log in. You are not able to use CWL login based on the current settings.")
+        abort(403, title="Log In Failed",
+            message="Please try an alternate way of logging in. The CWL login has been disabled by your system administrator.")
 
     return redirect(get_cas_login_url())
 
@@ -105,8 +106,8 @@ def cas_auth():
     set message in session so that frontend can get the message through /session call
     """
     if not current_app.config.get('CAS_LOGIN_ENABLED'):
-        abort(403, title="Not Logged In",
-            message="Please use a valid way to log in. You are not able to use CWL login based on the current settings.")
+        abort(403, title="Log In Failed",
+            message="Please try an alternate way of logging in. The CWL login has been disabled by your system administrator.")
 
     url = "/app/#/lti" if sess.get('LTI') else "/"
     error_message = None
@@ -155,7 +156,8 @@ def cas_auth():
 
                 if sess.get('LTI') and sess.get('oauth_create_user_link'):
                     lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-                    lti_user.compair_user_id = thirdpartyuser.user_id
+                    lti_user.compair_user = thirdpartyuser.user
+                    lti_user.upgrade_system_role()
                     sess.pop('oauth_create_user_link')
 
                 if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
@@ -174,8 +176,8 @@ def cas_auth():
 @login_api.route('/cas/logout', methods=['GET'])
 def cas_logout():
     if not current_app.config.get('CAS_LOGIN_ENABLED'):
-        abort(403, title="Not Logged Out",
-            message="Please use a valid way to log out. You are not able to use CWL logout based on the current settings.")
+        abort(403, title="Log Out Failed",
+            message="Please try an alternate way of logging out. The CWL logout has been disabled by your system administrator.")
 
     return redirect(get_cas_logout_url())
 

@@ -83,6 +83,7 @@
             // config CKEDITOR
             CKEDITOR.plugins.addExternal( 'combinedmath', '/app/lib_extension/ckeditor/plugins/combinedmath/' );
             CKEDITOR.plugins.addExternal( 'autolink', '/app/lib_extension/ckeditor/plugins/autolink/' );
+            CKEDITOR.addCss( '@media screen and (-webkit-min-device-pixel-ratio:0) { .cke_editable { font-size: 16px !important; } }' );
             CKEDITOR.on('dialogDefinition', function(ev) {
                 var dialogName = ev.data.name;
                 var dialog = ev.data.definition.dialog;

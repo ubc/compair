@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import json
 import mock
 
@@ -318,6 +320,44 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             lti_consumer.user_id_override = None
             db.session.commit()
             # done user_id_override ------
+
+        # test automatic upgrading of system role for existing accounts
+        for lti_role, (system_role, course_role) in roles.items():
+            for compair_system_role in [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]:
+                lti_context = self.lti_data.create_context(lti_consumer)
+                lti_user = self.lti_data.create_user(lti_consumer, system_role)
+                lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
+                lti_user_resource_link = self.lti_data.create_user_resource_link(
+                    lti_user, lti_resource_link, CourseRole.instructor)
+
+                user = self.data.create_user(compair_system_role)
+                lti_user.compair_user = user
+                course = self.data.create_course()
+                lti_context.compair_course = course
+
+                db.session.commit()
+
+                # valid request - user with account and existing context_id
+                with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                        user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                        follow_redirects=False) as rv:
+                    self.assertRedirects(rv, '/app/#/course/'+course.uuid)
+
+                # compair user system role will upgrade
+                if compair_system_role == SystemRole.student:
+                    if system_role == SystemRole.sys_admin:
+                        self.assertEqual(user.system_role, SystemRole.sys_admin)
+                    elif system_role == SystemRole.instructor:
+                        self.assertEqual(user.system_role, SystemRole.instructor)
+                    else:
+                        self.assertEqual(user.system_role, SystemRole.student)
+                elif compair_system_role == SystemRole.instructor:
+                    if system_role == SystemRole.sys_admin:
+                        self.assertEqual(user.system_role, SystemRole.sys_admin)
+                    else:
+                        self.assertEqual(user.system_role, SystemRole.instructor)
+                elif compair_system_role == SystemRole.sys_admin:
+                    self.assertEqual(user.system_role, SystemRole.sys_admin)
 
     def test_lti_status(self):
         url = '/api/lti/status'
@@ -660,7 +700,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     <roles>Learner</roles>
                     </member>
                     <member>
-                    <user_id>compair_student_3</user_id>
+                    <user_id>compair_student_3è</user_id>
                     <roles>TeachingAssistant</roles>
                     </member>
                     <member>
@@ -693,7 +733,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(lti_memberships), 5)
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
-                    "compair_student_3", "compair_instructor_2"])
+                    "compair_student_3è", "compair_instructor_2"])
 
         # test successful membership response (with user_id_override)
         with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
@@ -727,9 +767,9 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     <custom_puid>compair_student_2</custom_puid>
                     </member>
                     <member>
-                    <user_id>ignore_4</user_id>
+                    <user_id>ignore_4è</user_id>
                     <roles>TeachingAssistant</roles>
-                    <custom_puid>compair_student_3</custom_puid>
+                    <custom_puid>compair_student_3è</custom_puid>
                     </member>
                     <member>
                     <user_id>ignore_5</user_id>
@@ -762,7 +802,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(lti_memberships), 5)
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
-                    "compair_student_3", "compair_instructor_2"])
+                    "compair_student_3è", "compair_instructor_2"])
 
 
     @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._get_membership_request')
@@ -865,7 +905,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                                         "urn:lti:role:ims/lis/TeachingAssistant"
                                     ],
                                     "member":{
-                                        "userId":"compair_student_3"
+                                        "userId":"compair_student_3è"
                                     }
                                 },
                                 {
@@ -957,11 +997,11 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                                         "urn:lti:role:ims/lis/TeachingAssistant"
                                     ],
                                     "member":{
-                                        "userId":"compair_student_3"
+                                        "userId":"compair_student_3è"
                                     },
                                     "message": [{
                                         "message_type": "basic-lti-launch-request",
-                                        "lis_result_sourcedid": "lis_result_sourcedid_compair_student_3"
+                                        "lis_result_sourcedid": "lis_result_sourcedid_compair_student_3è"
                                     },{
                                         "message_type": "other-message-type"
                                     }]
@@ -1038,7 +1078,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(lti_memberships), 5)
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
-                    "compair_student_3", "compair_instructor_2"])
+                    "compair_student_3è", "compair_instructor_2"])
 
                 # ensure the lti_user_resource_link is generated and stores the lis_result_sourcedid
                 lti_user_resource_links = [lti_user_resource_link \
@@ -1142,10 +1182,10 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                                                 "message_type": "basic-lti-launch-request",
                                                 "lis_result_sourcedid": "1234567890-3",
                                                 "custom" : {
-                                                    "puid": "compair_student_3_puid"
+                                                    "puid": "compair_student_3è_puid"
                                                 },
                                                 "ext" : {
-                                                    "user_username": "compair_student_3_username",
+                                                    "user_username": "compair_student_3è_username",
                                                 }
                                             }
                                         ]
@@ -1286,12 +1326,12 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                                         "message" : [
                                             {
                                                 "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "lis_result_sourcedid_compair_student_3",
+                                                "lis_result_sourcedid": "lis_result_sourcedid_compair_student_3è",
                                                 "custom" : {
-                                                    "puid": "compair_student_3_puid"
+                                                    "puid": "compair_student_3è_puid"
                                                 },
                                                 "ext" : {
-                                                    "user_username": "compair_student_3_username",
+                                                    "user_username": "compair_student_3è_username",
                                                 }
                                             }
                                         ]
@@ -1382,10 +1422,10 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                         self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "userId_2", "userId_3", "userId_4", "userId_5"])
                     elif user_id_override == "custom_puid":
                         self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1_puid", "compair_student_2_puid",
-                            "compair_student_3_puid", "compair_instructor_2_puid"])
+                            "compair_student_3è_puid", "compair_instructor_2_puid"])
                     elif user_id_override == "ext_user_username":
                         self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1_username", "compair_student_2_username",
-                            "compair_student_3_username", "compair_instructor_2_username"])
+                            "compair_student_3è_username", "compair_instructor_2_username"])
                     elif user_id_override == "lis_result_sourcedid":
                         self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "1234567890-1", "1234567890-2",
                             "1234567890-3", "1234567890-4"])
@@ -1465,13 +1505,13 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             elif memberships_url == "https://mockmembershipurl.com?page=4&per_page=1":
                 result['nextPage'] = "https://mockmembershipurl.com?page=5&per_page=1"
                 result['pageOf']['membershipSubject']['membership'][0]['role'] = ["urn:lti:role:ims/lis/TeachingAssistant"]
-                result['pageOf']['membershipSubject']['membership'][0]['member']['userId'] = "compair_student_3"
+                result['pageOf']['membershipSubject']['membership'][0]['member']['userId'] = "compair_student_3è"
 
             elif memberships_url == "https://mockmembershipurl.com?rlid="+rlid+"&page=4&per_page=1":
                 result['nextPage'] = "https://mockmembershipurl.com?rlid="+rlid+"&page=5&per_page=1"
                 result['pageOf']['membershipSubject']['membership'][0]['role'] = ["urn:lti:role:ims/lis/TeachingAssistant"]
-                result['pageOf']['membershipSubject']['membership'][0]['member']['userId'] = "compair_student_3"
-                result_launch_message['lis_result_sourcedid'] = "lis_result_sourcedid_compair_student_3"
+                result['pageOf']['membershipSubject']['membership'][0]['member']['userId'] = "compair_student_3è"
+                result_launch_message['lis_result_sourcedid'] = "lis_result_sourcedid_compair_student_3è"
                 result['pageOf']['membershipSubject']['membership'][0]['message'] = [result_launch_message]
 
             elif memberships_url == "https://mockmembershipurl.com?page=5&per_page=1":
@@ -1535,7 +1575,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(lti_memberships), 5)
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
-                    "compair_student_3", "compair_instructor_2"])
+                    "compair_student_3è", "compair_instructor_2"])
 
     @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._post_membership_request')
     def test_lti_membership_for_consumer_with_membership_ext(self, mocked_post_membership_request):
@@ -1656,11 +1696,11 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     <lis_result_sourcedid>:_676_1::compai:compair_student_2</lis_result_sourcedid>
                     </member>
                     <member>
-                    <user_id>compair_student_3</user_id>
+                    <user_id>compair_student_3è</user_id>
                     <user_image>http://www.gravatar.com/avatar/4</user_image>
                     <roles>TeachingAssistant</roles>
-                    <person_sourcedid>compair_student_3</person_sourcedid>
-                    <person_contact_email_primary>compair_student_3@test.com</person_contact_email_primary>
+                    <person_sourcedid>compair_student_3è</person_sourcedid>
+                    <person_contact_email_primary>compair_student_3è@test.com</person_contact_email_primary>
                     <person_name_given>Student</person_name_given>
                     <person_name_family>Six</person_name_family>
                     <person_name_full>Student Six</person_name_full>
@@ -1701,7 +1741,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(lti_memberships), 5)
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
-                    "compair_student_2", "compair_student_3", "compair_instructor_2"])
+                    "compair_student_2", "compair_student_3è", "compair_instructor_2"])
 
             # test minimual membership response
             mocked_post_membership_request.return_value = """
@@ -1727,7 +1767,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     <roles>Learner</roles>
                     </member>
                     <member>
-                    <user_id>compair_student_3</user_id>
+                    <user_id>compair_student_3è</user_id>
                     <roles>TeachingAssistant</roles>
                     </member>
                     <member>
@@ -1760,7 +1800,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(lti_memberships), 5)
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
-                    "compair_student_2", "compair_student_3", "compair_instructor_2"])
+                    "compair_student_2", "compair_student_3è", "compair_instructor_2"])
 
 
             # test ensure current user is not unenrolled from course on membership fetch
@@ -1814,7 +1854,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
             self.assertEqual(rv.json['title'], "Membership Not Updated")
             self.assertEqual(rv.json['message'],
-                "Your LTI link settings has no course context. Please edit your LTI link settings and try again.")
+                "Sorry, your LTI link settings have no course context. Please edit your LTI link settings and try linking again.")
 
             # requires at least one linked lti context to support membership
             lti_context_2 = self.lti_data.create_context(lti_consumer, compair_course=course_2)
@@ -1955,12 +1995,12 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                                     "@id":None,
                                     "name":"Student Six",
                                     "img":"http://www.gravatar.com/avatar/4",
-                                    "email":"compair_student_3@test.com",
+                                    "email":"compair_student_3è@test.com",
                                     "familyName":"Six",
                                     "givenName":"Student",
                                     "resultSourcedId":None,
-                                    "sourcedId":"compair_student_3",
-                                    "userId":"compair_student_3"
+                                    "sourcedId":"compair_student_3è",
+                                    "userId":"compair_student_3è"
                                 }
                             },
                             {
@@ -2029,7 +2069,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(lti_memberships), 5)
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
-                    "compair_student_2", "compair_student_3", "compair_instructor_2", "compair_student_100"])
+                    "compair_student_2", "compair_student_3è", "compair_instructor_2", "compair_student_100"])
 
             # test minimual membership response
             mocked_get_membership_request.return_value = {
@@ -2078,7 +2118,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                                 "urn:lti:role:ims/lis/TeachingAssistant"
                             ],
                             "member":{
-                                "userId":"compair_student_3"
+                                "userId":"compair_student_3è"
                             }
                             },
                             {
@@ -2128,7 +2168,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(lti_memberships), 5)
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
-                    "compair_student_2", "compair_student_3", "compair_instructor_2"])
+                    "compair_student_2", "compair_student_3è", "compair_instructor_2"])
 
 
             # test ensure current user is not unenrolled from course on membership fetch

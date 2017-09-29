@@ -71,9 +71,9 @@ module.controller('LTIConsumerListController',
             LTIConsumerResource.save(consumer).$promise.then(
                 function (ret) {
                     if (ret.active) {
-                         Toaster.success("LTI Consumer Activated!");
+                         Toaster.success("LTI Consumer Activated");
                     } else {
-                         Toaster.success("LTI Consumer Deactivated!");
+                         Toaster.success("LTI Consumer Deactivated");
                     }
                     $scope.updateConsumerList();
                 }
@@ -113,9 +113,9 @@ module.controller("LTIConsumerViewController",
                 function (ret) {
                     $scope.consumer = ret;
                     if (ret.active) {
-                         Toaster.success("LTI Consumer Activated!");
+                         Toaster.success("LTI Consumer Activated");
                     } else {
-                         Toaster.success("LTI Consumer Deactivated!");
+                         Toaster.success("LTI Consumer Deactivated");
                     }
                 }
             );
@@ -147,9 +147,9 @@ module.controller("LTIConsumerWriteController",
             LTIConsumerResource.save($scope.consumer).$promise.then(
                 function (ret) {
                     if ($scope.method == "create") {
-                         Toaster.success("LTI Consumer Created!");
+                         Toaster.success("LTI Consumer Created");
                     } else if ($scope.method == "edit") {
-                         Toaster.success("LTI Consumer Updated!");
+                         Toaster.success("LTI Consumer Updated");
                     }
                     $location.path('/lti/consumer');
                 }

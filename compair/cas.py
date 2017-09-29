@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 from flask import current_app, url_for
-from caslib import SAMLClient, CASClient
+from caslib import SAMLClient, CASClient, CASResponse
 from xml.dom.minidom import parseString
 import requests
 
@@ -18,7 +20,7 @@ def _get_client():
             auth_prefix=auth_prefix
         )
     else:
-        return CASClient(
+        return CustomCASClient(
             server_url=server_url,
             service_url=service_url,
             auth_prefix=auth_prefix
@@ -36,6 +38,18 @@ def get_cas_logout_url():
     return _get_client()._logout_url(logout_service_url)
 
 
+class CustomCASClient(CASClient):
+    def get_cas_response(self, url):
+        try:
+            # overwritten to allow development environment to use self signed certificates
+            verify = current_app.config.get('ENFORCE_SSL', True)
+            response = requests.get(url, verify=verify)
+            response_text = response.text.encode('utf-8') if response.text else None
+            return CASResponse(response_text)
+        except Exception:
+            current_app.logging.exception("CASLIB: Error retrieving a response")
+            return None
+
 
 class CustomSAMLClient(SAMLClient):
     def get_saml_response(self, url, envelope):
@@ -43,7 +57,8 @@ class CustomSAMLClient(SAMLClient):
             # overwritten to allow development environment to use self signed certificates
             verify = current_app.config.get('ENFORCE_SSL', True)
             response = requests.post(url, data=envelope, verify=verify)
-            return CustomSAMLResponse(response.text)
+            response_text = response.text.encode('utf-8') if response.text else None
+            return CustomSAMLResponse(response_text)
         except Exception:
             current_app.logger.error("SAML: Error retrieving a response")
             raise

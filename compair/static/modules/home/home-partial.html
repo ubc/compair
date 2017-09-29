@@ -74,10 +74,10 @@
                         <!-- number of unfinished assignments for student user that can still be completed for each course, i.e.,
                              the student has not answered && the answer period is active ||
                              the student has not compared/self-eval'ed && the compare/eval period is active -->
-                        <li ng-if="course.status && course.status.incomplete_assignments > 0" title="{{course.status.incomplete_assignments}} unfinished">
+                        <li ng-if="course.status && course.status.incomplete_assignments > 0 && !course.canManageAssignment" title="{{course.status.incomplete_assignments}} unfinished">
                             <label class="label label-warning">{{course.status.incomplete_assignments}} assignment<span ng-if="course.status.incomplete_assignments != 1">s</span> to do</label>
                         </li>
-                        <li ng-if="course.status && course.status.incomplete_assignments == 0" title="{{course.status.incomplete_assignments}} unfinished">
+                        <li ng-if="course.status && course.status.incomplete_assignments == 0 && !course.canManageAssignment" title="{{course.status.incomplete_assignments}} unfinished">
                             No assignments to do
                         </li>
                         <!-- Total Users (instructors only) -->

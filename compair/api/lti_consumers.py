@@ -45,7 +45,7 @@ class ConsumerAPI(Resource):
     def get(self):
         require(MANAGE, LTIConsumer,
             title="Consumers Unavailable",
-            message="Your system role does not allow you to view LTI consumers.")
+            message="Sorry, your system role does not allow you to view LTI consumers.")
 
         params = consumer_list_parser.parse_args()
 
@@ -75,7 +75,7 @@ class ConsumerAPI(Resource):
         consumer = LTIConsumer()
         require(CREATE, consumer,
             title="Consumer Not Saved",
-            message="Your system role does not allow you to save LTI consumers.")
+            message="Sorry, your system role does not allow you to save LTI consumers.")
 
         consumer.oauth_consumer_key = params.get("oauth_consumer_key")
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
@@ -93,7 +93,7 @@ class ConsumerAPI(Resource):
             )
         except exc.IntegrityError:
             db.session.rollback()
-            abort(409, title="Consumer Not Saved", message="A LTI consumer with the same consumer key already exists.")
+            abort(409, title="Consumer Not Saved", message="An LTI consumer with the same consumer key already exists. Please double-check the consumer key and try saving again.")
 
         return marshal(consumer, dataformat.get_lti_consumer(include_sensitive=True))
 
@@ -108,7 +108,7 @@ class ConsumerIdAPI(Resource):
         consumer = LTIConsumer.get_by_uuid_or_404(consumer_uuid)
         require(READ, consumer,
             title="Consumer Unavailable",
-            message="Your system role does not allow you to view LTI consumers.")
+            message="Sorry, your system role does not allow you to view LTI consumers.")
 
         on_consumer_get.send(
             self,
@@ -122,14 +122,14 @@ class ConsumerIdAPI(Resource):
     def post(self, consumer_uuid):
         consumer = LTIConsumer.get_by_uuid_or_404(consumer_uuid)
         require(EDIT, consumer,
-            title="Consumer Not Updated",
-            message="Your system role does not allow you to update LTI consumers.")
+            title="Consumer Not Saved",
+            message="Sorry, your system role does not allow you to save LTI consumers.")
 
         params = existing_consumer_parser.parse_args()
 
         # make sure the course id in the url and the course id in the params match
         if params['id'] != consumer_uuid:
-            abort(400, title="Consumer Update Failed", message="LTI Consumer id does not match URL.")
+            abort(400, title="Consumer Not Saved", message="The LTI consumer ID does not match the URL, which is required in order to save the LTI consumer.")
 
         consumer.oauth_consumer_key = params.get("oauth_consumer_key")
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
@@ -146,7 +146,7 @@ class ConsumerIdAPI(Resource):
             )
         except exc.IntegrityError:
             db.session.rollback()
-            abort(409, title="Consumer Not Updated", message="A LTI consumer with the same consumer key already exists.")
+            abort(409, title="Consumer Not Saved", message="An LTI consumer with the same consumer key already exists. Please double-check the consumer key and try saving again.")
 
         return marshal(consumer, dataformat.get_lti_consumer(include_sensitive=True))
 
