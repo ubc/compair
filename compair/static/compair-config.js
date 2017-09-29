@@ -352,6 +352,20 @@ myApp.config(
                     }
                 }
             })
+        .when ('/course/:courseId/duplicate',
+            {
+                templateUrl: 'modules/course/course-duplicate-partial.html',
+                label: "Duplicate Course",
+                controller: 'CourseDuplicateController',
+                resolve: {
+                    resolvedData: function() {
+                        return ResolveDeferredRouteData({
+                            course: RouteResolves.course(),
+                            loggedInUser: RouteResolves.loggedInUser()
+                        }, ['course']);
+                    }
+                }
+            })
         .when ('/course/:courseId/user',
             {
                 templateUrl: 'modules/classlist/classlist-view-partial.html',

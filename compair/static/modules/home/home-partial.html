@@ -58,7 +58,7 @@
                         </li>
                         <!-- Duplicate Link (instructors only) -->
                         <li ng-if="course.canEditCourse">
-                            <a ng-click="duplicateCourse(course)" title="Duplicate" href="">
+                            <a ng-href="#/course/{{course.id}}/duplicate" title="Duplicate">
                                 Duplicate
                             </a>
                         </li>

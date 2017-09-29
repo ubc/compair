@@ -234,14 +234,6 @@ module.controller(
             });
         };
 
-        $scope.closeDuplicate = function(courseId) {
-            $scope.selectCourse(courseId);
-        };
-
-        $scope.dismissDuplicate = function() {
-            $scope.showDuplicateForm = false;
-        };
-
         $scope.updateCourseList = function() {
             UserResource.getUserCourses($scope.courseFilters).$promise.then(
                 function(ret) {
@@ -263,16 +255,17 @@ module.controller(
 
 
 module.controller(
-    'CourseDuplicateModalController',
-    ["$rootScope", "$scope", "AssignmentResource", "moment",
-     "Session", "CourseResource", "Toaster", "UserResource",
-    function ($rootScope, $scope, AssignmentResource, moment,
-              Session, CourseResource, Toaster, UserResource) {
+    'CourseDuplicateController',
+    ["$rootScope", "$scope", "AssignmentResource", "moment", '$routeParams', '$location',
+     "Session", "CourseResource", "Toaster", "resolvedData", "UserResource",
+    function ($rootScope, $scope, AssignmentResource, moment, $routeParams, $location, 
+              Session, CourseResource, Toaster, resolvedData, UserResource) {
 
         $scope.showAssignments = false;
         $scope.submitted = false;
         $scope.format = 'dd-MMMM-yyyy';
-        $scope.originalCourse = typeof($scope.originalCourse) != 'undefined' ? $scope.originalCourse : {};
+        $scope.courseId = $routeParams.courseId;
+        $scope.originalCourse = resolvedData.course || {};
 
         $scope.setupDuplicateCourse = function() {
             $scope.duplicateCourse = {
@@ -369,14 +362,6 @@ module.controller(
             object.opened = true;
         };
 
-        $scope.cancelDuplicateCourse = function() {
-            if ($scope.dismissDuplicate) {
-                $scope.dismissDuplicate();
-            } else {
-                $scope.$dismiss();
-            }
-        };
-
         $scope.datePickerMinDate = function() {
             var dates = Array.prototype.slice.call(arguments).filter(function(val) {
                 return val !== null;
@@ -463,11 +448,9 @@ module.controller(
                 Session.expirePermissions();
 
                 var course = ret;
-                if ($scope.closeDuplicate) {
-                    $scope.closeDuplicate(course.id);
-                } else {
-                    $scope.$close(course.id);
-                }
+                submitted = false;
+                $location.path('/course/' + ret.id);
+
             }).$promise.finally(function() {
                 $scope.submitted = false;
             });
