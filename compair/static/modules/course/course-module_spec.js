@@ -118,7 +118,7 @@ describe('course-module', function () {
                 };
                 beforeEach(inject(function (_Toaster_) {
                     toaster = _Toaster_;
-                    spyOn(toaster, 'error');
+                    spyOn(toaster, 'warning');
                 }));
 
                 beforeEach(function () {
@@ -131,7 +131,7 @@ describe('course-module', function () {
                     //double check nothing to initialize
                 });
 
-                it('should error when start date is not before end date', function () {
+                it('should warn when start date is not before end date', function () {
                     $rootScope.course = angular.copy(course);
                     $rootScope.course.id = undefined;
                     $rootScope.date.course_start.date = new Date();
@@ -143,7 +143,7 @@ describe('course-module', function () {
 
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Course Not Saved', 'Please set course end time after course start time and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
@@ -164,7 +164,7 @@ describe('course-module', function () {
                 var toaster;
                 beforeEach(inject(function (_Toaster_) {
                     toaster = _Toaster_;
-                    spyOn(toaster, 'error');
+                    spyOn(toaster, 'warning');
                 }));
 
                 beforeEach(function () {
@@ -181,7 +181,7 @@ describe('course-module', function () {
                     expect($rootScope.course).toEqualData(editCourse);
                 });
 
-                it('should error when start date is not before end date', function () {
+                it('should warn when start date is not before end date', function () {
                     $rootScope.date.course_start.date = new Date();
                     $rootScope.date.course_start.time = new Date();
                     $rootScope.date.course_end.date = new Date();
@@ -191,7 +191,7 @@ describe('course-module', function () {
 
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Course Not Saved', 'Please set course end time after course start time and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
@@ -279,7 +279,7 @@ describe('course-module', function () {
             ]
             beforeEach(inject(function (_Toaster_) {
                 toaster = _Toaster_;
-                spyOn(toaster, 'error');
+                spyOn(toaster, 'warning');
             }));
 
             beforeEach(function () {
@@ -329,7 +329,7 @@ describe('course-module', function () {
                     "student_count": 0
                 };
 
-                it('should error when start date is not before end date', function () {
+                it('should warn when start date is not before end date', function () {
                     $rootScope.course = angular.copy(course);
                     $rootScope.course.id = undefined;
                     $rootScope.date.course_start.date = new Date();
@@ -340,7 +340,7 @@ describe('course-module', function () {
 
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Course Not Saved', 'Please set course end time after course start time and save again.');
                     expect(modalInstance.close.calls.count()).toEqual(0);
                 });
 
@@ -503,7 +503,7 @@ describe('course-module', function () {
 
             beforeEach(inject(function (_Toaster_) {
                 toaster = _Toaster_;
-                spyOn(toaster, 'error');
+                spyOn(toaster, 'warning');
             }));
 
             beforeEach(function () {
@@ -619,7 +619,7 @@ describe('course-module', function () {
                     })
                 });
 
-                it('should error when course start date is not before end date', function () {
+                it('should warn when course start date is not before end date', function () {
                     $rootScope.duplicateCourse.date.course_start.date = new Date();
                     $rootScope.duplicateCourse.date.course_start.time = new Date();
                     $rootScope.duplicateCourse.date.course_end.date = new Date();
@@ -628,11 +628,11 @@ describe('course-module', function () {
 
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Course Not Duplicated', 'Please set course end time after course start time and try again.');
                     expect($location.path()).toEqual('');
                 });
 
-                it('should error when assignment answer start date is not before end date', function () {
+                it('should warn when assignment answer start date is not before end date', function () {
                     $rootScope.duplicateAssignments[0].date.astart.date = new Date();
                     $rootScope.duplicateAssignments[0].date.astart.time = new Date();
                     $rootScope.duplicateAssignments[0].date.aend.date = new Date();
@@ -641,26 +641,22 @@ describe('course-module', function () {
 
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith(
-                        'Answer Period Error for '+$rootScope.duplicateAssignments[0].name,
-                        'Answer end time must be after answer start time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please set answer end time after answer start time and try again.');
                     expect($location.path()).toEqual('');
                 });
 
-                it('should error when answer start is not before compare start', function () {
+                it('should warn when answer start is not before compare start', function () {
                     $rootScope.duplicateAssignments[0].availableCheck = true;
                     $rootScope.duplicateAssignments[0].date.cstart.date = angular.copy($rootScope.duplicateAssignments[0].date.astart.date);
                     $rootScope.duplicateAssignments[0].date.cstart.date.setDate($rootScope.duplicateAssignments[0].date.cstart.date.getDate()-1);
 
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith(
-                        'Time Period Error for '+$rootScope.duplicateAssignments[0].name,
-                        'Please double-check the answer and comparison period start and end times.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please double-check the answer and comparison start and end times for mismatches and try again.');
                     expect($location.path()).toEqual('');
                 });
 
-                it('should error when compare start is not before compare end', function () {
+                it('should warn when compare start is not before compare end', function () {
                     $rootScope.duplicateAssignments[0].availableCheck = true;
                     $rootScope.duplicateAssignments[0].date.cstart.date = angular.copy($rootScope.duplicateAssignments[0].date.astart.date);
                     $rootScope.duplicateAssignments[0].date.cstart.date.setDate($rootScope.duplicateAssignments[0].date.cstart.date.getDate()+1);
@@ -669,9 +665,7 @@ describe('course-module', function () {
 
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith(
-                        'Time Period Error for '+$rootScope.duplicateAssignments[0].name,
-                        'comparison end time must be after comparison start time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please set comparison end time after comparison start time and try again.');
                     expect($location.path()).toEqual('');
                 });
 

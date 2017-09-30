@@ -140,14 +140,14 @@ module.controller(
             if (groupName) {
                 GroupResource.updateUsersGroup({'courseId': $scope.courseId, 'groupName': groupName}, {ids: selectedUserIds},
                     function (ret) {
-                        Toaster.success("Update Complete", "Successfully enrolled the user(s) into " + ret.group_name);
+                        Toaster.success("User(s) Saved", "Successfully added the user(s) into " + ret.group_name + ".");
                         $route.reload();
                     }
                 );
             } else {
                 GroupResource.removeUsersGroup({'courseId': $scope.courseId}, {ids: selectedUserIds},
                     function (ret) {
-                        Toaster.success("User(s) Removed", "Successfully removed the user(s) from groups");
+                        Toaster.success("User(s) Removed From Group");
                         $route.reload();
                     }
                 );
@@ -164,14 +164,14 @@ module.controller(
             if (courseRole) {
                 ClassListResource.updateCourseRoles({'courseId': $scope.courseId}, {ids: selectedUserIds, course_role: courseRole},
                     function (ret) {
-                        Toaster.success("User(s) Updated", "Successfully changed course role to " + courseRole);
+                        Toaster.success("User(s) Saved", "Successfully changed course role to " + courseRole + ".");
                         $route.reload();
                     }
                 );
             } else {
                 ClassListResource.updateCourseRoles({'courseId': $scope.courseId}, {ids: selectedUserIds},
                     function (ret) {
-                        Toaster.success("User(s) Removed", "Successfully removed user(s) from course.");
+                        Toaster.success("User(s) Dropped");
                         $route.reload();
                     }
                 );
@@ -182,13 +182,13 @@ module.controller(
             if (groupName) {
                 GroupResource.enrol({'courseId': $scope.courseId, 'userId': userId, 'groupName': groupName}, {},
                     function (ret) {
-                        Toaster.success("Update Complete", "Successfully added the user to group " + ret.group_name);
+                        Toaster.success("User Saved", "Successfully added the user to group " + ret.group_name + ".");
                     }
                 );
             } else {
                 GroupResource.unenrol({'courseId': $scope.courseId, 'userId': userId},
                     function (ret) {
-                        Toaster.success("User Removed", "Successfully removed the user from the group.");
+                        Toaster.success("User Removed From Group");
                     }
                 );
             }
@@ -197,7 +197,7 @@ module.controller(
         $scope.enrol = function(user) {
             ClassListResource.enrol({'courseId': $scope.courseId, 'userId': user.id}, user,
                 function (ret) {
-                    Toaster.success("User Added", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role);
+                    Toaster.success("User Saved", 'Successfully changed '+ ret.fullname +'\'s course role to ' + ret.course_role + ".");
                 }
             );
         };
@@ -205,7 +205,7 @@ module.controller(
         $scope.unenrol = function(userId) {
             ClassListResource.unenrol({'courseId': $scope.courseId, 'userId': userId},
                 function (ret) {
-                    Toaster.success("User Removed", "Successfully unenrolled " + ret.fullname + " from the course.");
+                    Toaster.success("User Dropped");
                     $route.reload();
                 }
             )
@@ -218,7 +218,7 @@ module.controller(
                     $scope.submitted = false;
                     ClassListResource.get({'courseId':$scope.courseId},
                         function (ret) {
-                            Toaster.success("Enrolment Refreshed", "Successfully updated enrolment for the course.");
+                            Toaster.success("Enrollment List Refreshed", "This page now shows the most up-to-date enrollment for your course.");
                             $route.reload();
                         }
                     );
@@ -320,7 +320,7 @@ module.controller(
             ctrl.user.course_role = ctrl.course_role;
             ClassListResource.enrol({'courseId': ctrl.courseId, 'userId': ctrl.user.id}, ctrl.user).$promise.then(
                 function (ret) {
-                    Toaster.success("User Added", 'Successfully added '+ ret.fullname +' as ' + ret.course_role + ' to the course.');
+                    Toaster.success("User Enrolled", 'Successfully enrolled '+ ret.fullname +' as ' + ret.course_role + ' in the course.');
                     $route.reload();
                 }
             ).finally(function() {

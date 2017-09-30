@@ -880,19 +880,6 @@ describe('assignment-module', function () {
                 expect($rootScope.assignment.status.answers.answered).toBe(false);
             });
 
-            it('should be able to unflag answer', function () {
-                answer = mockAnswers.objects[0];
-
-                expect(answer.flagged).toBe(true);
-
-                $rootScope.unflagAnswer(answer);
-                $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers/'+answer.id+'/flagged').respond({});
-                $httpBackend.flush();
-
-                expect(answer.flagged).toBe(false);
-            });
-
-
             it('should be able to toggle top answer state', function () {
                 answer = mockAnswers.objects[0];
 
@@ -1175,10 +1162,10 @@ describe('assignment-module', function () {
                 }
                 beforeEach(inject(function (_Toaster_) {
                     toaster = _Toaster_;
-                    spyOn(toaster, 'error');
+                    spyOn(toaster, 'warning');
                 }));
 
-                it('should error when answer start is not before answer end', function () {
+                it('should warn when answer start is not before answer end', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.date.aend.date = $rootScope.date.astart.date;
@@ -1187,11 +1174,11 @@ describe('assignment-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Answer Period Error', 'Answer end time must be after answer start time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please set answer end time after answer start time and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
-                it('should error when answer start is not before compare start', function () {
+                it('should warn when answer start is not before compare start', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.availableCheck = true;
@@ -1201,11 +1188,11 @@ describe('assignment-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'Please double-check the answer and comparison period start and end times.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please double-check the answer and comparison start and end times for mismatches and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
-                it('should error when compare start is not before compare end', function () {
+                it('should warn when compare start is not before compare end', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.availableCheck = true;
@@ -1215,7 +1202,7 @@ describe('assignment-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'comparison end time must be after comparison start time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please set comparison end time after comparison start time and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
@@ -1232,7 +1219,7 @@ describe('assignment-module', function () {
                     expect($rootScope.submitted).toBe(false);
                 });
 
-                it('should error when comparison examples enabled and answer A is not set', function () {
+                it('should warn when comparison examples enabled and answer A is not set', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.addPractice = true;
@@ -1244,11 +1231,11 @@ describe('assignment-module', function () {
                     var currentPath = $location.path();
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer A Error', 'Practice answers needs to have content.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please add content for the first answer in your practice pair and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
-                it('should error when comparison examples enabled and answer B is not set', function () {
+                it('should warn when comparison examples enabled and answer B is not set', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.addPractice = true;
@@ -1260,7 +1247,7 @@ describe('assignment-module', function () {
                     var currentPath = $location.path();
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer B Error', 'Practice answers needs to have content.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please add content for the second answer in your practice pair and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
@@ -1447,10 +1434,10 @@ describe('assignment-module', function () {
                 var toaster;
                 beforeEach(inject(function (_Toaster_) {
                     toaster = _Toaster_;
-                    spyOn(toaster, 'error');
+                    spyOn(toaster, 'warning');
                 }));
 
-                it('should error when answer start is not before answer end', function () {
+                it('should warn when answer start is not before answer end', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.date.aend.date = $rootScope.date.astart.date;
                     $rootScope.date.aend.time = $rootScope.date.astart.time;
@@ -1458,7 +1445,7 @@ describe('assignment-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Answer Period Error', 'Answer end time must be after answer start time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please set answer end time after answer start time and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
@@ -1471,11 +1458,11 @@ describe('assignment-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'Please double-check the answer and comparison period start and end times.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please double-check the answer and comparison start and end times for mismatches and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
-                it('should error when compare start is not before compare end', function () {
+                it('should warn when compare start is not before compare end', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.availableCheck = true;
                     $rootScope.date.cend.date = $rootScope.date.cstart.date;
@@ -1484,29 +1471,29 @@ describe('assignment-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'comparison end time must be after comparison start time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please set comparison end time after comparison start time and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
-                it('should error when comparison examples enabled and answer A is not set', function () {
+                it('should warn when comparison examples enabled and answer A is not set', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.addPractice = true;
                     $rootScope.comparison_example.answer1.content = "";
                     var currentPath = $location.path();
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer A Error', 'Practice answers needs to have content.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please add content for the first answer in your practice pair and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
-                it('should error when comparison examples enabled and answer B is not set', function () {
+                it('should warn when comparison examples enabled and answer B is not set', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.addPractice = true;
                     $rootScope.comparison_example.answer2.content = "";
                     var currentPath = $location.path();
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer B Error', 'Practice answers needs to have content.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please add content for the second answer in your practice pair and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
@@ -1722,10 +1709,10 @@ describe('assignment-module', function () {
                 }
                 beforeEach(inject(function (_Toaster_) {
                     toaster = _Toaster_;
-                    spyOn(toaster, 'error');
+                    spyOn(toaster, 'warning');
                 }));
 
-                it('should error when answer start is not before answer end', function () {
+                it('should warn when answer start is not before answer end', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.date.aend.date = $rootScope.date.astart.date;
@@ -1734,11 +1721,11 @@ describe('assignment-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Answer Period Error', 'Answer end time must be after answer start time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please set answer end time after answer start time and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
-                it('should error when answer start is not before compare start', function () {
+                it('should warn when answer start is not before compare start', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.availableCheck = true;
@@ -1748,11 +1735,11 @@ describe('assignment-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'Please double-check the answer and comparison period start and end times.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please double-check the answer and comparison start and end times for mismatches and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
-                it('should error when compare start is not before compare end', function () {
+                it('should warn when compare start is not before compare end', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.availableCheck = true;
@@ -1762,7 +1749,7 @@ describe('assignment-module', function () {
 
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Time Period Error', 'comparison end time must be after comparison start time.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please set comparison end time after comparison start time and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
@@ -1779,7 +1766,7 @@ describe('assignment-module', function () {
                     expect($rootScope.submitted).toBe(false);
                 });
 
-                it('should error when comparison examples enabled and answer A is not set', function () {
+                it('should warn when comparison examples enabled and answer A is not set', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.addPractice = true;
@@ -1791,11 +1778,11 @@ describe('assignment-module', function () {
                     var currentPath = $location.path();
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer A Error', 'Practice answers needs to have content.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please add content for the first answer in your practice pair and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 
-                it('should error when comparison examples enabled and answer B is not set', function () {
+                it('should warn when comparison examples enabled and answer B is not set', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.addPractice = true;
@@ -1807,7 +1794,7 @@ describe('assignment-module', function () {
                     var currentPath = $location.path();
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.error).toHaveBeenCalledWith('Practice Answer B Error', 'Practice answers needs to have content.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please add content for the second answer in your practice pair and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 

@@ -49,7 +49,7 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixi
         if not title:
             title = "Reply Unavailable"
         if not message:
-            message = "The reply was removed from the system or is no longer accessible."
+            message = "Sorry, this reply was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
@@ -57,7 +57,7 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixi
         if not title:
             title = "Reply Unavailable"
         if not message:
-            message = "The reply was removed from the system or is no longer accessible."
+            message = "Sorry, this reply was deleted or is no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod

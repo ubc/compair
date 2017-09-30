@@ -123,7 +123,7 @@ module.controller("LTIController",
                         function(ret) {
                             // refresh permissions
                             Session.expirePermissions();
-                            Toaster.success("Course Linked", "Successfully linked your course as requested.");
+                            Toaster.success("Course Linked", "Successfully linked your ComPAIR course as requested with an external source.");
                             // reload to refresh status and check what to do next
                             $route.reload();
                         }

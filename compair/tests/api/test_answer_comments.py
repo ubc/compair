@@ -478,8 +478,8 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
             invalid['id'] = self.data.get_answer_comments_by_assignment(self.assignment)[1].uuid
             rv = self.client.post(url, data=json.dumps(invalid), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual("Reply Not Updated", rv.json['title'])
-            self.assertEqual("The reply's ID does not match the URL, which is required in order to update the reply.",
+            self.assertEqual("Reply Not Saved", rv.json['title'])
+            self.assertEqual("The reply's ID does not match the URL, which is required in order to save the reply.",
                 rv.json['message'])
 
             # test empty content
@@ -487,8 +487,8 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
             empty['content'] = ''
             rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual("Reply Not Updated", rv.json['title'])
-            self.assertEqual("Please provide content in the text editor to update this reply.", rv.json['message'])
+            self.assertEqual("Reply Not Saved", rv.json['title'])
+            self.assertEqual("Please provide content in the text editor to reply and try saving again.", rv.json['message'])
 
             # test empty comment_type
             empty = content.copy()

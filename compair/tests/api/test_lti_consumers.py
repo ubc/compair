@@ -50,7 +50,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url, data=json.dumps(consumer_expected), content_type='application/json')
             self.assertStatus(rv, 409)
             self.assertEqual(rv.json['title'], "Consumer Not Saved")
-            self.assertEqual(rv.json['message'], "A LTI consumer with the same consumer key already exists.")
+            self.assertEqual(rv.json['message'], "An LTI consumer with the same consumer key already exists. Please double-check the consumer key and try saving again.")
 
     def test_list_lti_consumers(self):
         url = self._build_consumer_url()
@@ -246,6 +246,6 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
 
             rv = self.client.post(url, data=json.dumps(consumer2_expected), content_type='application/json')
             self.assertStatus(rv, 409)
-            self.assertEqual(rv.json['title'], "Consumer Not Updated")
-            self.assertEqual(rv.json['message'], "A LTI consumer with the same consumer key already exists.")
+            self.assertEqual(rv.json['title'], "Consumer Not Saved")
+            self.assertEqual(rv.json['message'], "An LTI consumer with the same consumer key already exists. Please double-check the consumer key and try saving again.")
 

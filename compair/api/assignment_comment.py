@@ -63,7 +63,7 @@ class AssignmentCommentRootAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(CREATE, AssignmentComment(course_id=course.id),
             title="Help Comment Not Saved",
-            message="Help comments can be left only by those enrolled in the course. Please double-check your enrollment in this course.")
+            message="Help comments can be saved only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         new_assignment_comment = AssignmentComment(assignment_id=assignment.id)
 
@@ -71,7 +71,7 @@ class AssignmentCommentRootAPI(Resource):
 
         new_assignment_comment.content = params.get("content")
         if not new_assignment_comment.content:
-            abort(400, title="Help Comment Not Saved", message="Please provide content in the text editor to leave this comment.")
+            abort(400, title="Help Comment Not Saved", message="Please provide content in the text editor and try saving again.")
 
         new_assignment_comment.user_id = current_user.id
 
@@ -101,7 +101,7 @@ class AssignmentCommentIdAPI(Resource):
         assignment_comment = AssignmentComment.get_active_by_uuid_or_404(assignment_comment_uuid)
         require(READ, assignment_comment,
             title="Help Comment Unavailable",
-            message="Your role in this course does not allow you to view help comments.")
+            message="Sorry, your role in this course does not allow you to view help comments.")
 
         on_assignment_comment_get.send(
             self,
@@ -118,17 +118,17 @@ class AssignmentCommentIdAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         assignment_comment = AssignmentComment.get_active_by_uuid_or_404(assignment_comment_uuid)
         require(EDIT, assignment_comment,
-            title="Help Comment Not Updated",
-            message="Your role in this course does not allow you to update help comments.")
+            title="Help Comment Not Saved",
+            message="Sorry, your role in this course does not allow you to save help comments.")
 
         params = existing_assignment_comment_parser.parse_args()
         # make sure the comment id in the rul and the id matches
         if params['id'] != assignment_comment_uuid:
-            abort(400, title="Help Comment Not Updated", message="The comment's ID does not match the URL, which is required in order to update the comment.")
+            abort(400, title="Help Comment Not Saved", message="The comment's ID does not match the URL, which is required in order to save the comment.")
 
         # modify comment according to new values, preserve original values if values not passed
         if not params.get("content"):
-            abort(400, title="Help Comment Not Updated", message="Please provide content in the text editor to update this comment.")
+            abort(400, title="Help Comment Not Saved", message="Please provide content in the text editor and try saving again.")
 
         assignment_comment.content = params.get("content")
         db.session.add(assignment_comment)
@@ -151,7 +151,7 @@ class AssignmentCommentIdAPI(Resource):
         assignment_comment = AssignmentComment.get_active_by_uuid_or_404(assignment_comment_uuid)
         require(DELETE, assignment_comment,
             title="Help Comment Not Deleted",
-            message="Your role in this course does not allow you to delete help comments.")
+            message="Sorry, your role in this course does not allow you to delete help comments.")
 
         data = marshal(assignment_comment, dataformat.get_assignment_comment(False))
         assignment_comment.active = False

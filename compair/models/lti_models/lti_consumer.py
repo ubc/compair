@@ -63,7 +63,7 @@ class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin)
         if not title:
             title = "LTI Consumer Unavailable"
         if not message:
-            message = "The LTI consumer was removed from the system or is no longer accessible."
+            message = "Sorry, this LTI consumer was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
@@ -71,7 +71,7 @@ class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin)
         if not title:
             title = "LTI Consumer Unavailable"
         if not message:
-            message = "The LTI consumer was removed from the system or is no longer accessible."
+            message = "Sorry, this LTI consumer was deleted or is no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod

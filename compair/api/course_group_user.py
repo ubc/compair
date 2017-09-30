@@ -41,8 +41,8 @@ class GroupUserIdAPI(Resource):
             .first_or_404()
 
         require(EDIT, user_course,
-            title="Group Not Updated",
-            message="Your role in this course does not allow you to update groups.")
+            title="Group Not Saved",
+            message="Sorry, your role in this course does not allow you to save groups.")
 
         user_course.group_name = group_name
         db.session.commit()
@@ -70,8 +70,8 @@ class GroupUserAPI(Resource):
             ) \
             .first_or_404()
         require(EDIT, user_course,
-            title="Group Not Updated",
-            message="Your role in this course does not allow you to update groups.")
+            title="Group Not Saved",
+            message="Sorry, your role in this course does not allow you to save groups.")
 
         user_course.group_name = None
         db.session.commit()
@@ -93,13 +93,13 @@ class GroupUserListGroupNameAPI(Resource):
     def post(self, course_uuid, group_name):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, UserCourse(course_id=course.id),
-            title="Group Not Updated",
-            message="Your role in this course does not allow you to update groups.")
+            title="Group Not Saved",
+            message="Sorry, your role in this course does not allow you to save groups.")
 
         params = user_list_parser.parse_args()
 
         if len(params.get('ids')) == 0:
-            abort(400, title="Group Not Updated", message="Please select at least one user below and then try to update the group again.")
+            abort(400, title="Group Not Saved", message="Please select at least one user below and then try to apply the group again.")
 
         user_courses = UserCourse.query \
             .join(User, UserCourse.user_id == User.id) \
@@ -111,7 +111,7 @@ class GroupUserListGroupNameAPI(Resource):
             .all()
 
         if len(params.get('ids')) != len(user_courses):
-            abort(400, title="Group Not Updated", message="One or more users selected are not enrolled in the course yet.")
+            abort(400, title="Group Not Saved", message="One or more users selected are not enrolled in the course yet.")
 
         for user_course in user_courses:
             user_course.group_name = group_name
@@ -134,13 +134,13 @@ class GroupUserListAPI(Resource):
     def post(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(EDIT, UserCourse(course_id=course.id),
-            title="Group Not Updated",
-            message="Your role in this course does not allow you to update groups.")
+            title="Group Not Saved",
+            message="Sorry, your role in this course does not allow you to save groups.")
 
         params = user_list_parser.parse_args()
 
         if len(params.get('ids')) == 0:
-            abort(400, title="Group Not Updated", message="Please select at least one user below and then try to update the group again.")
+            abort(400, title="Group Not Saved", message="Please select at least one user below and then try to apply the group again.")
 
         user_courses = UserCourse.query \
             .join(User, UserCourse.user_id == User.id) \
@@ -152,7 +152,7 @@ class GroupUserListAPI(Resource):
             .all()
 
         if len(params.get('ids')) != len(user_courses):
-            abort(400, title="Group Not Updated", message="One or more users selected are not enrolled in the course yet.")
+            abort(400, title="Group Not Saved", message="One or more users selected are not enrolled in the course yet.")
 
         for user_course in user_courses:
             user_course.group_name = None

@@ -42,9 +42,9 @@ class ComparisonCriterion(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     @classmethod
     def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:
-            title = "Criterion Comparison Unavailable"
+            title = "Criterion Unavailable"
         if not message:
-            message = "The criterion comparison was removed from the system or is no longer accessible."
+            message = "Sorry, this criterion was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod

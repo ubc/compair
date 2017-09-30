@@ -120,7 +120,7 @@ module.controller(
         $scope.deleteAssignment = function(assignment) {
             AssignmentResource.delete({'courseId': assignment.course_id, 'assignmentId': assignment.id}).$promise.then(
                 function (ret) {
-                    Toaster.success("Assignment Removed");
+                    Toaster.success("Assignment Deleted");
                     $scope.assignments = _.filter($scope.assignments, function(a) {
                         return a.id != assignment.id;
                     });
@@ -219,7 +219,7 @@ module.controller(
                 $scope.course.end_date = null;
             }
             if ($scope.course.start_date != null && $scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
-                Toaster.error('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                Toaster.warning('Course Not Saved', 'Please set course end time after course start time and save again.');
                 $scope.submitted = false;
                 return;
             }
@@ -401,7 +401,7 @@ module.controller(
                 $scope.duplicateCourse.end_date = null;
             }
             if ($scope.duplicateCourse.start_date != null && $scope.duplicateCourse.end_date != null && $scope.duplicateCourse.start_date > $scope.duplicateCourse.end_date) {
-                Toaster.error('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                Toaster.warning('Course Not Duplicated', 'Please set course end time after course start time and try again.');
                 $scope.submitted = false;
                 return;
             }
@@ -420,15 +420,15 @@ module.controller(
 
                 // answer end datetime has to be after answer start datetime
                 if (assignment_submit.answer_start >= assignment_submit.answer_end) {
-                    Toaster.error('Answer Period Error for '+assignment.name, 'Answer end time must be after answer start time.');
+                    Toaster.warning('Assignment Not Duplicated', 'Please set answer end time after answer start time and try again.');
                     $scope.submitted = false;
                     return;
                 } else if (assignment.availableCheck && assignment_submit.answer_start > assignment_submit.compare_start) {
-                    Toaster.error("Time Period Error for "+assignment.name, 'Please double-check the answer and comparison period start and end times.');
+                    Toaster.warning('Assignment Not Duplicated', 'Please double-check the answer and comparison start and end times for mismatches and try again.');
                     $scope.submitted = false;
                     return;
                 } else if (assignment.availableCheck && assignment_submit.compare_start >= assignment_submit.compare_end) {
-                    Toaster.error("Time Period Error for "+assignment.name, 'comparison end time must be after comparison start time.');
+                    Toaster.warning('Assignment Not Duplicated', 'Please set comparison end time after comparison start time and try again.');
                     $scope.submitted = false;
                     return;
                 }
@@ -518,17 +518,13 @@ module.controller(
             }
 
             if ($scope.course.start_date != null && $scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
-                Toaster.error('Course Period Conflict', 'Course end date/time must be after course start date/time.');
+                Toaster.warning('Course Not Saved', 'Please set course end time after course start time and save again.');
                 $scope.submitted = false;
                 return;
             }
 
             CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
-                if ($scope.method == "create") {
-                    Toaster.success("Course Saved");
-                } else if ($scope.method == "edit") {
-                    Toaster.success("Course Updated");
-                }
+                Toaster.success("Course Saved");
 
                 // refresh permissions
                 Session.expirePermissions();

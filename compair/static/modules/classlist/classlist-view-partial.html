@@ -17,7 +17,7 @@
         </div>
     </div>
     <p class="intro-text" ng-if="lti_membership_enabled">
-        Your class list is managed externally. To update the list manually, click "Refresh List" below.
+        Your class list is managed externally. This means users need to enroll themselves by clicking a special link in your existing external course. This link sends registration information from your external course to ComPAIR that confirms the user should be enrolled. To manually update the list below to the latest enrollment numbers, click "Refresh List" below. 
     </p>
     <p class="intro-text" ng-if="!lti_membership_enabled">
         <strong>Edit or drop users from the course and manage course groups</strong> below. To make significant changes to the <em>full</em> course user list at once, click "Import Users" above and follow the directions on the next screen. To generate a file with all the currently enrolled users, click "Export Users" above.
@@ -38,7 +38,7 @@
         </div>
     </div>
     <p class="alert alert-info" ng-show="lti_membership_pending > 0">
-        <i class="glyphicon glyphicon-info-sign"></i> Currently, <strong>{{lti_membership_pending}} user<span ng-show="lti_membership_pending != 1">s</span></strong> are pending registration (registered in your external course but not yet in ComPAIR).
+        <i class="glyphicon glyphicon-info-sign"></i> Currently, <strong>{{lti_membership_pending}} user<span ng-show="lti_membership_pending != 1">s</span></strong> are pending registration (registered in your external course but not yet in ComPAIR). To register, <strong>each student must follow the link from your external course</strong> the first time they access ComPAIR. Once they have followed this link and registered, they may log in through the link or directly at this site.
     </p>
 
     <hr />

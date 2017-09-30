@@ -53,7 +53,7 @@ class CompareRootAPI(Resource):
 
         if not assignment.compare_grace:
             abort(403, title="Comparisons Unavailable",
-                message="The comparison deadline has passed. No comparisons can be done beyond the deadline.")
+                message="Sorry, the comparison deadline has passed. No comparisons can be done after the deadline.")
         elif not restrict_user and not assignment.educators_can_compare:
             abort(403, title="Comparisons Unavailable",
                 message="Only students can currently compare answers for this assignment. To change these settings to include instructors and teaching assistants, edit the assignment.")
@@ -91,7 +91,7 @@ class CompareRootAPI(Resource):
                     data=marshal(comparison, dataformat.get_comparison(restrict_user)))
 
             except InsufficientObjectsForPairException:
-                abort(400, title="Comparisons Unavailable", message="Not enough answers are available for you to do comparisons. Please check back later for more answers.")
+                abort(400, title="Comparisons Unavailable", message="Not enough answers are available for you to do comparisons right now. Please check back later for more answers.")
             except UserComparedAllObjectsException:
                 abort(400, title="Comparisons Unavailable", message="You have compared all the currently available answer pairs. Please check back later for more answers.")
             except UnknownPairGeneratorException:
@@ -117,12 +117,12 @@ class CompareRootAPI(Resource):
             message="Comparisons can only be saved by those enrolled in the course. Please double-check your enrollment in this course.")
         require(EDIT, Comparison,
             title="Comparison Not Saved",
-            message="Comparisons can only be updated by those enrolled in the course. Please double-check your enrollment in this course.")
+            message="Comparisons can only be saved by those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
         if not assignment.compare_grace:
             abort(403, title="Comparison Not Saved",
-                message="The comparison deadline has passed. No comparisons can be done beyond the deadline.")
+                message="Sorry, the comparison deadline has passed. No comparisons can be done after the deadline.")
         elif not restrict_user and not assignment.educators_can_compare:
             abort(403, title="Comparison Not Saved",
                 message="Only students can save answer comparisons for this assignment. To change these settings to include instructors and teaching assistants, edit the assignment.")
@@ -147,7 +147,7 @@ class CompareRootAPI(Resource):
 
         # check if number of comparison criteria submitted matches number of comparison criteria needed
         if len(comparison.comparison_criteria) != len(params['comparison_criteria']):
-            abort(400, title="Comparison Not Saved", message="Not all criteria were evaluated.")
+            abort(400, title="Comparison Not Saved", message="Please double-check that all criteria were evaluated and try saving again.")
 
         if params.get('draft'):
             completed = False
@@ -156,7 +156,7 @@ class CompareRootAPI(Resource):
         for comparison_criterion_update in params['comparison_criteria']:
             # ensure criterion param is present
             if 'criterion_id' not in comparison_criterion_update:
-                abort(400, title="Comparison Not Saved", message="The assignment is missing criteria. Please reload the page and try again.")
+                abort(400, title="Comparison Not Saved", message="Sorry, the assignment is missing criteria. Please reload the page and try again.")
 
             # set default values for cotnent and winner
             comparison_criterion_update.setdefault('content', None)
@@ -175,11 +175,11 @@ class CompareRootAPI(Resource):
 
                     # check that the winner id matches one of the answer pairs
                     if winner not in [None, WinningAnswer.answer1.value, WinningAnswer.answer2.value]:
-                        abort(400, title="Comparison Not Saved", message="Please select a valid winner from the list provided.")
+                        abort(400, title="Comparison Not Saved", message="Please select an answer from the two answers provided for each criterion and try saving again.")
 
                     break
             if not known_criterion:
-                abort(400, title="Comparison Not Saved", message="You are attempting to submit comparison of an unknown criterion, which is not allowed.")
+                abort(400, title="Comparison Not Saved", message="You are attempting to submit a comparison of an unknown criterion. Please remove the unknown criterion and try again.")
 
 
         # update comparison criterion

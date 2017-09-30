@@ -43,7 +43,7 @@ class Criterion(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         if not title:
             title = "Criterion Unavailable"
         if not message:
-            message = "The criterion was removed from the system or is no longer accessible."
+            message = "Sorry, this criterion was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
@@ -51,7 +51,7 @@ class Criterion(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         if not title:
             title = "Criterion Unavailable"
         if not message:
-            message = "The criterion was removed from the system or is no longer accessible."
+            message = "Sorry, this criterion was deleted or is no longer accessible."
         return super(cls, cls).get_active_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
