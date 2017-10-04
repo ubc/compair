@@ -356,15 +356,7 @@ myApp.config(
             {
                 templateUrl: 'modules/course/course-duplicate-partial.html',
                 label: "Duplicate Course",
-                controller: 'CourseDuplicateController',
-                resolve: {
-                    resolvedData: function() {
-                        return ResolveDeferredRouteData({
-                            course: RouteResolves.course(),
-                            loggedInUser: RouteResolves.loggedInUser()
-                        }, ['course']);
-                    }
-                }
+                controller: 'CourseDuplicateController'
             })
         .when ('/course/:courseId/user',
             {

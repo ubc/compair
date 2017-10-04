@@ -190,9 +190,9 @@
     <div class="text-center">
         <a class="btn btn-success btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
             ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
-        <a class="btn btn-default btn-lg" value="Back" ng-click="showAssignments=!showAssignments"
+        <a class="btn btn-default btn-lg" value="Back" ng-click="showAssignments= canGoBack(duplicateCourseForm) ? !showAssignments : showAssignments;"
             ng-show="showAssignments">&laquo; Back</a>
-        <input type="submit" class="btn btn-success btn-lg" value="Duplicate" style="padding: 11px 16px 12px; margin: 0;"
+        <input type="submit" class="btn btn-success btn-lg" value="Duplicate" style="padding: 11px 16px 12px; margin: 0 0 0 17px;"
             ng-disabled="duplicateCourseForm.$invalid || submitted" ng-show="showAssignments" />
     </div>
     <br />
