@@ -343,3 +343,15 @@ def get_lti_consumer(include_sensitive=False):
         ret['oauth_consumer_secret'] = fields.String
 
     return ret
+
+def get_lti_course_links():
+    return {
+        'id': fields.String(attribute="uuid"),
+        'compair_course_id': fields.String(attribute="compair_course_uuid"),
+        'compair_course_name': fields.String,
+        'oauth_consumer_key': fields.String,
+        'context_id': fields.String,
+        'context_title': fields.String,
+        'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
+    }

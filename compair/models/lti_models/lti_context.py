@@ -7,7 +7,7 @@ from . import *
 
 from compair.core import db
 
-class LTIContext(DefaultTableMixin, WriteTrackingMixin):
+class LTIContext(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     __tablename__ = 'lti_context'
 
     # table columns
@@ -29,6 +29,7 @@ class LTIContext(DefaultTableMixin, WriteTrackingMixin):
     lti_resource_links = db.relationship("LTIResourceLink", backref="lti_context")
 
     # hyprid and other functions
+    oauth_consumer_key = association_proxy('lti_consumer', 'oauth_consumer_key')
     compair_course_uuid = association_proxy('compair_course', 'uuid')
 
     @hybrid_property

@@ -14,8 +14,6 @@ from compair.models import Course, User, CourseRole, SystemRole, Criterion, File
     LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \
     ThirdPartyUser, ThirdPartyType
 
-from oauthlib.common import generate_token
-
 # suppress factory_boy debug logging (spits out a lot of text)
 # comment out/set log level to debug to see the messages
 logging.getLogger("factory").setLevel(logging.WARN)
@@ -205,8 +203,8 @@ class LTIConsumerFactory(factory.alchemy.SQLAlchemyModelFactory):
         model = LTIConsumer
         sqlalchemy_session = db.session
 
-    oauth_consumer_key = generate_token()
-    oauth_consumer_secret = generate_token()
+    oauth_consumer_key = factory.Sequence(lambda n: 'oauth_consumer_key_%d' % n)
+    oauth_consumer_secret = factory.Sequence(lambda n: 'oauth_consumer_secret_%d' % n)
 
     lti_version = "LTI-1p0"
 
@@ -217,6 +215,7 @@ class LTIContextFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     lti_consumer_id = 1
     context_id = factory.Sequence(lambda n: 'course-v1:LTI_%d' % n)
+    context_title = factory.Sequence(lambda n: 'this is a title for lti context ü %d' % n)
 
 class LTIResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:

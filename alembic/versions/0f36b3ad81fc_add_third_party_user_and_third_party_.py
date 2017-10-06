@@ -13,7 +13,10 @@ down_revision = 'deafd926294b'
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy_enum34 import EnumType
-from compair.models import ThirdPartyType
+from enum import Enum
+
+class ThirdPartyType(Enum):
+    cwl = "CWL"
 
 def upgrade():
     op.create_table('third_party_user',

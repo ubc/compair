@@ -13,8 +13,13 @@ down_revision = 'd2cfb4363907'
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy_enum34 import EnumType
+from enum import Enum
 
-from compair.models import convention, EmailNotificationMethod
+from compair.models import convention
+
+class EmailNotificationMethod(Enum):
+    enable = "enable"
+    disable = "disable"
 
 def upgrade():
     op.add_column('user', sa.Column('email_notification_method',

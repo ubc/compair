@@ -28,6 +28,7 @@ var myApp = angular.module('myApp', [
     'ubc.ctlt.compair.login',
     'ubc.ctlt.compair.lti',
     'ubc.ctlt.compair.lti.consumer',
+    'ubc.ctlt.compair.lti.context',
     'ubc.ctlt.compair.navbar',
     'ubc.ctlt.compair.assignment',
     'ubc.ctlt.compair.report',
@@ -335,6 +336,7 @@ myApp.config(
                             canEditCourse: RouteResolves.canEditCourse(),
                             canCreateAssignment: RouteResolves.canCreateAssignment(),
                             canManageAssignment: RouteResolves.canManageAssignment(),
+                            canManageUsers: RouteResolves.canManageUsers(),
                         }, ['course', 'courseAssignments']);
                     }
                 }

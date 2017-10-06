@@ -83,6 +83,7 @@ module.controller(
         $scope.canEditCourse = resolvedData.canEditCourse;
         $scope.canCreateAssignment = resolvedData.canCreateAssignment;
         $scope.canManageAssignment = resolvedData.canManageAssignment;
+        $scope.canManageUsers = resolvedData.canManageUsers;
 
         CourseResource.getCurrentUserStatus({'id': $scope.courseId}).$promise.then(
             function(ret) {

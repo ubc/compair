@@ -12,7 +12,6 @@ down_revision = 'fff3fc7f636a'
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy_enum34 import EnumType
 
 from compair.models import convention
 

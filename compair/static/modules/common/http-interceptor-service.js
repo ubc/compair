@@ -46,6 +46,24 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
         }
     };
 
+    this.contextCacheLTI = {
+        response: function(response) {
+            // force refresh enrolment status
+            var cache = $cacheFactory.get('classlist');
+            if(cache) {
+                var courseId = response.config.url.match(/[A-Za-z0-9_-]{22}/g)[0];
+                cache.remove('/api/courses/' + courseId + '/users');
+            }
+            // force refresh lti status
+            cache = $cacheFactory.get('$http');
+            if(cache) {
+                var courseId = response.config.url.match(/[A-Za-z0-9_-]{22}/g)[0];
+                cache.remove('/api/courses/' + courseId);
+            }
+            return response.data;
+        }
+    };
+
     this.groupSessionInterceptor = {
         response: function(response) {
             // store all course group names until javascript memory wiped (page refreshed,closed,etc)

@@ -7,7 +7,6 @@ from compair.models import User, SystemRole, CourseRole, UserCourse, \
     LTIConsumer, LTIContext, LTIUser, LTIMembership,  \
     LTIResourceLink, LTIUserResourceLink
 from compair.core import db
-from oauthlib.common import generate_token, generate_nonce, generate_timestamp
 
 class LoginAPITests(ComPAIRAPITestCase):
     def setUp(self):

@@ -58,4 +58,8 @@
         <hr />
         <p>No consumers found. Add a <a href="#/lti/consumer/create">new consumer</a>?</p>
     </div>
+
+    <div ng-controller="LTIContextListController">
+        <ng-include src="'modules/lti_context/lti-contexts-list-partial.html'"></ng-include>
+    </div>
 </div>
