@@ -32,7 +32,8 @@ module.controller(
         $scope.courseFilters = {
             page: 1,
             perPage: 10,
-            search: null
+            search: null,
+            includeSandbox: null
         };
         $scope.canAddCourse = resolvedData.canAddCourse;
         $scope.loggedInUserId = resolvedData.loggedInUser.id;

@@ -62,6 +62,7 @@ describe('assignment-module', function () {
         "name": "Test Course",
         "year": 2015,
         "term": "Winter",
+        "sandbox": false,
         "start_time": null,
         "end_time": null
     };

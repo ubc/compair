@@ -26,6 +26,9 @@ class CoursesAPITests(ComPAIRAPITestCase):
             course_expected.term, course_actual['term'],
             "Expected course term does not match actual.")
         self.assertEqual(
+            course_expected.sandbox, course_actual['sandbox'],
+            "Expected course sandbox flag does not match actual.")
+        self.assertEqual(
             course_expected.available, course_actual['available'],
             "Expected course availability does not match actual.")
 
@@ -72,6 +75,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'name': 'ExpectedCourse1',
             'year': 2015,
             'term': 'Winter',
+            'sandbox' : False,
             'start_date': None,
             'end_date': None
         }
@@ -98,6 +102,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(course_expected['name'], course_actual['name'])
             self.assertEqual(course_expected['year'], course_actual['year'])
             self.assertEqual(course_expected['term'], course_actual['term'])
+            self.assertEqual(course_expected['sandbox'], course_actual['sandbox'])
             self.assertTrue(course_actual['available'])
 
             # Verify the course is created in db
@@ -105,6 +110,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(course_in_db.name, course_actual['name'])
             self.assertEqual(course_in_db.year, course_actual['year'])
             self.assertEqual(course_in_db.term, course_actual['term'])
+            self.assertEqual(course_in_db.sandbox, course_actual['sandbox'])
             self.assertTrue(course_in_db.available)
 
             # Verify instructor added to course
@@ -151,6 +157,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'name': 'ExpectedCourse',
             'year': 2015,
             'term': 'Winter',
+            'sandbox': False,
             'start_date': None,
             'end_date': None
         }
@@ -261,6 +268,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'name': 'duplicate course',
             'year': 2015,
             'term': 'Winter',
+            'sandbox': False,
             'start_date': None,
             'end_date': None
         }
@@ -302,6 +310,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(expected['name'], rv.json['name'])
             self.assertEqual(expected['year'], rv.json['year'])
             self.assertEqual(expected['term'], rv.json['term'])
+            self.assertEqual(expected['sandbox'], rv.json['sandbox'])
             self.assertEqual(expected['start_date'], rv.json['start_date'])
             self.assertEqual(expected['end_date'], rv.json['end_date'])
 
@@ -342,6 +351,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             'name': 'duplicate course',
             'year': 2015,
             'term': 'Winter',
+            'sandbox': False,
             'start_date': (self.course.start_date + self.date_delta).isoformat() + 'Z',
             'end_date': (self.course.end_date + self.date_delta).isoformat() + 'Z',
             'assignments': []
@@ -403,6 +413,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             'name': 'duplicate validation course',
             'year': 2015,
             'term': 'Winter',
+            'sandbox': False,
             'start_date': self.valid_start_date,
             'end_date': self.valid_end_date,
             'assignments': [self.validate_expected_assignment]
@@ -514,6 +525,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             self.assertEqual(self.expected['name'], duplicate_course.name)
             self.assertEqual(self.expected['year'], duplicate_course.year)
             self.assertEqual(self.expected['term'], duplicate_course.term)
+            self.assertEqual(self.expected['sandbox'], duplicate_course.sandbox)
             self.assertEqual(self.expected['start_date'].replace('Z', ''), rv.json['start_date'].replace('+00:00', ''))
             self.assertEqual(self.expected['end_date'].replace('Z', ''), rv.json['end_date'].replace('+00:00', ''))
 
@@ -636,6 +648,7 @@ class CourseDemoAPITests(ComPAIRAPIDemoTestCase):
             'name': 'ExpectedCourse',
             'year': 2015,
             'term': 'Winter',
+            'sandbox': False,
             'start_date': None,
             'end_date': None,
             'description': 'Test Description'

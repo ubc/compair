@@ -1,12 +1,23 @@
 <div class="user-courses-screen">
 
     <div class="row">
-        <h1 class="col-sm-8">Manage {{ user.displayname }}'s Courses</h1>
+        <h1 class="col-sm-6">Manage {{ user.displayname }}'s Courses</h1>
 
-        <form class="col-sm-4 search-courses text-right" role="search" ng-show="courses.length || courseFilters.search">
-            <div class="form-group">
+        <form class="col-sm-6 search-courses text-right" role="search" ng-show="courses.length || courseFilters.search || courseFilters.includeSandbox!=''">
+            <div class="input-group">
+                <div class="input-group-btn" uib-dropdown>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" uib-dropdown-toggle>
+                        {{courseFilters.includeSandbox ? (courseFilters.includeSandbox=="false" ? "Non-sandbox courses" : "Sandbox courses") : "All courses" }}
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a ng-click="courseFilters.includeSandbox=''">All courses</a></li>
+                        <li><a ng-click="courseFilters.includeSandbox='false'">Non-sandbox courses</a></li>
+                        <li><a ng-click="courseFilters.includeSandbox='true'">Sandbox courses</a></li>
+                    </ul>
+                </div>
                 <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
-                       ng-model="courseFilters.search">
+                    ng-model="courseFilters.search">
             </div>
         </form>
     </div>
@@ -31,6 +42,9 @@
                     </th>
                     <th>
                         <a href="" ng-click="updateTableOrderBy('group_name')">Group</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('sandbox')">Sandbox</a>
                     </th>
                 </tr>
             </thead>
@@ -59,6 +73,7 @@
                             <option value="">- None -</option>
                         </select>
                     </td>
+                    <td>{{course.sandbox ? "Yes" : "No"}}</td>
                 </tr>
             </tbody>
         </table>
@@ -73,7 +88,8 @@
 
     <div ng-if="!courses.length">
         <hr />
-        <p ng-if="!courseFilters.search">No courses found. Select <a href="#/users">another user</a>?</p>
+        <p ng-if="!courseFilters.search && courseFilters.includeSandbox==''">No courses found. Select <a href="#/users">another user</a>?</p>
+        <p ng-if="!courseFilters.search && courseFilters.includeSandbox!=''">No courses found. Please try changing to "All courses" above.</p>
         <p ng-if="courseFilters.search">No courses found for this search. Please try another search term above.</p>
     </div>
 

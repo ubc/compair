@@ -396,6 +396,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "name": data.name,
                 "year": data.year,
                 "term": data.term,
+                "sandbox": data.sandbox,
                 "available": true,
                 "start_date": data.start_date,
                 "end_date": data.end_date,

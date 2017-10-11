@@ -61,7 +61,8 @@ describe('course-module', function () {
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
         "name": "Test Course",
         "year": 2015,
-        "term": "Winter"
+        "term": "Winter",
+        "sandbox": false
     };
     beforeEach(module('ubc.ctlt.compair.course'));
     beforeEach(inject(function ($injector) {
@@ -110,6 +111,7 @@ describe('course-module', function () {
                     "name": "Test111",
                     "year": 2015,
                     "term": "Winter",
+                    "sandbox": false,
                     "start_date": null,
                     "end_date": null,
                     "assignment_count": 0,
@@ -199,6 +201,7 @@ describe('course-module', function () {
                     $rootScope.course.name = 'new name';
                     $rootScope.course.year = 2016;
                     $rootScope.course.term = "Summer";
+                    $rootScope.course.sandbox = false;
                     $httpBackend.expectPOST('/api/courses/2abcABC123-abcABC123_Z', $rootScope.course).respond($rootScope.course);
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
@@ -259,7 +262,8 @@ describe('course-module', function () {
                     "name": "Another course",
                     "start_date": "2017-01-02T23:00:00",
                     "term": "Summer",
-                    "year": 2016
+                    "year": 2016,
+                    "sandbox": false
                 },
                 {
                     "available": true,
@@ -274,7 +278,8 @@ describe('course-module', function () {
                     "name": "test course",
                     "start_date": "2016-10-03T07:00:00",
                     "term": "asdasdasd",
-                    "year": 2016
+                    "year": 2016,
+                    "sandbox": false
                 }
             ]
             beforeEach(inject(function (_Toaster_) {
@@ -322,6 +327,7 @@ describe('course-module', function () {
                     "name": "Test111",
                     "year": 2015,
                     "term": "Winter",
+                    "sandbox": false,
                     "start_date": null,
                     "end_date": null,
                     "assignment_count": 0,
@@ -399,7 +405,8 @@ describe('course-module', function () {
                 "name": "Another course",
                 "start_date": "2017-01-02T23:00:00",
                 "term": "Summer",
-                "year": 2016
+                "year": 2016,
+                "sandbox": false
             };
 
             var assignments = [

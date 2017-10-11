@@ -3,6 +3,7 @@
     <div class="row">
         <header class="col-sm-6">
             <h1><i class="fa fa-book"></i> {{course.name}} <br />({{course.year}} {{course.term}})</h1>
+            <span ng-show="course.sandbox" class="label label-default">Sandbox Course</span>
         </header>
         <div class="col-sm-6 sub-nav">
             <span ng-if="canCreateAssignment">

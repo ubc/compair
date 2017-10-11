@@ -61,9 +61,11 @@ user_list_parser.add_argument('ids', required=False, default=None)
 
 user_course_list_parser = pagination_parser.copy()
 user_course_list_parser.add_argument('search', required=False, default=None)
+user_course_list_parser.add_argument('includeSandbox', type=bool, required=False, default=None)
 
 user_id_course_list_parser = pagination_parser.copy()
 user_id_course_list_parser.add_argument('search', required=False, default=None)
+user_id_course_list_parser.add_argument('includeSandbox', type=bool, required=False, default=None)
 user_id_course_list_parser.add_argument('orderBy', required=False, default=None)
 user_id_course_list_parser.add_argument('reverse', type=bool, default=False)
 
@@ -377,6 +379,12 @@ class CurrentUserCourseListAPI(Resource):
                         Course.year.like(search),
                         Course.term.like(search)
                     ))
+
+        if params['includeSandbox'] != None:
+            query = query.filter(
+                Course.sandbox == params['includeSandbox']
+            )
+
         page = query.paginate(params['page'], params['perPage'])
 
         # TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
@@ -421,6 +429,11 @@ class UserCourseListAPI(Resource):
                         Course.year.like(search),
                         Course.term.like(search)
                     ))
+
+        if params['includeSandbox'] != None:
+            query = query.filter(
+                Course.sandbox == params['includeSandbox']
+            )
 
         if params['orderBy']:
             if params['reverse']:
