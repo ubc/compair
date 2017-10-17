@@ -139,7 +139,7 @@ class DemoDataFixture(object):
             number_of_comparisons=3,
             students_can_reply=True,
             enable_self_evaluation=False,
-            pairing_algorithm=PairingAlgorithm.adaptive,
+            pairing_algorithm=PairingAlgorithm.adaptive_min_delta,
             educators_can_compare=True
         )
         db.session.add(simple_assignment)
@@ -226,7 +226,7 @@ class DemoDataFixture(object):
             number_of_comparisons=3,
             students_can_reply=True,
             enable_self_evaluation=True,
-            pairing_algorithm=PairingAlgorithm.adaptive,
+            pairing_algorithm=PairingAlgorithm.adaptive_min_delta,
             educators_can_compare=True,
             rank_display_limit=10
         )

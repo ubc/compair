@@ -31,7 +31,7 @@
         <div mathjax hljs ng-bind-html="criterion.description"></div>
     </div>
     <div class="col-sm-2" ng-if="assignment.criteria.length > 1">
-        <div ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive">
+        <div ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive || assignment.pairing_algorithm == PairingAlgorithm.adaptive_min_delta">
             <span class="text-muted">Score Weight = {{getCriterionWeightAsPercent(criterion.weight)|number:2}}%</span>
             <div ng-if="!assignment.compared">
                 <input class="form-control" type="number" min="0" ng-pattern="onlyNumbers" required
@@ -45,7 +45,7 @@
     </div>
 </div>
 
-<p class="alert alert-info" ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && criteriaCanDraw()">
+<p class="alert alert-info" ng-if="(assignment.pairing_algorithm == PairingAlgorithm.adaptive || assignment.pairing_algorithm == PairingAlgorithm.adaptive_min_delta) && criteriaCanDraw()">
     Note that with these criteria weights, <strong>it is possible for an answer pair to be scored overall as tied</strong>. This may affect the accuracy of answer pair selection and final answer rankings, but it will not change the comparison process for students.
 </p>
 

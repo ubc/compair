@@ -1018,7 +1018,7 @@ describe('assignment-module', function () {
                     students_can_reply: false,
                     educators_can_compare: false,
                     number_of_comparisons: 3,
-                    pairing_algorithm: 'adaptive',
+                    pairing_algorithm: 'adaptive_min_delta',
                     rank_display_limit: null,
                     answer_grade_weight: 1,
                     comparison_grade_weight: 1,

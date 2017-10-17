@@ -94,7 +94,8 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     @classmethod
     def _get_new_comparison_pair(cls, course_id, assignment_id, user_id, pairing_algorithm, comparisons):
-        from . import Assignment, UserCourse, CourseRole, Answer, AnswerScore, PairingAlgorithm
+        from . import Assignment, UserCourse, CourseRole, Answer, AnswerScore, \
+            PairingAlgorithm, AnswerCriterionScore, AssignmentCriterion
 
         # ineligible authors - eg. instructors, TAs, dropped student, current user
         non_students = UserCourse.query \
@@ -118,6 +119,27 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
             )) \
             .all()
 
+        answers_with_criterion_score = Answer.query \
+            .with_entities(Answer, AnswerCriterionScore.criterion_id, AnswerCriterionScore.score) \
+            .join(AnswerCriterionScore) \
+            .filter(and_(
+                Answer.user_id.notin_(ineligible_user_ids),
+                Answer.assignment_id == assignment_id,
+                Answer.active == True,
+                Answer.practice == False,
+                Answer.draft == False
+            )) \
+            .all()
+
+        assignment_criterion_weights = Assignment.query \
+            .with_entities(Assignment, AssignmentCriterion.criterion_id, AssignmentCriterion.weight) \
+            .join(AssignmentCriterion) \
+            .filter(and_(
+                Assignment.id == assignment_id,
+                AssignmentCriterion.active == True
+            )) \
+            .all()
+
         scored_objects = []
         for answer_with_score in answers_with_score:
             scored_objects.append(ScoredObject(
@@ -130,12 +152,35 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
         comparison_pairs = [comparison.convert_to_comparison_pair() for comparison in comparisons]
 
-        comparison_pair = generate_pair(
-            package_name=pairing_algorithm.value,
-            scored_objects=scored_objects,
-            comparison_pairs=comparison_pairs,
-            log=current_app.logger
-        )
+        criterion_scores = {}
+        for answer_with_criterion_score in answers_with_criterion_score:
+            key = answer_with_criterion_score.Answer.id
+            scores = criterion_scores.setdefault(key, {})
+            scores[answer_with_criterion_score.criterion_id] = \
+                answer_with_criterion_score.score
+
+        criterion_weights = {}
+        for the_weight in assignment_criterion_weights:
+            criterion_weights[the_weight.criterion_id] = \
+                the_weight.weight
+
+        # adaptive min delta algo requires extra criterion specific parameters
+        if pairing_algorithm == PairingAlgorithm.adaptive_min_delta:
+            comparison_pair = generate_pair(
+                package_name=pairing_algorithm.value,
+                scored_objects=scored_objects,
+                comparison_pairs=comparison_pairs,
+                criterion_scores=criterion_scores,
+                criterion_weights=criterion_weights,
+                log=current_app.logger
+            )
+        else:
+            comparison_pair = generate_pair(
+                package_name=pairing_algorithm.value,
+                scored_objects=scored_objects,
+                comparison_pairs=comparison_pairs,
+                log=current_app.logger
+            )
 
         return comparison_pair
 

@@ -31,7 +31,7 @@
         <div>
             <label for="importFile">Related Attachment</label>
             <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
-           
+
             <div class="row" ng-repeat="item in uploader.queue">
                 <div class="col-md-1">
                     <a href="" ng-click="item.cancel();item.remove();resetFileUploader();">
@@ -195,8 +195,8 @@
         </div>
 
         <label class="required-star">Answer Pair Selection</label>
-        <p ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && assignment.rank_display_limit == null">You are currently using the default:</p>
-        <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive">Adaptive&mdash;Add answer scores/rank, pair answers by scores, <span ng-if="assignment.rank_display_limit == null">students do not see rank</span><span ng-if="assignment.rank_display_limit == 10">students see answers ranked 10<sup>th</sup> and higher</span><span ng-if="assignment.rank_display_limit == 20">students see answers ranked 20<sup>th</sup> and higher</span></blockquote>
+        <p ng-if="(assignment.pairing_algorithm == PairingAlgorithm.adaptive || assignment.pairing_algorithm == PairingAlgorithm.adaptive_min_delta) && assignment.rank_display_limit == null">You are currently using the default:</p>
+        <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive || assignment.pairing_algorithm == PairingAlgorithm.adaptive_min_delta">Adaptive&mdash;Add answer scores/rank, pair answers by scores, <span ng-if="assignment.rank_display_limit == null">students do not see rank</span><span ng-if="assignment.rank_display_limit == 10">students see answers ranked 10<sup>th</sup> and higher</span><span ng-if="assignment.rank_display_limit == 20">students see answers ranked 20<sup>th</sup> and higher</span></blockquote>
         <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.random">Random&mdash;No answer scores/rank, pair answers randomly</blockquote>
         <a href="" ng-click="showAdvanced = !showAdvanced">
             <p>
@@ -212,7 +212,7 @@
                 <div class="form-check col-md-5">
                     <label class="form-check-label">
                         <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
-                               value="{{PairingAlgorithm.adaptive}}" ng-disabled="assignment.compared">
+                               value="{{PairingAlgorithm.adaptive_min_delta}}" ng-disabled="assignment.compared">
                         &nbsp;Adaptively select answers for comparison (add scores/rank):
                     </label>
                     <ul>
@@ -222,8 +222,8 @@
                         <li>Later students <em>may</em> experience increased level of difficulty</li>
                     </ul>
                     <div class="rank-selection">
-                        <label ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'">Let students see rank (but not score) for: &nbsp;</label>
-                        <select ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'" ng-model="assignment.rank_display_limit"
+                        <label ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}' || assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive_min_delta}}'">Let students see rank (but not score) for: &nbsp;</label>
+                        <select ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}' || assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive_min_delta}}'" ng-model="assignment.rank_display_limit"
                                 ng-options="option.value as option.label for option in rankLimitOptions">
                             <option value="">No answers (ranking hidden)</option>
                         </select>
@@ -309,8 +309,8 @@
         <br />
 
         <input id="educators_can_compare" type="checkbox" name="educators_can_compare" ng-model="assignment.educators_can_compare">
-        <label class="not-bold" for="educators_can_compare">Allow instructors and teaching assistants to compare <span ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}'">and affect scores of </span>student answers</label>
-       
+        <label class="not-bold" for="educators_can_compare">Allow instructors and teaching assistants to compare <span ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}' || assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive_min_delta}}'">and affect scores of </span>student answers</label>
+
         <br /><br />
 
         <p class="text-center alert alert-info">With these settings, students will review in total</strong>

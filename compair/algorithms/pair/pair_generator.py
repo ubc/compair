@@ -11,6 +11,6 @@ class PairGenerator:
             self.log.debug(message)
 
     @abstractmethod
-    def generate_pair(self, scored_objects, completed_comparison_pairs):
+    def generate_pair(self, scored_objects, completed_comparison_pairs, criterion_scores={}, criterion_weights={}):
         pass
 

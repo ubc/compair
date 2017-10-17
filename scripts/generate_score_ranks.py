@@ -159,6 +159,7 @@ TOP_50_PERCENT = range((NUMBER_OF_ANSWERS * 50 / 100)+1, NUMBER_OF_ANSWERS+1)
 
 pairing_packages = [
     PairingAlgorithm.adaptive.value,
+#    PairingAlgorithm.adaptive_min_delta.value,
 #    PairingAlgorithm.random.value
 ]
 

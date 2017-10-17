@@ -67,7 +67,8 @@ var _findEqualPartitionsRecursive = function(partition1, partition2) {
 
 module.constant('PairingAlgorithm', {
     adaptive: "adaptive",
-    random: "random"
+    random: "random",
+    adaptive_min_delta: "adaptive_min_delta"
 });
 
 /***** Directives *****/
@@ -818,7 +819,7 @@ module.controller("AssignmentWriteController",
                 // instructor comparisons disabled by default
                 educators_can_compare: false,
                 number_of_comparisons: $scope.recommended_comparisons,
-                pairing_algorithm: PairingAlgorithm.adaptive,
+                pairing_algorithm: PairingAlgorithm.adaptive_min_delta,
                 rank_display_limit: null,
                 answer_grade_weight: 1,
                 comparison_grade_weight: 1,

@@ -288,7 +288,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             'students_can_reply': assignment.students_can_reply,
             'enable_self_evaluation': assignment.enable_self_evaluation,
             'criteria': assignment_criteria,
-            'pairing_algorithm': PairingAlgorithm.adaptive.value,
+            'pairing_algorithm': PairingAlgorithm.adaptive_min_delta.value,
             'rank_display_limit': 10,
             'answer_grade_weight': 2,
             'comparison_grade_weight': 2,
@@ -443,7 +443,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
                 'students_can_reply': assignment.students_can_reply,
                 'enable_self_evaluation': assignment.enable_self_evaluation,
                 'criteria': assignment_criteria,
-                'pairing_algorithm': PairingAlgorithm.adaptive.value,
+                'pairing_algorithm': PairingAlgorithm.adaptive_min_delta.value,
                 'rank_display_limit': 10,
                 'answer_grade_weight': 2,
                 'comparison_grade_weight': 2,
@@ -594,7 +594,7 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             # test cannot change pairing_algorithm
             chaged_pairing = expected.copy()
-            chaged_pairing['pairing_algorithm'] = PairingAlgorithm.adaptive.value
+            chaged_pairing['pairing_algorithm'] = PairingAlgorithm.adaptive_min_delta.value
             rv = self.client.post(url, data=json.dumps(chaged_pairing), content_type='application/json')
             self.assert403(rv)
             self.assertEqual(rv.json['title'], "Assignment Not Saved")
@@ -1329,7 +1329,7 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
             'criteria': [
                 { 'id': self.fixtures.default_criterion.uuid }
             ],
-            'pairing_algorithm': PairingAlgorithm.adaptive.value,
+            'pairing_algorithm': PairingAlgorithm.adaptive_min_delta.value,
             'rank_display_limit': 10,
             'answer_grade_weight': assignment.answer_grade_weight,
             'comparison_grade_weight': assignment.answer_grade_weight,
@@ -1513,7 +1513,7 @@ class AssignmentDemoAPITests(ComPAIRAPIDemoTestCase):
                 'students_can_reply': assignment.students_can_reply,
                 'enable_self_evaluation': assignment.enable_self_evaluation,
                 'criteria': assignment_criteria,
-                'pairing_algorithm': PairingAlgorithm.adaptive.value,
+                'pairing_algorithm': PairingAlgorithm.adaptive_min_delta.value,
                 'rank_display_limit': 10,
                 'answer_grade_weight': 2,
                 'comparison_grade_weight': 2,
