@@ -20,17 +20,24 @@
 
         <h2 class="col-sm-6">Your courses</h2>
 
-        <form class="col-sm-6 search-courses text-right" role="search" ng-show="canAddCourse && (courses.length || courseFilters.search || courseFilters.includeSandbox!='')" style="padding-right:0;">
+        <form class="col-sm-6 search-courses text-right" role="search" ng-show="!canManageUsers && canAddCourse && (courses.length || courseFilters.search)">
+            <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
+                ng-model="courseFilters.search">
+        </form>
+
+        <form class="col-sm-6 search-courses text-right" role="search" ng-show="canManageUsers && canAddCourse && (courses.length || courseFilters.search || courseFilters.includeSandbox!==null)" style="padding-right:0;">
             <div class="input-group">
                 <div class="input-group-btn" uib-dropdown>
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" uib-dropdown-toggle>
-                        {{courseFilters.includeSandbox ? (courseFilters.includeSandbox=="false" ? "Non-sandbox courses" : "Sandbox courses") : "All courses" }}
+                        <span ng-show="courseFilters.includeSandbox===null">All courses</span>
+                        <span ng-show="courseFilters.includeSandbox===false">Regular courses</span>
+                        <span ng-show="courseFilters.includeSandbox===true">Sandbox courses</span>
                         <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu">
-                        <li><a ng-click="courseFilters.includeSandbox=''">All courses</a></li>
-                        <li><a ng-click="courseFilters.includeSandbox='false'">Non-sandbox courses</a></li>
-                        <li><a ng-click="courseFilters.includeSandbox='true'">Sandbox courses</a></li>
+                        <li><a ng-click="courseFilters.includeSandbox=null">All courses</a></li>
+                        <li><a ng-click="courseFilters.includeSandbox=false">Regular courses</a></li>
+                        <li><a ng-click="courseFilters.includeSandbox=true">Sandbox courses</a></li>
                     </ul>
                 </div>
                 <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
@@ -100,8 +107,8 @@
                             {{course.year}} {{course.term}}
                         </li>
                         <!-- Course Sandbox -->
-                        <li ng-if="course.sandbox">
-                            <span class="label label-default">Sandbox Course</span>
+                        <li ng-if="course.sandbox && course.canEditCourse">
+                            Sandbox Course
                         </li>
                         <!-- Delete Link -->
                         <li ng-if="course.canDeleteCourse">
@@ -137,8 +144,8 @@
 
     <div ng-if="!courses.length">
         <hr />
-        <p ng-if="!courseFilters.search && courseFilters.includeSandbox==''">No courses currently available. <span ng-if="canAddCourse">Would you like to <a href="#/course/create">add a course</a>?</span></p>
-        <p ng-if="!courseFilters.search && courseFilters.includeSandbox!=''">No courses found. Please try changing to "All courses" above.</p>
+        <p ng-if="!courseFilters.search && courseFilters.includeSandbox===null">No courses currently available. <span ng-if="canAddCourse">Would you like to <a href="#/course/create">add a course</a>?</span></p>
+        <p ng-if="!courseFilters.search && courseFilters.includeSandbox!==null">No courses found. Please try another filter above.</p>
         <p ng-if="courseFilters.search">No courses found for this search. Please try another search term above.</p>
     </div>
 

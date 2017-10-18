@@ -37,6 +37,7 @@ module.controller(
         };
         $scope.canAddCourse = resolvedData.canAddCourse;
         $scope.loggedInUserId = resolvedData.loggedInUser.id;
+        $scope.canManageUsers = resolvedData.canManageUsers;
 
         $scope.updateCourseList = function() {
             UserResource.getUserCourses($scope.courseFilters).$promise.then(

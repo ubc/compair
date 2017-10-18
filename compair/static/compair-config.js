@@ -293,6 +293,7 @@ myApp.config(
                         return ResolveDeferredRouteData({
                             loggedInUser: RouteResolves.loggedInUser(),
                             canAddCourse: RouteResolves.canAddCourse(),
+                            canManageUsers: RouteResolves.canManageUsers(),
                         });
                     }
                 }
