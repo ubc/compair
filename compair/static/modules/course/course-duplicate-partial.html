@@ -187,12 +187,13 @@
         </div>
     </fieldset>
 
-    <div class="text-center">
+    <div class="form-group text-center">
         <a class="btn btn-success btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
             ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
-        <a class="btn btn-default btn-lg" value="Back" ng-click="showAssignments= canGoBack(duplicateCourseForm) ? !showAssignments : showAssignments;"
+        <a class="btn btn-default btn-lg mirror-submit" value="Back" ng-click="showAssignments= canGoBack(duplicateCourseForm) ? !showAssignments : showAssignments;"
             ng-show="showAssignments">&laquo; Back</a>
-        <input type="submit" class="btn btn-success btn-lg" value="Duplicate" style="padding: 11px 16px 12px; margin: 0 0 0 17px;"
+        &nbsp; &nbsp;
+        <input type="submit" class="btn btn-success btn-lg" value="Duplicate"
             ng-disabled="duplicateCourseForm.$invalid || submitted" ng-show="showAssignments" />
     </div>
     <br />
