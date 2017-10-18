@@ -138,17 +138,14 @@ class AdaptiveMinDeltaPairGenerator(PairGenerator):
         criterion_scores_1 = self.criterion_scores.setdefault(scored_object_key1, {})
         criterion_scores_2 = self.criterion_scores.setdefault(scored_object_key2, {})
 
-        criterion_key_list = criterion_scores_1.keys()
-        criterion_key_list.extend(criterion_scores_2.keys())
+        criterion_key_list = list(criterion_scores_1.keys())
+        criterion_key_list.extend(list(criterion_scores_2.keys()))
         criterion_key_list = set(criterion_key_list)
 
         for criterion in criterion_key_list:
-            score1 = 0 if criterion_scores_1.setdefault(criterion, 0) == None \
-                else criterion_scores_1.get(criterion)
-            score2 = 0 if criterion_scores_2.setdefault(criterion, 0) == None \
-                else criterion_scores_2.get(criterion)
-            weight = 0 if self.criterion_weights.setdefault(criterion, 0) == None \
-                else self.criterion_weights.get(criterion)
+            score1 = criterion_scores_1.get(criterion, 0)
+            score2 = criterion_scores_2.get(criterion, 0)
+            weight = self.criterion_weights.get(criterion, 0)
 
             theSum += math.fabs((score1 - score2)) * weight
 
