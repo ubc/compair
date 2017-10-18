@@ -359,26 +359,18 @@ describe('course-module', function () {
         });
     });
 
-    describe('CourseDuplicateModalController', function () {
-        var $rootScope, createController, $location, $uibModal, $q;
+    describe('CourseDuplicateController', function () {
+        var $rootScope, createController, $location, $q;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$q_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $uibModal = _$uibModal_;
             $q = _$q_;
-            modalInstance = {
-                close: jasmine.createSpy('modalInstance.close'),
-                dismiss: jasmine.createSpy('modalInstance.dismiss'),
-                result: {
-                    then: jasmine.createSpy('modalInstance.result.then')
-                }
-            };
-            createController = function (route, params) {
-                return $controller('CourseDuplicateModalController', {
+            createController = function (params, resolvedData) {
+                return $controller('CourseDuplicateController', {
                     $scope: $rootScope,
-                    $uibModalInstance: modalInstance,
-                    $routeParams: params || {}
+                    $routeParams: params || {},
+                    resolvedData: resolvedData || {}
                 });
             }
         }));
@@ -516,10 +508,9 @@ describe('course-module', function () {
 
             beforeEach(function () {
                 $rootScope.originalCourse = course;
-                $rootScope.closeDuplicate = jasmine.createSpy('$rootScope.closeDuplicate');
-                $rootScope.dismissDuplicate = jasmine.createSpy('$rootScope.dismissDuplicate');
-
-                controller = createController();
+                controller = createController({courseId: $rootScope.originalCourse.id}, {
+                    course: $rootScope.originalCourse
+                });
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments').respond({
                     'objects': assignments
                 });
@@ -638,7 +629,7 @@ describe('course-module', function () {
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
                     expect(toaster.warning).toHaveBeenCalledWith('Course Not Duplicated', 'Please set course end time after course start time and try again.');
-                    expect($rootScope.closeDuplicate.calls.count()).toEqual(0);
+                    expect($location.path()).toEqual('');
                 });
 
                 it('should warn when assignment answer start date is not before end date', function () {
@@ -651,7 +642,7 @@ describe('course-module', function () {
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
                     expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please set answer end time after answer start time and try again.');
-                    expect($rootScope.closeDuplicate.calls.count()).toEqual(0);
+                    expect($location.path()).toEqual('');
                 });
 
                 it('should warn when answer start is not before compare start', function () {
@@ -662,7 +653,7 @@ describe('course-module', function () {
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
                     expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please double-check the answer and comparison start and end times for mismatches and try again.');
-                    expect($rootScope.closeDuplicate.calls.count()).toEqual(0);
+                    expect($location.path()).toEqual('');
                 });
 
                 it('should warn when compare start is not before compare end', function () {
@@ -675,7 +666,7 @@ describe('course-module', function () {
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
                     expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please set comparison end time after comparison start time and try again.');
-                    expect($rootScope.closeDuplicate.calls.count()).toEqual(0);
+                    expect($location.path()).toEqual('');
                 });
 
                 it('should be able to save new course', function () {
@@ -687,7 +678,7 @@ describe('course-module', function () {
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
                     expect($rootScope.submitted).toBe(false);
-                    expect($rootScope.closeDuplicate).toHaveBeenCalledWith(newCourseId);
+                    expect($location.path()).toEqual('/course/3abcABC123-abcABC123_Z');
                 });
             });
         });

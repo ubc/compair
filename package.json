@@ -20,7 +20,7 @@
     "gulp-print": "^2.0.1",
     "gulp-sort": "^2.0.0",
     "gulp-uglify": "latest",
-    "less": "latest",
+    "less": "2.7.2",
     "main-bower-files": "latest",
     "proxy-middleware": "latest",
     "gulp-clean-css": "~3.0.4",

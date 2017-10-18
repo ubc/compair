@@ -81,31 +81,6 @@ module.controller(
             );
         };
 
-        $scope.duplicateCourse = function(course) {
-            var modalScope = $scope.$new();
-            modalScope.originalCourse = course;
-
-            $scope.modalInstance = $uibModal.open({
-                animation: true,
-                backdrop: 'static',
-                controller: "CourseDuplicateModalController",
-                templateUrl: 'modules/course/course-duplicate-partial.html',
-                scope: modalScope
-            });
-
-            $scope.modalInstance.opened.then(function() {
-                xAPIStatementHelper.opened_modal("Duplicate Course");
-            });
-
-            $scope.modalInstance.result.then(function (courseId) {
-                $location.path('/course/' + courseId);
-                xAPIStatementHelper.closed_modal("Duplicate Course");
-            }, function () {
-                //cancelled, do nothing
-                xAPIStatementHelper.closed_modal("Duplicate Course");
-            });
-        };
-
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
             if (oldValue.search != newValue.search) {

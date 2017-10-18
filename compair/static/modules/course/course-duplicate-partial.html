@@ -1,8 +1,6 @@
-<p class="pull-right"><a href="" ng-click="cancelDuplicateCourse()">Cancel</a></p>
-
 <form name="duplicateCourseForm" class="form" ng-submit="duplicate()" novalidate>
 
-    <h1 class="text-center">Duplicate: {{originalCourse.name}}</h1>
+    <h1>Duplicate: {{originalCourse.name}}</h1>
     <br />
     <p class="intro-text">Please provide the required fields below to duplicate your course and its assignments. All assignments will be editable after duplication. This process will <em>not</em> copy enrolled students, submitted answers, or comparisons.</p>
 
@@ -68,14 +66,6 @@
             </div>
         </div>
     </fieldset>
-
-    <div ng-class="{'text-center': !showAssignments}">
-        <a class="btn btn-success btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
-            ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
-        <br ng-show="!showAssignments" /><br ng-show="!showAssignments" />
-        <a class="btn btn-default btn-md" value="Back" ng-click="showAssignments=!showAssignments"
-            ng-show="showAssignments">&laquo; Back</a>
-    </div>
 
     <fieldset ng-show="showAssignments">
         <legend>Assignment Dates</legend>
@@ -197,6 +187,15 @@
         </div>
     </fieldset>
 
-    <input type="submit" class="btn btn-success btn-lg center-block" value="Duplicate"
+    <div class="form-group text-center">
+        <a class="btn btn-success btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
+            ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
+        <a class="btn btn-default btn-lg mirror-submit" value="Back" ng-click="showAssignments= canGoBack(duplicateCourseForm) ? !showAssignments : showAssignments;"
+            ng-show="showAssignments">&laquo; Back</a>
+        &nbsp; &nbsp;
+        <input type="submit" class="btn btn-success btn-lg" value="Duplicate"
             ng-disabled="duplicateCourseForm.$invalid || submitted" ng-show="showAssignments" />
+    </div>
+    <br />
+    
 </form>

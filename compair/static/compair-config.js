@@ -352,6 +352,12 @@ myApp.config(
                     }
                 }
             })
+        .when ('/course/:courseId/duplicate',
+            {
+                templateUrl: 'modules/course/course-duplicate-partial.html',
+                label: "Duplicate Course",
+                controller: 'CourseDuplicateController'
+            })
         .when ('/course/:courseId/user',
             {
                 templateUrl: 'modules/classlist/classlist-view-partial.html',
