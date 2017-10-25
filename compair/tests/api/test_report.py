@@ -15,7 +15,7 @@ class ReportAPITest(ComPAIRAPITestCase):
     def setUp(self):
         super(ReportAPITest, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_additional_criteria=1, num_groups=2, num_answers=25,
-            with_draft_student=True, with_comments=True)
+            with_draft_student=True, with_comments=True, with_comparisons=True)
         self.url = "/api/courses/" + self.fixtures.course.uuid + "/report"
         self.files_to_cleanup = []
 
