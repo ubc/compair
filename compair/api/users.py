@@ -15,6 +15,7 @@ from compair.models import User, SystemRole, Course, UserCourse, CourseRole, \
     Assignment, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
     Answer, Comparison, AnswerComment, AnswerCommentType, EmailNotificationMethod
 from compair.api.login import authenticate
+from distutils.util import strtobool
 
 user_api = Blueprint('user_api', __name__)
 
@@ -23,6 +24,12 @@ def non_blank_text(value):
         return None
     else:
         return None if text_type(value).strip() == "" else text_type(value)
+
+def string_to_bool(value):
+    if value is None:
+        return None
+    else:
+        return strtobool(value)
 
 new_user_parser = RequestParser()
 new_user_parser.add_argument('username', type=non_blank_text, required=False)
@@ -61,9 +68,11 @@ user_list_parser.add_argument('ids', required=False, default=None)
 
 user_course_list_parser = pagination_parser.copy()
 user_course_list_parser.add_argument('search', required=False, default=None)
+user_course_list_parser.add_argument('includeSandbox', type=string_to_bool, required=False, default=None)
 
 user_id_course_list_parser = pagination_parser.copy()
 user_id_course_list_parser.add_argument('search', required=False, default=None)
+user_id_course_list_parser.add_argument('includeSandbox', type=string_to_bool, required=False, default=None)
 user_id_course_list_parser.add_argument('orderBy', required=False, default=None)
 user_id_course_list_parser.add_argument('reverse', type=bool, default=False)
 
@@ -377,6 +386,12 @@ class CurrentUserCourseListAPI(Resource):
                         Course.year.like(search),
                         Course.term.like(search)
                     ))
+
+        if params['includeSandbox'] != None:
+            query = query.filter(
+                Course.sandbox == params['includeSandbox']
+            )
+
         page = query.paginate(params['page'], params['perPage'])
 
         # TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
@@ -421,6 +436,11 @@ class UserCourseListAPI(Resource):
                         Course.year.like(search),
                         Course.term.like(search)
                     ))
+
+        if params['includeSandbox'] != None:
+            query = query.filter(
+                Course.sandbox == params['includeSandbox']
+            )
 
         if params['orderBy']:
             if params['reverse']:

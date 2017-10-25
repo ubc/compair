@@ -272,7 +272,8 @@ module.controller("UserCourseController",
             perPage: 20,
             search: null,
             orderBy: null,
-            reverse: null
+            reverse: null,
+            includeSandbox: null
         };
 
         breadcrumbs.options = {'Manage User Courses': "Manage {0}'s Courses".format($scope.user.displayname)};

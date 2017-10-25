@@ -277,6 +277,7 @@ module.controller(
                 name: $scope.originalCourse.name,
                 year: new Date().getFullYear(),
                 term: $scope.originalCourse.term,
+                sandbox: $scope.originalCourse.sandbox,
                 date: {
                     course_start: {date: null, time: new Date().setHours(0, 0, 0, 0)},
                     course_end: {date: null, time: new Date().setHours(23, 59, 0, 0)}

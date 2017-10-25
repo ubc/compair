@@ -62,6 +62,7 @@ def get_course():
         'name': fields.String,
         'year': fields.Integer,
         'term': fields.String,
+        'sandbox': fields.Boolean,
         'start_date': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.start_date)),
         'end_date': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.end_date)),
         'available': fields.Boolean,

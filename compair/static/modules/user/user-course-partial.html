@@ -1,12 +1,25 @@
 <div class="user-courses-screen">
 
     <div class="row">
-        <h1 class="col-sm-8">Manage {{ user.displayname }}'s Courses</h1>
+        <h1 class="col-sm-6">Manage {{ user.displayname }}'s Courses</h1>
 
-        <form class="col-sm-4 search-courses text-right" role="search" ng-show="courses.length || courseFilters.search">
-            <div class="form-group">
+        <form class="col-sm-6 search-courses text-right" role="search" ng-show="courses.length || courseFilters.search || courseFilters.includeSandbox!==null">
+            <div class="input-group">
+                <div class="input-group-btn" uib-dropdown>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" uib-dropdown-toggle>
+                        <span ng-show="courseFilters.includeSandbox===null">All courses</span>
+                        <span ng-show="courseFilters.includeSandbox===false">Regular courses</span>
+                        <span ng-show="courseFilters.includeSandbox===true">Sandbox courses</span>
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a ng-click="courseFilters.includeSandbox=null">All courses</a></li>
+                        <li><a ng-click="courseFilters.includeSandbox=false">Regular courses</a></li>
+                        <li><a ng-click="courseFilters.includeSandbox=true">Sandbox courses</a></li>
+                    </ul>
+                </div>
                 <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
-                       ng-model="courseFilters.search">
+                    ng-model="courseFilters.search">
             </div>
         </form>
     </div>
@@ -43,9 +56,10 @@
                     <td>{{course.year}}</td>
                     <td>{{course.term}}</td>
                     <td>
-                        <span ng-if="course.before_start">Not yet started</span>
-                        <span ng-if="course.completed">Completed</span>
-                        <span ng-if="course.in_progress">Currently in progress</span>
+                        <span ng-if="course.sandbox">Sandbox course</span>
+                        <span ng-if="course.before_start && !course.sandbox">Not yet started</span>
+                        <span ng-if="course.completed && !course.sandbox">Completed</span>
+                        <span ng-if="course.in_progress && !course.sandbox">Currently in progress</span>
                     <td>
                         <select ng-model="course.course_role"
                                 ng-options="course_role as course_role for course_role in course_roles"
@@ -73,7 +87,8 @@
 
     <div ng-if="!courses.length">
         <hr />
-        <p ng-if="!courseFilters.search">No courses found. Select <a href="#/users">another user</a>?</p>
+        <p ng-if="!courseFilters.search && courseFilters.includeSandbox===null">No courses found. Select <a href="#/users">another user</a>?</p>
+        <p ng-if="!courseFilters.search && courseFilters.includeSandbox!==null">No courses found. Select <a href="#/users">another user</a> or try another filter above.</p>
         <p ng-if="courseFilters.search">No courses found for this search. Please try another search term above.</p>
     </div>
 

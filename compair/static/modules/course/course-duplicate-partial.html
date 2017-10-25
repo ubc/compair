@@ -27,6 +27,14 @@
                 </compair-field-with-feedback>
             </div>
         </div>
+        <div class="row">
+            <div class="col-md-12 form-group">
+                <label for="courseSandbox">
+                    <input type="checkbox" id="courseSandbox" name="courseSandbox" value="1" ng-model="duplicateCourse.sandbox">&nbsp;
+                    This course is only for trying out ComPAIR (a "sandbox" course)
+                </label>
+            </div>
+        </div>
     </fieldset>
 
     <fieldset ng-show="!showAssignments">
