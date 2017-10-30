@@ -214,6 +214,7 @@ describe('xapi-module', function () {
                 'avatar': "63a9f0ea7bb98050796b649e85481845",
                 'displayname': "root",
                 'fullname': "John Smith",
+                'fullname_sortable': "Smith, John",
                 'id': id
             },
             'created': "Fri, 09 Jan 2015 18:35:58 -0000",

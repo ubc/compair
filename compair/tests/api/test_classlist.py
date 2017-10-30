@@ -29,7 +29,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             (self.data.get_authorized_instructor(), '', ''),
             (self.data.get_authorized_ta(), '', ''),
             (self.data.get_authorized_student(), '', '')]
-        expected.sort(key=lambda x: x[0].firstname)
+        expected.sort(key=lambda x: x[0].lastname)
 
         with self.login(self.data.get_authorized_instructor().username):
             # test authorized user
@@ -66,7 +66,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 (self.data.get_authorized_instructor(), '', "instructor_group"),
                 (self.data.get_authorized_ta(), '', "ta_group"),
                 (self.data.get_authorized_student(), '', "student_group")]
-            expected.sort(key=lambda x: x[0].firstname)
+            expected.sort(key=lambda x: x[0].lastname)
 
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
@@ -90,7 +90,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 (self.data.get_authorized_instructor(), third_party_instructor.unique_identifier, "instructor_group"),
                 (self.data.get_authorized_ta(), third_party_ta.unique_identifier, "ta_group"),
                 (self.data.get_authorized_student(), third_party_student.unique_identifier, "student_group")]
-            expected.sort(key=lambda x: x[0].firstname)
+            expected.sort(key=lambda x: x[0].lastname)
 
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
@@ -190,7 +190,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().uuid,
-                'name': self.data.get_authorized_student().fullname
+                'name': self.data.get_authorized_student().fullname_sortable
             }
             self.assertEqual(students[0]['id'], expected['id'])
             self.assertEqual(students[0]['name'], expected['name'])
@@ -201,7 +201,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().uuid,
-                'name': self.data.get_authorized_student().fullname
+                'name': self.data.get_authorized_student().fullname_sortable
             }
             self.assertEqual(students[0]['id'], expected['id'])
             self.assertEqual(students[0]['name'], expected['name'])
@@ -258,6 +258,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             expected = {
                 'user_id': self.data.get_dropped_instructor().uuid,
                 'fullname': self.data.get_dropped_instructor().fullname,
+                'fullname_sortable': self.data.get_dropped_instructor().fullname_sortable,
                 'course_role': CourseRole.instructor.value
             }
             rv = self.client.post(
@@ -272,6 +273,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             expected = {
                 'user_id': self.data.get_unauthorized_instructor().uuid,
                 'fullname': self.data.get_unauthorized_instructor().fullname,
+                'fullname_sortable': self.data.get_unauthorized_instructor().fullname_sortable,
                 'course_role': CourseRole.instructor.value
             }
             rv = self.client.post(
@@ -286,6 +288,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             expected = {
                 'user_id': self.data.get_unauthorized_instructor().uuid,
                 'fullname': self.data.get_unauthorized_instructor().fullname,
+                'fullname_sortable': self.data.get_unauthorized_instructor().fullname_sortable,
                 'course_role': CourseRole.teaching_assistant.value
             }
             rv = self.client.post(
@@ -327,6 +330,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             expected = {
                 'user_id': self.data.get_authorized_instructor().uuid,
                 'fullname': self.data.get_authorized_instructor().fullname,
+                'fullname_sortable': self.data.get_authorized_instructor().fullname_sortable,
                 'course_role': CourseRole.dropped.value
             }
             rv = self.client.delete(url)

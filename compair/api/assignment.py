@@ -756,7 +756,7 @@ class AssignmentUsersComparisonsAPI(Resource):
                 Comparison.completed == True
             )) \
             .group_by(User) \
-            .order_by(User.firstname, User.lastname)
+            .order_by(User.lastname, User.firstname)
 
         self_evaluation_total = AnswerComment.query \
             .join("answer") \

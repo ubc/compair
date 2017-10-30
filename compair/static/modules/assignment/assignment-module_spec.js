@@ -40,6 +40,7 @@ describe('assignment-module', function () {
         email: null,
         firstname: "John",
         fullname: "John Smith",
+        fullname_sortable: 'Smith, John',
         id: id,
         lastname: "Smith",
         last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
@@ -151,6 +152,7 @@ describe('assignment-module', function () {
             "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
             "displayname": "root",
             "fullname": "thkx UeNV",
+            "fullname_sortable": "UeNV, thkx",
             "id": "1abcABC123-abcABC123_Z"
         },
         "user_id": "1abcABC123-abcABC123_Z",
@@ -231,6 +233,7 @@ describe('assignment-module', function () {
                     "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                     "displayname": "root",
                     "fullname": "thkx UeNV",
+                    "fullname_sortable": "UeNV, thkx",
                     "id": "1abcABC123-abcABC123_Z"
                 },
                 "user_id": "1abcABC123-abcABC123_Z",
@@ -245,6 +248,7 @@ describe('assignment-module', function () {
                     "avatar": "27e062bf3df59edebb5db9f89952c8b3",
                     "displayname": "student6",
                     "fullname": "Student Sx",
+                    "fullname_sortable": "Sx, Student",
                     "id": "8abcABC123-abcABC123_Z",
                 },
                 "user_id": "8abcABC123-abcABC123_Z",
@@ -259,6 +263,7 @@ describe('assignment-module', function () {
                     "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                     "displayname": "root",
                     "fullname": "thkx UeNV",
+                    "fullname_sortable": "UeNV, thkx",
                     "id": "1abcABC123-abcABC123_Z"
                 },
                 "user_id": "1abcABC123-abcABC123_Z"
@@ -285,6 +290,7 @@ describe('assignment-module', function () {
                     "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                     "displayname": "root",
                     "fullname": "thkx UeNV",
+                    "fullname_sortable": "UeNV, thkx",
                     "id": "1abcABC123-abcABC123_Z"
                 },
                 "user_id": "1abcABC123-abcABC123_Z"
@@ -307,6 +313,7 @@ describe('assignment-module', function () {
                     "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                     "displayname": "root",
                     "fullname": "thkx UeNV",
+                    "fullname_sortable": "UeNV, thkx",
                     "id": "1abcABC123-abcABC123_Z"
                 },
                 "user_id": "1abcABC123-abcABC123_Z"
@@ -329,6 +336,7 @@ describe('assignment-module', function () {
                     "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                     "displayname": "root",
                     "fullname": "thkx UeNV",
+                    "fullname_sortable": "UeNV, thkx",
                     "id": "1abcABC123-abcABC123_Z"
                 },
                 "user_id": "1abcABC123-abcABC123_Z"
@@ -351,6 +359,7 @@ describe('assignment-module', function () {
                     "avatar": "b4cd29f38b87efce1490b0755785e237",
                     "displayname": "Instructor One",
                     "fullname": "Instructor One",
+                    "fullname_sortable": "One, Instructor",
                     "id": "2abcABC123-abcABC123_Z"
                 },
                 "user_id": "2abcABC123-abcABC123_Z"
@@ -376,6 +385,7 @@ describe('assignment-module', function () {
                     "avatar": "7c8cd5da17441ff04bf445736964dd16",
                     "displayname": "student9",
                     "fullname": "Student Nine",
+                    "fullname_sortable": "Nine, Student",
                     "id": "11bcABC123-abcABC123_Z"
                 },
                 "user_id": "11bcABC123-abcABC123_Z"
@@ -401,6 +411,7 @@ describe('assignment-module', function () {
                     "avatar": "27e062bf3df59edebb5db9f89952c8b3",
                     "displayname": "student6",
                     "fullname": "Student Sx",
+                    "fullname_sortable": "Sx, Student",
                     "id": "8abcABC123-abcABC123_Z"
                 },
                 "user_id": "8abcABC123-abcABC123_Z"
@@ -426,6 +437,7 @@ describe('assignment-module', function () {
                     "avatar": "2c62e6068c765179e1aed9bc2bfd4689",
                     "displayname": "student10",
                     "fullname": "Student Ten",
+                    "fullname_sortable": "Ten, Student",
                     "id": "12bcABC123-abcABC123_Z"
                 },
                 "user_id": "12abcABC123-abcABC123_Z"
@@ -451,6 +463,7 @@ describe('assignment-module', function () {
                     "avatar": "8aa7fb36a4efbbf019332b4677b528cf",
                     "displayname": "student8",
                     "fullname": "Student Eight",
+                    "fullname_sortable": "Eight, Student",
                     "id": "10bcABC123-abcABC123_Z"
                 },
                 "user_id": "10bcABC123-abcABC123_Z"
@@ -476,6 +489,7 @@ describe('assignment-module', function () {
                     "avatar": "9fd9280a7aa3578c8e853745a5fcc18a",
                     "displayname": "student5",
                     "fullname": "Student Five",
+                    "fullname_sortable": "Five, Student",
                     "id": "7abcABC123-abcABC123_Z"
                 },
                 "user_id": "7abcABC123-abcABC123_Z"
@@ -501,6 +515,7 @@ describe('assignment-module', function () {
                     "avatar": "213ee683360d88249109c2f92789dbc3",
                     "displayname": "student2",
                     "fullname": "Student Two",
+                    "fullname_sortable": "Two, Student",
                     "id": "4abcABC123-abcABC123_Z"
                 },
                 "user_id": "4abcABC123-abcABC123_Z"
@@ -526,6 +541,7 @@ describe('assignment-module', function () {
                     "avatar": "8e4947690532bc44a8e41e9fb365b76a",
                     "displayname": "student3",
                     "fullname": "Student Three",
+                    "fullname_sortable": "Three, Student",
                     "id": "5abcABC123-abcABC123_Z"
                 },
                 "user_id": "5abcABC123-abcABC123_Z"
@@ -551,6 +567,7 @@ describe('assignment-module', function () {
                     "avatar": "72e8744fc2faa17a83dec9bed06b8b65",
                     "displayname": "student7",
                     "fullname": "Student Seven",
+                    "fullname_sortable": "Seven, Student",
                     "id": "9abcABC123-abcABC123_Z",
                 },
                 "user_id": "9abcABC123-abcABC123_Z",
@@ -576,6 +593,7 @@ describe('assignment-module', function () {
                     "avatar": "5e5545d38a68148a2d5bd5ec9a89e327",
                     "displayname": "student1",
                     "fullname": "Student One",
+                    "fullname_sortable": "One, Student",
                     "id": "3abcABC123-abcABC123_Z"
                 },
                 "user_id": "3abcABC123-abcABC123_Z"
@@ -601,6 +619,7 @@ describe('assignment-module', function () {
                     "avatar": "166a50c910e390d922db4696e4c7747b",
                     "displayname": "student4",
                     "fullname": "Student Four",
+                    "fullname_sortable": "Four, Student",
                     "id": "6abcABC123-abcABC123_Z"
                 },
                 "user_id": "6abcABC123-abcABC123_Z"
@@ -625,6 +644,7 @@ describe('assignment-module', function () {
                 "avatar": "27e062bf3df59edebb5db9f89952c8b3",
                 "displayname": "student6",
                 "fullname": "Student Sx",
+                "fullname_sortable": "Sx, Student",
                 "id": "8abcABC123-abcABC123_Z",
             },
             "user_id": "8abcABC123-abcABC123_Z",
@@ -664,6 +684,7 @@ describe('assignment-module', function () {
                         "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                         "displayname": "root",
                         "fullname": "thkx UeNV",
+                        "fullname_sortable": "UeNV, thkx",
                         "id": "1abcABC123-abcABC123_Z"
                     },
                     "user_id": "1abcABC123-abcABC123_Z"
@@ -687,6 +708,7 @@ describe('assignment-module', function () {
                         "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
                         "displayname": "root",
                         "fullname": "thkx UeNV",
+                        "fullname_sortable": "UeNV, thkx",
                         "id": "1abcABC123-abcABC123_Z"
                     },
                     "user_id": "1abcABC123-abcABC123_Z"

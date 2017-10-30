@@ -12,11 +12,11 @@
             <div class="col-sm-6 text-right multi-filters">
                 <span class="filter">
                     <label>Show: &nbsp;</label>
-                    <select ng-if="groups.length > 0" ng-model="comparisonFilters.group" class="nullable" chosen disable_search_threshold="8"
+                    <select ng-if="groups.length > 0" ng-model="comparisonFilters.group" class="nullable" chosen
                             ng-options="group as group for group in groups | orderBy: 'toString()'">
                         <option value="">All groups</option>
                     </select>
-                    <select id="comparison-filter" ng-model="comparisonFilters.author" class="nullable" chosen disable_search_threshold="8"
+                    <select id="comparison-filter" ng-model="comparisonFilters.author" class="nullable" chosen
                             ng-options="u.id as u.name for u in users | orderBy: 'name'">
                         <option value="">All students</option>
                     </select>
@@ -42,7 +42,7 @@
         <div ng-repeat="comparison_set in comparison_sets">
             <div class="each-evaluation" ng-repeat="comparison in comparison_set.comparisons">
                 <h4 class="text-center evaluator-heading" ng-if="$first">
-                    <i class="fa fa-user" aria-hidden="true"></i> {{ comparison_set.user.fullname }} <br />
+                    <i class="fa fa-user" aria-hidden="true"></i> {{ comparison_set.user.fullname_sortable }} <br />
                     <i class="fa fa-arrow-down"></i>
                 </h4>
 

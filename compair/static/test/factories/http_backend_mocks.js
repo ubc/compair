@@ -159,6 +159,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "email": null,
                 "firstname": null,
                 "fullname": null,
+                "fullname_sortable": null,
                 "lastname": null,
                 "student_number": null,
                 "avatar": "63a9f0ea7bb98050796b649e85481845",
@@ -172,6 +173,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
 
             newUser = angular.merge({}, newUser, data);
             newUser.fullname = newUser.firstname + " " + newUser.lastname;
+            newUser.fullname_sortable = newUser.lastname + ", " + newUser.firstname;
 
             storageFixture.storage().users[newUser.id] = newUser;
 
@@ -531,6 +533,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
             var returnData = {
                 course_role: courseRole,
                 fullname: storageFixture.storage().users[userId].fullname,
+                fullname_sortable: storageFixture.storage().users[userId].fullname_sortable,
                 user_id: userId
             }
 
@@ -552,6 +555,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
 
             var returnData = {
                 fullname: storageFixture.storage().users[userId].fullname,
+                fullname_sortable: storageFixture.storage().users[userId].fullname_sortable,
                 user_id: userId,
                 course_role: "Dropped"
             }

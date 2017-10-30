@@ -34,6 +34,7 @@ describe('Service: Session', function() {
         email: null,
         firstname: "John",
         fullname: "John Smith",
+        fullname_sortable: "Smith, John",
         id: id,
         lastname: "Smith",
         last_online: "Tue, 12 Aug 2014 20:53:31 -0000",

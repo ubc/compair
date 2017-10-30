@@ -40,6 +40,7 @@ describe('user-module', function () {
         email: null,
         firstname: "John",
         fullname: "John Smith",
+        fullname_sortable: "Smith, John",
         id: id,
         lastname: "Smith",
         last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
@@ -153,7 +154,7 @@ describe('user-module', function () {
             });
         });
     });
-    
+
     describe('UserPasswordModalController', function () {
         var $rootScope, createController, $uibModal, $q;
 

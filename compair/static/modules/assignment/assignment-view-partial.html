@@ -146,18 +146,18 @@
                         <div ng-if="assignment.answer_count && (canManageAssignment || see_answers)">
                             <span class="filter">
                                 <label>Show: &nbsp;</label>
-                                <select ng-if="groups.length > 0 && canManageAssignment" ng-model="answerFilters.group" class="nullable" chosen disable_search_threshold="8"
+                                <select ng-if="groups.length > 0 && canManageAssignment" ng-model="answerFilters.group" class="nullable" chosen
                                         ng-options="group as group for group in groups | orderBy: 'toString()'">
                                     <option value="">All groups</option>
                                 </select>
-                                <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen disable_search_threshold="8"
+                                <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen
                                         ng-options="u.id as u.name for u in students">
                                     <option value="">All answers</option>
                                 </select>
                             </span><br />
                             <span class="filter" ng-if="(canManageAssignment || rankLimit) && assignment.pairing_algorithm != PairingAlgorithm.random">
                                 <label>Order by: &nbsp;</label>
-                                <select ng-model="answerFilters.orderBy" chosen disable_search_threshold="8" ng-disabled="answerFilters.top == true">
+                                <select ng-model="answerFilters.orderBy" chosen ng-disabled="answerFilters.top == true">
                                     <option value="">Date submitted</option>
                                     <option value="score" ng-if="canManageAssignment">Answer score</option>
                                     <option value="score" ng-if="!canManageAssignment">Answer rank</option>

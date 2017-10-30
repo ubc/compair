@@ -23,6 +23,9 @@ class TestUsersModel(ComPAIRTestCase):
     def test_fullname(self):
         self.assertEqual(self.user.fullname, "John Smith")
 
+    def test_fullname_sortable(self):
+        self.assertEqual(self.user.fullname_sortable, "Smith, John")
+
     def test_avatar(self):
         # role != student
         self.user.email = "myemailaddress@example.com"
