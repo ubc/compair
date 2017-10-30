@@ -7,6 +7,7 @@ var userTempalte = {
     "email": null,
     "firstname": null,
     "fullname": null,
+    "fullname_sortable": null,
     "lastname": null,
     "student_number": null,
     "avatar": "63a9f0ea7bb98050796b649e85481845",

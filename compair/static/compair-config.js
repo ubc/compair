@@ -32,6 +32,7 @@ var myApp = angular.module('myApp', [
     'ubc.ctlt.compair.assignment',
     'ubc.ctlt.compair.report',
     'ubc.ctlt.compair.oauth',
+    'localytics.directives',
     'templates'
 ]);
 
@@ -261,8 +262,8 @@ myApp.factory('RouteResolves',
 }]);
 
 myApp.config(
-    ['$routeProvider', '$logProvider', '$httpProvider',
-     '$locationProvider', "RouteResolvesProvider", "ResolveDeferredRouteDataProvider",
+    ['$routeProvider', '$logProvider', '$httpProvider', '$locationProvider',
+     "RouteResolvesProvider", "ResolveDeferredRouteDataProvider",
     function ($routeProvider, $logProvider, $httpProvider, $locationProvider,
               RouteResolvesProvider, ResolveDeferredRouteDataProvider) {
 
@@ -703,13 +704,19 @@ myApp.config(
 }]);
 
 myApp.config(
-    ['localStorageServiceProvider',
-    function (localStorageServiceProvider)
+    ['localStorageServiceProvider', 'chosenProvider',
+    function (localStorageServiceProvider, chosenProvider)
     {
         localStorageServiceProvider
             .setPrefix('ComPAIR')
             .setStorageType('sessionStorage') // options [localStorage, sessionStorage]
             .setStorageCookie(0); // fallback default settings
+
+        chosenProvider.setOption({
+            disable_search_threshold: 8,
+            search_contains: true,
+            enable_split_word_search: true
+        });
     }
 ]);
 

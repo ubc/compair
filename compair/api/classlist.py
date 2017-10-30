@@ -323,7 +323,7 @@ class ClasslistRootAPI(Resource):
                 UserCourse.course_id == course.id,
                 UserCourse.course_role != CourseRole.dropped
             )) \
-            .order_by(User.firstname) \
+            .order_by(User.lastname, User.firstname) \
             .all()
 
         if not restrict_user:
@@ -482,6 +482,7 @@ class EnrolAPI(Resource):
         return {
             'user_id': user.uuid,
             'fullname': user.fullname,
+            'fullname_sortable': user.fullname_sortable,
             'course_role': course_role.value
         }
 
@@ -519,6 +520,7 @@ class EnrolAPI(Resource):
         return {
             'user_id': user.uuid,
             'fullname': user.fullname,
+            'fullname_sortable': user.fullname_sortable,
             'course_role': CourseRole.dropped.value
         }
 
@@ -573,6 +575,7 @@ class StudentsAPI(Resource):
                 UserCourse.course_id == course.id,
                 UserCourse.course_role == CourseRole.student
             ) \
+            .order_by(User.lastname, User.firstname) \
             .all()
 
         users = []
@@ -581,7 +584,7 @@ class StudentsAPI(Resource):
             if allow(READ, user_course):
                 users.append({
                     'id': u.User.uuid,
-                    'name': u.User.fullname if u.User.fullname else u.User.displayname,
+                    'name': u.User.fullname_sortable,
                     'group_name': u.group_name
                 })
             else:

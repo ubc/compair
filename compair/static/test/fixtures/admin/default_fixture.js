@@ -35,6 +35,7 @@ var admin = userFactory.generateUser("1abcABC123-abcABC123_Z", "System Administr
     firstname: "JaNy",
     lastname: "bwsV",
     fullname: "JaNy bwsV",
+    fullname_sortable: "bwsV, JaNy",
     email: "admin@exmple.com"
 });
 storage.users[admin.id] = admin;
@@ -45,6 +46,7 @@ var instructor = userFactory.generateUser("2abcABC123-abcABC123_Z", "Instructor"
     firstname: "First",
     lastname: "Instructor",
     fullname: "First Instructor",
+    fullname_sortable: "Instructor, First",
     email: "first.instructor@exmple.com"
 });
 storage.users[instructor.id] = instructor;
@@ -55,6 +57,7 @@ var student1 = userFactory.generateUser("3abcABC123-abcABC123_Z", "Student", {
     firstname: "First",
     lastname: "Student",
     fullname: "First Student",
+    fullname_sortable: "Student, First",
     email: "first.student@exmple.com"
 });
 storage.users[student1.id] = student1;
@@ -65,6 +68,7 @@ var student2 = userFactory.generateUser("4abcABC123-abcABC123_Z", "Student", {
     firstname: "Second",
     lastname: "Student",
     fullname: "Second Student",
+    fullname_sortable: "Student, Second",
     email: "second.student@exmple.com"
 });
 storage.users[student2.id] = student2;

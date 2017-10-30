@@ -17,6 +17,7 @@ def get_partial_user(restrict_user=True):
     }
     if not restrict_user:
         ret['fullname'] = fields.String(attribute="user_fullname")
+        ret['fullname_sortable'] = fields.String(attribute="user_fullname_sortable")
 
     return ret
 
@@ -38,6 +39,7 @@ def get_user(restrict_user=True):
         'lastname': fields.String,
         'email': fields.String,
         'fullname': fields.String,
+        'fullname_sortable': fields.String,
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
         'system_role': UnwrapEnum(attribute='system_role'),
         'email_notification_method': UnwrapEnum(attribute='email_notification_method'),

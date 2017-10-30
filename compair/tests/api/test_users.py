@@ -54,6 +54,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertIn('firstname', root)
             self.assertIn('lastname', root)
             self.assertIn('fullname', root)
+            self.assertIn('fullname_sortable', root)
             self.assertIn('email', root)
 
     def test_users_info_restricted(self):
@@ -68,6 +69,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertNotIn('firstname', root)
             self.assertNotIn('lastname', root)
             self.assertNotIn('fullname', root)
+            self.assertNotIn('fullname_sortable', root)
             self.assertNotIn('email', root)
 
     def test_users_list(self):
@@ -1035,13 +1037,6 @@ class UsersAPITests(ComPAIRAPITestCase):
 
             # undo the forced login earlier
             logout_user()
-
-    def _generate_search_users(self, user):
-        return {
-            'id': user.uuid,
-            'display': user.fullname + ' (' + user.displayname + ') - ' + user.system_role,
-            'name': user.fullname}
-
 
 class UsersCourseStatusAPITests(ComPAIRAPITestCase):
     def setUp(self):

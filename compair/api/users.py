@@ -226,7 +226,7 @@ class UserListAPI(Resource):
                 query = query.order_by(desc(params['orderBy']))
             else:
                 query = query.order_by(asc(params['orderBy']))
-        query.order_by(User.firstname.asc(), User.lastname.asc())
+        query = query.order_by(User.lastname.asc(), User.firstname.asc())
 
         page = query.paginate(params['page'], params['perPage'])
 

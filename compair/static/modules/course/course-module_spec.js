@@ -40,6 +40,7 @@ describe('course-module', function () {
         email: null,
         firstname: "John",
         fullname: "John Smith",
+        fullname_sortable: "Smith, John",
         id: id,
         lastname: "Smith",
         last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
@@ -450,6 +451,7 @@ describe('course-module', function () {
                         "avatar": "831fdab66736a3de4671777adf80908c",
                         "displayname": "root",
                         "fullname": "thkx UeNV",
+                        "fullname_sortable": "UeNV, thkx",
                         "id": "hJYTzpyVQcCnSN3raYtxGQ"
                     },
                     "user_id": "hJYTzpyVQcCnSN3raYtxGQ"
@@ -502,6 +504,7 @@ describe('course-module', function () {
                         "avatar": "831fdab66736a3de4671777adf80908c",
                         "displayname": "root",
                         "fullname": "thkx UeNV",
+                        "fullname_sortable": "UeNV, thkx",
                         "id": "hJYTzpyVQcCnSN3raYtxGQ"
                     },
                     "user_id": "hJYTzpyVQcCnSN3raYtxGQ"

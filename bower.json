@@ -29,7 +29,7 @@
     "es-breadcrumbs": "~0.4.1",
     "angular-loading-bar": "~0.8.0",
     "AngularJS-Toaster": "~2.1.0",
-    "angular-chosen-localytics": "~1.5",
+    "angular-chosen-localytics": "~1.8.0",
     "chosen-bootstrap-theme":  "~1.0.4",
     "angular-moment": "~0.10.3",
     "angular-file-upload": "~2.5.0",
