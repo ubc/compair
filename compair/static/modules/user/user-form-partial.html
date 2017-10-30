@@ -76,9 +76,9 @@
         </div>
         <div ng-if="method != 'create' && ((ownProfile || canManageUsers) && user.uses_compair_login)">
             <label>ComPAIR Password </label>
-            <p><a id="change-password" class="btn btn-sm btn-primary" ng-click="showPasswordModal()"><i class="fa fa-edit" aria-hidden="true"></i> Edit Password</a></p>
+            <p><a id="change-password-btn" class="btn btn-sm btn-primary" ng-click="showPasswordModal()"><i class="fa fa-edit" aria-hidden="true"></i> Edit Password</a></p>
         </div>
-        
+
     </fieldset>
     <input type="submit" class="btn btn-success center-block btn-lg" value="Save"
         ng-disabled="userForm.$invalid || submitted" />

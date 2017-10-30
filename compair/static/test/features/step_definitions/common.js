@@ -73,13 +73,21 @@ var commonStepDefinitionsWrapper = function() {
     });
 
     // click button on page factory
-    this.When("I select '$button' button", function (button) {
+    this.When("I select the '$button' button", function (button) {
         return page.clickButton(button);
     });
 
     //submit form button
     this.When("I submit form with '$button' button", function (button) {
         return element(by.css('input[type=submit][value="'+button+'"]')).click();
+    });
+
+    this.When("I should see the '$button' button", function (button) {
+        expect(element(by.cssContainingText('a.btn', button)).isPresent()).to.eventually.equal(true);
+    });
+
+    this.When("I should not see the '$button' button", function (button) {
+        expect(element(by.cssContainingText('a.btn', button)).isPresent()).to.eventually.equal(false);
     });
 
     this.When("I submit form with the first '$button' button", function (button) {
@@ -91,8 +99,8 @@ var commonStepDefinitionsWrapper = function() {
     });
 
     //submit modal form button
-    this.When("I submit modal form with '$button' button", function (button) {
-        return element(by.css('.modal input[type=button][value="'+button+'"]')).click();
+    this.When("I submit modal form with the '$button' button", function (button) {
+        return element(by.css('.modal input[type=submit][value="'+button+'"]')).click();
     });
 
     // page verification

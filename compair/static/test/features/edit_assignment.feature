@@ -4,13 +4,13 @@ Feature: Edit Assignment
   Scenario: Loading edit assignment page as admin
     Given I'm a System Administrator
     And I'm on 'assignment' page for assignment with id '1abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
-    When I select 'Edit Assignment' button
+    When I select the 'Edit Assignment' button
     Then I should be on the 'edit assignment' page
 
   Scenario: Loading edit assignment page as instructor
     Given I'm an Instructor
     And I'm on 'assignment' page for assignment with id '1abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
-    When I select 'Edit Assignment' button
+    When I select the 'Edit Assignment' button
     Then I should be on the 'edit assignment' page
 
   Scenario: Editing an assignment as instructor
@@ -30,12 +30,12 @@ Feature: Edit Assignment
     When I edit the second criterion
     And I fill form item 'criterion.name' in with 'Choose the best one'
     And I fill in the criterion description with 'Choose the best one.'
-    And I submit modal form with 'Save' button
+    And I submit modal form with the 'Save' button
     And I add a new criterion
     And I fill form item 'criterion.name' in with 'Which do you like?'
     And I fill in the criterion description with 'Choose the one you like best.'
     And I toggle the 'Include this criterion in my list of default criteria (to re-use it in other assignments)' checkbox
-    And I submit modal form with 'Save' button
+    And I submit modal form with the 'Save' button
     And I submit form with 'Save' button
     Then I should be on the 'course' page
 

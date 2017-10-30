@@ -4,7 +4,7 @@ Feature: Create LTI Consumers
   Scenario: Loading create LTI consumers page as admin
     Given I'm a System Administrator
     And I'm on 'manage lti' page
-    When I select 'Add LTI Consumer' button
+    When I select the 'Add LTI Consumer' button
     Then I should be on the 'create lti consumer' page
 
   Scenario: Creating a lti consumer as admin

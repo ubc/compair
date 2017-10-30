@@ -4,13 +4,13 @@ Feature: Create Course
   Scenario: Loading add course page by Add Course button as admin
     Given I'm a System Administrator
     And I'm on 'home' page
-    When I select 'Add Course' button
+    When I select the 'Add Course' button
     Then I should be on the 'create course' page
 
   Scenario: Loading add course page by add a course button as instructor
     Given I'm an Instructor
     And I'm on 'home' page
-    When I select 'Add Course' button
+    When I select the 'Add Course' button
     Then I should be on the 'create course' page
 
   Scenario: Creating a course as instructor

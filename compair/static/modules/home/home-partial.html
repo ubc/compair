@@ -20,12 +20,12 @@
 
         <h2 class="col-sm-6">Your courses</h2>
 
-        <form class="col-sm-6 search-courses text-right" role="search" ng-show="!canManageUsers && canAddCourse && (courses.length || courseFilters.search)">
+        <form class="col-sm-6 search-courses text-right" role="search" ng-if="!canManageUsers && canAddCourse && (courses.length || courseFilters.search)">
             <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
                 ng-model="courseFilters.search">
         </form>
 
-        <form class="col-sm-6 search-courses text-right" role="search" ng-show="canManageUsers && canAddCourse && (courses.length || courseFilters.search || courseFilters.includeSandbox!==null)" style="padding-right:0;">
+        <form class="col-sm-6 search-courses text-right" role="search" ng-if="canManageUsers && canAddCourse && (courses.length || courseFilters.search || courseFilters.includeSandbox!==null)" style="padding-right:0;">
             <div class="input-group">
                 <div class="input-group-btn" uib-dropdown>
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" uib-dropdown-toggle>

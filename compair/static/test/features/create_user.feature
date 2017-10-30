@@ -4,7 +4,7 @@ Feature: Create Account
   Scenario: Loading create user page by Create Account button as admin
     Given I'm a System Administrator
     And I'm on 'home' page
-    When I select 'Create Account' button
+    When I select the 'Create Account' button
     Then I should be on the 'create user' page
 
   Scenario: Creating a instructor as admin

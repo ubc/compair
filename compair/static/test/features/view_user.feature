@@ -4,7 +4,7 @@ Feature: View Profile
   Scenario: Loading own profile as admin
     Given I'm a System Administrator
     And I'm on 'home' page
-    When I select 'Profile' button
+    When I select the 'Profile' button
     Then I should be on the 'profile' page
     And I should see root's profile
     And I should see the edit notification settings option
@@ -26,7 +26,7 @@ Feature: View Profile
   Scenario: Loading own profile as instructor
     Given I'm an Instructor
     And I'm on 'home' page
-    When I select 'Profile' button
+    When I select the 'Profile' button
     Then I should be on the 'profile' page
     And I should see First Instructor's profile
     And I should see the edit notification settings option
@@ -48,7 +48,7 @@ Feature: View Profile
   Scenario: Loading own profile as CAS instructor
     Given I'm a CAS Instructor
     And I'm on 'home' page
-    When I select 'Profile' button
+    When I select the 'Profile' button
     Then I should be on the 'profile' page
     And I should see First Instructor's CAS profile
     And I should see the edit notification settings option
@@ -64,7 +64,7 @@ Feature: View Profile
   Scenario: Loading own profile as student
     Given I'm a Student
     And I'm on 'home' page
-    When I select 'Profile' button
+    When I select the 'Profile' button
     Then I should be on the 'profile' page
     And I should see First Student's profile
     And I should see the edit notification settings option
@@ -80,7 +80,7 @@ Feature: View Profile
   Scenario: Loading own profile as CAS student
     Given I'm a CAS Student
     And I'm on 'home' page
-    When I select 'Profile' button
+    When I select the 'Profile' button
     Then I should be on the 'profile' page
     And I should see First Student's CAS profile
     And I should see the edit notification settings option

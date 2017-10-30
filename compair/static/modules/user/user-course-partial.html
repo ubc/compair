@@ -3,7 +3,7 @@
     <div class="row">
         <h1 class="col-sm-6">Manage {{ user.displayname }}'s Courses</h1>
 
-        <form class="col-sm-6 search-courses text-right" role="search" ng-show="courses.length || courseFilters.search || courseFilters.includeSandbox!==null">
+        <form class="col-sm-6 search-courses text-right" role="search" ng-if="courses.length || courseFilters.search || courseFilters.includeSandbox!==null">
             <div class="input-group">
                 <div class="input-group-btn" uib-dropdown>
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" uib-dropdown-toggle>

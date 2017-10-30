@@ -4,35 +4,35 @@ Feature: Edit Profile
   Scenario: Loading edit own profile as admin
     Given I'm a System Administrator
     And I'm on 'user' page for user with id '1abcABC123-abcABC123_Z'
-    When I select 'Edit' button
+    When I select the 'Edit' button
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
     And I should see the system role in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should see the Account Login section
-    And I should see the Password section
+    And I should see the 'Edit Password' button
 
   Scenario: Loading edit instructor's profile as admin
     Given I'm a System Administrator
     And I'm on 'user' page for user with id '2abcABC123-abcABC123_Z'
-    When I select 'Edit' button
+    When I select the 'Edit' button
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
     And I should see the system role in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should see the Account Login section
-    And I should see the Password section without old password
+    And I should see the 'Edit Password' button
 
   Scenario: Loading edit own profile as instructor
     Given I'm an Instructor
     And I'm on 'user' page for user with id '2abcABC123-abcABC123_Z'
-    When I select 'Edit' button
+    When I select the 'Edit' button
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
     And I should not see the system role in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should see the Account Login section
-    And I should see the Password section
+    And I should see the 'Edit Password' button
 
   Scenario: Edit own profile as instructor
     Given I'm an Instructor
@@ -49,23 +49,23 @@ Feature: Edit Profile
   Scenario: Change own password as instructor
     Given I'm an Instructor
     And I'm on 'edit user' page for user with id '2abcABC123-abcABC123_Z'
-    When I fill form item 'password.oldpassword' in with 'password'
+    When I select the 'Edit Password' button
+    And I fill form item 'password.oldpassword' in with 'password'
     And I fill form item 'password.newpassword' in with 'password2'
     And I fill form item 'password.verifypassword' in with 'password2'
-    And I submit form with the second 'Save' button
-    Then I should be on the 'profile' page
-    And I should see 'First Instructor's Profile' in 'h1' on the page
+    And I submit modal form with the 'Save' button
+    Then I should see a success message
 
   Scenario: Loading edit another user's profile as instructor
     Given I'm an Instructor
     And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
-    When I select 'Edit' button
+    When I select the 'Edit' button
     Then I should be on the 'edit profile' page
     And I should see the student number in the Account Details section
     And I should not see the system role in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should see the Account Login section
-    And I should not see the Password section
+    And I should not see the 'Edit Password' button
 
   Scenario: Edit another user's profile as instructor
     Given I'm an Instructor
@@ -83,13 +83,13 @@ Feature: Edit Profile
   Scenario: Loading edit own profile as student
     Given I'm a Student
     And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
-    When I select 'Edit' button
+    When I select the 'Edit' button
     Then I should be on the 'edit profile' page
     And I should see the student number in the Account Details section
     And I should not see the system role in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should see the Account Login section
-    And I should see the Password section
+    And I should see the 'Edit Password' button
 
   Scenario: Edit own profile as student
     Given I'm a Student
@@ -107,23 +107,23 @@ Feature: Edit Profile
   Scenario: Change own password as student
     Given I'm a Student
     And I'm on 'edit user' page for user with id '3abcABC123-abcABC123_Z'
-    When I fill form item 'password.oldpassword' in with 'password'
+    When I select the 'Edit Password' button
+    And I fill form item 'password.oldpassword' in with 'password'
     And I fill form item 'password.newpassword' in with 'password2'
     And I fill form item 'password.verifypassword' in with 'password2'
-    And I submit form with the second 'Save' button
-    Then I should be on the 'profile' page
-    And I should see 'First Student's Profile' in 'h1' on the page
+    And I submit modal form with the 'Save' button
+    Then I should see a success message
 
   Scenario: Loading edit own profile as CAS instructor
     Given I'm a CAS Instructor
     And I'm on 'user' page for user with id '2abcABC123-abcABC123_Z'
-    When I select 'Edit' button
+    When I select the 'Edit' button
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
     And I should not see the system role in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should not see the Account Login section
-    And I should not see the Password section
+    And I should not see the 'Edit Password' button
 
   Scenario: Edit own profile as CAS instructor
     Given I'm a CAS Instructor
@@ -139,13 +139,13 @@ Feature: Edit Profile
   Scenario: Loading edit another user's profile as CAS instructor
     Given I'm a CAS Instructor
     And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
-    When I select 'Edit' button
+    When I select the 'Edit' button
     Then I should be on the 'edit profile' page
     And I should see the student number in the Account Details section
     And I should not see the system role in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should not see the Account Login section
-    And I should not see the Password section
+    And I should not see the 'Edit Password' button
 
   Scenario: Edit another user's profile as CAS instructor
     Given I'm a CAS Instructor

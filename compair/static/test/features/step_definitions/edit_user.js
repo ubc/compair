@@ -45,27 +45,5 @@ var editUserStepDefinitionsWrapper = function () {
         // Account Login
         return expect(element(by.model('user.username')).isPresent()).to.eventually.equal(false);
     });
-
-    this.Then("I should see the Password section", function() {
-        // Password
-        expect(element(by.model('password.oldpassword')).isPresent()).to.eventually.equal(true);
-        expect(element(by.model('password.newpassword')).isPresent()).to.eventually.equal(true);
-        return expect(element(by.model('password.verifypassword')).isPresent()).to.eventually.equal(true);
-    });
-
-    this.Then("I should see the Password section without old password", function() {
-        // Password
-        expect(element(by.model('password.oldpassword')).isPresent()).to.eventually.equal(false);
-        expect(element(by.model('password.newpassword')).isPresent()).to.eventually.equal(true);
-        return expect(element(by.model('password.verifypassword')).isPresent()).to.eventually.equal(true);
-    });
-
-    this.Then("I should not see the Password section", function() {
-        // Password
-        expect(element(by.model('password.oldpassword')).isPresent()).to.eventually.equal(false);
-        expect(element(by.model('password.newpassword')).isPresent()).to.eventually.equal(false);
-        return expect(element(by.model('password.verifypassword')).isPresent()).to.eventually.equal(false);
-    });
-
 };
 module.exports = editUserStepDefinitionsWrapper;

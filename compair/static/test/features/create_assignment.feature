@@ -4,13 +4,13 @@ Feature: Create Assignment
   Scenario: Loading add assignment page by Add Assignment button as admin
     Given I'm a System Administrator
     And I'm on 'course' page for course with id '2abcABC123-abcABC123_Z'
-    When I select 'Add Assignment' button
+    When I select the 'Add Assignment' button
     Then I should be on the 'create assignment' page
 
   Scenario: Loading add assignment page by Add Assignment button as instructor
     Given I'm an Instructor
     And I'm on 'course' page for course with id '2abcABC123-abcABC123_Z'
-    When I select 'Add Assignment' button
+    When I select the 'Add Assignment' button
     Then I should be on the 'create assignment' page
 
   Scenario: Creating a assignment as instructor

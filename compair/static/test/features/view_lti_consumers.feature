@@ -4,7 +4,7 @@ Feature: Manage LTI Consumers
   Scenario: Loading view LTI consumers page by LTI Consumers button as admin
     Given I'm a System Administrator
     And I'm on 'home' page
-    When I select 'Manage LTI' button
+    When I select the 'Manage LTI' button
     Then I should be on the 'manage lti' page
     And I should see '3' consumers listed
     And I should see consumers with consumer keys:

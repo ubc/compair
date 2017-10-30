@@ -4,13 +4,13 @@ Feature: Edit Course Users
   Scenario: Loading manage course users page as admin
     Given I'm a System Administrator
     And I'm on 'course' page for course with id '1abcABC123-abcABC123_Z'
-    When I select 'Manage Users' button
+    When I select the 'Manage Users' button
     Then I should be on the 'manage users' page
 
   Scenario: Loading manage course users page as instructor
     Given I'm an Instructor
     And I'm on 'course' page for course with id '1abcABC123-abcABC123_Z'
-    When I select 'Manage Users' button
+    When I select the 'Manage Users' button
     Then I should be on the 'manage users' page
     And I should see '2' users listed for the course
     And I should see course users with displaynames:
