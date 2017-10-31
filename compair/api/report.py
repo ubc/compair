@@ -360,7 +360,7 @@ def participation_report(course, assignments, group_name):
             if user.id not in comparisons or assignment.id not in comparisons[user.id]:
                 compared = 0
             else:
-                compared = comparisons[user.id][assignment.id] / len(criteria[assignment.id])
+                compared = comparisons[user.id][assignment.id]
             temp.append(str(compared))
             # self-evaluation
             if assignment.enable_self_evaluation:
