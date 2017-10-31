@@ -130,6 +130,7 @@ module.controller(
                 $scope.answer, $scope.tracking.getRegistration(), duration
             );
         });
+        $scope.showAssignment = true;
 
         if ($scope.method == "create") {
             $scope.answer = {

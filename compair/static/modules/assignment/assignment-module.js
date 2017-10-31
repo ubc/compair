@@ -384,8 +384,8 @@ module.controller("AssignmentViewController",
 
         $scope.loadTabData = function() {
             // tabs: answers, help, participation, your_work, comparisons
-            if (tab == "your_work") {
-                $scope.comparison_set = AssignmentResource.getCurrentUserComparisons(params);
+            $scope.comparison_set = AssignmentResource.getCurrentUserComparisons(params);
+            if (tab == "your_feedback" || tab == "your_comparisons") {
                 var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
                 $scope.user_answers = AnswerResource.get(answer_params,
                     function (ret) {

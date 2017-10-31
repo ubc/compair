@@ -11,7 +11,7 @@
     <p class="assignment-toggle"><a href="" ng-click="showAssignment = !showAssignment">
         <i class="fa fa-chevron-down" ng-show="showAssignment "></i>
         <i class="fa fa-chevron-right" ng-hide="showAssignment "></i>
-        Show assignment "{{assignment.name}}"
+        Show description for assignment "{{assignment.name}}"
     </a></p>
 
     <div ng-show="showAssignment " class="standalone-assignment">
@@ -84,7 +84,7 @@
                                 </div>
                             </div>
                             <div class="col-sm-4 text-center">
-                                <p><strong>Select Your Choice</strong></p>
+                                <p class="required-star"><strong>Select Your Choice</strong></p>
                                 <div class="btn-group">
                                     <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer1 }">
                                         <i class="fa fa-thumbs-up"></i><input type="radio" class="hideRadio"
@@ -151,7 +151,7 @@
                 <fieldset>
                     <legend>Peer Feedback</legend>
                     <div class="col-md-6">
-                        <label class="cke-label">
+                        <label class="cke-label required-star">
                             Your feedback for Answer {{firstAnsNum}} (shown to instructors and author)
                             <i class="fa fa-arrow-down"></i>
                         </label>
@@ -161,7 +161,7 @@
                     </div>
     
                     <div class="col-md-6">
-                        <label class="cke-label">
+                        <label class="cke-label required-star">
                             Your feedback for Answer {{secondAnsNum}} (shown to instructors and author)
                             <i class="fa fa-arrow-down"></i>
                         </label>

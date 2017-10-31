@@ -26,6 +26,12 @@
             </span>
         </div>
     </div>
+    
+    <div class="row" ng-if="!canManageAssignment">
+        <div class="col-md-12">
+            <p class="intro-text">For each assignment below, you will first submit your own answer. Then you will compare pairs of anonymous peer answers. Try to make your answer as strong as possible, since your peers will also read and compare it anonymously with other answers.</p>
+        </div>
+    </div>
 
     <div class="row">
 
@@ -67,9 +73,9 @@
                 </a>
 
                 <!-- Details -->
-                <div class="assignment-desc">
+                <!-- <div class="assignment-desc">
                     <rich-content content="assignment.description" attachment="assignment.file"></rich-content>
-                </div>
+                </div> -->
 
                 <!-- Metadata -->
                 <ul class="list-inline assignment-metadata-list">
@@ -102,26 +108,34 @@
                         </a>
                     </li>
                     <!-- Total Comments -->
-                    <li title="{{assignment.comment_count}} comments">
+                    <!-- <li title="{{assignment.comment_count}} comments">
                         <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=help#comments">
                             {{assignment.comment_count}} comment<span ng-if="assignment.comment_count != 1">s</span> &raquo;
                         </a>
+                    </li> -->
+                    <!-- Assignment Peer Feedback (for students) -->
+                    <li ng-if="!canManageAssignment && assignment.status.answers.feedback">
+                        <a href="#/course/{{course.id}}/assignment/{{assignment.id}}/?tab=your_feedback">{{assignment.status.answers.feedback}} feedback comment<span ng-if="assignment.status.answers.feedback != 1">s</span> &raquo;</a>
+                    </li>
+                    <li ng-if="!canManageAssignment && !assignment.status.answers.feedback">
+                        No feedback received
                     </li>
                     <!-- Completed Assignment Feedback (for students) -->
-                    <li ng-if="!canManageAssignment && (assignment.steps_left == 0 || assignment.status.answers.answered)">
+                    <li ng-if="!canManageAssignment && (assignment.status.comparisons.count > 0 || assignment.status.answers.answered)">
                         You
-                        <span ng-if="assignment.status.answers.answered"><strong>answered</strong> <span ng-if="assignment.steps_left == 0">and </span></span>
-                        <span ng-if="assignment.steps_left == 0"><strong>compared</strong></span>
+                        <span ng-if="assignment.status.answers.answered"><strong>answered</strong> <span ng-if="assignment.status.comparisons.count > 0">and </span></span>
+                        <span ng-if="assignment.status.comparisons.count > 0"><strong>compared {{assignment.status.comparisons.count}} pair<span ng-if="assignment.status.comparisons.count > 1">s</span></strong></span>
+                    </li>
+                    <li ng-if="!canManageAssignment && ((!assignment.compare_period && assignment.steps_left > 0) || (!assignment.answer_period && !assignment.status.answers.answered))">
+                        You missed
+                        <span ng-if="!assignment.status.answers.answered">answering <span ng-if="!assignment.compare_period && assignment.steps_left > 0">and </span></span>
+                        <span ng-if="!assignment.compare_period && assignment.steps_left > 0">comparing <span ng-if="assignment.status.comparisons.count != 0">{{assignment.steps_left}} pair<span ng-if="assignment.steps_left > 1">s</span></span></span>
                     </li>
                     <!-- Assignment Feedback (for students) -->
                     <li ng-if="!canManageAssignment && ((assignment.compare_period && assignment.steps_left > 0) || (assignment.answer_period && !assignment.status.answers.answered))" class="label label-warning">
                         <span ng-if="assignment.answer_period && !assignment.status.answers.answered">1 answer<span ng-if="(assignment.compare_period && assignment.steps_left) > 0">, </span></span>
                         <span ng-if="assignment.compare_period && assignment.steps_left > 0">{{assignment.steps_left}} comparison<span ng-if="(assignment.steps_left) != 1">s</span></span>
                         needed
-                    </li>
-                    <!-- Assignment Peer Feedback (for students) -->
-                    <li ng-if="!canManageAssignment && assignment.status.answers.feedback" class="label label-warning">
-                        {{assignment.status.answers.feedback}} feedback item<span ng-if="assignment.status.answers.feedback != 1">s</span> received
                     </li>
                     <!-- Assignment Feedback (for instructors) -->
                     <li ng-if="canManageAssignment">
@@ -189,7 +203,7 @@
             <!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND (user is not an admin OR admins can compare) AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active) -->
             <p class="below-button-text"
                 ng-show="!assignment.status.comparisons.available && (!canManageAssignment || assignment.educators_can_compare) && assignment.compare_period && assignment.comparisons_left && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
-                Not enough answers to compare<br />(Refresh the page to check again)
+                Not enough answers to compare right now<br />(Refresh the page to check again)
             </p>
 
             <!-- ADDITIONAL TEXT when answer pairs are available for comparison AND user is not an admin AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active) AND the comparison period has an end date set -->
