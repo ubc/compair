@@ -121,7 +121,7 @@
             <a ng-click="setTab('your_feedback')" href="">Your Answer + Feedback <span class="hidden-xs">({{assignment.status.answers.feedback}})</span></a>
         </li>
         <li ng-show="!canManageAssignment" id="your_comparisons" ng-class="{active:showTab('your_comparisons')}">
-            <a ng-click="setTab('your_comparisons')" href="">Your Comparisons <span class="hidden-xs">({{comparison_set.comparisons.length}})</span></a>
+            <a ng-click="setTab('your_comparisons')" href="">Your Comparisons <span class="hidden-xs">({{assignment.status.comparisons.count}})</span></a>
         </li>
         <li ng-show="canManageAssignment" id="comparisons" ng-class="{active:showTab('comparisons')}">
             <a ng-click="setTab('comparisons')" href="">All Comparisons <span class="hidden-xs">({{totalNumComparisonsShown.count}})</span></a>
