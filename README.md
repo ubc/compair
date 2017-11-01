@@ -251,6 +251,15 @@ Currently only version 3 of the Kaltura api is supported.
 
 Restart server after making any changes to settings
 
+Student Data Privacy Settings
+-----------------------------
+
+You can control data accessibility for certain sensitive fields with the following settings
+
+`EXPOSE_EMAIL_TO_INSTRUCTOR`: Set to 1 to allow instructors to see and modify email address for students in any of their classes (off by default). Instructors can see email info by exporting their class lists or view one of their student's profiles.
+
+`EXPOSE_CAS_USERNAME_TO_INSTRUCTOR`: Set to 1 to allow instructors to see CAS username for students in any of their classes (off by default). Instructors can see cas username info by exporting their class lists
+
 Google Analytics Web Tracking
 -----------------------------
 1. Register for a Google Analytics web property ID at http://www.google.ca/analytics/.

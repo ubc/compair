@@ -37,7 +37,8 @@ module.factory('UserResource', ['$resource', function($resource) {
 }]);
 
 module.constant('UserSettings', {
-    notifications: false
+    notifications: false,
+    expose_email_to_instructor: false
 });
 
 module.constant('SystemRole', {

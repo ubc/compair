@@ -12,7 +12,7 @@ Feature: Create LTI Consumers
     And I'm on 'create lti consumer' page
     When I fill form item 'consumer.oauth_consumer_key' in with 'consumer_key_4'
     And I fill form item 'consumer.oauth_consumer_secret' in with 'consumer_secret_4'
-    And I submit form with 'Save' button
+    And I submit form with the 'Save' button
     Then I should be on the 'manage lti' page
     And I should see '4' consumers listed
     And I should see consumers with consumer keys:

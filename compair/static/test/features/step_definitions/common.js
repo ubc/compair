@@ -78,7 +78,7 @@ var commonStepDefinitionsWrapper = function() {
     });
 
     //submit form button
-    this.When("I submit form with '$button' button", function (button) {
+    this.When("I submit form with the '$button' button", function (button) {
         return element(by.css('input[type=submit][value="'+button+'"]')).click();
     });
 

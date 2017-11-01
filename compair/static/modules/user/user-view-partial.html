@@ -1,5 +1,5 @@
 <div>
-    <div class="pull-right" ng-if="canManageUser || showEditButton.available || ownProfile">
+    <div class="pull-right" ng-if="canManageUsers || showEditButton.available || ownProfile">
         <a id="edit-profile-btn" ng-href="#/user/{{user.id}}/edit" class="btn btn-primary">
             <i class="fa fa-edit"></i> Edit User
         </a>
@@ -28,11 +28,11 @@
             <strong class="col-md-3">Student Number:</strong>
             <div id="user_student_number"  class="col-md-9">{{ user.student_number }}</div>
         </div>
-        <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+        <div class="row" ng-if="canManageUsers || (UserSettings.expose_email_to_instructor && showEditButton.available) || ownProfile">
             <strong class="col-md-3">Email:</strong>
             <div id="user_email"  class="col-md-9">{{ user.email }}</div>
         </div>
-        <div class="row" ng-if="UserSettings.notifications && (canManageUser || showEditButton.available || ownProfile)">
+        <div class="row" ng-if="UserSettings.notifications && (canManageUsers || (UserSettings.expose_email_to_instructor && showEditButton.available) || ownProfile)">
             <strong class="col-md-3">Notifications:</strong>
 		    <div class="col-md-9" ng-show="!user.email">N/A</div>
 		    <div id="user_email_notification_method" class="col-md-9" ng-show="user.email">

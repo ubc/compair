@@ -285,7 +285,14 @@ def import_users(import_type, course, users):
 
 @api.representation('text/csv')
 def output_csv(data, code, headers=None):
-    fieldnames = ['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name']
+    fieldnames = ['username', 'student_number', 'firstname', 'lastname', 'displayname', 'group_name']
+
+    if allow(MANAGE, User) or current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False):
+        fieldnames.insert(4, 'email')
+
+    if allow(MANAGE, User) or current_app.config.get('EXPOSE_CAS_USERNAME_TO_INSTRUCTOR', False):
+        fieldnames.insert(1, 'cas_username')
+
     csv_buffer = BytesIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, extrasaction='ignore')
     writer.writeheader()
@@ -355,7 +362,10 @@ class ClasslistRootAPI(Resource):
             user=current_user,
             course_id=course.id)
 
-        return {'objects': marshal(class_list, dataformat.get_users_in_course(restrict_user=restrict_user))}
+        if allow(MANAGE, User):
+            return {'objects': marshal(class_list, dataformat.get_full_users_in_course())}
+        else:
+            return {'objects': marshal(class_list, dataformat.get_users_in_course(restrict_user=restrict_user))}
 
     @login_required
     def post(self, course_uuid):

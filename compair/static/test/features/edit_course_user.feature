@@ -24,7 +24,7 @@ Feature: Edit Course Users
     When I fill form item '$ctrl.user' in with 'Second'
     And I select the first user search result
     And I select the Student role for the user
-    And I submit form with 'Enrol' button
+    And I submit form with the 'Enrol' button
     Then I should see '3' users listed for the course
     And I should see course users with displaynames:
       | displayname            |

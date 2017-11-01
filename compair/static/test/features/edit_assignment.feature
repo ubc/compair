@@ -20,9 +20,9 @@ Feature: Edit Assignment
     And I fill in the assignment description with 'This is the new description'
     And I drop the first criterion
     And I add my default criterion
-    And I submit form with 'Save' button
+    And I submit form with the 'Save' button
     Then I should be on the 'course' page
-    And I should see the assignment with the new name and description
+    And I should see the assignment with the new name
 
   Scenario: Editing a assignment's criterion as instructor before comparisons
     Given I'm an Instructor
@@ -36,7 +36,7 @@ Feature: Edit Assignment
     And I fill in the criterion description with 'Choose the one you like best.'
     And I toggle the 'Include this criterion in my list of default criteria (to re-use it in other assignments)' checkbox
     And I submit modal form with the 'Save' button
-    And I submit form with 'Save' button
+    And I submit form with the 'Save' button
     Then I should be on the 'course' page
 
   Scenario: Editing assignment's criterion as instructor after the criterion has been compared

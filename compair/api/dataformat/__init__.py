@@ -1,6 +1,7 @@
 # Specify what columns should be sent out by the API
 from flask_restful import fields
 import pytz
+from flask_login import current_app
 
 def replace_tzinfo(datetime):
     return datetime.replace(tzinfo=pytz.utc) if datetime else None
@@ -37,24 +38,47 @@ def get_user(restrict_user=True):
         'student_number': fields.String,
         'firstname': fields.String,
         'lastname': fields.String,
-        'email': fields.String,
         'fullname': fields.String,
         'fullname_sortable': fields.String,
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
         'system_role': UnwrapEnum(attribute='system_role'),
-        'email_notification_method': UnwrapEnum(attribute='email_notification_method'),
         'uses_compair_login': fields.Boolean
     }
+
+    if current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False):
+        unrestricted['email'] = fields.String
+        unrestricted['email_notification_method'] = UnwrapEnum(attribute='email_notification_method')
+
     unrestricted.update(restricted)
     return unrestricted
 
+# only admins and users fetching themselves should have access to this
+def get_full_user():
+    unrestricted = get_user(False)
+    full = {
+        'email': fields.String,
+        'email_notification_method': UnwrapEnum(attribute='email_notification_method')
+    }
+    full.update(unrestricted)
+    return full
+
+def get_full_users_in_course():
+    users = get_user(restrict_user)
+    users['group_name'] = fields.String
+    users['course_role'] = UnwrapEnum(attribute='course_role')
+    users['cas_username'] = fields.String
+
+    return users
 
 def get_users_in_course(restrict_user=True):
     users = get_user(restrict_user)
     users['group_name'] = fields.String
+
     if not restrict_user:
         users['course_role'] = UnwrapEnum(attribute='course_role')
-        users['cas_username'] = fields.String
+        if current_app.config.get('EXPOSE_CAS_USERNAME_TO_INSTRUCTOR', False):
+            users['cas_username'] = fields.String
+
     return users
 
 
@@ -167,7 +191,7 @@ def get_answer(restrict_user=True):
         'draft': fields.Boolean,
         'top_answer': fields.Boolean,
 
-        'score': fields.Nested(get_score(restrict_user=restrict_user), allow_null=True),
+        'score': fields.Nested(get_score(restrict_user), allow_null=True),
 
         'comment_count': fields.Integer,
         'private_comment_count': fields.Integer,
@@ -245,10 +269,8 @@ def get_comparison(restrict_user=True, with_answers=True, with_feedback=False):
     }
 
     if with_answers:
-        ret['answer1'] = fields.Nested(get_answer(
-            restrict_user=restrict_user))
-        ret['answer2'] = fields.Nested(get_answer(
-            restrict_user=restrict_user))
+        ret['answer1'] = fields.Nested(get_answer(restrict_user))
+        ret['answer2'] = fields.Nested(get_answer(restrict_user))
 
     if with_feedback:
         ret['answer1_feedback'] = fields.List(fields.Nested(get_answer_comment(restrict_user)))
@@ -290,10 +312,8 @@ def get_comparison_example(with_answers=True):
     }
 
     if with_answers:
-        ret['answer1'] = fields.Nested(get_answer(
-            restrict_user=False))
-        ret['answer2'] = fields.Nested(get_answer(
-            restrict_user=False))
+        ret['answer1'] = fields.Nested(get_answer(False))
+        ret['answer2'] = fields.Nested(get_answer(False))
 
     return ret
 

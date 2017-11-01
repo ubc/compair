@@ -19,6 +19,6 @@ Feature: Create Course
     When I fill form item 'course.name' in with 'Test Course 2'
     And I fill form item 'course.year' in with '2015'
     And I fill form item 'course.term' in with 'Winter'
-    And I submit form with 'Save' button
+    And I submit form with the 'Save' button
     Then I should be on the 'course' page
     And I should see 'Test Course 2\n(2015 Winter)' in 'h1' on the page
