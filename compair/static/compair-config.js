@@ -648,7 +648,7 @@ myApp.config(
         .when('/lti/consumer',
             {
                 templateUrl: 'modules/lti_consumer/lti-consumers-list-partial.html',
-                label: "Manage LTI Consumers",
+                label: "Manage LTI",
                 controller: 'LTIConsumerListController',
                 resolve: {
                     resolvedData: function() {
