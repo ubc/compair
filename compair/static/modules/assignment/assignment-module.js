@@ -383,9 +383,8 @@ module.controller("AssignmentViewController",
         });
 
         $scope.loadTabData = function() {
-            // tabs: answers, help, participation, your_work, comparisons
-            if (tab == "your_work") {
-                $scope.comparison_set = AssignmentResource.getCurrentUserComparisons(params);
+            // tabs: answers, participation, your_feedback, your_comparisons, comparisons
+            if (tab == "your_feedback") {
                 var answer_params = angular.extend({}, params, {author: $scope.loggedInUserId});
                 $scope.user_answers = AnswerResource.get(answer_params,
                     function (ret) {
@@ -394,6 +393,8 @@ module.controller("AssignmentViewController",
                         });
                     }
                 );
+            } else if (tab == "your_comparisons") {
+                $scope.comparison_set = AssignmentResource.getCurrentUserComparisons(params);
             } else if (tab == "help") {
                 AssignmentCommentResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
                     function(ret) {

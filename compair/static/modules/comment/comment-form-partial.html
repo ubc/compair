@@ -1,7 +1,7 @@
 <p class="assignment-toggle"><a href="" ng-click="showAssignment = !showAssignment">
     <i class="fa fa-chevron-down" ng-show="showAssignment "></i>
     <i class="fa fa-chevron-right" ng-hide="showAssignment "></i>
-    Show <span ng-if="answerComment">answer you're replying to by {{parent.user.displayname}}</span><span ng-if="!answerComment">assignment "{{assignment.name}}"</span>
+    Show <span ng-if="answerComment">answer you're leaving feedback for by {{parent.user.displayname}}</span><span ng-if="!answerComment">description for assignment "{{assignment.name}}"</span>
 </a></p>
 
 <div ng-show="showAssignment" class="standalone-assignment">
@@ -13,7 +13,7 @@
 
 <form name="commentForm" class="form" ng-submit="commentSubmit()" confirm-form-exit novalidate form-type="comment">
     <fieldset>
-        <legend><span ng-if="answerComment">Reply</span><span ng-if="!answerComment">Comment</span> Details</legend>
+        <legend><span ng-if="answerComment">Feedback</span><span ng-if="!answerComment">Comment</span> Details</legend>
         <div class="form-group">
             <label>Text</label>
             <textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8"
@@ -23,7 +23,7 @@
         <div class="form-group" ng-if="answerComment">
             <input id="comment_type" type="checkbox" ng-model="comment.comment_type" ng-disabled="!(comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)"
                    ng-true-value="'{{AnswerCommentType.public}}'" ng-false-value="'{{AnswerCommentType.private}}'">
-            <label for="comment_type"><span class="text-muted not-bold" ng-if="!(comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)">(cannot show this reply to the whole class)</span> <span ng-if="comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private">Show this reply to the whole class</span></label>
+            <label for="comment_type"><span class="text-muted not-bold" ng-if="!(comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)">(cannot show this feedback to the whole class)</span> <span ng-if="comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private">Show this feedback to the whole class</span></label>
             
         </div>
     </fieldset>

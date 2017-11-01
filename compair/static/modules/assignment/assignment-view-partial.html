@@ -28,36 +28,33 @@
             <li ng-show="canManageAssignment">
                 <em>Answering:</em> {{assignment.answer_start | amDateFormat: 'MMM D @ h:mm a'}} - {{assignment.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
             </li>
-            <li ng-show="canManageAssignment && assignment.compare_start">
+            <li ng-show="canManageAssignment">
                 <em>Comparing:</em> {{assignment.compare_start | amDateFormat: 'MMM D @ h:mm a'}} - {{assignment.compare_end | amDateFormat: 'MMM D @ h:mm a'}}
             </li>
-            <li ng-show="canManageAssignment && !assignment.compare_start">
-                <em>Comparing:</em> after {{assignment.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
+            <li ng-if="!canManageAssignment && assignment.status.answers.feedback">
+                <strong>{{assignment.status.answers.feedback}} feedback comment<span ng-if="assignment.status.answers.feedback != 1">s</span></strong> below
             </li>
-            <li ng-if="!canManageAssignment && (steps_left == 0 || assignment.status.answers.answered)">
+            <li ng-if="!canManageAssignment && !assignment.status.answers.feedback">
+                No feedback received
+            </li>
+            <li ng-if="!canManageAssignment && (assignment.status.comparisons.count > 0 || assignment.status.answers.answered)">
                 You
-                <span ng-if="assignment.status.answers.answered"><strong>answered</strong> <span ng-if="steps_left == 0">and </span></span>
-                <span ng-if="steps_left == 0"><strong>compared</strong></span>
+                <span ng-if="assignment.status.answers.answered"><strong>answered</strong> <span ng-if="assignment.status.comparisons.count > 0">and </span></span>
+                <span ng-if="assignment.status.comparisons.count > 0"><strong>compared {{assignment.status.comparisons.count}} pair<span ng-if="assignment.status.comparisons.count > 1">s</span></strong></span>
             </li>
-            <li ng-if="!canManageAssignment && assignment.answer_period && !assignment.status.answers.answered">
-                <strong>Answer due {{assignment.answer_end | amDateFormat: 'MMM D @ h:mm a'}}</strong>
+            <li ng-if="!canManageAssignment && ((!assignment.compare_period && steps_left > 0) || (!assignment.answer_period && !assignment.status.answers.answered))">
+                You missed
+                <span ng-if="!assignment.status.answers.answered">answering <span ng-if="!assignment.compare_period && steps_left > 0">and </span></span>
+                <span ng-if="!assignment.compare_period && steps_left > 0">comparing <span ng-if="assignment.status.comparisons.count != 0">{{steps_left}} pair<span ng-if="steps_left > 1">s</span></span></span>
             </li>
-            <li ng-if="assignment.status.comparisons.available && !canManageAssignment && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period) && assignment.compare_end">
+            <li ng-if="!canManageAssignment && assignment.answer_period && !assignment.status.answers.answered" class="label label-warning">
+                Answer due {{assignment.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
+            </li>
+            <li ng-if="!canManageAssignment && assignment.compare_period && (steps_left > 0) && assignment.compare_end" class="label label-warning">
                 Comparisons due {{assignment.compare_end | amDateFormat: 'MMM D @ h:mm a'}}
             </li>
-            <li ng-if="!canManageAssignment && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)" class="label label-warning">
+            <li ng-if="!canManageAssignment && assignment.compare_period && (steps_left > 0) && !assignment.compare_end" class="label label-warning">
                 {{ steps_left }} comparison<span ng-if="steps_left != 1">s</span> needed
-            </li>
-            <!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND (user is not an admin OR admins can compare) AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)-->
-            <li ng-if="!assignment.status.comparisons.available && (!canManageAssignment || assignment.educators_can_compare) && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
-                <em>Not enough answers to compare</em>
-            </li>
-            <!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered assignment -->
-            <li ng-if="!canManageAssignment && assignment.compare_period && comparisons_left == 0 && self_evaluation_needed && !assignment.status.answers.answered">
-                <em>Self-evaluation comparison unavailable</em>
-            </li>
-            <li ng-if="!canManageAssignment && assignment.status.answers.feedback" class="label label-warning">
-                {{assignment.status.answers.feedback}} feedback item<span ng-if="assignment.status.answers.feedback != 1">s</span> received
             </li>
         </ul>
 
@@ -100,6 +97,16 @@
                ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
                 Compare Pairs
             </a>
+            
+            <!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND (user is not an admin OR admins can compare) AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)-->
+            <p ng-if="!assignment.status.comparisons.available && (!canManageAssignment || assignment.educators_can_compare) && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
+                <em>Not enough answers to compare right now</em>
+            </p>
+            
+            <!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered assignment -->
+            <p ng-if="!canManageAssignment && assignment.compare_period && comparisons_left == 0 && self_evaluation_needed && !assignment.status.answers.answered">
+                <em>Self-evaluation comparison unavailable</em>
+            </p>
 
         </div>
 
@@ -108,17 +115,20 @@
     <!-- Tabs -->
     <ul class="nav nav-tabs" role="tablist">
         <li id="answers" ng-class="{active:showTab('answers')}">
-            <a ng-click="setTab('answers')" href="">Answers <span class="hidden-xs" ng-show="canManageAssignment || (!assignment.answer_period && see_answers)">({{answers.total}})</span></a>
+            <a ng-click="setTab('answers')" href="">All Answers <span class="hidden-xs" ng-show="canManageAssignment || (!assignment.answer_period && see_answers)">({{answers.total}})</span></a>
         </li>
-        <li ng-show="!canManageAssignment" id="your_work" ng-class="{active:showTab('your_work')}">
-            <a ng-click="setTab('your_work')" href="">Your Work + Feedback <span class="hidden-xs" ng-if="assignment.status.answers.feedback">({{assignment.status.answers.feedback}})</span></a>
+        <li ng-show="!canManageAssignment" id="your_feedback" ng-class="{active:showTab('your_feedback')}">
+            <a ng-click="setTab('your_feedback')" href="">Your Answer + Feedback <span class="hidden-xs">({{assignment.status.answers.feedback}})</span></a>
+        </li>
+        <li ng-show="!canManageAssignment" id="your_comparisons" ng-class="{active:showTab('your_comparisons')}">
+            <a ng-click="setTab('your_comparisons')" href="">Your Comparisons <span class="hidden-xs">({{assignment.status.comparisons.count}})</span></a>
         </li>
         <li ng-show="canManageAssignment" id="comparisons" ng-class="{active:showTab('comparisons')}">
-            <a ng-click="setTab('comparisons')" href="">Comparisons <span class="hidden-xs">({{totalNumComparisonsShown.count}})</span></a>
+            <a ng-click="setTab('comparisons')" href="">All Comparisons <span class="hidden-xs">({{totalNumComparisonsShown.count}})</span></a>
         </li>
-        <li id="comments" ng-class="{active:showTab('help')}">
+        <!-- <li id="comments" ng-class="{active:showTab('help')}">
             <a ng-click="setTab('help')" href=""><span class="hidden-xs">Help</span> Comments <span class="hidden-xs">({{assignment.comment_count}})</span></a>
-        </li>
+        </li> -->
         <li ng-show="canManageAssignment" id="participation" ng-class="{active:showTab('participation')}">
             <a ng-click="setTab('participation')" href="">Participation</a>
         </li>
@@ -134,7 +144,7 @@
 
                 <div class="row">
                     <div class="col-sm-6">
-                        <h2>Answers
+                        <h2>All answers
                             <span ng-show="canManageAssignment && answerFilters.group && !answerFilters.author">for "{{answerFilters.group}}"</span>
                             <span ng-show="answerFilters.author && (!answerFilters.anonymous || answerFilters.top)">for "{{ answerFiltersName }}"</span>
                             <span ng-show="answerFilters.author && (answerFilters.anonymous && !answerFilters.top)">for "Student"</span>
@@ -164,7 +174,7 @@
                                 </select>
                             </span><br />
                             <span class="filter hidden-xs" ng-if="canManageAssignment">
-                                 <a href="" uib-tooltip="Hide student names, scores, and replies when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="left">
+                                 <a href="" uib-tooltip="Hide student names, scores, and feedback when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="left">
                                     <i class="fa fa-question-circle"></i>
                                 </a>&nbsp;
                                 <button uib-btn-checkbox ng-model="answerFilters.anonymous" activeClass="''"
@@ -207,17 +217,17 @@
 
                 <!-- Students should see before evaluating during the comparison period (self-evaluation) -->
                 <p class="intro-text" ng-if="!canManageAssignment && assignment.compare_period && comparisons_left == 0 && self_evaluation_needed">
-                    <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare" title="Compare answers">Compare your answer</a> for the assignment first, then read answers written by your classmates and instructors here.
-                </p>
-
-                <!-- Anyone sees during the answer period, if no answers provided yet -->
-                <p class="intro-text" ng-if="assignment.answer_period && !assignment.answer_count && (canManageAssignment || (!canManageAssignment && see_answers))">
-                    No answers given for this assignment yet.
+                    <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare" title="Compare answers">Compare your own answer</a> for the assignment first, then read answers written by your classmates and instructors here.
                 </p>
 
                 <!-- Students see after evaluating before the comparison period is over -->
                 <p class="intro-text" ng-if="!canManageAssignment && comparisons_left == 0 && !self_evaluation_needed && !see_answers">
                     You have successfully finished comparisons for this assignment! Answers written by your classmates and instructors will be available here beginning <strong>{{ answerAvail | amDateFormat: 'MMM D @ h:mm a'}}</strong>.
+                </p>
+                
+                <!-- Students see when answers exist and visible -->
+                <p class="intro-text" ng-if="!canManageAssignment && see_answers && !answerFilters.author">
+                    Answers for this assignment submitted by you, your classmates, and instructors are available below. Any public feedback left for other student answers can be found underneath the student answer. Private feedback does not appear to the class.
                 </p>
 
             </div>
@@ -260,7 +270,7 @@
                         <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right">
                             <!-- Student Score (not used for instructor answers) -->
-                            <span ng-if="canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score" class="label label-warning score-tooltip" uib-tooltip="Scores are normalized, so the top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
+                            <span ng-if="canManageAssignment && !answerFilters.anonymous && answer.score" class="label label-warning score-tooltip" uib-tooltip="Scores are normalized, so the top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
                                 Score: {{answer.score.normalized_score}}%
                             </span>
                             <!-- Student Rank (not used for instructor answers) -->
@@ -322,9 +332,9 @@
                             <i class="fa fa-chevron-down" ng-show="showReplies"></i>
                             <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
                             <strong>
-                            <ng-pluralize ng-if="answer.public_comment_count && !canManageAssignment && (see_answers && answer.user_id != loggedInUserId)" count="answer.public_comment_count" when="{'1': '{} public reply', 'other': '{} public replies'}"></ng-pluralize>
-                            <ng-pluralize ng-if="answer.comment_count && (answer.user_id == loggedInUserId || canManageAssignment)" count="answer.comment_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize>
-                            to this answer
+                            <ng-pluralize ng-if="answer.public_comment_count && !canManageAssignment && (see_answers && answer.user_id != loggedInUserId)" count="answer.public_comment_count" when="{'1': '{} public feedback comment', 'other': '{} public feedback comments'}"></ng-pluralize>
+                            <ng-pluralize ng-if="answer.comment_count && (answer.user_id == loggedInUserId || canManageAssignment)" count="answer.comment_count" when="{'1': '{} feedback comment', 'other': '{} feedback comments'}"></ng-pluralize>
+                            for <span ng-if="answer.user_id != loggedInUserId">this</span><span ng-if="answer.user_id == loggedInUserId">your</span> answer
                             <span ng-if="canManageAssignment || answer.user_id == loggedInUserId">({{ answer.private_comment_count }} private, {{ answer.public_comment_count }} public)</span>
                             </strong>
                         </p>
@@ -342,14 +352,14 @@
                                 <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation"> gave private feedback <span class="glyphicon glyphicon-lock"></span></strong>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"> self-evaluated <span class="glyphicon glyphicon-lock"></span></strong>
-                                <strong ng-if="comment.comment_type == AnswerCommentType.public"> replied publicly <span class="glyphicon glyphicon-eye-open"></span> </strong>
+                                <strong ng-if="comment.comment_type == AnswerCommentType.public"> gave public feedback <span class="glyphicon glyphicon-eye-open"></span> </strong>
                                 on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
                                 <div class="manager-actions pull-right"
                                      ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private))">
-                                    <a href="" title="Delete this reply" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
+                                    <a href="" title="Delete this feedback" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="feedback">
                                         <i class="fa fa-trash-o"></i>
                                     </a>
-                                    <a href="" title="Edit this reply" ng-click="editAnswerComment(answer, comment)">
+                                    <a href="" title="Edit this feedback" ng-click="editAnswerComment(answer, comment)">
                                         Edit
                                     </a>
                                 </div>
@@ -364,12 +374,17 @@
 
                     <p class="pull-right">
                         <a ng-if="!answerFilters.anonymous && (assignment.students_can_reply || canManageAssignment)" href="" ng-click="createAnswerComment(answer)" class="btn btn-sm btn-primary btn-reply">
-                            <i class="fa fa-reply"></i> Reply
+                            <i class="fa fa-reply"></i> Give Feedback
                         </a>
                     </p>
 
                 </div><!-- closes each-answer (student) -->
 
+                <!-- Anyone sees when there no answers (and user has permission to view answers) -->
+                <div class="each-answer clearfix" ng-if="assignment.answer_count == 0 && (see_answers || canManageAssignment)">
+                    <p>(No answers submitted yet.)</p>
+                </div>
+                
                 <!-- Anyone sees when there are answers, a filter is set, but no answers show in results (and user has permission to view answers) -->
                 <div class="each-answer clearfix" ng-if="assignment.answer_count > 0 && (answerFilters.group || answerFilters.author || answerFilters.orderBy) && (results.length < 1 && adminResults.length < 1) && (see_answers || canManageAssignment)">
                     <p>No answers were found with these filter settings. Try another choice above.</p>
@@ -385,29 +400,23 @@
 
         </div><!-- closes answers-tab -->
 
-        <div class="tab-pane" ng-class="{active: showTab('your_work')}" id="your_work-tab">
+        <div class="tab-pane" ng-class="{active: showTab('your_feedback')}" id="your_feedback-tab">
 
             <!-- Your Work Tab Header -->
             <div class="tab-header">
                 <div>
-                    <h2>Your work and feedback</h2>
-                    <p class="intro-text">Work you have submitted
-                    <span ng-show="assignment.status.answers.answered || comparison_set.comparisons.length > 0">
-                        &mdash;
-                        <strong>
-                            <span ng-show="assignment.status.answers.answered">1 answer</span><span ng-show="assignment.status.answers.answered && comparison_set.comparisons.length > 0">,</span>
-                            <span ng-show="comparison_set.comparisons.length > 0">{{comparison_set.comparisons.length}} comparison<span ng-show="comparison_set.comparisons.length > 1">s</span></span>
-                        </strong>
-                        &mdash;
-                    </span>
-                    for this assignment appears below. Any feedback for your answer can be found in the replies underneath the answer.</p>
+                    <h2>Your answer and feedback</h2>
+                    <br />
+                    <p class="intro-text">The answer you submitted for this assignment appears below. Any peer, instructor, or self-evaluation feedback&mdash;<strong>{{assignment.status.answers.feedback}} feedback comments</strong> currently&mdash;for your answer can be found underneath the answer. Only feedback marked as public can be seen by other students.</p>
                 </div>
+            </div>
+            
+            <div class="each-evaluation" ng-if="user_answers.objects.length == 0">
+                <p>(You have not submitted an answer.<span ng-if="assignment.answer_period"> Would you like to <span ng-show="!assignment.status.answers.has_draft"><a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/create" title="Answer the assignment">answer</a></span><span ng-show="assignment.status.answers.has_draft"><a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" title="Finish answering the assignment">finish answering</a></span> this assignment?</span>)</p>
             </div>
 
             <!-- Student Answer Metadata Header -->
             <div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
-                <h3 ng-if="$first" ng-class="{first: $first}">Your answer and peer feedback</h3>
-                <br ng-if="$first"/>
                 <div class="each-header clearfix">
                     <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" me="true"></compair-avatar>
                     <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
@@ -441,8 +450,8 @@
                         <i class="fa fa-chevron-down" ng-show="showReplies"></i>
                         <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
                         <strong>
-                        <ng-pluralize count="answer.comment_count" when="{'1': '{} reply', 'other': '{} replies'}"></ng-pluralize>
-                        to your answer
+                        <ng-pluralize count="answer.comment_count" when="{'1': '{} feedback comment', 'other': '{} feedback comments'}"></ng-pluralize>
+                        for your answer
                         <span ng-if="canManageAssignment || answer.user_id == loggedInUserId">({{ answer.private_comment_count }} private, {{ answer.public_comment_count }} public)</span>
                         </strong>
                     </p>
@@ -459,14 +468,14 @@
                             <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
                             <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation"> gave private feedback <span class="glyphicon glyphicon-lock"></span></strong>
                             <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"> self-evaluated <span class="glyphicon glyphicon-lock"></span></strong>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.public"> replied publicly <span class="glyphicon glyphicon-eye-open"></span></strong>
+                            <strong ng-if="comment.comment_type == AnswerCommentType.public"> gave public feedback <span class="glyphicon glyphicon-eye-open"></span></strong>
                             on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
                             <div class="manager-actions pull-right"
                                  ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.public))">
-                                <a href="" title="Delete this reply" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
+                                <a href="" title="Delete this feedback" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="feedback">
                                     <i class="fa fa-trash-o"></i>
                                 </a>
-                                <a href="" title="Edit this reply" ng-click="editAnswerComment(answer, comment)">
+                                <a href="" title="Edit this feedback" ng-click="editAnswerComment(answer, comment)">
                                     Edit
                                 </a>
                             </div>
@@ -481,11 +490,23 @@
 
             </div>
 
+        </div><!-- closes your_feedback-tab -->
+        
+        <div class="tab-pane" ng-class="{active: showTab('your_comparisons')}" id="your_comparisons-tab" ng-if="!canManageAssignment">
+
+            <!-- Your Comparisons Header -->
+            <div class="tab-header">
+                <h2>Your comparisons</h2>
+                <br />
+                <p class="intro-text">Comparisons you've submitted for this assignment&mdash;<strong>{{comparison_set.comparisons.length}} comparisons</strong> currently&mdash;appear below. Each comparison shows the answers you compared, the feedback you gave for each answer, and which answer in the pair you chose for each criterion.</p>
+            </div>
+            
+            <div class="each-evaluation" ng-if="comparison_set.comparisons.length == 0">
+                <p>(You have not submitted any comparisons.<span ng-if="assignment.compare_period && comparisons_left > 0 "> Would you like to <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare" title="Compare answers">compare answer pairs</a> for this assignment?</span>)</p>
+            </div>
+            
             <!-- Comparisons Section -->
             <div class="each-evaluation" ng-repeat="comparison in comparison_set.comparisons">
-
-                <h3 ng-if="$first">Your comparisons</h3>
-                <br ng-if="$first"/>
 
                 <!-- Comparison Header -->
                 <div class="each-header">
@@ -508,7 +529,7 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                        <h5 class="content">Feedback for Odd-Numbered Answer</h5>
+                        <h5 class="content">Feedback Given for Odd-Numbered Answer</h5>
                         <!-- feedback for odd-numbered answer -->
                         <div ng-repeat="feedback in comparison.answer1_feedback">
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
@@ -516,7 +537,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <h5 class="content">Feedback for Even-Numbered Answer</h5>
+                        <h5 class="content">Feedback Given for Even-Numbered Answer</h5>
                         <!-- feedback for even-numbered answer -->
                         <div ng-repeat="feedback in comparison.answer2_feedback">
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
@@ -524,10 +545,10 @@
                     </div>
                 </div>
 
-                <h5 class="content">Comparisons</h5>
+                <h5 class="content">Answer Chosen by Criterion</h5>
                 <div ng-repeat="comparison_criterion in comparison.comparison_criteria">
                     <div class="content">
-                        <p>"{{ comparison_criterion.criterion.name }}"<br />
+                        <p>Criterion: "{{ comparison_criterion.criterion.name }}"<br />
                             <span class="glyphicon glyphicon-ok-circle"></span>
                             <span ng-if="comparison_criterion.winner == WinningAnswer.answer1"><strong>Odd-numbered answer</strong></span>
                             <span ng-if="comparison_criterion.winner == WinningAnswer.answer2"><strong>Even-numbered answer</strong></span>
@@ -536,37 +557,13 @@
                 </div>
 
             </div><!-- closes each-evaluation -->
+            
+        </div><!-- closes your_comparisons-tab -->
 
-            <div class="each-evaluation" ng-if="!user_answers.objects && comparison_set.comparisons.length < 1">
-                <p>(Nothing saved under your name yet.)</p>
-            </div>
-
-            <!-- self evaluation section -->
-            <div class="each-evaluation" ng-if="comparison_set.self_evaluations.length > 0">
-                <div ng-repeat="comment in comparison_set.self_evaluations">
-                    <div class="each-header">
-                        <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" me="true"></compair-avatar>
-                        <strong>self-evaluated</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
-                        <div class="manager-actions pull-right"
-                             ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private))">
-                            <a href="" title="Delete this reply" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="reply">
-                                <i class="fa fa-trash-o"></i>
-                            </a>
-                            <a title="Edit this reply" href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{answer.id}}/comment/{{comment.id}}/edit">
-                                Edit
-                            </a>
-                        </div>
-                    </div>
-                    <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
-                </div>
-            </div>
-
-        </div><!-- closes your_work-tab -->
-
-        <div class="tab-pane" ng-class="{active: showTab('help')}" id="comments-tab">
+        <!-- <div class="tab-pane" ng-class="{active: showTab('help')}" id="comments-tab">-->
 
             <!-- Comments Tab Header -->
-            <div class="tab-header">
+            <!-- <div class="tab-header">
                 <div class="row">
                     <div class="col-sm-9">
                         <h2>Help comments for this assignment</h2>
@@ -579,13 +576,13 @@
                         </a>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Comments Section -->
-            <div ng-repeat="(commentKey, comment) in comments.objects" class="each-comment">
+            <!-- <div ng-repeat="(commentKey, comment) in comments.objects" class="each-comment">-->
 
                 <!-- Comment Metadata Header -->
-                <div class="each-header clearfix">
+                <!-- <div class="each-header clearfix">
                     <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" display-name="comment.user.displayname" full-name="comment.user.fullname" me="comment.user_id == loggedInUserId"></compair-avatar>
                     <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
                     <strong>commented</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
@@ -597,19 +594,19 @@
                             Edit
                         </a>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Comment -->
                 <!-- Student Answer -->
-                <div class="content {{comment.id}}" get-height>
+                <!-- <div class="content {{comment.id}}" get-height>
                     <rich-content content="comment.content" ng-click="revealContent(comment)"></rich-content>
-                </div>
+                </div> -->
                 <!-- Student Answer Read More Button (not used for instructor answers) -->
-                <p ng-show="showReadMore" class="read-more" ng-click="revealContent(comment)"><a href="" class="btn btn-sm btn-info"><i class="fa fa-long-arrow-down"></i> Read More</a></p>
+                <!-- <p ng-show="showReadMore" class="read-more" ng-click="revealContent(comment)"><a href="" class="btn btn-sm btn-info"><i class="fa fa-long-arrow-down"></i> Read More</a></p>-->
                 <!-- <p ng-show="!showReadMore">No More To Read!!! ({{thisHeight}})</p> -->
-            </div><!-- closes each-comment -->
+            <!-- </div> --><!-- closes each-comment -->
 
-        </div><!-- closes comments-tab -->
+        <!-- </div> --><!-- closes comments-tab -->
 
         <div class="tab-pane" ng-class="{active: showTab('comparisons')}" id="comparisons-tab" ng-if="canManageAssignment && showTab('comparisons')">
             <div ng-controller="ComparisonViewController">

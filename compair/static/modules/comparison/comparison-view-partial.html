@@ -2,7 +2,7 @@
     <div class="tab-header">
         <div class="row">
             <div class="col-sm-6">
-                <h2>Comparisons
+                <h2>All comparisons
                     <span ng-if="comparisonFilters.group && !comparisonFilters.author"> for "{{ comparisonFilters.group }}"</span>
                     <span ng-if="comparisonFilters.author"> for "{{ comparisonFiltersName }}"</span>
                 </h2>
@@ -30,7 +30,7 @@
             </div>
         </div>
 
-        <p class="intro-text">Filter by a group (if available) and student evaluator's name, or select "any" for these options to see the full list of available comparisons. To see all feedback left for each student answer, visit the "Answers" tab.</p>
+        <p class="intro-text">Filter by a group (if available) and student evaluator's name, or select all for these options to see the full list of available comparisons. To see all feedback left for each student answer, visit the "All Answers" tab.</p>
 
         <div ng-show="!comparison_sets.length">
             <p>No comparisons were found<span ng-if="comparisonFilters.group || comparisonFilters.author"> with these filter settings. Try another choice above</span>.</p>
@@ -68,7 +68,7 @@
                 <!-- Comparison Header -->
                 <div class="each-header">
                     <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" display-name="comparison.user.fullname"></compair-avatar>
-                    <strong>submitted</strong> on {{ comparison.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                    <strong>compared</strong> on {{ comparison.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
 
                 <!-- Answers -->
@@ -88,14 +88,14 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                        <h5 class="content">Feedback for Odd-Numbered Answer</h5>
+                        <h5 class="content">Feedback Given for Odd-Numbered Answer</h5>
                         <!-- feedback for odd-numbered answer -->
                         <div ng-repeat="feedback in comparison.answer1_feedback">
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <h5 class="content">Feedback for Even-Numbered Answer</h5>
+                        <h5 class="content">Feedback Given for Even-Numbered Answer</h5>
                         <!-- feedback for even-numbered answer -->
                         <div ng-repeat="feedback in comparison.answer2_feedback">
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
@@ -103,7 +103,7 @@
                     </div>
                 </div>
 
-                <h5 class="content">Comparisons</h5>
+                <h5 class="content">Answer Chosen by Criterion</h5>
 
                 <div ng-repeat="comparison_criterion in comparison.comparison_criteria">
 
