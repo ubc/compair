@@ -80,6 +80,9 @@ module.directive(
             link: function(scope, element, attrs){
                 var msg = attrs.keyword ? " "+attrs.keyword : "";
                 msg = "Are you sure you want to remove this"+msg+"?";
+                if (attrs.confirmationWarning) {
+                    msg += "\n"+attrs.confirmationWarning;
+                }
                 element.bind('click', function(e) {
                     if ( window.confirm(msg) ) {
                         scope.$eval(attrs.confirmationNeeded);
@@ -411,19 +414,6 @@ module.controller("AssignmentViewController",
             var thisClass = '.content.'+contentItem.id;      // class for the content item to show is "content" plus the content item's ID
             $(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this content item
             this.showReadMore = false;                 // and hide the read more button for this content item
-        };
-
-        // assignment delete function
-        $scope.deleteAssignment = function(assignment) {
-            AssignmentResource.delete({'courseId': assignment.course_id, 'assignmentId': assignment.id},
-                function (ret) {
-                    Toaster.success("Assignment Deleted");
-                    $location.path('/course/'+$scope.courseId);
-                },
-                function (ret) {
-                    $location.path('/course/'+$scope.courseId);
-                }
-            );
         };
 
         $scope.deleteAnswer = function(answer) {

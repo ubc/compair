@@ -146,7 +146,7 @@
                         <span ng-if="!assignment.answer_period && !assignment.compare_period && assignment.see_answers">Completed on {{assignment.compare_end | amDateFormat: 'MMM D'}}</span>
                     </li>
                     <li ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
-                        <a confirmation-needed="deleteAssignment(assignment)" keyword="assignment" title="Delete" href="">
+                        <a confirmation-needed="deleteAssignment(assignment)" confirmation-warning="{{assignment.delete_warning}}" keyword="assignment" title="Delete" href="">
                             <i class="fa fa-trash-o"></i>
                         </a>
                     </li>
