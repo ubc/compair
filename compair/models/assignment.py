@@ -76,7 +76,11 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     user_fullname_sortable = association_proxy('user', 'fullname_sortable')
     user_system_role = association_proxy('user', 'system_role')
 
-    lti_linkable = association_proxy('course', 'lti_linked')
+    lti_course_linked = association_proxy('course', 'lti_linked')
+
+    @hybrid_property
+    def lti_linked(self):
+        return self.lti_resource_link_count > 0
 
     @hybrid_property
     def criteria(self):
@@ -99,6 +103,10 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                 completed=True
             ) \
             .count()
+
+    def clear_lti_links(self):
+        for lti_resource_link in self.lti_resource_links.all():
+            lti_resource_link.compair_assignment_id = None
 
     @hybrid_property
     def available(self):
@@ -229,7 +237,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @classmethod
     def __declare_last__(cls):
-        from . import UserCourse, CourseRole
+        from . import UserCourse, CourseRole, LTIResourceLink
         super(cls, cls).__declare_last__()
 
         cls.answer_count = column_property(
@@ -336,6 +344,13 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                 AnswerComment.draft == False,
                 Answer.assignment_id == cls.id
             )),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.lti_resource_link_count = column_property(
+            select([func.count(LTIResourceLink.id)]).
+            where(LTIResourceLink.compair_assignment_id == cls.id),
             deferred=True,
             group="counts"
         )

@@ -74,6 +74,12 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         from . import CourseGrade
         CourseGrade.calculate_grades(self)
 
+    def clear_lti_links(self):
+        for lti_context in self.lti_contexts.all():
+            lti_context.compair_course_id = None
+        for assignment in self.assignments.all():
+            assignment.clear_lti_links()
+
     @classmethod
     def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:

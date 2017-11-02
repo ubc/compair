@@ -192,6 +192,7 @@ class CourseAPI(Resource):
                 abort(400, title="Course Not Deleted", message="Sorry, you cannot remove the default demo course.")
 
         course.active = False
+        course.clear_lti_links()
         db.session.commit()
 
         on_course_delete.send(

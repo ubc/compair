@@ -2,7 +2,7 @@ import datetime
 import json
 from compair import db
 
-from data.fixtures.test_data import BasicTestData, ComparisonTestData
+from data.fixtures.test_data import BasicTestData, ComparisonTestData, LTITestData, SimpleAssignmentTestData
 from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 from compair.models import Course, UserCourse
 
@@ -664,3 +664,45 @@ class CourseDemoAPITests(ComPAIRAPIDemoTestCase):
             self.app.config['DEMO_INSTALLATION'] = False
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
             self.assert200(rv)
+
+
+class CoursesLTIAPITests(ComPAIRAPITestCase):
+    def setUp(self):
+        super(CoursesLTIAPITests, self).setUp()
+        self.data = SimpleAssignmentTestData()
+        self.lti_data = LTITestData()
+
+    def test_delete_course(self):
+        # test unlinking of lti contexts when course deleted
+        course = self.data.get_course()
+        url = '/api/courses/' + course.uuid
+
+        lti_consumer = self.lti_data.get_consumer()
+        lti_context1 = self.lti_data.create_context(
+            lti_consumer,
+            compair_course_id=course.id
+        )
+        lti_context2 = self.lti_data.create_context(
+            lti_consumer,
+            compair_course_id=course.id
+        )
+        lti_resource_link1 = self.lti_data.create_resource_link(
+            lti_consumer,
+            lti_context=lti_context2,
+            compair_assignment=self.data.assignments[0]
+        )
+        lti_resource_link2 = self.lti_data.create_resource_link(
+            lti_consumer,
+            lti_context=lti_context2,
+            compair_assignment=self.data.assignments[1]
+        )
+
+        with self.login(self.data.get_authorized_instructor().username):
+            rv = self.client.delete(url)
+            self.assert200(rv)
+            self.assertEqual(course.uuid, rv.json['id'])
+
+            self.assertIsNone(lti_context1.compair_course_id)
+            self.assertIsNone(lti_context2.compair_course_id)
+            self.assertIsNone(lti_resource_link1.compair_assignment_id)
+            self.assertIsNone(lti_resource_link2.compair_assignment_id)

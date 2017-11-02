@@ -191,6 +191,34 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             # verify lti_resource_link does not retain the invalid assignment_id
             self.assertIsNone(lti_resource_link.compair_assignment_id)
 
+            # will not link assignment from another course
+            course_invalid = self.data.create_course()
+            assignment_invalid = self.data.create_assignment_in_answer_period(course_invalid, self.data.get_authorized_instructor())
+
+            # valid request - user with account and course linked (with assignment)
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_uuid=assignment_invalid.uuid, follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid)
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+                self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
+                self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
+                self.assertEqual(lti_user.id, sess.get('lti_user'))
+                self.assertEqual(lti_context.id, sess.get('lti_context'))
+                self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
+
+                # user already exists, oauth_create_user_link should be None
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+            # verify lti_resource_link does not retain the invalid assignment_id
+            self.assertIsNone(lti_resource_link.compair_assignment_id)
+
             # create assignment - should be automatically linked when custom_assignment is set
             assignment = self.data.create_assignment_in_answer_period(course, self.data.get_authorized_instructor())
 

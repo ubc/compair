@@ -55,6 +55,10 @@ module.controller(
                         Authorize.can(Authorize.DELETE, CourseResource.MODEL, course.id).then(function(result) {
                             course.canDeleteCourse = result;
                         });
+
+                        if (course.lti_linked) {
+                            course.delete_warning = "This will also unlink all LTI links from this course.";
+                        }
                     });
 
                     var courseIds = $scope.courses.map(function(course) {

@@ -1681,3 +1681,31 @@ class AssignmentUserComparisonsAPITests(ComPAIRAPITestCase):
                 self.assertEqual(len(rv.json['self_evaluations']), len(self_evaluations))
                 for self_evaluation in rv.json['self_evaluations']:
                     self.assertIn(self_evaluation['id'], self_evaluation_uuids)
+
+class AssignmentLTIAPITests(ComPAIRAPITestCase):
+    def setUp(self):
+        super(AssignmentLTIAPITests, self).setUp()
+        self.data = SimpleAssignmentTestData()
+        self.url = '/api/courses/' + self.data.get_course().uuid + '/assignments'
+        self.lti_data = LTITestData()
+
+    def test_delete_assignment(self):
+        # Test deleting the assignment
+        course = self.data.get_course()
+        assignment = self.data.assignments[0]
+
+        lti_consumer = self.lti_data.get_consumer()
+        lti_context = self.lti_data.create_context(
+            lti_consumer,
+            compair_course=course
+        )
+        lti_resource_link = self.lti_data.create_resource_link(
+            lti_consumer,
+            lti_context=lti_context,
+            compair_assignment=assignment
+        )
+
+        with self.login(self.data.get_authorized_instructor().username):
+            rv = self.client.delete(self.url + '/' + assignment.uuid)
+            self.assert200(rv)
+            self.assertIsNone(lti_resource_link.compair_assignment_id)

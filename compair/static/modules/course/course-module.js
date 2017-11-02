@@ -84,6 +84,13 @@ module.controller(
         $scope.canCreateAssignment = resolvedData.canCreateAssignment;
         $scope.canManageAssignment = resolvedData.canManageAssignment;
 
+        // get course assignments status
+        $scope.assignments.forEach(function(assignment) {
+            if (assignment.lti_linked) {
+                assignment.delete_warning = "This will also unlink all LTI direct links to this assignment.";
+            }
+        });
+
         CourseResource.getCurrentUserStatus({'id': $scope.courseId}).$promise.then(
             function(ret) {
                 var statuses = ret.statuses;

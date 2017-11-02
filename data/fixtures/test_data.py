@@ -148,12 +148,6 @@ class LTITestData:
     def get_consumer(self):
         return self.lti_consumer
 
-    def get_context(self):
-        return self.lti_context
-
-    def get_resource_link(self):
-        return self.lti_resource_link
-
     def generate_resource_link_id(self):
         lti_resource_link = LTIResourceLinkFactory.stub()
 

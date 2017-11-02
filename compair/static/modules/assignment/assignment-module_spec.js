@@ -888,13 +888,6 @@ describe('assignment-module', function () {
                 expect($rootScope.showTab('comparisons')).toBe(true);
             });
 
-            it('should be able to delete assignment', function () {
-                $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z').respond(mockAssignment);
-                $rootScope.deleteAssignment(mockAssignment);
-                $httpBackend.flush();
-                expect($location.path()).toEqual('/course/1abcABC123-abcABC123_Z');
-            });
-
             it('should be able to delete answers', function () {
                 answer = mockAnswers.objects[0];
 

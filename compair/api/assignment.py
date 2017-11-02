@@ -273,6 +273,7 @@ class AssignmentIdAPI(Resource):
         formatted_assignment = marshal(assignment, dataformat.get_assignment(False))
         # delete file when assignment is deleted
         assignment.active = False
+        assignment.clear_lti_links()
         db.session.commit()
 
         # update course grades
