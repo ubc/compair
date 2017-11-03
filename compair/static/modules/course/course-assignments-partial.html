@@ -177,7 +177,8 @@
                  -->
             <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Pairs" ng-href="#/course/{{course.id}}/assignment/{{assignment.id}}/compare"
                ng-show="!canManageAssignment && assignment.compare_period && assignment.comparisons_left > 0 && ((assignment.answer_period && assignment.status.answers.answered) || (!assignment.answer_period))" ng-disabled="!assignment.status.comparisons.available">
-                Compare Pairs
+                <span ng-if="!assignment.status.comparisons.has_draft">Compare Pairs</span>
+                <span ng-if="assignment.status.comparisons.has_draft">Finish Comparison</span>
             </a>
 
             <!-- BUTTON when user is not an admin AND the comparison period is active AND user has finished pair comparisons AND has a self-evaluation remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)
@@ -185,13 +186,15 @@
                  enabled only when user has answered assignment -->
             <a class="btn" ng-class="{'btn-success': assignment.status.answers.answered, 'btn-default': !assignment.status.answers.answered}" title="Compare Pairs" ng-href="#/course/{{ course.id }}/assignment/{{ assignment.id }}/self_evaluation"
                ng-show="!canManageAssignment && assignment.compare_period && !assignment.comparisons_left > 0 && assignment.self_evaluation_needed && ((assignment.answer_period && assignment.status.answers.answered) || (!assignment.answer_period))" ng-disabled="!assignment.status.answers.answered">
-                Compare Pairs
+                <span ng-if="!assignment.status.comparisons.self_evaluation_draft">Compare Pairs</span>
+                <span ng-if="assignment.status.comparisons.self_evaluation_draft">Finish Comparison</span>
             </a>
 
             <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
             <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Pairs" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
                ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
-                Compare Pairs
+                <span ng-if="!assignment.status.comparisons.has_draft">Compare Pairs</span>
+                <span ng-if="assignment.status.comparisons.has_draft">Finish Comparison</span>
             </a>
 
             <!-- ADDITIONAL TEXT when user has not answered AND user is not an admin AND answer period is active -->
