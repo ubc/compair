@@ -339,7 +339,7 @@ module.controller(
             AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
                 function (ret) {
                     $scope.answer = ret;
-                    Toaster.success("Answer Submitted");
+                    Toaster.success("Answer Saved");
                     $uibModalInstance.close($scope.answer);
                 }
             ).finally(function() {

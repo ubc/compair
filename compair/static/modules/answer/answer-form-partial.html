@@ -95,10 +95,18 @@
         <input type="submit" class="btn btn-success btn-lg" value="Submit"
             ng-click="saveDraft = false"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+        <p ng-if="submitted">
+                <i class="fa fa-spin fa-spinner"></i>
+                &nbsp; Submitting answer...
+        </p>
     </div>
-    <div ng-show="!answer.draft || (canManageAssignment && answer.user_id != loggedInUserId)">
+    <div ng-show="!answer.draft || (canManageAssignment && answer.user_id != loggedInUserId)" class="text-center">
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
             ng-click="saveDraft = false"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+        <p ng-if="submitted">
+                <i class="fa fa-spin fa-spinner"></i>
+                &nbsp; Saving answer...
+        </p>
     </div>
 </form>

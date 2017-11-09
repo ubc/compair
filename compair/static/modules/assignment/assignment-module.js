@@ -79,7 +79,7 @@ module.directive(
             restrict: 'A',
             link: function(scope, element, attrs){
                 var msg = attrs.keyword ? " "+attrs.keyword : "";
-                msg = "Are you sure you want to remove this"+msg+"?";
+                msg = "Do you want to permanently remove this"+msg+"?";
                 if (attrs.confirmationWarning) {
                     msg += "\n"+attrs.confirmationWarning;
                 }
