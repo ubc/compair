@@ -29,6 +29,7 @@ Developer Installation - Docker
 ### Clone Repo and Start Server
 
     git clone git@github.com:ubc/compair.git compair
+    npm install
     docker-compose up -d
 
 After initialization is finished, run the following command if it is the first time:

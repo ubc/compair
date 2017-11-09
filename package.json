@@ -8,9 +8,10 @@
   },
   "dependencies": {
     "bower": "latest",
-    "gulp": "latest",
     "gulp-angular-templatecache": "^1.9.1",
     "gulp-bower": "latest",
+    "gulp-clean-css": "~3.0.4",
+    "gulp-cli": "^1.4.0",
     "gulp-concat": "latest",
     "gulp-concat-vendor": "latest",
     "gulp-connect": "latest",
@@ -23,7 +24,6 @@
     "less": "2.7.2",
     "main-bower-files": "latest",
     "proxy-middleware": "latest",
-    "gulp-clean-css": "~3.0.4",
     "streamqueue": "^1.1.1",
     "wiredep": "latest"
   },
@@ -33,6 +33,7 @@
     "cucumber": "~1.3.0",
     "deepcopy": "~0.6.3",
     "del": "^2.2.2",
+    "gulp": "^3.9.1",
     "gulp-protractor": "~4.1.0",
     "gulp-rev": "^6.0.1",
     "jasmine-core": "latest",
