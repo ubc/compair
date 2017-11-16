@@ -179,6 +179,410 @@ module.directive('comparisonPreview', function() {
     };
 });
 
+module.directive('assignmentActionButton', function() {
+    
+    return {
+        restrict : 'E',
+        scope: true,
+        templateUrl: 'modules/common/element-button-template.html',
+        replace: true,
+        link: function ($scope, $element, $attributes) {
+            $scope.actionElementName = $attributes.name;
+        },
+        controller: ["$scope", "$filter", "AssignmentPermissions", 
+            function ($scope, $filter, AssignmentPermissions) {
+                $scope.$watchCollection("[assignment, assignment.status, actionElementName]", function(newStatus){
+
+                    var permissions = AssignmentPermissions.getAll($scope.assignment, $scope.canManageAssignment, $scope.loggedInUserId);
+
+                    if ($scope.assignment.status !== undefined) {
+                        
+                        var assignmentId = $scope.assignment.id;
+                        var assignmentStatus = $scope.assignment.status;
+                        var assignment = $scope.assignment;
+                        var courseId = $scope.course.id;
+                        var course = $scope.course;
+
+                        var allMetadata = {
+                            'answer' : {
+                                'label' : "Answer",
+                                'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/answer/create",
+                                'title' : "Answer Assignment",
+                                'show' : {
+                                    'user'  : permissions.canAnswer && permissions.needsAnswer && !permissions.hasDraftAnswer,
+                                    'instructor' : !permissions.hasDraftAnswer,
+                                }
+                            },
+                            'finishAnswer' : {
+                                'label' : "Finish Answer",
+                                'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/answer/" + assignmentStatus.answers.draft_ids[0] + "/edit",
+                                'title' : "Finish Answering Assignment",
+                                'show' : {
+                                    'user'  : permissions.canAnswer && permissions.needsAnswer && permissions.hasDraftAnswer,
+                                    'instructor' : permissions.hasDraftAnswer,
+                                }
+                            },
+                            'compare' : {
+                                'label' : ($scope.canManageAssignment || !permissions.hasDraftComparison) ? "Compare Pairs" : "Finish Comparison",
+                                'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/compare",
+                                'title' : !permissions.hasComparisonsAvailable ? "No comparisons available" : ($scope.canManageAssignment || !permissions.hasDraftComparison) ? "Compare Pairs" : "Finish Comparison",
+                                'disabled' : !permissions.hasComparisonsAvailable,
+                                'show' : {
+                                    'user' : permissions.canCompare && permissions.needsCompare,
+                                    'instructor' : permissions.canCompare,
+                                }
+                            },
+                            'selfEval' : {
+                                'label' : ($scope.canManageAssignment || !permissions.hasDraftSelfEval) ? "Compare Pairs" : "Finish Comparison",
+                                'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/self_evaluation",
+                                'title' : ($scope.canManageAssignment || !permissions.hasDraftSelfEval) ? "Compare Pairs" : "Finish Comparison",
+                                'disabled' : !permissions.canSelfEval,
+                                'show' : {
+                                    'user' : permissions.needsSelfEval,
+                                    'instructor' : false
+                                }
+                            },
+                            'viewResults' : {
+                                'label' : "See Results",
+                                'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/",
+                                'title' : "View Results",
+                                'show' : {
+                                    'user' : permissions.canViewAnswers,
+                                    'instructor' : false
+                                }
+                            },
+                        };
+
+                        if (allMetadata[$scope.actionElementName]) {
+                            if ($scope.canManageAssignment && allMetadata[$scope.actionElementName].show.instructor) {
+                                $scope.button = allMetadata[$scope.actionElementName];
+                            }
+                            else if (!$scope.canManageAssignment && allMetadata[$scope.actionElementName].show.user) {
+                                $scope.button = allMetadata[$scope.actionElementName];
+                            }
+                            else {
+                                $scope.button = { 'hide': true };
+                            }
+                        }
+                    }
+                    else {
+                        $scope.button = { 'hide': true };
+                    }
+                });
+            }
+        ]
+    };
+});
+
+module.directive('assignmentText', function() {
+    
+    return {
+        restrict : 'E',
+        scope: true,
+        templateUrl: 'modules/common/element-text-template.html',
+        replace: true,
+        link: function ($scope, $element, $attributes) {
+            $scope.textElementName = $attributes.name;
+        },
+        controller: ["$scope", "$filter", "AssignmentPermissions", 
+            function ($scope, $filter, AssignmentPermissions) {
+                $scope.$watchCollection("[assignment, assignment.status, textElementName]", function(newStatus){
+
+                    var permissions = AssignmentPermissions.getAll($scope.assignment, $scope.canManageAssignment, $scope.loggedInUserId);
+
+                    if ($scope.assignment.status !== undefined) {
+                        
+                        var assignment = $scope.assignment;
+
+                        var allMetadata = {
+                            'answerDue' : {
+                                'label' : assignment.answer_end ? "<em>Answer due </em> " + $filter('date')(assignment.answer_end, 'MMM d') : "",
+                                'show' : {
+                                    'user' : permissions.canAnswer && permissions.needsAnswer,
+                                    'instructor' : false
+                                }
+                            },
+                            'comparisonsDue' : {
+                                'label': assignment.compare_end ? "<em>Comparisons due </em> " + $filter('date')(assignment.compare_end, 'MMM d') : "",
+                                'show' : {
+                                    'user' : permissions.isComparePeriod && permissions.needsCompareOrSelfEval,
+                                    'instructor' : false
+                                }
+                            },
+                            'notEnoughAnswers'  : {
+                                'label' : "Not enough answers to compare<br />(Refresh the page to check again)",
+                                'show' : {
+                                    'user' : permissions.canCompare && permissions.needsCompareOrSelfEval && !permissions.hasComparisonsAvailable,
+                                    'instructor' : permissions.canCompare && permissions.needsCompareOrSelfEval && !permissions.hasComparisonsAvailable,
+                                }
+                            },
+                            'noSelfEval' : {
+                                'label': "Self-evaluation comparison unavailable",
+                                'show' : {
+                                    'user' : permissions.needsSelfEval && !permissions.canSelfEval,
+                                    'instructor' : false
+                                }
+                            },
+                        };
+
+                        if (allMetadata[$scope.textElementName]) {
+                            if ($scope.canManageAssignment && allMetadata[$scope.textElementName].show.instructor) {
+                                $scope.dirText = allMetadata[$scope.textElementName];
+                            }
+                            else if (!$scope.canManageAssignment && allMetadata[$scope.textElementName].show.user) {
+                                $scope.dirText = allMetadata[$scope.textElementName];
+                            }
+                            else {
+                                $scope.dirText = { 'hide': true };
+                            }
+                        }
+                    }
+                    else {
+                        $scope.dirText = { 'hide': true };
+                    }
+                });
+            }
+        ]
+    };
+});
+
+module.directive('assignmentMetadata', function() {
+    
+    return {
+        restrict : 'E',
+        scope: true,
+        templateUrl: 'modules/common/element-metadata-template.html',
+        replace: true,
+        link: function ($scope, $element, $attributes) {
+            $scope.metadataName = $attributes.name;
+        },
+        controller: ["$scope", "$filter", "AssignmentPermissions", 
+            function ($scope, $filter, AssignmentPermissions) {
+                $scope.$watchCollection("[assignment, assignment.status, metadataName]", function(newStatus){
+
+                    var permissions = AssignmentPermissions.getAll($scope.assignment, $scope.canManageAssignment, $scope.loggedInUserId);
+
+                    if ($scope.assignment.status !== undefined) {
+                        
+                        var assignmentId = $scope.assignment.id;
+                        var assignmentStatus = $scope.assignment.status;
+                        var assignment = $scope.assignment;
+                        var courseId = $scope.course.id;
+                        var course = $scope.course;
+                        
+                        var allMetadata = {
+                            'editLink' : {
+                                'label' : "Edit",
+                                'href'  : "#/course/" + courseId + "/assignment/" + assignment.id + "/edit",
+                                'show' : {
+                                    'user'  : permissions.isOwner,
+                                    'instructor'  : true,
+                                }
+                            },
+                            'duplicateLink' : {
+                                'label': "Duplicate",
+                                'href' : "#/course/" + courseId + "/assignment/" + assignment.id + "/duplicate",
+                                'show' : {
+                                    'user'  : false,
+                                    'instructor' : true,
+                                }
+                            },
+                            'answerCount' : {
+                                'label': assignment.answer_count + " answer" + (assignment.answer_count != 1 ? "s" : "") + " &raquo;",
+                                'href' : "#/course/" + courseId + "/assignment/" + assignment.id +"/?tab=answers#answers",
+                                'show' : {
+                                    'user' : permissions.canViewAnswers,
+                                    'instructor' : true
+                                }
+                            },
+                            'answeringDates' : {
+                                'label': "<em>Answering:</em> " + (assignment.answer_start ? $filter('date')(assignment.answer_start, 'MMM d @ h:mm a') + " - " + $filter('date')(assignment.answer_end, 'MMM d @ h:mm a') : "NOT SET"),
+                                'show' : {
+                                    'user'  : false,
+                                    'instructor' : true,
+                                }
+                            },
+                            'comparingDates' : {
+                                'label': "<em>Comparing:</em> " + (assignment.compare_start ? $filter('date')(assignment.compare_start, 'MMM d @ h:mm a') + " - " + $filter('date')(assignment.compare_end, 'MMM d @ h:mm a') : "NOT SET"),
+                                'show' : {
+                                    'user'  : false,
+                                    'instructor' : true,
+                                }
+                            },
+                            'answerCountEmpty' : {
+                                'label': "Answers not yet available",
+                                'show' : {
+                                    'user' : !permissions.canViewAnswers,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'compareCount' : {
+                                'label': assignment.evaluation_count + " comparison" + (assignment.evaluation_count != 1 ? "s" : "") + " &raquo;",
+                                'href' : "#/course/" + courseId + "/assignment/" + assignment.id +"/?tab=comparisons#comparisons",
+                                'show' : {
+                                    'user'  : false,
+                                    'instructor' : true,
+                                }
+                            },
+                            // 'commentCount' : {
+                            //     'label': assignment.comment_count + " comment" + (assignment.comment_count != 1 ? "s" : "") + " &raquo;",
+                            //     'href' : "#/course/" + courseId + "/assignment/" + assignment.id +"/?tab=help#comments"
+                            // },
+                            'feedbackCount' : {
+                                'label': assignment.status.answers.feedback + " feedback comment" + (assignment.status.answers.feedback != 1 ? "s" : "") + " &raquo;",
+                                'href' : "#/course/" + courseId + "/assignment/" + assignment.id +"/?tab=your_feedback",
+                                'show' : {
+                                    'user' : permissions.hasFeedback,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'feedbackCountBelow' : {
+                                'label': "<strong>" + assignment.status.answers.feedback + " feedback comment" + (assignment.status.answers.feedback != 1 ? "s" : "") + "</strong> below",
+                                'show' : {
+                                    'user' : permissions.hasFeedback,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'feedbackCountEmpty' : {
+                                'label': "No feedback received",
+                                'show' : {
+                                    'user' : !permissions.hasFeedback,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'completedFeedback' : {
+                                'label': "You " + 
+                                        (!permissions.needsAnswer ? "<strong>answered</strong>" + 
+                                        (permissions.hasCompared ? " and " : "") : "") + 
+                                        (permissions.hasCompared ? "<strong>compared " + assignment.status.comparisons.count + " pair" + (assignment.status.comparisons.count != 0 ? "s" : "") + "</strong>" : ""),
+                                'show' : {
+                                    'user' : permissions.hasCompared || !permissions.needsAnswer,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'missedFeedback' : {
+                                'label': "You missed " + 
+                                        (permissions.hasMissedAnswer ? "answering " + 
+                                        (permissions.hasMissedCompare ? " and " : "") : "") + 
+                                        (permissions.hasMissedCompare ? "comparing " + (permissions.needsCompare ? assignment.steps_left + " pair" + (assignment.steps_left != 0 ? "s" : "") : "") : ""),
+                                'show' : {
+                                    'user' : permissions.hasMissedAnswer || permissions.hasMissedCompare,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'missingFeedback' : {
+                                'label': (permissions.canAnswer && permissions.needsAnswer ? "1 answer " + 
+                                         (permissions.isComparePeriod && permissions.needsCompareOrSelfEval > 0 ? ", " : "") : "") + 
+                                         (permissions.isComparePeriod && permissions.needsCompareOrSelfEval > 0 ? assignment.steps_left + " comparison" + (assignment.steps_left != 0 ? "s" : "") : "") + " needed",
+                                'class': 'label label-warning',
+                                'show' : {
+                                            // suggested: (canAnswer && needsAnswer) || (>>>> canCompare <<<< && needsCompareOrSelfEval)
+                                    'user' : (permissions.canAnswer && permissions.needsAnswer) || (permissions.isComparePeriod && permissions.needsCompareOrSelfEval),
+                                    'instructor'  : false,
+                                }
+                            },
+                            'missingComparisonsFeedback' : {
+                                'label': assignment.steps_left + " comparison" + (assignment.steps_left != 1 ? "s" : "") + " needed",
+                                'class': 'label label-warning',
+                                'show' : {
+                                            // suggested: >>>> canCompare <<<< && needsCompareOrSelfEval && !hasCompareDueDate
+                                    'user' : permissions.isComparePeriod && permissions.needsCompareOrSelfEval && !permissions.hasCompareDueDate,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'answerDue' : {
+                                'label': assignment.answer_end ? "Answer due: " + $filter('date')(assignment.answer_end, 'MMM d @ h:mm a') : "",
+                                'class': 'label label-warning',
+                                'show' : {
+                                    'user' : permissions.canAnswer && permissions.needsAnswer,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'comparisonsDue' : {
+                                'label': assignment.compare_end ? "Comparisons due: " + $filter('date')(assignment.compare_end, 'MMM d @ h:mm a') : "",
+                                'class': 'label label-warning',
+                                'show' : {
+                                            // suggested: >>>> canCompare <<<< && needsCompareOrSelfEval && hasCompareDueDate
+                                    'user' : permissions.isComparePeriod && permissions.needsCompareOrSelfEval && permissions.hasCompareDueDate,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'assignmentScheduled' : {
+                                'label': function(){
+                                    if (permissions.isAfterAnswerDue && permissions.hasCompareDueDate) {
+                                        return "Comparing scheduled for " + $filter('date')(assignment.compare_start, 'MMM d');
+                                    }
+                                    else if (permissions.isAfterAnswerDue) {
+                                        return "Comparing not scheduled";
+                                    }
+                                    else {
+                                        return "Scheduled for " + $filter('date')(assignment.answer_start, 'MMM d');
+                                    }
+                                }(),
+                                'show' : {
+                                    'user'  : false,
+                                    'instructor' : !permissions.isAnswerPeriod && !permissions.isComparePeriod && !permissions.canViewAnswers,
+                                }
+                            },
+                            'periodLabel' : {
+                                'label': function(){
+                                    if (permissions.isAnswerPeriod && !permissions.isComparePeriod) {
+                                        return "Answer period";
+                                    }
+                                    else if (!permissions.isAnswerPeriod && permissions.isComparePeriod) {
+                                        return "Comparison period";
+                                    }
+                                    else if (permissions.isAnswerPeriod && permissions.isComparePeriod) {
+                                        return "Answer/comparison period";
+                                    }
+                                }(),
+                                'class': 'label label-warning',
+                                'show' : {
+                                    'user'  : false,
+                                    'instructor' : permissions.isAnswerPeriod || permissions.isComparePeriod,
+                                }
+                            },
+                            'assignmentCompleted' : {
+                                'label': "Completed on " + $filter('date')(assignment.compare_end, 'MMM d'),
+                                'show' : {
+                                    'user'  : false,
+                                    'instructor' : !permissions.isAnswerPeriod && !permissions.isComparePeriod && permissions.canViewAnswers,
+                                }
+                            },
+                            'deleteLink' : {
+                                'label': '<i class="fa fa-trash-o"></i>',
+                                'title' : "Delete",
+                                'confirmationNeeded' : 'deleteAssignment(assignment)' ,
+                                'confirmationWarning': assignment.delete_warning, 
+                                'keyword' : "assignment",
+                                'show' : {
+                                    'user'  : permissions.isOwner,
+                                    'instructor'  : true,
+                                }
+                            }
+                        };
+
+                        if (allMetadata[$scope.metadataName]) {
+                            if ($scope.canManageAssignment && allMetadata[$scope.metadataName].show.instructor) {
+                                $scope.meta = allMetadata[$scope.metadataName];
+                            }
+                            else if (!$scope.canManageAssignment && allMetadata[$scope.metadataName].show.user) {
+                                $scope.meta = allMetadata[$scope.metadataName];
+                            }
+                            else {
+                                $scope.meta = { 'hide': true };
+                            }
+                        }
+                    }
+                    else {
+                        $scope.meta = { 'hide': true };
+                    }
+                });
+            }
+        ]
+    };
+});
+
 /***** Providers *****/
 module.factory(
     "AssignmentResource",
@@ -218,6 +622,78 @@ module.factory(
         return ret;
     }
 ]);
+
+module.factory( "AssignmentPermissions", function (){
+
+    return {
+        'getAll' : function(assignment, canManageAssignment, loggedInUserId) {
+            var permissions = {};
+
+            if (assignment.status) {
+
+                assignment.steps_left = assignment.status.comparisons.left + (assignment.self_evaluation_needed ? 1 : 0);
+
+                if (!(assignment.answer_end instanceof Date) && assignment.answer_end) {
+                    assignment.answer_end = new Date(assignment.answer_end);
+                }
+                if (!(assignment.compare_end instanceof Date) && assignment.compare_end) {
+                    assignment.compare_end = new Date(assignment.compare_end);
+                }
+
+                permissions = {
+
+                    // answer
+                    'isAnswerPeriod'    : assignment.answer_period,
+                    'canAnswer'         : assignment.answer_period,
+                    'canViewAnswers'    : assignment.see_answers,
+                    'needsAnswer'       : !assignment.status.answers.answered,
+                    'hasDraftAnswer'    : assignment.status.answers.has_draft,
+                    'hasFeedback'       : assignment.status.answers.feedback,
+                    'isAfterAnswerDue'  : !assignment.answer_period && assignment.answer_end && assignment.answer_end < new Date(),
+
+                    // compare
+                    'isComparePeriod'   : assignment.compare_period,
+                    'canCompare'        : assignment.compare_period && 
+                                            // regular users
+                                            (!canManageAssignment && 
+                                                (
+                                                // either (the answer period is active AND the assignment has been answered)
+                                                (assignment.answer_period && assignment.status.answers.answered) || 
+                                                // OR the answer period is not active
+                                                !assignment.answer_period
+                                                )
+                                            ) || 
+                                            // instructors
+                                            (canManageAssignment && assignment.educators_can_compare),
+                    'needsCompare'      : assignment.status.comparisons.left > 0,
+                    'hasDraftComparison': assignment.status.comparisons.has_draft,
+                    'hasComparisonsAvailable': assignment.status.comparisons.available,
+                    'hasCompared'       : assignment.status.comparisons.count > 0,
+                    'isAfterCompareDue' : !assignment.compare_period && assignment.compare_end && assignment.compare_end < new Date(),
+                    'hasCompareDueDate' : assignment.compare_end,
+
+                    // self-eval
+                    'canSelfEval'       : assignment.status.answers.answered && assignment.status.comparisons.left == 0,
+                    'needsSelfEval'     : assignment.status.comparisons.left == 0 && assignment.self_evaluation_needed, // && canCompare (added below)
+                    'hasDraftSelfEval'  : assignment.status.comparisons.self_evaluation_draft,
+
+                    // general / mixed
+                    'isOwner': (assignment.user_id == loggedInUserId),
+                    'isAvailable': assignment.available,
+                    'needsCompareOrSelfEval': assignment.steps_left > 0,
+                }
+
+                // just so we don't repeat that big conditional for canCompare
+                permissions.needsSelfEval &= permissions.canCompare;
+
+                permissions.hasMissedAnswer = permissions.isAfterAnswerDue && permissions.needsAnswer;
+                permissions.hasMissedCompare = permissions.isAfterCompareDue && permissions.needsCompare;
+            }
+            
+            return permissions;
+        }
+    }
+});
 
 /***** Filters *****/
 module.filter("excludeInstr", function() {

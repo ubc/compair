@@ -64,15 +64,16 @@
 
   li {
     margin-bottom: .3em;
-    padding: .2em .5em;
-    border-right: 1px solid @border-gray;
-    &:last-child {
-      border-right: none;
+    padding: .2em .5em .2em 0.5em;
+    
+    // add padding+border to the left of all elements except the first non-empty one
+    &:not(.ng-hide) ~ li {
+      padding-left: .5em;
+      border-left: 1px solid @green-blue;
     }
   }
 
   .label {
-    margin: 0 .5em;
     font-size: 1.05em;
 
     .label-link {
