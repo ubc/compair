@@ -621,7 +621,8 @@ module.exports.httpbackendMock = function(storageFixtures) {
                         "comparisons": {
                             "available": true,
                             "count": 0,
-                            "left": 3
+                            "left": 3,
+                            "has_draft": false
                         }
                     }
                 });
@@ -813,7 +814,8 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "comparisons": {
                     "available": true,
                     "count": 0,
-                    "left": 3
+                    "left": 3,
+                    "has_draft": false
                 }
             }
 

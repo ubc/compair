@@ -104,6 +104,14 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             ) \
             .count()
 
+    def draft_comparison_count_for_user(self, user_id):
+        return self.comparisons \
+            .filter_by(
+                user_id=user_id,
+                draft=True
+            ) \
+            .count()
+
     def clear_lti_links(self):
         for lti_resource_link in self.lti_resource_links.all():
             lti_resource_link.compair_assignment_id = None

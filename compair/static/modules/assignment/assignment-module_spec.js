@@ -785,7 +785,9 @@ describe('assignment-module', function () {
                             "available": false,
                             "count": 0,
                             "left": 3,
-                            "self_evaluation_completed": false
+                            "has_draft": false,
+                            "self_evaluation_completed": false,
+                            "self_evaluation_draft": false
                         }
                     }
                 });

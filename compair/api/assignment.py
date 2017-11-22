@@ -482,6 +482,7 @@ class AssignmentIdStatusAPI(Resource):
             .all()
 
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
+        comparison_draft_count = assignment.draft_comparison_count_for_user(current_user.id)
         other_student_answers = assignment.student_answer_count - answer_count
         comparison_available = comparison_count < other_student_answers * (other_student_answers - 1) / 2
 
@@ -496,7 +497,8 @@ class AssignmentIdStatusAPI(Resource):
             'comparisons': {
                 'available': comparison_available,
                 'count': comparison_count,
-                'left': max(0, assignment.total_comparisons_required - comparison_count)
+                'left': max(0, assignment.total_comparisons_required - comparison_count),
+                'has_draft': comparison_draft_count > 0
             }
         }
 
@@ -514,7 +516,22 @@ class AssignmentIdStatusAPI(Resource):
                     Answer.draft == False
                 )) \
                 .count()
+
+            self_evaluation_drafts = AnswerComment.query \
+                .join("answer") \
+                .filter(and_(
+                    AnswerComment.user_id == current_user.id,
+                    AnswerComment.active == True,
+                    AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                    AnswerComment.draft == True,
+                    Answer.assignment_id == assignment.id,
+                    Answer.active == True,
+                    Answer.practice == False,
+                    Answer.draft == False
+                )) \
+                .count()
             status['comparisons']['self_evaluation_completed'] = self_evaluations > 0
+            status['comparisons']['self_evaluation_draft'] = self_evaluation_drafts > 0
 
         on_assignment_get_status.send(
             self,
@@ -597,8 +614,27 @@ class AssignmentRootStatusAPI(Resource):
             .group_by(Answer.assignment_id) \
             .all()
 
+        self_evaluation_drafts = AnswerComment.query \
+            .join("answer") \
+            .with_entities(
+                Answer.assignment_id,
+                func.count(Answer.assignment_id).label('self_evaluation_count')
+            ) \
+            .filter(and_(
+                AnswerComment.user_id == current_user.id,
+                AnswerComment.active == True,
+                AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                AnswerComment.draft == True,
+                Answer.active == True,
+                Answer.practice == False,
+                Answer.draft == False,
+                Answer.assignment_id.in_(assignment_ids)
+            )) \
+            .group_by(Answer.assignment_id) \
+            .all()
+
         drafts = Answer.query \
-            .options(load_only('id', 'assignment_id')) \
+            .options(load_only('id', 'assignment_id', 'uuid')) \
             .filter_by(
                 user_id=current_user.id,
                 active=True,
@@ -606,6 +642,7 @@ class AssignmentRootStatusAPI(Resource):
                 draft=True,
                 saved=True
             ) \
+            .filter(Answer.assignment_id.in_(assignment_ids)) \
             .all()
 
         statuses = {}
@@ -620,6 +657,7 @@ class AssignmentRootStatusAPI(Resource):
             )
             assignment_drafts = [draft for draft in drafts if draft.assignment_id == assignment.id]
             comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
+            comparison_draft_count = assignment.draft_comparison_count_for_user(current_user.id)
             other_student_answers = assignment.student_answer_count - answer_count
             comparison_available = comparison_count < other_student_answers * (other_student_answers - 1) / 2
 
@@ -634,7 +672,8 @@ class AssignmentRootStatusAPI(Resource):
                 'comparisons': {
                     'available': comparison_available,
                     'count': comparison_count,
-                    'left': max(0, assignment.total_comparisons_required - comparison_count)
+                    'left': max(0, assignment.total_comparisons_required - comparison_count),
+                    'has_draft': comparison_draft_count > 0
                 }
             }
 
@@ -643,7 +682,12 @@ class AssignmentRootStatusAPI(Resource):
                     (result.self_evaluation_count for result in self_evaluations if result.assignment_id == assignment.id),
                     0
                 )
+                self_evaluation_draft_count = next(
+                    (result.self_evaluation_count for result in self_evaluation_drafts if result.assignment_id == assignment.id),
+                    0
+                )
                 statuses[assignment.uuid]['comparisons']['self_evaluation_completed'] = self_evaluation_count > 0
+                statuses[assignment.uuid]['comparisons']['self_evaluation_draft'] = self_evaluation_draft_count > 0
 
         on_assignment_list_get_status.send(
             self,
