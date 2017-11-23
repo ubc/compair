@@ -14,8 +14,12 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 from sqlalchemy_enum34 import EnumType
+from enum import Enum
+from compair.models import convention
 
-from compair.models import convention, PairingAlgorithm
+class PairingAlgorithm(Enum):
+    adaptive = "adaptive"
+    random = "random"
 
 def upgrade():
     op.add_column('comparison', sa.Column('pairing_algorithm',

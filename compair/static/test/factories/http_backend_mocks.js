@@ -67,6 +67,7 @@ module.exports.buildStorageFixture = function(storageFixture) {
         criteria: {},
         groups: [],
         lti_consumers: {},
+        lti_contexts: {},
         user_search_results: {
             "objects": [],
             "page":1,
@@ -987,6 +988,32 @@ module.exports.httpbackendMock = function(storageFixtures) {
 
         // END LTI Consumers
 
+
+        // LTI Consumers
+
+        // get lti contexts
+        $httpBackend.whenGET(/\/api\/lti\/course\/context\?.*$/).respond(function(method, url, data, headers) {
+            var contexts = _.values(storageFixture.storage().lti_contexts);
+
+            return [200, {
+                "objects": contexts,
+                "page": 1,
+                "pages": 1,
+                "total": contexts.length,
+                "per_page": 20
+            }, {}]
+        });
+
+        // get lti consumer by id
+        $httpBackend.whenDELETE(/\/api\/lti\/course\/[A-Za-z0-9_-]{22}\/context\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            var context_id = url.split('/').pop();
+
+            delete storageFixture.storage().lti_contexts[context_id]
+
+            return [200, {success: true}, {}];
+        });
+
+        // END LTI Consumers
 
         // Statements
         $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {

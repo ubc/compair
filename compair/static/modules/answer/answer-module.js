@@ -28,17 +28,17 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
     var listCacheKeys = [];
     var cache = $cacheFactory.get('$http');
 
-        function invalidListCache(url) {
-            // remove list caches. As list query may contain pagination and query parameters
-            // we have to invalidate all.
-            _.remove(listCacheKeys, function(key) {
-                if (url == undefined || _.startsWith(key, url)) {
-                    cache.remove(key);
-                    return true;
-                }
-                return false;
-            });
-        }
+    function invalidListCache(url) {
+        // remove list caches. As list query may contain pagination and query parameters
+        // we have to invalidate all.
+        _.remove(listCacheKeys, function(key) {
+            if (url == undefined || _.startsWith(key, url)) {
+                cache.remove(key);
+                return true;
+            }
+            return false;
+        });
+    }
 
     var cacheInterceptor = {
         response: function(response) {

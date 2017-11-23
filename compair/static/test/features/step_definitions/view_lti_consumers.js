@@ -14,6 +14,12 @@ var viewLTIConsumersStepDefinitionsWrapper = function () {
             .count()).to.eventually.eql(parseInt(count));
     });
 
+    this.Then("I should see '$count' contexts listed", function (count) {
+        browser.waitForAngular();
+        return expect(element.all(by.exactRepeater("context in contexts"))
+            .count()).to.eventually.eql(parseInt(count));
+    });
+
     this.Then("I should see consumers with consumer keys:", function (data) {
         browser.waitForAngular();
         var list = data.hashes().map(function(item) {
@@ -22,6 +28,16 @@ var viewLTIConsumersStepDefinitionsWrapper = function () {
 
         return expect(element.all(by.exactRepeater("consumer in consumers")
             .column('consumer.oauth_consumer_key')).getText()).to.eventually.eql(list);
+    });
+
+    this.Then("I should see contexts with titles:", function (data) {
+        browser.waitForAngular();
+        var list = data.hashes().map(function(item) {
+            return item.context_title;
+        });
+
+        return expect(element.all(by.exactRepeater("context in contexts")
+            .column('context.context_title')).getText()).to.eventually.eql(list);
     });
 
     this.When("I set the first consumer's active status to '$active'", function (active) {
@@ -55,6 +71,19 @@ var viewLTIConsumersStepDefinitionsWrapper = function () {
             .get(0)
             .element(by.cssContainingText('a', 'Edit'))
             .click();
+    });
+
+    this.When("I unlink the second lti context", function () {
+        element.all(by.exactRepeater("context in contexts"))
+            .get(1)
+            .element(by.cssContainingText('a', 'Unlink'))
+            .click();
+
+        browser.wait(protractor.ExpectedConditions.alertIsPresent(), 1000);
+
+        browser.driver.switchTo().alert().accept();
+        browser.driver.switchTo().defaultContent();
+        return element(by.css("body")).click();
     });
 };
 

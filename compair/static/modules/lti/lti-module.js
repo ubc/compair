@@ -16,7 +16,8 @@ var module = angular.module('ubc.ctlt.compair.lti', [
     'ubc.ctlt.compair.authorization',
     'ubc.ctlt.compair.toaster',
     'ubc.ctlt.compair.user',
-    'ubc.ctlt.compair.course'
+    'ubc.ctlt.compair.course',
+    'ubc.ctlt.compair.lti.context'
 ]);
 
 /***** Providers *****/
@@ -27,7 +28,6 @@ module.factory('LTIResource',
     var ret = $resource('/api/lti', {},
         {
             'getStatus': {url: '/api/lti/status'},
-            'linkCourse': {method: 'POST', url: '/api/lti/course/:id/link', interceptor: Interceptors.enrolCacheLTI},
             'getMembershipStatus': {method: 'GET', url: '/api/lti/course/:id/membership/status'},
             'updateMembership': {method: 'POST', url: '/api/lti/course/:id/membership', interceptor: Interceptors.enrolCacheLTI}
         }
@@ -84,10 +84,10 @@ module.factory('LTI',
 /***** Controllers *****/
 module.controller("LTIController",
     ['$rootScope', '$scope', '$location', '$route', "$uibModal", 'breadcrumbs',
-     'CourseRole', 'Toaster', 'AuthenticationService', 'LTI', 'LTIResource', 'Session',
+     'CourseRole', 'Toaster', 'AuthenticationService', 'LTI', 'LTIContextLinkResource', 'Session',
      'xAPIStatementHelper', 'resolvedData',
     function($rootScope, $scope, $location, $route, $uibModal, breadcrumbs,
-             CourseRole, Toaster, AuthenticationService, LTI, LTIResource, Session,
+             CourseRole, Toaster, AuthenticationService, LTI, LTIContextLinkResource, Session,
              xAPIStatementHelper, resolvedData)
     {
         $scope.status = resolvedData.ltiStatus;
@@ -119,7 +119,7 @@ module.controller("LTIController",
                     xAPIStatementHelper.opened_modal("Select Course");
                 });
                 modalInstance.result.then(function (selectedCourseId) {
-                    LTIResource.linkCourse({id: selectedCourseId}, {},
+                    LTIContextLinkResource.linkCourse({course_id: selectedCourseId}, {},
                         function(ret) {
                             // refresh permissions
                             Session.expirePermissions();

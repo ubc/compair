@@ -7,7 +7,7 @@ from . import *
 
 from compair.core import db
 
-class LTIUser(DefaultTableMixin, WriteTrackingMixin):
+class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     __tablename__ = 'lti_user'
 
     # table columns

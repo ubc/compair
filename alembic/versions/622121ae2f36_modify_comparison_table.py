@@ -15,8 +15,18 @@ import sqlalchemy as sa
 from sqlalchemy_enum34 import EnumType
 import uuid
 import base64
+from enum import Enum
 
-from compair.models import convention, PairingAlgorithm, WinningAnswer
+from compair.models import convention
+
+class PairingAlgorithm(Enum):
+    adaptive = "adaptive"
+    random = "random"
+
+class WinningAnswer(Enum):
+    answer1 = "answer1"
+    answer2 = "answer2"
+    draw = "draw"
 
 def upgrade():
     # Rename score table to answer_criterion_score

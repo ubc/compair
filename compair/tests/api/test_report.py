@@ -495,6 +495,8 @@ class ReportAPITest(ComPAIRAPITestCase):
             }
             rv = self.client.post(self.url, data=json.dumps(input), content_type='application/json')
             self.assert200(rv)
+            file_name = rv.json['file'].split("/")[-1]
+            self.files_to_cleanup.append(file_name)
 
     def _check_participation_stat_report_heading_rows(self, heading):
         expected_heading = ['Assignment', 'User UUID', 'Last Name', 'First Name',

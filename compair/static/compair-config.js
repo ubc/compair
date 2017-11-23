@@ -28,6 +28,7 @@ var myApp = angular.module('myApp', [
     'ubc.ctlt.compair.login',
     'ubc.ctlt.compair.lti',
     'ubc.ctlt.compair.lti.consumer',
+    'ubc.ctlt.compair.lti.context',
     'ubc.ctlt.compair.navbar',
     'ubc.ctlt.compair.assignment',
     'ubc.ctlt.compair.report',
@@ -340,6 +341,7 @@ myApp.config(
                             canEditCourse: RouteResolves.canEditCourse(),
                             canCreateAssignment: RouteResolves.canCreateAssignment(),
                             canManageAssignment: RouteResolves.canManageAssignment(),
+                            canManageUsers: RouteResolves.canManageUsers(),
                         }, ['course', 'courseAssignments']);
                     }
                 }
@@ -672,7 +674,7 @@ myApp.config(
             {
                 title: "Manage LTI Consumers",
                 templateUrl: 'modules/lti_consumer/lti-consumers-list-partial.html',
-                label: "Manage LTI Consumers",
+                label: "Manage LTI",
                 controller: 'LTIConsumerListController',
                 resolve: {
                     resolvedData: function() {

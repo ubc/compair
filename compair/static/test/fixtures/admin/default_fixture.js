@@ -16,6 +16,9 @@ var criterionFactory = new CriterionFactory();
 var LTIConsumerFactory = require('../../factories/lti_consumer_factory.js');
 var ltiConsumerFactory = new LTIConsumerFactory();
 
+var LTIContextFactory = require('../../factories/lti_context_factory.js');
+var ltiContextFactory = new LTIContextFactory();
+
 var storage = {
     session: {},
     users: {},
@@ -26,6 +29,7 @@ var storage = {
     course_assignments: {},
     criteria: {},
     lti_consumers: {},
+    lti_contexts: {},
     user_search_results: {}
 }
 
@@ -189,6 +193,25 @@ var consumer3 = ltiConsumerFactory.generateConsumer("3abcABC123-abcABC123_Z", "c
 storage.lti_consumers[consumer1.id] = consumer1;
 storage.lti_consumers[consumer2.id] = consumer2;
 storage.lti_consumers[consumer3.id] = consumer3;
+
+var context1 = ltiContextFactory.generateContext("1abcABC123-abcABC123_Z", consumer1, course, {
+    "context_id": "canvas.course.1",
+    "context_title": "Canvas Course One",
+});
+
+var context2 = ltiContextFactory.generateContext("2abcABC123-abcABC123_Z", consumer1, course2, {
+    "context_id": "canvas.course.2",
+    "context_title": "Canvas Course Two",
+});
+
+var context3 = ltiContextFactory.generateContext("3abcABC123-abcABC123_Z", consumer2, course, {
+    "context_id": "blackboard.course.2",
+    "context_title": "Blackboard Course One",
+});
+
+storage.lti_contexts[context1.id] = context1;
+storage.lti_contexts[context2.id] = context2;
+storage.lti_contexts[context3.id] = context3;
 
 // user_search_results
 storage.user_search_results.objects = [student2];

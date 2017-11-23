@@ -14,8 +14,21 @@ from alembic import op
 import sqlalchemy as sa
 
 from sqlalchemy_enum34 import EnumType
+from enum import Enum
 
-from compair.models import SystemRole, CourseRole
+from compair.models import convention
+
+class SystemRole(Enum):
+    student = "Student"
+    instructor = "Instructor"
+    sys_admin = "System Administrator"
+
+class CourseRole(Enum):
+    dropped = "Dropped"
+    instructor = "Instructor"
+    teaching_assistant = "Teaching Assistant"
+    student = "Student"
+
 
 def upgrade():
     op.create_table('lti_consumer',

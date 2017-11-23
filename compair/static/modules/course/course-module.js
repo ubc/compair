@@ -83,6 +83,7 @@ module.controller(
         $scope.canEditCourse = resolvedData.canEditCourse;
         $scope.canCreateAssignment = resolvedData.canCreateAssignment;
         $scope.canManageAssignment = resolvedData.canManageAssignment;
+        $scope.canManageUsers = resolvedData.canManageUsers;
 
         // get course assignments status
         $scope.assignments.forEach(function(assignment) {
