@@ -8,6 +8,7 @@ Feature: Edit Profile
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
     And I should see the system role in the Account Details section
+    And I should see email fields in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should see the Account Login section
     And I should see the 'Edit Password' button
@@ -19,6 +20,7 @@ Feature: Edit Profile
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
     And I should see the system role in the Account Details section
+    And I should see email fields in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should see the Account Login section
     And I should see the 'Edit Password' button
@@ -30,6 +32,7 @@ Feature: Edit Profile
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
     And I should not see the system role in the Account Details section
+    And I should see email fields in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should see the Account Login section
     And I should see the 'Edit Password' button
@@ -63,6 +66,7 @@ Feature: Edit Profile
     Then I should be on the 'edit profile' page
     And I should see the student number in the Account Details section
     And I should not see the system role in the Account Details section
+    And I should not see email fields in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should see the Account Login section
     And I should not see the 'Edit Password' button
@@ -74,7 +78,6 @@ Feature: Edit Profile
     And I fill form item 'user.firstname' in with 'student'
     And I fill form item 'user.lastname' in with '123'
     And I fill form item 'user.student_number' in with '1234567890'
-    And I fill form item 'user.email' in with 'student.123@example.com'
     And I fill form item 'user.username' in with 'student123'
     And I submit form with the first 'Save' button
     Then I should be on the 'profile' page
@@ -87,6 +90,7 @@ Feature: Edit Profile
     Then I should be on the 'edit profile' page
     And I should see the student number in the Account Details section
     And I should not see the system role in the Account Details section
+    And I should see email fields in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should see the Account Login section
     And I should see the 'Edit Password' button
@@ -121,6 +125,7 @@ Feature: Edit Profile
     Then I should be on the 'edit profile' page
     And I should not see the student number in the Account Details section
     And I should not see the system role in the Account Details section
+    And I should see email fields in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should not see the Account Login section
     And I should not see the 'Edit Password' button
@@ -143,6 +148,7 @@ Feature: Edit Profile
     Then I should be on the 'edit profile' page
     And I should see the student number in the Account Details section
     And I should not see the system role in the Account Details section
+    And I should not see email fields in the Account Details section
     And I should see the rest of the Account Details section fields
     And I should not see the Account Login section
     And I should not see the 'Edit Password' button
@@ -154,10 +160,21 @@ Feature: Edit Profile
     And I fill form item 'user.firstname' in with 'student'
     And I fill form item 'user.lastname' in with '123'
     And I fill form item 'user.student_number' in with '1234567890'
-    And I fill form item 'user.email' in with 'student.123@example.com'
     And I submit form with the first 'Save' button
     Then I should be on the 'profile' page
     And I should see 'student123's Profile' in 'h1' on the page
+
+  Scenario: Loading edit another user's profile as CAS admin
+    Given I'm a CAS System Administrator
+    And I'm on 'user' page for user with id '3abcABC123-abcABC123_Z'
+    When I select the 'Edit' button
+    Then I should be on the 'edit profile' page
+    And I should see the student number in the Account Details section
+    And I should see the system role in the Account Details section
+    And I should see email fields in the Account Details section
+    And I should see the rest of the Account Details section fields
+    And I should see the Account Login section
+    And I should not see the 'Edit Password' button
 
   Scenario: Edit another user's profile as CAS admin
     Given I'm a CAS System Administrator

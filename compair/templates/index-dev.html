@@ -167,6 +167,7 @@
                 angular.module('ubc.ctlt.compair.user')
                 .run( ['UserSettings', function(UserSettings) {
                     UserSettings.notifications = {{ 'true' if notifications_enabled else 'false' }};
+                    UserSettings.expose_email_to_instructor = {{ 'true' if expose_email_to_instructor else 'false' }};
                 }]);
             })();
         </script>

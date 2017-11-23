@@ -109,9 +109,6 @@
                         <a href="" ng-click="updateTableOrderBy('student_number')">Student Number</a>
                     </th>
                     <th>
-                        <a href="" ng-click="updateTableOrderBy('email')">Email</a>
-                    </th>
-                    <th>
                         <a href="" ng-click="updateTableOrderBy('course_role')">Course Role</a>
                     </th>
                     <th ng-if="groups.length > 0">
@@ -135,7 +132,6 @@
                     <td>{{user.firstname}}</td>
                     <td>{{user.lastname}}</td>
                     <td>{{user.student_number}}</td>
-                    <td>{{user.email}}</td>
                     <td>
                         <select ng-if="loggedInUserId != user.id || canManageUsers" ng-model="user.course_role"
                                 ng-options="course_role as course_role for course_role in course_roles"

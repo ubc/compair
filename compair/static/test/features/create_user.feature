@@ -17,7 +17,7 @@ Feature: Create Account
     And I fill form item 'user.displayname' in with 'Second Instructor'
     And I fill form item 'user.firstname' in with 'Second'
     And I fill form item 'user.lastname' in with 'Instructor'
-    And I submit form with 'Save' button
+    And I submit form with the 'Save' button
     Then I should be on the 'profile' page
     And I should see 'Second Instructor's Profile' in 'h1' on the page
 
@@ -31,7 +31,7 @@ Feature: Create Account
     And I fill form item 'user.displayname' in with 'Second Student'
     And I fill form item 'user.firstname' in with 'Second'
     And I fill form item 'user.lastname' in with 'Student'
-    And I submit form with 'Save' button
+    And I submit form with the 'Save' button
     Then I should be on the 'profile' page
     And I should see 'Second Student's Profile' in 'h1' on the page
 

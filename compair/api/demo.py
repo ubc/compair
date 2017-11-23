@@ -110,7 +110,7 @@ class DemoListAPI(Resource):
                 self,
                 event_name=on_user_demo_create.name,
                 user=current_user,
-                data=marshal(user, dataformat.get_user(False)))
+                data=marshal(user, dataformat.get_full_user()))
 
         except exc.IntegrityError:
             db.session.rollback()
@@ -119,6 +119,6 @@ class DemoListAPI(Resource):
 
         authenticate(user, login_method="Demo")
 
-        return marshal(user, dataformat.get_user())
+        return marshal(user, dataformat.get_full_user())
 
 api.add_resource(DemoListAPI, '')
