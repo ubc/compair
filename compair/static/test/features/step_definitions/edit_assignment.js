@@ -51,11 +51,10 @@ var editAssignmentStepDefinitionsWrapper = function () {
         return element(by.id("add-default-criteria")).click();
     });
 
-    this.Then("I should see the assignment with the new name and description", function() {
+    this.Then("I should see the assignment with the new name", function() {
         var item = element.all(by.exactRepeater("assignment in assignments")).get(2)
 
-        expect(item.element(by.css(".media-heading")).getText()).to.eventually.equal("New Name »");
-        return expect(item.element(by.css(".assignment-desc p")).getText()).to.eventually.equal("This is the new description");
+        return expect(item.element(by.css(".media-heading")).getText()).to.eventually.equal("New Name »");
     });
 
     this.Then("I should see a warning message in the edit criterion modal", function() {

@@ -2,7 +2,7 @@
 
     <div class="row">
         <header class="col-sm-6">
-            <h1>View Assignment</h1>
+            <h1>Assignment &amp; Results</h1>
             <br class="hidden-xs" ng-if="!canManageAssignment" />
         </header>
         <div class="col-sm-6 sub-nav">
@@ -198,7 +198,7 @@
                 <!-- Instructors should see when assignment becomes active -->
                 <p class="intro-text"
                    ng-if="canManageAssignment && assignment.available">
-                    You can add answers to a list of instructor's "top picks" by clicking the star icon for any answer below. Students will then have the option to view the list when they look at this assignment. (Simply click the star again to remove any answer from the list.)
+                     Answers submitted for this assignment are shown below. Only you and your teaching team will see the name that appears in parentheses. You can also add answers to a list of instructor's "top picks" by clicking the star icon for any answer. Students will then have the option to filter by these when they look at the answers.
                 </p>
 
                 <!-- Students should see before answering during the answer period -->
@@ -230,7 +230,7 @@
                 
                 <!-- Students see when answers exist and visible -->
                 <p class="intro-text" ng-if="!canManageAssignment && see_answers && !answerFilters.author">
-                    Answers for this assignment submitted by you, your classmates, and instructors are available below. Any public feedback left for other student answers can be found underneath the student answer. Private feedback does not appear to the class.
+                    Answers for this assignment submitted by you, your classmates, and instructors are available below. Any public feedback left for other student answers can be found underneath the student answer. Private feedback you receive does not appear to the class.
                 </p>
 
             </div>
@@ -518,7 +518,7 @@
                 </div>
 
                 <!-- Answers -->
-                <h5 class="content">Answer Pair</h5>
+                <h5 class="content">Answer Pair You Saw</h5>
                     <p class="show-answers content"><a href="" ng-click="showAnswers = !showAnswers;">
                         <i ng-show="showAnswers" class="fa fa-chevron-down"></i>
                         <i ng-hide="showAnswers" class="fa fa-chevron-right"></i>
@@ -532,7 +532,7 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                        <h5 class="content">Feedback Given for Odd-Numbered Answer</h5>
+                        <h5 class="content">Feedback You Gave for Odd-Numbered Answer</h5>
                         <!-- feedback for odd-numbered answer -->
                         <div ng-repeat="feedback in comparison.answer1_feedback">
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
@@ -540,7 +540,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <h5 class="content">Feedback Given for Even-Numbered Answer</h5>
+                        <h5 class="content">Feedback You Gave for Even-Numbered Answer</h5>
                         <!-- feedback for even-numbered answer -->
                         <div ng-repeat="feedback in comparison.answer2_feedback">
                             <div class="content" mathjax hljs ng-bind-html="feedback.content"></div>
@@ -548,7 +548,7 @@
                     </div>
                 </div>
 
-                <h5 class="content">Answer Chosen by Criterion</h5>
+                <h5 class="content">Answer You Chose by Criterion</h5>
                 <div ng-repeat="comparison_criterion in comparison.comparison_criteria">
                     <div class="content">
                         <p>Criterion: "{{ comparison_criterion.criterion.name }}"<br />

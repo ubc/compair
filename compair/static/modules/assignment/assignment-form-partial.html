@@ -196,8 +196,8 @@
 
         <label class="required-star">Answer Pair Selection</label>
         <p ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive && assignment.rank_display_limit == null">You are currently using the default:</p>
-        <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive">Adaptive&mdash;Add answer scores/rank, pair answers by scores, <span ng-if="assignment.rank_display_limit == null">students do not see rank</span><span ng-if="assignment.rank_display_limit == 10">students see answers ranked 10<sup>th</sup> and higher</span><span ng-if="assignment.rank_display_limit == 20">students see answers ranked 20<sup>th</sup> and higher</span></blockquote>
-        <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.random">Random&mdash;No answer scores/rank, pair answers randomly</blockquote>
+        <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive">Adaptive&mdash;Add score/rank to answers, pair answers by scores, <span ng-if="assignment.rank_display_limit == null">hide ranking from students</span><span ng-if="assignment.rank_display_limit == 10">let students see answers ranked 10<sup>th</sup> and higher</span><span ng-if="assignment.rank_display_limit == 20">let students see answers ranked 20<sup>th</sup> and higher</span></blockquote>
+        <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.random">Random&mdash;Don't add score/rank to answers, pair answers randomly</blockquote>
         <a href="" ng-click="showAdvanced = !showAdvanced">
             <p>
                 <i class="fa fa-chevron-down" ng-show="showAdvanced"></i>
@@ -213,11 +213,11 @@
                     <label class="form-check-label">
                         <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
                                value="{{PairingAlgorithm.adaptive}}" ng-disabled="assignment.compared">
-                        &nbsp;Adaptively select answers for comparison (add scores/rank):
+                        &nbsp;Adaptively select answers for comparison (add score/rank):
                     </label>
                     <ul>
-                        <li>Answers receive <a href="http://ubc.github.io/compair/site/best-practices.html#scores" target="_blank">dynamic scores</a> (only instructors see)</li>
-                        <li>Answers paired for comparison based on similarity in scores</li>
+                        <li>Answers receive a <a href="http://ubc.github.io/compair/site/best-practices.html#scores" target="_blank">dynamic score</a> (only instructors see)</li>
+                        <li>Answers are paired for comparison based on similarity in scores</li>
                         <li>Adaptive pairing allows for meaningful scores after a manageable number of comparisons per student</li>
                         <li>Later students <em>may</em> experience increased level of difficulty</li>
                     </ul>
@@ -234,11 +234,11 @@
                     <label class="form-check-label">
                         <input class="form-check-input" type="radio" ng-model="assignment.pairing_algorithm"
                                value="{{PairingAlgorithm.random}}" ng-disabled="assignment.compared">
-                        &nbsp;Randomly select answers for comparison (no scores/rank):
+                        &nbsp;Randomly select answers for comparison (no score/rank):
                     </label>
                     <ul>
-                        <li>Answers paired for comparison based on chance alone</li>
-                        <li>Answers receive no scores due to random pairing</li>
+                        <li>Answers are paired for comparison based on chance alone</li>
+                        <li>Answers receive no score due to random pairing</li>
                         <li>Random pairing makes any scoring meaningless without excessive comparisons per student</li>
                         <li>All students <em>theoretically</em> experience similar level of difficulty</li>
                     </ul>
@@ -251,7 +251,7 @@
         <div class="form-group">
             <compair-field-with-feedback form-control="assignmentForm.number_of_comparisons">
                 <label class="required-star">Comparisons Required from Each Student</label>
-                <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" required>
+                <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" required placeholder="number of comparisons required from each student">
             </compair-field-with-feedback>
         </div>
 
@@ -299,7 +299,7 @@
         <br />
 
         <input id="enable_self_evaluation" type="checkbox" name="enable_self_evaluation" ng-model="assignment.enable_self_evaluation">
-        <label class="not-bold" for="enable_self_evaluation">Require that students also self-evaluate and leave feedback on their own answer (after peer comparisons)</label>
+        <label class="not-bold" for="enable_self_evaluation">Require that students also self-evaluate by leaving feedback on their own answer (after peer comparisons)</label>
 
         <br />
 

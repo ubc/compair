@@ -22,7 +22,7 @@ Feature: Edit Assignment
     And I add my default criterion
     And I submit form with 'Save' button
     Then I should be on the 'course' page
-    And I should see the assignment with the new name and description
+    And I should see the assignment with the new name
 
   Scenario: Editing a assignment's criterion as instructor before comparisons
     Given I'm an Instructor

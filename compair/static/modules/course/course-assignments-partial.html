@@ -1,10 +1,10 @@
 <div class="course-screen">
 
     <div class="row">
-        <header class="col-sm-6">
-            <h1><i class="fa fa-book"></i> {{course.name}} <br />({{course.year}} {{course.term}})</h1>
+        <header ng-class="{'col-sm-6': canManageAssignment, 'col-sm-12': !canManageAssignment}">
+            <h1><i class="fa fa-book"></i> {{course.name}} ({{course.year}} {{course.term}})</h1>
         </header>
-        <div class="col-sm-6 sub-nav">
+        <div ng-if="canManageAssignment" class="col-sm-6 sub-nav">
             <span ng-if="canCreateAssignment">
                 <a ng-href="#/course/{{course.id}}/assignment/create"
                     class="btn btn-primary" id="add-assignment-btn">
@@ -27,9 +27,12 @@
         </div>
     </div>
     
-    <div class="row" ng-if="!canManageAssignment">
-        <div class="col-md-12">
+    <div class="row">
+        <div class="col-md-12" ng-if="!canManageAssignment">
             <p class="intro-text">For each assignment below, you will first submit your own answer. Then you will compare pairs of anonymous peer answers. Try to make your answer as strong as possible, since your peers will also read and compare it anonymously with other answers.</p>
+        </div>
+        <div class="col-md-12" ng-if="canManageAssignment">
+            <p class="intro-text">For each assignment below, students will first submit their own answer. Then they will compare pairs of anonymous peer answers. Finally, they will read feedback received from peers. The anonymity of this feedback depends on what you instruct students to use as a display name in their profile, but you and your teaching team will always see who wrote what.</p>
         </div>
     </div>
 
@@ -192,9 +195,16 @@
 
             <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
             <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Pairs" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
+               ng-disabled="!assignment.status.comparisons.available"
                ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
                 <span ng-if="!assignment.status.comparisons.has_draft">Compare Pairs</span>
                 <span ng-if="assignment.status.comparisons.has_draft">Finish Comparison</span>
+            </a>
+            
+            <!-- BUTTON when user is not an admin AND answers are available -->
+            <a class="btn btn-success" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/" title="View Results"
+               ng-show="!canManageAssignment && assignment.see_answers">
+                See Results
             </a>
 
             <!-- ADDITIONAL TEXT when user has not answered AND user is not an admin AND answer period is active -->
@@ -206,7 +216,7 @@
             <!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND (user is not an admin OR admins can compare) AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active) -->
             <p class="below-button-text"
                 ng-show="!assignment.status.comparisons.available && (!canManageAssignment || assignment.educators_can_compare) && assignment.compare_period && assignment.comparisons_left && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
-                Not enough answers to compare right now<br />(Refresh the page to check again)
+                Not enough answers to compare<br />(Refresh the page to check again)
             </p>
 
             <!-- ADDITIONAL TEXT when answer pairs are available for comparison AND user is not an admin AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active) AND the comparison period has an end date set -->
