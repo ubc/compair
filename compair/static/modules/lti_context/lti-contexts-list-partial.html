@@ -1,0 +1,65 @@
+<div class="lti-contexts-screen">
+    <div class="row">
+
+        <h2 class="col-md-6">LTI links</h2>
+
+        <form class="col-md-6 search-contexts text-right" role="search">
+            <input class="form-control" type="text" name="search" placeholder="Filter linked courses by keyword"
+                ng-model="contextFilters.search">
+        </form>
+    </div>
+
+    <div class="table-responsive" ng-if="contexts.length">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Actions</th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('oauth_consumer_key')">Consumer Key</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('context_id')">ID</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('context_title')">Title</a>
+                    </th>
+                    <th>
+                        <a href="" ng-click="updateTableOrderBy('course.name')">ComPAIR Course Name</a>
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="context in contexts">
+                    <td class="nowrap">
+                        <a title="Unlink this context" href="" confirmation-needed="unlinkContext(context)" keyword="LTI link">
+                            <i class="glyphicon glyphicon-remove"></i>
+                        </a>
+                    </td>
+                    <td>
+                        {{context.oauth_consumer_key}}
+                    </td>
+                    <td>
+                        {{context.context_id}}
+                    </td>
+                    <td>
+                        {{context.context_title}}
+                    </td>
+                    <td>
+                        {{context.compair_course_name}}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center" ng-if="contexts.length">
+        <ul uib-pagination total-items="totalNumContexts" ng-model="contextFilters.page"
+            max-size="10" class="pagination-sm" boundary-links="true"
+            direction-links="false" items-per-page="contextFilters.perPage"
+            num-pages="numPages" ng-hide="numPages == 1"></ul>
+    </div>
+    <div ng-if="!contexts.length">
+        <hr />
+        <p>No course links found.
+    </div>
+</div>

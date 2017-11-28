@@ -48,6 +48,7 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     user_uuid = association_proxy('user', 'uuid')
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
+    user_fullname_sortable = association_proxy('user', 'fullname_sortable')
     user_system_role = association_proxy('user', 'system_role')
 
     @hybrid_property

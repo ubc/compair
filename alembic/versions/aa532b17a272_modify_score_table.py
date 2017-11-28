@@ -14,8 +14,14 @@ from alembic import op
 import sqlalchemy as sa
 from datetime import datetime
 from sqlalchemy_enum34 import EnumType
+from enum import Enum
 
-from compair.models import convention, ScoringAlgorithm
+from compair.models import convention
+
+class ScoringAlgorithm(Enum):
+    comparative_judgement = "comparative_judgement"
+    elo = "elo_rating"
+    true_skill = "true_skill_rating"
 
 def upgrade():
     # Rename score table to answer_criterion_score

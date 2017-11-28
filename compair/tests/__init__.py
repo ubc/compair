@@ -16,6 +16,8 @@ test_app_settings = {
     'XAPI_APP_BASE_URL': 'https://localhost:8888/',
     'LRS_STATEMENT_ENDPOINT': 'local',
     'DEMO_INSTALLATION': False,
+    'EXPOSE_EMAIL_TO_INSTRUCTOR': False,
+    'EXPOSE_CAS_USERNAME_TO_INSTRUCTOR': False,
     'MAIL_NOTIFICATION_ENABLED': True,
     'MAIL_DEFAULT_SENDER': 'compair@example.com'
 }

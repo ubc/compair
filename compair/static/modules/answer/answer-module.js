@@ -28,17 +28,17 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
     var listCacheKeys = [];
     var cache = $cacheFactory.get('$http');
 
-        function invalidListCache(url) {
-            // remove list caches. As list query may contain pagination and query parameters
-            // we have to invalidate all.
-            _.remove(listCacheKeys, function(key) {
-                if (url == undefined || _.startsWith(key, url)) {
-                    cache.remove(key);
-                    return true;
-                }
-                return false;
-            });
-        }
+    function invalidListCache(url) {
+        // remove list caches. As list query may contain pagination and query parameters
+        // we have to invalidate all.
+        _.remove(listCacheKeys, function(key) {
+            if (url == undefined || _.startsWith(key, url)) {
+                cache.remove(key);
+                return true;
+            }
+            return false;
+        });
+    }
 
     var cacheInterceptor = {
         response: function(response) {
@@ -130,6 +130,7 @@ module.controller(
                 $scope.answer, $scope.tracking.getRegistration(), duration
             );
         });
+        $scope.showAssignment = true;
 
         if ($scope.method == "create") {
             $scope.answer = {
@@ -338,7 +339,7 @@ module.controller(
             AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
                 function (ret) {
                     $scope.answer = ret;
-                    Toaster.success("Answer Submitted");
+                    Toaster.success("Answer Saved");
                     $uibModalInstance.close($scope.answer);
                 }
             ).finally(function() {

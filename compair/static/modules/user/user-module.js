@@ -37,7 +37,8 @@ module.factory('UserResource', ['$resource', function($resource) {
 }]);
 
 module.constant('UserSettings', {
-    notifications: false
+    notifications: false,
+    expose_email_to_instructor: false
 });
 
 module.constant('SystemRole', {
@@ -64,8 +65,8 @@ module.controller("UserWriteController",
     ['$scope', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session',
      'AuthTypesEnabled', 'UserResource', 'SystemRole', 'Toaster', 'resolvedData',
      'UserSettings', 'EmailNotificationMethod', "$uibModal",
-    function($scope, $route, $routeParams, $location, breadcrumbs, Session, 
-             AuthTypesEnabled, UserResource, SystemRole, Toaster, resolvedData, 
+    function($scope, $route, $routeParams, $location, breadcrumbs, Session,
+             AuthTypesEnabled, UserResource, SystemRole, Toaster, resolvedData,
              UserSettings, EmailNotificationMethod, $uibModal)
     {
         $scope.userId = $routeParams.userId;
@@ -139,7 +140,7 @@ module.controller(
         $scope.modalInstance = $uibModalInstance;
         $scope.submitted = false;
         $scope.password = {};
-        
+
         $scope.changePassword = function() {
             $scope.submitted = true;
             UserResource.password({'id': $scope.user.id}, $scope.password, function (ret) {
@@ -194,7 +195,7 @@ module.controller("UserListController",
         $scope.loggedInUserId = resolvedData.loggedInUser.id;
         $scope.canManageUsers = resolvedData.canManageUsers;
 
-        $scope.predicate = 'firstname';
+        $scope.predicate = 'lastname';
         $scope.reverse = false;
         $scope.users = [];
         $scope.totalNumUsers = 0;
@@ -272,7 +273,8 @@ module.controller("UserCourseController",
             perPage: 20,
             search: null,
             orderBy: null,
-            reverse: null
+            reverse: null,
+            includeSandbox: null
         };
 
         breadcrumbs.options = {'Manage User Courses': "Manage {0}'s Courses".format($scope.user.displayname)};

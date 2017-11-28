@@ -13,8 +13,14 @@ down_revision = '36c9fd392e33'
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy_enum34 import EnumType
+from enum import Enum
 
-from compair.models import convention, ScoringAlgorithm
+from compair.models import convention
+
+class ScoringAlgorithm(Enum):
+    comparative_judgement = "comparative_judgement"
+    elo = "elo_rating"
+    true_skill = "true_skill_rating"
 
 def upgrade():
     op.add_column('score', sa.Column('scoring_algorithm', EnumType(ScoringAlgorithm, name='scoring_algorithm'), nullable=True))

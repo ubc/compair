@@ -38,7 +38,7 @@
       }
       
       &.label {
-        font-size: 100%;
+        font-size: 1.1em;
         border-right: none;
       
         &+li {
@@ -54,6 +54,11 @@
   /* class for ul creating tab navigation */
   .nav-tabs {
     border-color: @border-gray;
+  }
+  
+  /* tabs at bigger screen size are bigger text */
+  .nav > li > a {
+    font-size: 1.15em;
   }
 
     /* tab color to match alternating answer/comment color */
@@ -113,7 +118,6 @@
     .each-comment {
 
       padding: 1em 1em 2em 1em;
-      color: @breadcrumb-gray;
       border-bottom: 1px solid @border-gray;
 
       /* limit how much of answer/comment content is shown */
@@ -210,7 +214,7 @@
         padding-bottom: .3em;
         color: #888;
         font-size: 1em;
-        border-bottom: 2px solid @border-gray;
+        border-bottom: 2px dotted @border-gray;
       }
 
     }//closes each-evaluation

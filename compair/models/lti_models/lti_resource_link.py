@@ -35,13 +35,17 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
     def is_linked_to_assignment(self):
         return self.compair_assignment_id != None
 
-    def _update_link_to_compair_assignment(self):
+    def _update_link_to_compair_assignment(self, lti_context):
         from compair.models import Assignment
 
-        if self.custom_param_assignment_id:
+        if self.custom_param_assignment_id and lti_context and lti_context.compair_course_id:
             # check if assignment exists
             assignment = Assignment.query \
-                .filter_by(uuid=self.custom_param_assignment_id) \
+                .filter_by(
+                    uuid=self.custom_param_assignment_id,
+                    course_id=lti_context.compair_course_id,
+                    active=True
+                ) \
                 .one_or_none()
 
             if assignment:
@@ -71,15 +75,12 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
                 resource_link_id=tool_provider.resource_link_id
             )
             db.session.add(lti_resource_link)
-        original_custom_param_assignment_id = lti_resource_link.custom_param_assignment_id
 
         lti_resource_link.lti_context_id = lti_context.id if lti_context else None
         lti_resource_link.resource_link_title = tool_provider.resource_link_title
         lti_resource_link.launch_presentation_return_url = tool_provider.launch_presentation_return_url
         lti_resource_link.custom_param_assignment_id = tool_provider.custom_assignment
-
-        if original_custom_param_assignment_id != tool_provider.custom_assignment:
-            lti_resource_link._update_link_to_compair_assignment()
+        lti_resource_link._update_link_to_compair_assignment(lti_context)
 
         db.session.commit()
 

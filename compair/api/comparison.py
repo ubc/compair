@@ -1,6 +1,7 @@
 from __future__ import division
 import operator
 import random
+import datetime
 
 from bouncer.constants import READ, CREATE, EDIT, MANAGE
 from flask import Blueprint, current_app
@@ -217,6 +218,9 @@ class CompareRootAPI(Resource):
                 comparison.winner = WinningAnswer.answer2
             else:
                 comparison.winner = WinningAnswer.draw
+        else:
+            # ensure that the comparison is 'touched' when saving a draft
+            comparison.modified = datetime.datetime.utcnow()
 
         db.session.commit()
 

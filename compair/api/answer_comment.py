@@ -75,6 +75,7 @@ class AnswerCommentListAPI(Resource):
                 'user_id': 1,
                 'user_displayname': 'John',
                 'user_fullname': 'John Smith',
+                'fullname_sortable': 'Smith, John',
                 'user_avatar': '12k3jjh24k32jhjksaf',
                 'comment_type': 'self_evaluation',
                 'course_id': 1,

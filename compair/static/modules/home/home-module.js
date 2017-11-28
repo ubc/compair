@@ -32,10 +32,12 @@ module.controller(
         $scope.courseFilters = {
             page: 1,
             perPage: 10,
-            search: null
+            search: null,
+            includeSandbox: null
         };
         $scope.canAddCourse = resolvedData.canAddCourse;
         $scope.loggedInUserId = resolvedData.loggedInUser.id;
+        $scope.canManageUsers = resolvedData.canManageUsers;
 
         $scope.updateCourseList = function() {
             UserResource.getUserCourses($scope.courseFilters).$promise.then(
@@ -53,6 +55,10 @@ module.controller(
                         Authorize.can(Authorize.DELETE, CourseResource.MODEL, course.id).then(function(result) {
                             course.canDeleteCourse = result;
                         });
+
+                        if (course.lti_linked) {
+                            course.delete_warning = "This will also unlink all LTI links from this course.";
+                        }
                     });
 
                     var courseIds = $scope.courses.map(function(course) {
@@ -79,31 +85,6 @@ module.controller(
                     $scope.updateCourseList();
                 }
             );
-        };
-
-        $scope.duplicateCourse = function(course) {
-            var modalScope = $scope.$new();
-            modalScope.originalCourse = course;
-
-            $scope.modalInstance = $uibModal.open({
-                animation: true,
-                backdrop: 'static',
-                controller: "CourseDuplicateModalController",
-                templateUrl: 'modules/course/course-duplicate-partial.html',
-                scope: modalScope
-            });
-
-            $scope.modalInstance.opened.then(function() {
-                xAPIStatementHelper.opened_modal("Duplicate Course");
-            });
-
-            $scope.modalInstance.result.then(function (courseId) {
-                $location.path('/course/' + courseId);
-                xAPIStatementHelper.closed_modal("Duplicate Course");
-            }, function () {
-                //cancelled, do nothing
-                xAPIStatementHelper.closed_modal("Duplicate Course");
-            });
         };
 
         var filterWatcher = function(newValue, oldValue) {

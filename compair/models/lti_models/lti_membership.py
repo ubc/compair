@@ -89,12 +89,14 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         for member in members:
             user_ids.append(member['user_id'])
 
-        existing_lti_users = LTIUser.query \
-            .filter(and_(
-                LTIUser.lti_consumer_id == lti_context.lti_consumer_id,
-                LTIUser.user_id.in_(user_ids)
-            )) \
-            .all()
+        existing_lti_users = []
+        if len(user_ids) > 0:
+            existing_lti_users = LTIUser.query \
+                .filter(and_(
+                    LTIUser.lti_consumer_id == lti_context.lti_consumer_id,
+                    LTIUser.user_id.in_(user_ids)
+                )) \
+                .all()
 
         # get existing lti_user_resource_link if there there exists lti users and known resource links for context
         existing_lti_user_resource_links = []

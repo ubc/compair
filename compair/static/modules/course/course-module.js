@@ -83,6 +83,14 @@ module.controller(
         $scope.canEditCourse = resolvedData.canEditCourse;
         $scope.canCreateAssignment = resolvedData.canCreateAssignment;
         $scope.canManageAssignment = resolvedData.canManageAssignment;
+        $scope.canManageUsers = resolvedData.canManageUsers;
+
+        // get course assignments status
+        $scope.assignments.forEach(function(assignment) {
+            if (assignment.lti_linked) {
+                assignment.delete_warning = "This will also unlink all LTI direct links to this assignment.";
+            }
+        });
 
         CourseResource.getCurrentUserStatus({'id': $scope.courseId}).$promise.then(
             function(ret) {
@@ -233,11 +241,10 @@ module.controller(
                 $scope.submitted = false;
             });
         };
-
+        
         $scope.closeDuplicate = function(courseId) {
             $scope.selectCourse(courseId);
         };
-
         $scope.dismissDuplicate = function() {
             $scope.showDuplicateForm = false;
         };
@@ -263,22 +270,22 @@ module.controller(
 
 
 module.controller(
-    'CourseDuplicateModalController',
-    ["$rootScope", "$scope", "AssignmentResource", "moment",
+    'CourseDuplicateController',
+    ["$rootScope", "$scope", "AssignmentResource", "moment", '$routeParams', '$location',
      "Session", "CourseResource", "Toaster", "UserResource",
-    function ($rootScope, $scope, AssignmentResource, moment,
+    function ($rootScope, $scope, AssignmentResource, moment, $routeParams, $location, 
               Session, CourseResource, Toaster, UserResource) {
 
         $scope.showAssignments = false;
         $scope.submitted = false;
         $scope.format = 'dd-MMMM-yyyy';
-        $scope.originalCourse = typeof($scope.originalCourse) != 'undefined' ? $scope.originalCourse : {};
 
         $scope.setupDuplicateCourse = function() {
             $scope.duplicateCourse = {
                 name: $scope.originalCourse.name,
                 year: new Date().getFullYear(),
                 term: $scope.originalCourse.term,
+                sandbox: $scope.originalCourse.sandbox,
                 date: {
                     course_start: {date: null, time: new Date().setHours(0, 0, 0, 0)},
                     course_end: {date: null, time: new Date().setHours(23, 59, 0, 0)}
@@ -306,6 +313,10 @@ module.controller(
                 }
             );
         };
+
+        $scope.canGoBack = function(theFormToCheck) {
+            return (theFormToCheck.$pristine || confirm('Are you sure you want to leave this page? Any dates you\'ve manually changed for assignments here will be lost.'));
+        }
 
         $scope.adjustDuplicateAssignmentDates = function() {
             // startPoint is original course start_date if set
@@ -367,14 +378,6 @@ module.controller(
             $event.stopPropagation();
 
             object.opened = true;
-        };
-
-        $scope.cancelDuplicateCourse = function() {
-            if ($scope.dismissDuplicate) {
-                $scope.dismissDuplicate();
-            } else {
-                $scope.$dismiss();
-            }
         };
 
         $scope.datePickerMinDate = function() {
@@ -463,11 +466,14 @@ module.controller(
                 Session.expirePermissions();
 
                 var course = ret;
+                submitted = false;
                 if ($scope.closeDuplicate) {
                     $scope.closeDuplicate(course.id);
-                } else {
-                    $scope.$close(course.id);
                 }
+                else {
+                    $location.path('/course/' + ret.id);
+                }
+
             }).$promise.finally(function() {
                 $scope.submitted = false;
             });
@@ -477,8 +483,20 @@ module.controller(
             if (angular.equals(newValue, oldValue)) return;
             $scope.setupDuplicateCourse();
         };
-        $scope.$watchCollection('originalCourse', originalCourseWatcher);
-        $scope.setupDuplicateCourse();
+
+        if (typeof($scope.originalCourse) == 'undefined') {
+            CourseResource.get({'id': $routeParams.courseId}).$promise.then(
+                function(ret) {
+                    $scope.originalCourse = ret;
+                    $scope.$watchCollection('originalCourse', originalCourseWatcher);
+                    $scope.setupDuplicateCourse();
+                }
+            );
+        }
+        else {
+            $scope.$watchCollection('originalCourse', originalCourseWatcher);
+            $scope.setupDuplicateCourse();
+        }
     }
 ]);
 

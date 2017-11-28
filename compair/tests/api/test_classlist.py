@@ -26,29 +26,44 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assert403(rv)
 
         expected = [
-            (self.data.get_authorized_instructor(), '', ''),
-            (self.data.get_authorized_ta(), '', ''),
-            (self.data.get_authorized_student(), '', '')]
-        expected.sort(key=lambda x: x[0].firstname)
+            (self.data.get_authorized_instructor(), ''),
+            (self.data.get_authorized_ta(), ''),
+            (self.data.get_authorized_student(), '')]
+        expected.sort(key=lambda x: x[0].lastname)
 
         with self.login(self.data.get_authorized_instructor().username):
             # test authorized user
             rv = self.client.get(self.url)
             self.assert200(rv)
             self.assertEqual(len(expected), len(rv.json['objects']))
-            for key, (user, cas_username, group_name) in enumerate(expected):
+            for key, (user, group_name) in enumerate(expected):
                 self.assertEqual(user.uuid, rv.json['objects'][key]['id'])
 
-            # test export csv
+            # test export csv without email
+            self.app.config['EXPOSE_EMAIL_TO_INSTRUCTOR'] = False
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
             reader = csv.reader(rv.data.splitlines(), delimiter=',')
 
-            self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
-            for user, cas_username, group_name in expected:
+            self.assertEqual(['username', 'student_number', 'firstname', 'lastname', 'displayname', 'group_name'], next(reader))
+            for user, group_name in expected:
                 self.assertEqual(
-                    [user.username, cas_username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
+                    [user.username, user.student_number or '', user.firstname, user.lastname, user.displayname, group_name],
+                    next(reader)
+                )
+
+            # test export csv with email
+            self.app.config['EXPOSE_EMAIL_TO_INSTRUCTOR'] = True
+            rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
+            self.assert200(rv)
+            self.assertEqual('text/csv', rv.content_type)
+            reader = csv.reader(rv.data.splitlines(), delimiter=',')
+
+            self.assertEqual(['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
+            for user, group_name in expected:
+                self.assertEqual(
+                    [user.username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
                     next(reader)
                 )
 
@@ -63,24 +78,25 @@ class ClassListAPITest(ComPAIRAPITestCase):
             db.session.commit()
 
             expected = [
-                (self.data.get_authorized_instructor(), '', "instructor_group"),
-                (self.data.get_authorized_ta(), '', "ta_group"),
-                (self.data.get_authorized_student(), '', "student_group")]
-            expected.sort(key=lambda x: x[0].firstname)
+                (self.data.get_authorized_instructor(), "instructor_group"),
+                (self.data.get_authorized_ta(), "ta_group"),
+                (self.data.get_authorized_student(), "student_group")]
+            expected.sort(key=lambda x: x[0].lastname)
 
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
             reader = csv.reader(rv.data.splitlines(), delimiter=',')
 
-            self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
-            for user, cas_username, group_name in expected:
+            self.assertEqual(['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
+            for user, group_name in expected:
                 self.assertEqual(
-                    [user.username, cas_username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
+                    [user.username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
                     next(reader)
                 )
 
             # test export csv with cas usernames
+            self.app.config['EXPOSE_CAS_USERNAME_TO_INSTRUCTOR'] = True
             third_party_student = ThirdPartyUserFactory(user=self.data.get_authorized_student())
             third_party_instructor = ThirdPartyUserFactory(user=self.data.get_authorized_instructor())
             third_party_ta = ThirdPartyUserFactory(user=self.data.get_authorized_ta())
@@ -90,7 +106,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 (self.data.get_authorized_instructor(), third_party_instructor.unique_identifier, "instructor_group"),
                 (self.data.get_authorized_ta(), third_party_ta.unique_identifier, "ta_group"),
                 (self.data.get_authorized_student(), third_party_student.unique_identifier, "student_group")]
-            expected.sort(key=lambda x: x[0].firstname)
+            expected.sort(key=lambda x: x[0].lastname)
 
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
@@ -122,13 +138,14 @@ class ClassListAPITest(ComPAIRAPITestCase):
                     next(reader)
                 )
 
-
         with self.login(self.data.get_authorized_ta().username):
             rv = self.client.get(self.url)
             self.assert200(rv)
             self.assertEqual(len(expected), len(rv.json['objects']))
             for key, (user, cas_username, group_name) in enumerate(expected):
                 self.assertEqual(user.uuid, rv.json['objects'][key]['id'])
+
+        self.app.config['EXPOSE_CAS_USERNAME_TO_INSTRUCTOR'] = False
 
     def test_get_instructor_labels(self):
         url = self.url + "/instructors/labels"
@@ -190,7 +207,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().uuid,
-                'name': self.data.get_authorized_student().fullname
+                'name': self.data.get_authorized_student().fullname_sortable
             }
             self.assertEqual(students[0]['id'], expected['id'])
             self.assertEqual(students[0]['name'], expected['name'])
@@ -201,7 +218,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().uuid,
-                'name': self.data.get_authorized_student().fullname
+                'name': self.data.get_authorized_student().fullname_sortable
             }
             self.assertEqual(students[0]['id'], expected['id'])
             self.assertEqual(students[0]['name'], expected['name'])
@@ -258,6 +275,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             expected = {
                 'user_id': self.data.get_dropped_instructor().uuid,
                 'fullname': self.data.get_dropped_instructor().fullname,
+                'fullname_sortable': self.data.get_dropped_instructor().fullname_sortable,
                 'course_role': CourseRole.instructor.value
             }
             rv = self.client.post(
@@ -272,6 +290,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             expected = {
                 'user_id': self.data.get_unauthorized_instructor().uuid,
                 'fullname': self.data.get_unauthorized_instructor().fullname,
+                'fullname_sortable': self.data.get_unauthorized_instructor().fullname_sortable,
                 'course_role': CourseRole.instructor.value
             }
             rv = self.client.post(
@@ -286,6 +305,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             expected = {
                 'user_id': self.data.get_unauthorized_instructor().uuid,
                 'fullname': self.data.get_unauthorized_instructor().fullname,
+                'fullname_sortable': self.data.get_unauthorized_instructor().fullname_sortable,
                 'course_role': CourseRole.teaching_assistant.value
             }
             rv = self.client.post(
@@ -327,6 +347,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             expected = {
                 'user_id': self.data.get_authorized_instructor().uuid,
                 'fullname': self.data.get_authorized_instructor().fullname,
+                'fullname_sortable': self.data.get_authorized_instructor().fullname_sortable,
                 'course_role': CourseRole.dropped.value
             }
             rv = self.client.delete(url)

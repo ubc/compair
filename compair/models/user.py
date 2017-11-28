@@ -110,6 +110,17 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
             return None
 
     @hybrid_property
+    def fullname_sortable(self):
+        if self.firstname and self.lastname:
+            return '%s, %s' % (self.lastname, self.firstname)
+        elif self.firstname:  # only first name provided
+            return self.firstname
+        elif self.lastname:  # only last name provided
+            return self.lastname
+        else:
+            return None
+
+    @hybrid_property
     def avatar(self):
         """
         According to gravatar's hash specs

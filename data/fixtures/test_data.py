@@ -6,7 +6,7 @@ import factory.fuzzy
 
 from compair import db
 from six.moves import range
-from compair.models import SystemRole, CourseRole, Criterion, Course, \
+from compair.models import SystemRole, CourseRole, Course, \
     Comparison, ThirdPartyType, AnswerCommentType, WinningAnswer
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, ComparisonCriterionFactory, \
@@ -18,7 +18,8 @@ from data.fixtures import DefaultFixture
 
 class BasicTestData:
     def __init__(self):
-        self.default_criterion = Criterion.query.get(1)
+        self.users = [DefaultFixture.ROOT_USER]
+        self.default_criterion = DefaultFixture.DEFAULT_CRITERION
         self.main_course = self.create_course()
         self.secondary_course = self.create_course()
         self.authorized_instructor = self.create_instructor()
@@ -62,6 +63,7 @@ class BasicTestData:
             student_number = factory.fuzzy.FuzzyText(length=4)
         user = UserFactory(system_role=type, student_number=student_number)
         db.session.commit()
+        self.users.append(user)
         return user
 
     def enrol_student(self, user, course):
@@ -147,12 +149,6 @@ class LTITestData:
 
     def get_consumer(self):
         return self.lti_consumer
-
-    def get_context(self):
-        return self.lti_context
-
-    def get_resource_link(self):
-        return self.lti_resource_link
 
     def generate_resource_link_id(self):
         lti_resource_link = LTIResourceLinkFactory.stub()
@@ -521,7 +517,7 @@ class ComparisonTestData(CriterionTestData):
 
 class TestFixture:
     def __init__(self):
-        self.default_criterion = Criterion.query.get(1)
+        self.default_criterion = DefaultFixture.DEFAULT_CRITERION
         self.course = self.assignment = None
         self.instructor = self.ta = None
         self.students = []

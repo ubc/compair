@@ -22,6 +22,7 @@ new_course_parser = reqparse.RequestParser()
 new_course_parser.add_argument('name', required=True, help='Course name is required.')
 new_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
 new_course_parser.add_argument('term', required=True, help='Course term/semester is required.')
+new_course_parser.add_argument('sandbox', type=bool, default=False)
 new_course_parser.add_argument('start_date', default=None)
 new_course_parser.add_argument('end_date', default=None)
 
@@ -33,6 +34,7 @@ duplicate_course_parser = reqparse.RequestParser()
 duplicate_course_parser.add_argument('name', required=True, help='Course name is required.')
 duplicate_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
 duplicate_course_parser.add_argument('term', required=True, help='Course term/semester is required.')
+duplicate_course_parser.add_argument('sandbox', type=bool, default=False)
 duplicate_course_parser.add_argument('start_date', default=None)
 duplicate_course_parser.add_argument('end_date', default=None)
 # has to add location parameter, otherwise MultiDict will screw up the list
@@ -62,6 +64,7 @@ class CourseListAPI(Resource):
             name=params.get("name"),
             year=params.get("year"),
             term=params.get("term"),
+            sandbox=params.get("sandbox"),
             start_date=params.get('start_date', None),
             end_date=params.get('end_date', None)
         )
@@ -148,6 +151,7 @@ class CourseAPI(Resource):
         course.name = params.get("name", course.name)
         course.year = params.get("year", course.year)
         course.term = params.get("term", course.term)
+        course.sandbox = params.get("sandbox", course.sandbox)
 
         course.start_date = params.get("start_date", None)
         if course.start_date is not None:
@@ -188,6 +192,7 @@ class CourseAPI(Resource):
                 abort(400, title="Course Not Deleted", message="Sorry, you cannot remove the default demo course.")
 
         course.active = False
+        course.clear_lti_links()
         db.session.commit()
 
         on_course_delete.send(
@@ -261,6 +266,7 @@ class CourseDuplicateAPI(Resource):
             name=params.get("name"),
             year=params.get("year"),
             term=params.get("term"),
+            sandbox=params.get("sandbox"),
             start_date=start_date,
             end_date=end_date
         )

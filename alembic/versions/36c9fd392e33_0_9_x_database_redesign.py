@@ -15,7 +15,25 @@ import sqlalchemy as sa
 from datetime import datetime
 from sqlalchemy_enum34 import EnumType
 from sqlalchemy import exc
-from compair.models import convention, SystemRole, CourseRole, AnswerCommentType
+from compair.models import convention
+from enum import Enum
+
+class SystemRole(Enum):
+    student = "Student"
+    instructor = "Instructor"
+    sys_admin = "System Administrator"
+
+class CourseRole(Enum):
+    dropped = "Dropped"
+    instructor = "Instructor"
+    teaching_assistant = "Teaching Assistant"
+    student = "Student"
+
+class AnswerCommentType(Enum):
+    public = "Public"
+    private = "Private"
+    evaluation = "Evaluation"
+    self_evaluation = "Self Evaluation"
 
 def upgrade():
     def translate_system_role(usertypesforsystem_id):
@@ -739,7 +757,7 @@ def upgrade():
                 modified=datetime.utcnow(), created=datetime.utcnow()
             )
         )
-    # STEP 3: Handle activilty log
+    # STEP 3: Handle activity log
     try:
         # expected foreign key to follow naming convensions
         with op.batch_alter_table('Activities', naming_convention=convention) as batch_op:

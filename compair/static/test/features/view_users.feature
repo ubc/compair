@@ -4,7 +4,7 @@ Feature: Manage Users
   Scenario: Loading view users page by Manage Users button as admin
     Given I'm a System Administrator
     And I'm on 'home' page
-    When I select 'Manage Users' button
+    When I select the 'Manage Users' button
     Then I should be on the 'users' page
     And I should see '4' users listed
     And I should users with displaynames:

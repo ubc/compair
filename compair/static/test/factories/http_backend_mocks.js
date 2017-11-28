@@ -67,6 +67,7 @@ module.exports.buildStorageFixture = function(storageFixture) {
         criteria: {},
         groups: [],
         lti_consumers: {},
+        lti_contexts: {},
         user_search_results: {
             "objects": [],
             "page":1,
@@ -159,6 +160,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "email": null,
                 "firstname": null,
                 "fullname": null,
+                "fullname_sortable": null,
                 "lastname": null,
                 "student_number": null,
                 "avatar": "63a9f0ea7bb98050796b649e85481845",
@@ -172,6 +174,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
 
             newUser = angular.merge({}, newUser, data);
             newUser.fullname = newUser.firstname + " " + newUser.lastname;
+            newUser.fullname_sortable = newUser.lastname + ", " + newUser.firstname;
 
             storageFixture.storage().users[newUser.id] = newUser;
 
@@ -396,6 +399,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "name": data.name,
                 "year": data.year,
                 "term": data.term,
+                "sandbox": data.sandbox,
                 "available": true,
                 "start_date": data.start_date,
                 "end_date": data.end_date,
@@ -530,6 +534,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
             var returnData = {
                 course_role: courseRole,
                 fullname: storageFixture.storage().users[userId].fullname,
+                fullname_sortable: storageFixture.storage().users[userId].fullname_sortable,
                 user_id: userId
             }
 
@@ -551,6 +556,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
 
             var returnData = {
                 fullname: storageFixture.storage().users[userId].fullname,
+                fullname_sortable: storageFixture.storage().users[userId].fullname_sortable,
                 user_id: userId,
                 course_role: "Dropped"
             }
@@ -616,7 +622,8 @@ module.exports.httpbackendMock = function(storageFixtures) {
                         "comparisons": {
                             "available": true,
                             "count": 0,
-                            "left": 3
+                            "left": 3,
+                            "has_draft": false
                         }
                     }
                 });
@@ -808,7 +815,8 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "comparisons": {
                     "available": true,
                     "count": 0,
-                    "left": 3
+                    "left": 3,
+                    "has_draft": false
                 }
             }
 
@@ -980,6 +988,32 @@ module.exports.httpbackendMock = function(storageFixtures) {
 
         // END LTI Consumers
 
+
+        // LTI Consumers
+
+        // get lti contexts
+        $httpBackend.whenGET(/\/api\/lti\/course\/context\?.*$/).respond(function(method, url, data, headers) {
+            var contexts = _.values(storageFixture.storage().lti_contexts);
+
+            return [200, {
+                "objects": contexts,
+                "page": 1,
+                "pages": 1,
+                "total": contexts.length,
+                "per_page": 20
+            }, {}]
+        });
+
+        // get lti consumer by id
+        $httpBackend.whenDELETE(/\/api\/lti\/course\/[A-Za-z0-9_-]{22}\/context\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            var context_id = url.split('/').pop();
+
+            delete storageFixture.storage().lti_contexts[context_id]
+
+            return [200, {success: true}, {}];
+        });
+
+        // END LTI Consumers
 
         // Statements
         $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {

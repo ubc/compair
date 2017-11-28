@@ -17,7 +17,7 @@
         </div>
     </div>
     <p class="intro-text" ng-if="lti_membership_enabled">
-        Your class list is managed externally. This means users need to enroll themselves by clicking a special link in your existing external course. This link sends registration information from your external course to ComPAIR that confirms the user should be enrolled. To manually update the list below to the latest enrollment numbers, click "Refresh List" below. 
+        Your class list is managed externally. This means users need to enroll themselves by clicking a special link in your existing external course. This link sends registration information from your external course to ComPAIR that confirms the user should be enrolled. To manually update the list below to the latest enrollment numbers, click "Refresh List" below.
     </p>
     <p class="intro-text" ng-if="!lti_membership_enabled">
         <strong>Edit or drop users from the course and manage course groups</strong> below. To make significant changes to the <em>full</em> course user list at once, click "Import Users" above and follow the directions on the next screen. To generate a file with all the currently enrolled users, click "Export Users" above.
@@ -109,9 +109,6 @@
                         <a href="" ng-click="updateTableOrderBy('student_number')">Student Number</a>
                     </th>
                     <th>
-                        <a href="" ng-click="updateTableOrderBy('email')">Email</a>
-                    </th>
-                    <th>
                         <a href="" ng-click="updateTableOrderBy('course_role')">Course Role</a>
                     </th>
                     <th ng-if="groups.length > 0">
@@ -120,7 +117,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-class="{'success': user.selected}" ng-repeat="user in classlist | orderBy:[predicate, 'firstname', 'lastname'] | emptyToEnd:predicate | orderBy:'':reverse">
+                <tr ng-class="{'success': user.selected}" ng-repeat="user in classlist | orderBy:[predicate, 'lastname', 'firstname'] | emptyToEnd:predicate | orderBy:'':reverse">
                     <td class="nowrap">
                         <a href="#/user/{{user.id}}/edit" target="_blank">Edit</a>
                         <span>&nbsp;|&nbsp;</span>
@@ -135,7 +132,6 @@
                     <td>{{user.firstname}}</td>
                     <td>{{user.lastname}}</td>
                     <td>{{user.student_number}}</td>
-                    <td>{{user.email}}</td>
                     <td>
                         <select ng-if="loggedInUserId != user.id || canManageUsers" ng-model="user.course_role"
                                 ng-options="course_role as course_role for course_role in course_roles"

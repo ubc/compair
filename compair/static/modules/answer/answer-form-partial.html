@@ -14,7 +14,7 @@
     <p class="assignment-toggle"><a href="" ng-click="showAssignment = !showAssignment">
         <i class="fa fa-chevron-down" ng-show="showAssignment "></i>
         <i class="fa fa-chevron-right" ng-hide="showAssignment "></i>
-        Show assignment "{{assignment.name}}"
+        Show description for assignment "{{assignment.name}}"
     </a></p>
 
     <div ng-show="showAssignment" class="standalone-assignment">
@@ -44,8 +44,8 @@
         <div class="form-group" ng-if="canManageAssignment && answer.draft && comparison_example !== true">
             <label class="required-star" for="user_id">Submit As</label>
             <select id="user_id" name="user_id" required
-                    ng-model="answer.user_id" class="form-control" chosen width="'100%'" disable_search_threshold="8"
-                    ng-options="u.id as u.fullname for u in classlist">
+                    ng-model="answer.user_id" class="form-control" chosen width="'100%'"
+                    ng-options="u.id as u.fullname_sortable for u in classlist">
                 <option value="">- Select a user -</option>
             </select>
         </div>
@@ -95,10 +95,18 @@
         <input type="submit" class="btn btn-success btn-lg" value="Submit"
             ng-click="saveDraft = false"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+        <p ng-if="submitted">
+                <i class="fa fa-spin fa-spinner"></i>
+                &nbsp; Submitting answer...
+        </p>
     </div>
-    <div ng-show="!answer.draft || (canManageAssignment && answer.user_id != loggedInUserId)">
+    <div ng-show="!answer.draft || (canManageAssignment && answer.user_id != loggedInUserId)" class="text-center">
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
             ng-click="saveDraft = false"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+        <p ng-if="submitted">
+                <i class="fa fa-spin fa-spinner"></i>
+                &nbsp; Saving answer...
+        </p>
     </div>
 </form>

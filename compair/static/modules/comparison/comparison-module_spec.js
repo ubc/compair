@@ -40,6 +40,7 @@ describe('comparison-module', function () {
         email: null,
         firstname: "John",
         fullname: "John Smith",
+        fullname_sortable: "Smith, John",
         id: id,
         lastname: "Smith",
         last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
@@ -268,6 +269,7 @@ describe('comparison-module', function () {
                 'avatar': "63a9f0ea7bb98050796b649e85481845",
                 'displayname': "root",
                 'fullname': "John Smith",
+                'fullname_sortable': "Smith, John",
                 'id': id
             },
             'created': "Fri, 09 Jan 2015 18:35:58 -0000",

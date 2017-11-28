@@ -2,7 +2,7 @@ import datetime
 import json
 from compair import db
 
-from data.fixtures.test_data import BasicTestData, ComparisonTestData
+from data.fixtures.test_data import BasicTestData, ComparisonTestData, LTITestData, SimpleAssignmentTestData
 from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 from compair.models import Course, UserCourse
 
@@ -25,6 +25,9 @@ class CoursesAPITests(ComPAIRAPITestCase):
         self.assertEqual(
             course_expected.term, course_actual['term'],
             "Expected course term does not match actual.")
+        self.assertEqual(
+            course_expected.sandbox, course_actual['sandbox'],
+            "Expected course sandbox flag does not match actual.")
         self.assertEqual(
             course_expected.available, course_actual['available'],
             "Expected course availability does not match actual.")
@@ -72,6 +75,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'name': 'ExpectedCourse1',
             'year': 2015,
             'term': 'Winter',
+            'sandbox' : False,
             'start_date': None,
             'end_date': None
         }
@@ -98,6 +102,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(course_expected['name'], course_actual['name'])
             self.assertEqual(course_expected['year'], course_actual['year'])
             self.assertEqual(course_expected['term'], course_actual['term'])
+            self.assertEqual(course_expected['sandbox'], course_actual['sandbox'])
             self.assertTrue(course_actual['available'])
 
             # Verify the course is created in db
@@ -105,6 +110,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(course_in_db.name, course_actual['name'])
             self.assertEqual(course_in_db.year, course_actual['year'])
             self.assertEqual(course_in_db.term, course_actual['term'])
+            self.assertEqual(course_in_db.sandbox, course_actual['sandbox'])
             self.assertTrue(course_in_db.available)
 
             # Verify instructor added to course
@@ -151,6 +157,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'name': 'ExpectedCourse',
             'year': 2015,
             'term': 'Winter',
+            'sandbox': False,
             'start_date': None,
             'end_date': None
         }
@@ -261,6 +268,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'name': 'duplicate course',
             'year': 2015,
             'term': 'Winter',
+            'sandbox': False,
             'start_date': None,
             'end_date': None
         }
@@ -302,6 +310,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(expected['name'], rv.json['name'])
             self.assertEqual(expected['year'], rv.json['year'])
             self.assertEqual(expected['term'], rv.json['term'])
+            self.assertEqual(expected['sandbox'], rv.json['sandbox'])
             self.assertEqual(expected['start_date'], rv.json['start_date'])
             self.assertEqual(expected['end_date'], rv.json['end_date'])
 
@@ -342,6 +351,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             'name': 'duplicate course',
             'year': 2015,
             'term': 'Winter',
+            'sandbox': False,
             'start_date': (self.course.start_date + self.date_delta).isoformat() + 'Z',
             'end_date': (self.course.end_date + self.date_delta).isoformat() + 'Z',
             'assignments': []
@@ -403,6 +413,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             'name': 'duplicate validation course',
             'year': 2015,
             'term': 'Winter',
+            'sandbox': False,
             'start_date': self.valid_start_date,
             'end_date': self.valid_end_date,
             'assignments': [self.validate_expected_assignment]
@@ -514,6 +525,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             self.assertEqual(self.expected['name'], duplicate_course.name)
             self.assertEqual(self.expected['year'], duplicate_course.year)
             self.assertEqual(self.expected['term'], duplicate_course.term)
+            self.assertEqual(self.expected['sandbox'], duplicate_course.sandbox)
             self.assertEqual(self.expected['start_date'].replace('Z', ''), rv.json['start_date'].replace('+00:00', ''))
             self.assertEqual(self.expected['end_date'].replace('Z', ''), rv.json['end_date'].replace('+00:00', ''))
 
@@ -636,6 +648,7 @@ class CourseDemoAPITests(ComPAIRAPIDemoTestCase):
             'name': 'ExpectedCourse',
             'year': 2015,
             'term': 'Winter',
+            'sandbox': False,
             'start_date': None,
             'end_date': None,
             'description': 'Test Description'
@@ -651,3 +664,45 @@ class CourseDemoAPITests(ComPAIRAPIDemoTestCase):
             self.app.config['DEMO_INSTALLATION'] = False
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
             self.assert200(rv)
+
+
+class CoursesLTIAPITests(ComPAIRAPITestCase):
+    def setUp(self):
+        super(CoursesLTIAPITests, self).setUp()
+        self.data = SimpleAssignmentTestData()
+        self.lti_data = LTITestData()
+
+    def test_delete_course(self):
+        # test unlinking of lti contexts when course deleted
+        course = self.data.get_course()
+        url = '/api/courses/' + course.uuid
+
+        lti_consumer = self.lti_data.get_consumer()
+        lti_context1 = self.lti_data.create_context(
+            lti_consumer,
+            compair_course_id=course.id
+        )
+        lti_context2 = self.lti_data.create_context(
+            lti_consumer,
+            compair_course_id=course.id
+        )
+        lti_resource_link1 = self.lti_data.create_resource_link(
+            lti_consumer,
+            lti_context=lti_context2,
+            compair_assignment=self.data.assignments[0]
+        )
+        lti_resource_link2 = self.lti_data.create_resource_link(
+            lti_consumer,
+            lti_context=lti_context2,
+            compair_assignment=self.data.assignments[1]
+        )
+
+        with self.login(self.data.get_authorized_instructor().username):
+            rv = self.client.delete(url)
+            self.assert200(rv)
+            self.assertEqual(course.uuid, rv.json['id'])
+
+            self.assertIsNone(lti_context1.compair_course_id)
+            self.assertIsNone(lti_context2.compair_course_id)
+            self.assertIsNone(lti_resource_link1.compair_assignment_id)
+            self.assertIsNone(lti_resource_link2.compair_assignment_id)

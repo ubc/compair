@@ -40,6 +40,7 @@ describe('course-module', function () {
         email: null,
         firstname: "John",
         fullname: "John Smith",
+        fullname_sortable: "Smith, John",
         id: id,
         lastname: "Smith",
         last_online: "Tue, 12 Aug 2014 20:53:31 -0000",
@@ -61,7 +62,8 @@ describe('course-module', function () {
         "modified": "Fri, 09 Jan 2015 17:23:59 -0000",
         "name": "Test Course",
         "year": 2015,
-        "term": "Winter"
+        "term": "Winter",
+        "sandbox": false
     };
     beforeEach(module('ubc.ctlt.compair.course'));
     beforeEach(inject(function ($injector) {
@@ -110,6 +112,7 @@ describe('course-module', function () {
                     "name": "Test111",
                     "year": 2015,
                     "term": "Winter",
+                    "sandbox": false,
                     "start_date": null,
                     "end_date": null,
                     "assignment_count": 0,
@@ -199,6 +202,7 @@ describe('course-module', function () {
                     $rootScope.course.name = 'new name';
                     $rootScope.course.year = 2016;
                     $rootScope.course.term = "Summer";
+                    $rootScope.course.sandbox = false;
                     $httpBackend.expectPOST('/api/courses/2abcABC123-abcABC123_Z', $rootScope.course).respond($rootScope.course);
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
@@ -259,7 +263,8 @@ describe('course-module', function () {
                     "name": "Another course",
                     "start_date": "2017-01-02T23:00:00",
                     "term": "Summer",
-                    "year": 2016
+                    "year": 2016,
+                    "sandbox": false
                 },
                 {
                     "available": true,
@@ -274,7 +279,8 @@ describe('course-module', function () {
                     "name": "test course",
                     "start_date": "2016-10-03T07:00:00",
                     "term": "asdasdasd",
-                    "year": 2016
+                    "year": 2016,
+                    "sandbox": false
                 }
             ]
             beforeEach(inject(function (_Toaster_) {
@@ -322,6 +328,7 @@ describe('course-module', function () {
                     "name": "Test111",
                     "year": 2015,
                     "term": "Winter",
+                    "sandbox": false,
                     "start_date": null,
                     "end_date": null,
                     "assignment_count": 0,
@@ -359,26 +366,18 @@ describe('course-module', function () {
         });
     });
 
-    describe('CourseDuplicateModalController', function () {
-        var $rootScope, createController, $location, $uibModal, $q;
+    describe('CourseDuplicateController', function () {
+        var $rootScope, createController, $location, $q;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$q_) {
             $rootScope = _$rootScope_;
             $location = _$location_;
-            $uibModal = _$uibModal_;
             $q = _$q_;
-            modalInstance = {
-                close: jasmine.createSpy('modalInstance.close'),
-                dismiss: jasmine.createSpy('modalInstance.dismiss'),
-                result: {
-                    then: jasmine.createSpy('modalInstance.result.then')
-                }
-            };
-            createController = function (route, params) {
-                return $controller('CourseDuplicateModalController', {
+            createController = function (params, resolvedData) {
+                return $controller('CourseDuplicateController', {
                     $scope: $rootScope,
-                    $uibModalInstance: modalInstance,
-                    $routeParams: params || {}
+                    $routeParams: params || {},
+                    resolvedData: resolvedData || {}
                 });
             }
         }));
@@ -399,7 +398,8 @@ describe('course-module', function () {
                 "name": "Another course",
                 "start_date": "2017-01-02T23:00:00",
                 "term": "Summer",
-                "year": 2016
+                "year": 2016,
+                "sandbox": false
             };
 
             var assignments = [
@@ -437,7 +437,8 @@ describe('course-module', function () {
                     "evaluation_count": 0,
                     "file": null,
                     "id": "1abcABC123-abcABC123_Z",
-                    "lti_linkable": false,
+                    "lti_course_linked": false,
+                    "lti_linked": false,
                     "modified": "2016-10-04T21:32:54",
                     "name": "1234567",
                     "number_of_comparisons": 3,
@@ -451,6 +452,7 @@ describe('course-module', function () {
                         "avatar": "831fdab66736a3de4671777adf80908c",
                         "displayname": "root",
                         "fullname": "thkx UeNV",
+                        "fullname_sortable": "UeNV, thkx",
                         "id": "hJYTzpyVQcCnSN3raYtxGQ"
                     },
                     "user_id": "hJYTzpyVQcCnSN3raYtxGQ"
@@ -489,7 +491,8 @@ describe('course-module', function () {
                     "evaluation_count": 0,
                     "file": null,
                     "id": "2abcABC123-abcABC123_Z",
-                    "lti_linkable": false,
+                    "lti_course_linked": false,
+                    "lti_linked": false,
                     "modified": "2016-10-04T21:32:54",
                     "name": "1234567890",
                     "number_of_comparisons": 3,
@@ -503,6 +506,7 @@ describe('course-module', function () {
                         "avatar": "831fdab66736a3de4671777adf80908c",
                         "displayname": "root",
                         "fullname": "thkx UeNV",
+                        "fullname_sortable": "UeNV, thkx",
                         "id": "hJYTzpyVQcCnSN3raYtxGQ"
                     },
                     "user_id": "hJYTzpyVQcCnSN3raYtxGQ"
@@ -516,10 +520,9 @@ describe('course-module', function () {
 
             beforeEach(function () {
                 $rootScope.originalCourse = course;
-                $rootScope.closeDuplicate = jasmine.createSpy('$rootScope.closeDuplicate');
-                $rootScope.dismissDuplicate = jasmine.createSpy('$rootScope.dismissDuplicate');
-
-                controller = createController();
+                controller = createController({courseId: $rootScope.originalCourse.id}, {
+                    course: $rootScope.originalCourse
+                });
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments').respond({
                     'objects': assignments
                 });
@@ -638,7 +641,7 @@ describe('course-module', function () {
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
                     expect(toaster.warning).toHaveBeenCalledWith('Course Not Duplicated', 'Please set course end time after course start time and try again.');
-                    expect($rootScope.closeDuplicate.calls.count()).toEqual(0);
+                    expect($location.path()).toEqual('');
                 });
 
                 it('should warn when assignment answer start date is not before end date', function () {
@@ -651,7 +654,7 @@ describe('course-module', function () {
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
                     expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please set answer end time after answer start time and try again.');
-                    expect($rootScope.closeDuplicate.calls.count()).toEqual(0);
+                    expect($location.path()).toEqual('');
                 });
 
                 it('should warn when answer start is not before compare start', function () {
@@ -662,7 +665,7 @@ describe('course-module', function () {
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
                     expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please double-check the answer and comparison start and end times for mismatches and try again.');
-                    expect($rootScope.closeDuplicate.calls.count()).toEqual(0);
+                    expect($location.path()).toEqual('');
                 });
 
                 it('should warn when compare start is not before compare end', function () {
@@ -675,7 +678,7 @@ describe('course-module', function () {
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
                     expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please set comparison end time after comparison start time and try again.');
-                    expect($rootScope.closeDuplicate.calls.count()).toEqual(0);
+                    expect($location.path()).toEqual('');
                 });
 
                 it('should be able to save new course', function () {
@@ -687,7 +690,7 @@ describe('course-module', function () {
                     expect($rootScope.submitted).toBe(true);
                     $httpBackend.flush();
                     expect($rootScope.submitted).toBe(false);
-                    expect($rootScope.closeDuplicate).toHaveBeenCalledWith(newCourseId);
+                    expect($location.path()).toEqual('/course/3abcABC123-abcABC123_Z');
                 });
             });
         });

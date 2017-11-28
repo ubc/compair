@@ -285,7 +285,14 @@ def import_users(import_type, course, users):
 
 @api.representation('text/csv')
 def output_csv(data, code, headers=None):
-    fieldnames = ['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name']
+    fieldnames = ['username', 'student_number', 'firstname', 'lastname', 'displayname', 'group_name']
+
+    if allow(MANAGE, User) or current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False):
+        fieldnames.insert(4, 'email')
+
+    if allow(MANAGE, User) or current_app.config.get('EXPOSE_CAS_USERNAME_TO_INSTRUCTOR', False):
+        fieldnames.insert(1, 'cas_username')
+
     csv_buffer = BytesIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, extrasaction='ignore')
     writer.writeheader()
@@ -323,7 +330,7 @@ class ClasslistRootAPI(Resource):
                 UserCourse.course_id == course.id,
                 UserCourse.course_role != CourseRole.dropped
             )) \
-            .order_by(User.firstname) \
+            .order_by(User.lastname, User.firstname) \
             .all()
 
         if not restrict_user:
@@ -355,7 +362,10 @@ class ClasslistRootAPI(Resource):
             user=current_user,
             course_id=course.id)
 
-        return {'objects': marshal(class_list, dataformat.get_users_in_course(restrict_user=restrict_user))}
+        if allow(MANAGE, User):
+            return {'objects': marshal(class_list, dataformat.get_full_users_in_course())}
+        else:
+            return {'objects': marshal(class_list, dataformat.get_users_in_course(restrict_user=restrict_user))}
 
     @login_required
     def post(self, course_uuid):
@@ -482,6 +492,7 @@ class EnrolAPI(Resource):
         return {
             'user_id': user.uuid,
             'fullname': user.fullname,
+            'fullname_sortable': user.fullname_sortable,
             'course_role': course_role.value
         }
 
@@ -519,6 +530,7 @@ class EnrolAPI(Resource):
         return {
             'user_id': user.uuid,
             'fullname': user.fullname,
+            'fullname_sortable': user.fullname_sortable,
             'course_role': CourseRole.dropped.value
         }
 
@@ -573,6 +585,7 @@ class StudentsAPI(Resource):
                 UserCourse.course_id == course.id,
                 UserCourse.course_role == CourseRole.student
             ) \
+            .order_by(User.lastname, User.firstname) \
             .all()
 
         users = []
@@ -581,7 +594,7 @@ class StudentsAPI(Resource):
             if allow(READ, user_course):
                 users.append({
                     'id': u.User.uuid,
-                    'name': u.User.fullname if u.User.fullname else u.User.displayname,
+                    'name': u.User.fullname_sortable,
                     'group_name': u.group_name
                 })
             else:

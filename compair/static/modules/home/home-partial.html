@@ -18,12 +18,30 @@
 
     <div class="row">
 
-        <h2 class="col-sm-8">Your courses</h2>
+        <h2 class="col-sm-6">Your courses</h2>
 
-        <form class="col-sm-4 search-courses text-right" role="search" ng-show="canAddCourse && (courses.length || courseFilters.search)">
-            <div class="form-group">
+        <form class="col-sm-6 search-courses text-right" role="search" ng-if="!canManageUsers && canAddCourse && (courses.length || courseFilters.search)">
+            <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
+                ng-model="courseFilters.search">
+        </form>
+
+        <form class="col-sm-6 search-courses text-right" role="search" ng-if="canManageUsers && canAddCourse && (courses.length || courseFilters.search || courseFilters.includeSandbox!==null)" style="padding-right:0;">
+            <div class="input-group">
+                <div class="input-group-btn" uib-dropdown>
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" uib-dropdown-toggle>
+                        <span ng-show="courseFilters.includeSandbox===null">All courses</span>
+                        <span ng-show="courseFilters.includeSandbox===false">Regular courses</span>
+                        <span ng-show="courseFilters.includeSandbox===true">Sandbox courses</span>
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a ng-click="courseFilters.includeSandbox=null">All courses</a></li>
+                        <li><a ng-click="courseFilters.includeSandbox=false">Regular courses</a></li>
+                        <li><a ng-click="courseFilters.includeSandbox=true">Sandbox courses</a></li>
+                    </ul>
+                </div>
                 <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
-                       ng-model="courseFilters.search">
+                    ng-model="courseFilters.search">
             </div>
         </form>
     </div>
@@ -58,7 +76,7 @@
                         </li>
                         <!-- Duplicate Link (instructors only) -->
                         <li ng-if="course.canEditCourse">
-                            <a ng-click="duplicateCourse(course)" title="Duplicate" href="">
+                            <a ng-href="#/course/{{course.id}}/duplicate" title="Duplicate">
                                 Duplicate
                             </a>
                         </li>
@@ -68,7 +86,7 @@
                         </li>
                         <!-- Student Total Assignments (students only) -->
                         <li title="{{course.student_assignment_count}} assignments" ng-if="!course.canManageAssignment">
-                                {{course.student_assignment_count}} assignment<span ng-if="course.student_assignment_count != 1">s</span> posted
+                                {{course.student_assignment_count}} assignment<span ng-if="course.student_assignment_count != 1">s</span> total
                         </li>
                         <!-- Total Unfinished (students only) -->
                         <!-- number of unfinished assignments for student user that can still be completed for each course, i.e.,
@@ -88,9 +106,13 @@
                         <li title="Course year and term">
                             {{course.year}} {{course.term}}
                         </li>
+                        <!-- Course Sandbox -->
+                        <li ng-if="course.sandbox && course.canEditCourse">
+                            Sandbox Course
+                        </li>
                         <!-- Delete Link -->
                         <li ng-if="course.canDeleteCourse">
-                            <a confirmation-needed="deleteCourse(course)" keyword="course and its assignments" title="Delete" href="">
+                            <a confirmation-needed="deleteCourse(course)" confirmation-warning="{{course.delete_warning}}" keyword="course and its assignments" title="Delete" href="">
                                 <i class="fa fa-trash-o"></i>
                             </a>
                         </li>
@@ -104,7 +126,7 @@
             <div class="col-sm-3 text-right action-btns">
 
                 <a ng-href="#/course/{{course.id}}/" class="btn btn-success" title="View Course">
-                    View Course
+                    See Assignments
                 </a>
 
             </div>
@@ -122,7 +144,8 @@
 
     <div ng-if="!courses.length">
         <hr />
-        <p ng-if="!courseFilters.search">No courses currently available. <span ng-if="canAddCourse">Would you like to <a href="#/course/create">add a course</a>?</span></p>
+        <p ng-if="!courseFilters.search && courseFilters.includeSandbox===null">No courses currently available. <span ng-if="canAddCourse">Would you like to <a href="#/course/create">add a course</a>?</span></p>
+        <p ng-if="!courseFilters.search && courseFilters.includeSandbox!==null">No courses found. Please try another filter above.</p>
         <p ng-if="courseFilters.search">No courses found for this search. Please try another search term above.</p>
     </div>
 

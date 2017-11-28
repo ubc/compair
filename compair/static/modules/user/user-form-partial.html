@@ -36,12 +36,12 @@
             <input class="form-control" id="student_number" type="text"
                 name="student_number" ng-model="user.student_number"/>
         </compair-field-with-feedback>
-        <compair-field-with-feedback form-control="userForm.email">
+        <compair-field-with-feedback form-control="userForm.email" ng-if="canManageUsers || UserSettings.expose_email_to_instructor || user.id == loggedInUser.id">
             <label for="email">Email </label>
             <input class="form-control" id="email" type="email"
                 name="email" ng-model="user.email" />
         </compair-field-with-feedback>
-        <compair-field-with-feedback form-control="userForm.email_notification_method" ng-if="UserSettings.notifications">
+        <compair-field-with-feedback form-control="userForm.email_notification_method" ng-if="(canManageUsers || UserSettings.expose_email_to_instructor || user.id == loggedInUser.id) && UserSettings.notifications">
             <input type="checkbox" ng-show="!user.email" disabled />
             <input id="email_notification_method" type="checkbox" ng-model="user.email_notification_method" ng-show="user.email"
                 ng-true-value="'{{EmailNotificationMethod.enable}}'" ng-false-value="'{{EmailNotificationMethod.disable}}'">
@@ -76,9 +76,9 @@
         </div>
         <div ng-if="method != 'create' && ((ownProfile || canManageUsers) && user.uses_compair_login)">
             <label>ComPAIR Password </label>
-            <p><a id="change-password" class="btn btn-sm btn-primary" ng-click="showPasswordModal()"><i class="fa fa-edit" aria-hidden="true"></i> Edit Password</a></p>
+            <p><a id="change-password-btn" class="btn btn-sm btn-primary" ng-click="showPasswordModal()"><i class="fa fa-edit" aria-hidden="true"></i> Edit Password</a></p>
         </div>
-        
+
     </fieldset>
     <input type="submit" class="btn btn-success center-block btn-lg" value="Save"
         ng-disabled="userForm.$invalid || submitted" />

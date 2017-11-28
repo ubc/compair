@@ -15,6 +15,7 @@ from compair.models import User, SystemRole, Course, UserCourse, CourseRole, \
     Assignment, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
     Answer, Comparison, AnswerComment, AnswerCommentType, EmailNotificationMethod
 from compair.api.login import authenticate
+from distutils.util import strtobool
 
 user_api = Blueprint('user_api', __name__)
 
@@ -23,6 +24,12 @@ def non_blank_text(value):
         return None
     else:
         return None if text_type(value).strip() == "" else text_type(value)
+
+def string_to_bool(value):
+    if value is None:
+        return None
+    else:
+        return strtobool(value)
 
 new_user_parser = RequestParser()
 new_user_parser.add_argument('username', type=non_blank_text, required=False)
@@ -61,9 +68,11 @@ user_list_parser.add_argument('ids', required=False, default=None)
 
 user_course_list_parser = pagination_parser.copy()
 user_course_list_parser.add_argument('search', required=False, default=None)
+user_course_list_parser.add_argument('includeSandbox', type=string_to_bool, required=False, default=None)
 
 user_id_course_list_parser = pagination_parser.copy()
 user_id_course_list_parser.add_argument('search', required=False, default=None)
+user_id_course_list_parser.add_argument('includeSandbox', type=string_to_bool, required=False, default=None)
 user_id_course_list_parser.add_argument('orderBy', required=False, default=None)
 user_id_course_list_parser.add_argument('reverse', type=bool, default=False)
 
@@ -100,6 +109,12 @@ def check_valid_email_notification_method(email_notification_method):
     if email_notification_method not in email_notification_methods:
         abort(400, title="User Not Saved", message="Please try again with an email notification checked or unchecked.")
 
+def marshal_user_data(user):
+    if allow(MANAGE, user) or current_user.id == user.id:
+        return marshal(user, dataformat.get_full_user())
+    else:
+        return marshal(user, dataformat.get_user(is_user_access_restricted(user)))
+
 # /user_uuid
 class UserAPI(Resource):
     @login_required
@@ -112,7 +127,7 @@ class UserAPI(Resource):
             user=current_user,
             data={'id': user.id}
         )
-        return marshal(user, dataformat.get_user(is_user_access_restricted(user)))
+        return marshal_user_data(user)
 
     @login_required
     def post(self, user_uuid):
@@ -154,6 +169,17 @@ class UserAPI(Resource):
             check_valid_system_role(system_role)
             user.system_role = SystemRole(system_role)
 
+        if allow(MANAGE, user) or user.id == current_user.id or current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False):
+            user.email = params.get("email", user.email)
+
+            email_notification_method = params.get("email_notification_method")
+            check_valid_email_notification_method(email_notification_method)
+            user.email_notification_method = EmailNotificationMethod(email_notification_method)
+
+        elif params.get("email") or params.get("email_notification_method"):
+            abort(400, title="User Not Saved", message="your role does not allow you to change email settings for this user.")
+
+
         # only students should have student numbers
         if user.system_role == SystemRole.student:
             student_number = params.get("student_number", user.student_number)
@@ -168,12 +194,6 @@ class UserAPI(Resource):
         user.firstname = params.get("firstname", user.firstname)
         user.lastname = params.get("lastname", user.lastname)
         user.displayname = params.get("displayname", user.displayname)
-
-        user.email = params.get("email", user.email)
-
-        email_notification_method = params.get("email_notification_method")
-        check_valid_email_notification_method(email_notification_method)
-        user.email_notification_method = EmailNotificationMethod(email_notification_method)
 
         changes = get_model_changes(user)
 
@@ -190,7 +210,7 @@ class UserAPI(Resource):
             db.session.rollback()
             abort(409, title="User Not Saved", message="Sorry, this ID already exists and IDs must be unique in ComPAIR. Please try addding another user.")
 
-        return marshal(user, dataformat.get_user(restrict_user))
+        return marshal_user_data(user)
 
 # /
 class UserListAPI(Resource):
@@ -217,7 +237,7 @@ class UserListAPI(Resource):
                 query = query.order_by(desc(params['orderBy']))
             else:
                 query = query.order_by(asc(params['orderBy']))
-        query.order_by(User.firstname.asc(), User.lastname.asc())
+        query = query.order_by(User.lastname.asc(), User.firstname.asc())
 
         page = query.paginate(params['page'], params['perPage'])
 
@@ -323,12 +343,12 @@ class UserListAPI(Resource):
                     self,
                     event_name=on_user_create.name,
                     user=current_user,
-                    data=marshal(user, dataformat.get_user(False)))
+                    data=marshal(user, dataformat.get_full_user()))
             else:
                 on_user_create.send(
                     self,
                     event_name=on_user_create.name,
-                    data=marshal(user, dataformat.get_user(False)))
+                    data=marshal(user, dataformat.get_full_user()))
 
         except exc.IntegrityError:
             db.session.rollback()
@@ -345,7 +365,7 @@ class UserListAPI(Resource):
                 sess.pop('CAS_UNIQUE_IDENTIFIER')
                 sess['CAS_LOGIN'] = True
 
-        return marshal(user, dataformat.get_user())
+        return marshal_user_data(user)
 
 
 # /courses
@@ -377,6 +397,12 @@ class CurrentUserCourseListAPI(Resource):
                         Course.year.like(search),
                         Course.term.like(search)
                     ))
+
+        if params['includeSandbox'] != None:
+            query = query.filter(
+                Course.sandbox == params['includeSandbox']
+            )
+
         page = query.paginate(params['page'], params['perPage'])
 
         # TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
@@ -421,6 +447,11 @@ class UserCourseListAPI(Resource):
                         Course.year.like(search),
                         Course.term.like(search)
                     ))
+
+        if params['includeSandbox'] != None:
+            query = query.filter(
+                Course.sandbox == params['includeSandbox']
+            )
 
         if params['orderBy']:
             if params['reverse']:
@@ -604,10 +635,10 @@ class UserUpdateNotificationAPI(Resource):
     @login_required
     def post(self, user_uuid):
         user = User.get_by_uuid_or_404(user_uuid)
-        # anyone who passes checking below should be an instructor or admin
-        require(EDIT, user,
-            title="Notifications Not Updated",
-            message="Sorry, your system role does not allow you to update notification settings for this user.")
+        # anyone who passes checking below should be an admin or current user
+        if not allow(MANAGE, user) and not user.id == current_user.id and not \
+                (allow(EDIT, user) and current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False)):
+            abort(403, title="Notifications Not Updated", message="Sorry, your system role does not allow you to update notification settings for this user.")
 
         if not user.email:
             abort(400, title="Notifications Not Updated",
@@ -624,7 +655,8 @@ class UserUpdateNotificationAPI(Resource):
             self,
             event_name=on_user_notifications_update.name,
             user=current_user)
-        return marshal(user, dataformat.get_user(is_user_access_restricted(user)))
+
+        return marshal_user_data(user)
 
 # /password
 class UserUpdatePasswordAPI(Resource):
@@ -654,7 +686,8 @@ class UserUpdatePasswordAPI(Resource):
             self,
             event_name=on_user_password_update.name,
             user=current_user)
-        return marshal(user, dataformat.get_user(False))
+
+        return marshal_user_data(user)
 
 api = new_restful_api(user_api)
 api.add_resource(UserAPI, '/<user_uuid>')

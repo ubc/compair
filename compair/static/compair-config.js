@@ -28,10 +28,12 @@ var myApp = angular.module('myApp', [
     'ubc.ctlt.compair.login',
     'ubc.ctlt.compair.lti',
     'ubc.ctlt.compair.lti.consumer',
+    'ubc.ctlt.compair.lti.context',
     'ubc.ctlt.compair.navbar',
     'ubc.ctlt.compair.assignment',
     'ubc.ctlt.compair.report',
     'ubc.ctlt.compair.oauth',
+    'localytics.directives',
     'templates'
 ]);
 
@@ -261,8 +263,8 @@ myApp.factory('RouteResolves',
 }]);
 
 myApp.config(
-    ['$routeProvider', '$logProvider', '$httpProvider',
-     '$locationProvider', "RouteResolvesProvider", "ResolveDeferredRouteDataProvider",
+    ['$routeProvider', '$logProvider', '$httpProvider', '$locationProvider',
+     "RouteResolvesProvider", "ResolveDeferredRouteDataProvider",
     function ($routeProvider, $logProvider, $httpProvider, $locationProvider,
               RouteResolvesProvider, ResolveDeferredRouteDataProvider) {
 
@@ -285,6 +287,7 @@ myApp.config(
     $routeProvider
         .when ('/',
             {
+                title: 'Home',
                 templateUrl: 'modules/home/home-partial.html',
                 label: "Home", // breadcrumb label
                 controller: 'HomeController',
@@ -293,12 +296,14 @@ myApp.config(
                         return ResolveDeferredRouteData({
                             loggedInUser: RouteResolves.loggedInUser(),
                             canAddCourse: RouteResolves.canAddCourse(),
+                            canManageUsers: RouteResolves.canManageUsers(),
                         });
                     }
                 }
             })
         .when ('/oauth/create',
             {
+                title: 'Add User',
                 templateUrl: 'modules/oauth/oauth-partial.html',
                 label: "Add User", // breadcrumb label
                 controller: 'OAuthController',
@@ -310,6 +315,7 @@ myApp.config(
             })
         .when ('/course/create',
             {
+                title: 'Add Course',
                 templateUrl: 'modules/course/course-partial.html',
                 label: "Add Course",
                 controller: 'CourseController',
@@ -323,6 +329,7 @@ myApp.config(
             })
         .when ('/course/:courseId',
             {
+                title: 'Course Assignments',
                 templateUrl: 'modules/course/course-assignments-partial.html',
                 label: "Course Assignments",
                 controller: 'CourseAssignmentsController',
@@ -334,12 +341,14 @@ myApp.config(
                             canEditCourse: RouteResolves.canEditCourse(),
                             canCreateAssignment: RouteResolves.canCreateAssignment(),
                             canManageAssignment: RouteResolves.canManageAssignment(),
+                            canManageUsers: RouteResolves.canManageUsers(),
                         }, ['course', 'courseAssignments']);
                     }
                 }
             })
         .when ('/course/:courseId/edit',
             {
+                title: 'Edit Course',
                 templateUrl: 'modules/course/course-partial.html',
                 label: "Edit Course",
                 controller: 'CourseController',
@@ -352,8 +361,16 @@ myApp.config(
                     }
                 }
             })
+        .when ('/course/:courseId/duplicate',
+            {
+                title: "Duplicate Course",
+                templateUrl: 'modules/course/course-duplicate-partial.html',
+                label: "Duplicate Course",
+                controller: 'CourseDuplicateController'
+            })
         .when ('/course/:courseId/user',
             {
+                title: "Manage Users",
                 templateUrl: 'modules/classlist/classlist-view-partial.html',
                 label: "Manage Users",
                 controller: 'ClassViewController',
@@ -372,6 +389,7 @@ myApp.config(
             })
         .when ('/course/:courseId/user/import',
             {
+                title: "Import Users",
                 templateUrl: 'modules/classlist/classlist-import-partial.html',
                 label: "Import Users",
                 controller: 'ClassImportController',
@@ -385,6 +403,7 @@ myApp.config(
             })
         .when ('/course/:courseId/user/import/results',
             {
+                title: "Results",
                 templateUrl: 'modules/classlist/classlist-import-results-partial.html',
                 label: "Results",
                 controller: 'ClassImportResultsController',
@@ -396,6 +415,7 @@ myApp.config(
             })
         .when ('/course/:courseId/assignment/create',
             {
+                title: "Add Assignment",
                 templateUrl: 'modules/assignment/assignment-form-partial.html',
                 label: "Add Assignment",
                 controller: 'AssignmentWriteController',
@@ -412,8 +432,9 @@ myApp.config(
             })
         .when ('/course/:courseId/assignment/:assignmentId',
             {
+                title: "Assignment & Results",
                 templateUrl: 'modules/assignment/assignment-view-partial.html',
-                label: "View Assignment",
+                label: "Assignment & Results",
                 controller: 'AssignmentViewController',
                 resolve: {
                     resolvedData: function() {
@@ -431,6 +452,7 @@ myApp.config(
             })
         .when ('/course/:courseId/assignment/:assignmentId/edit',
             {
+                title: "Edit Assignment",
                 templateUrl: 'modules/assignment/assignment-form-partial.html',
                 label: "Edit Assignment",
                 controller: 'AssignmentWriteController',
@@ -449,6 +471,7 @@ myApp.config(
             })
         .when ('/course/:courseId/assignment/:assignmentId/duplicate',
             {
+                title: "Duplicate Assignment",
                 templateUrl: 'modules/assignment/assignment-form-partial.html',
                 label: "Duplicate Assignment",
                 controller: 'AssignmentWriteController',
@@ -468,6 +491,7 @@ myApp.config(
             })
         .when ('/course/:courseId/assignment/:assignmentId/answer/create',
             {
+                title: "Answer",
                 templateUrl: 'modules/answer/answer-form-partial.html',
                 label: "Answer",
                 controller: 'AnswerWriteController',
@@ -487,6 +511,7 @@ myApp.config(
             })
         .when ('/course/:courseId/assignment/:assignmentId/answer/:answerId/edit',
             {
+                title: "Edit Answer",
                 templateUrl: 'modules/answer/answer-form-partial.html',
                 label: "Edit Answer",
                 controller: 'AnswerWriteController',
@@ -505,6 +530,7 @@ myApp.config(
             })
         .when ('/course/:courseId/assignment/:assignmentId/compare',
             {
+                title: "Compare Answer Pairs",
                 templateUrl: 'modules/comparison/comparison-form-partial.html',
                 label: "Compare Answer Pairs",
                 controller: 'ComparisonController',
@@ -522,6 +548,7 @@ myApp.config(
             })
         .when('/course/:courseId/assignment/:assignmentId/self_evaluation',
             {
+                title: "Self-Evaluation",
                 templateUrl: 'modules/comparison/comparison-self_evaluation-partial.html',
                 label: "Self-Evaluation",
                 controller: 'ComparisonSelfEvalController',
@@ -538,6 +565,7 @@ myApp.config(
                 }
             })
         .when('/report',{
+                title: "Download Reports",
                 templateUrl: 'modules/report/report-create-partial.html',
                 label: "Download Reports",
                 controller: 'ReportCreateController',
@@ -551,6 +579,7 @@ myApp.config(
             })
         .when('/user/create',
             {
+                title: "Add User",
                 templateUrl: 'modules/user/user-create-partial.html',
                 label: "Add User",
                 controller: 'UserWriteController',
@@ -565,6 +594,7 @@ myApp.config(
             })
         .when('/user/:userId/edit',
             {
+                title: "Edit User",
                 templateUrl: 'modules/user/user-edit-partial.html',
                 label: "Edit User",
                 controller: 'UserWriteController',
@@ -580,6 +610,7 @@ myApp.config(
             })
         .when('/user/:userId',
             {
+                title: "View User",
                 templateUrl: 'modules/user/user-view-partial.html',
                 label: "View User",
                 controller: 'UserViewController',
@@ -596,6 +627,7 @@ myApp.config(
             })
         .when('/users',
             {
+                title: "Manage Users",
                 templateUrl: 'modules/user/user-list-partial.html',
                 label: "Manage Users",
                 controller: 'UserListController',
@@ -610,6 +642,7 @@ myApp.config(
             })
         .when('/users/:userId/course',
             {
+                title: "Manage User Courses",
                 templateUrl: 'modules/user/user-course-partial.html',
                 label: "Manage User Courses",
                 controller: 'UserCourseController',
@@ -624,6 +657,7 @@ myApp.config(
             })
         .when('/lti',
             {
+                title: "ComPAIR Setup",
                 templateUrl: 'modules/lti/lti-setup-partial.html',
                 label: "ComPAIR Setup",
                 controller: 'LTIController',
@@ -638,8 +672,9 @@ myApp.config(
             })
         .when('/lti/consumer',
             {
+                title: "Manage LTI Consumers",
                 templateUrl: 'modules/lti_consumer/lti-consumers-list-partial.html',
-                label: "Manage LTI Consumers",
+                label: "Manage LTI",
                 controller: 'LTIConsumerListController',
                 resolve: {
                     resolvedData: function() {
@@ -651,6 +686,7 @@ myApp.config(
             })
         .when('/lti/consumer/create',
             {
+                title: "Add LTI Consumer",
                 templateUrl: 'modules/lti_consumer/lti-consumer-form-partial.html',
                 label: "Add LTI Consumer",
                 controller: 'LTIConsumerWriteController',
@@ -664,6 +700,7 @@ myApp.config(
             })
         .when('/lti/consumer/:consumerId/edit',
             {
+                title: "Edit LTI Consumer",
                 templateUrl: 'modules/lti_consumer/lti-consumer-form-partial.html',
                 label: "Edit LTI Consumer",
                 controller: 'LTIConsumerWriteController',
@@ -678,6 +715,7 @@ myApp.config(
             })
         .when('/lti/consumer/:consumerId',
             {
+                title: "View LTI Consumer",
                 templateUrl: 'modules/lti_consumer/lti-consumer-view-partial.html',
                 label: "View LTI Consumer",
                 controller: 'LTIConsumerViewController',
@@ -696,13 +734,19 @@ myApp.config(
 }]);
 
 myApp.config(
-    ['localStorageServiceProvider',
-    function (localStorageServiceProvider)
+    ['localStorageServiceProvider', 'chosenProvider',
+    function (localStorageServiceProvider, chosenProvider)
     {
         localStorageServiceProvider
             .setPrefix('ComPAIR')
             .setStorageType('sessionStorage') // options [localStorage, sessionStorage]
             .setStorageCookie(0); // fallback default settings
+
+        chosenProvider.setOption({
+            disable_search_threshold: 8,
+            search_contains: true,
+            enable_split_word_search: true
+        });
     }
 ]);
 
@@ -721,6 +765,7 @@ myApp.run(
         });
         $rootScope.$on("$routeChangeSuccess", function(evt, current, previous) {
             $rootScope.routeResolveLoadError = undefined;
+            $rootScope.title = current.$$route.title;
         });
     }
 ]);

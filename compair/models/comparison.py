@@ -60,7 +60,19 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     user_uuid = association_proxy('user', 'uuid')
     user_displayname = association_proxy('user', 'displayname')
     user_fullname = association_proxy('user', 'fullname')
+    user_fullname_sortable = association_proxy('user', 'fullname_sortable')
     user_system_role = association_proxy('user', 'system_role')
+
+    @hybrid_property
+    def draft(self):
+        return self.modified != self.created and not self.completed
+
+    @draft.expression
+    def draft(cls):
+        return and_(
+            cls.modified != cls.created,
+            cls.completed == False
+        )
 
     @classmethod
     def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):

@@ -86,6 +86,15 @@ var viewUserStepDefinitionsWrapper = function () {
         return expect(element(by.css("#user_email")).getText()).to.eventually.equal("first.student@exmple.com");
     });
 
+    this.Then("I should see instructor view of First Student's profile", {timeout: 10 * 1000}, function () {
+        expect(element(by.css("h1")).getText()).to.eventually.equal("First Student's Profile");
+        expect(element(by.css("#user_system_role")).getText()).to.eventually.equal("Student");
+        expect(element(by.css("#user_username")).getText()).to.eventually.equal("student1");
+        expect(element(by.css("#user_student_number")).getText()).to.eventually.equal("");
+        expect(element(by.css("#user_fullname")).getText()).to.eventually.equal("First Student");
+        return expect(element(by.css("#user_displayname")).getText()).to.eventually.equal("First Student");
+    });
+
     this.Then("I should see First Student's CAS profile", {timeout: 10 * 1000}, function () {
         expect(element(by.css("#user_username")).isPresent()).to.eventually.equal(false);
 
@@ -95,6 +104,16 @@ var viewUserStepDefinitionsWrapper = function () {
         expect(element(by.css("#user_fullname")).getText()).to.eventually.equal("First Student");
         expect(element(by.css("#user_displayname")).getText()).to.eventually.equal("First Student");
         return expect(element(by.css("#user_email")).getText()).to.eventually.equal("first.student@exmple.com");
+    });
+
+    this.Then("I should see instructor view of First Student's CAS profile", {timeout: 10 * 1000}, function () {
+        expect(element(by.css("#user_username")).isPresent()).to.eventually.equal(false);
+
+        expect(element(by.css("h1")).getText()).to.eventually.equal("First Student's Profile");
+        expect(element(by.css("#user_system_role")).getText()).to.eventually.equal("Student");
+        expect(element(by.css("#user_student_number")).getText()).to.eventually.equal("");
+        expect(element(by.css("#user_fullname")).getText()).to.eventually.equal("First Student");
+        return expect(element(by.css("#user_displayname")).getText()).to.eventually.equal("First Student");
     });
 };
 

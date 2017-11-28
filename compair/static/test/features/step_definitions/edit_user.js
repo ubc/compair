@@ -27,13 +27,23 @@ var editUserStepDefinitionsWrapper = function () {
         return expect(element(by.model('user.student_number')).isPresent()).to.eventually.equal(false);
     });
 
+    this.Then("I should see email fields in the Account Details section", function() {
+        // Account Details
+        expect(element(by.model('user.email')).isPresent()).to.eventually.equal(true);
+        return expect(element(by.model('user.email_notification_method')).isPresent()).to.eventually.equal(true);
+    });
+
+    this.Then("I should not see email fields in the Account Details section", function() {
+        // Account Details
+        expect(element(by.model('user.email')).isPresent()).to.eventually.equal(false);
+        return expect(element(by.model('user.email_notification_method')).isPresent()).to.eventually.equal(false);
+    });
+
     this.Then("I should see the rest of the Account Details section fields", function() {
         // Account Details
         expect(element(by.model('user.displayname')).isPresent()).to.eventually.equal(true);
         expect(element(by.model('user.firstname')).isPresent()).to.eventually.equal(true);
         expect(element(by.model('user.lastname')).isPresent()).to.eventually.equal(true);
-        expect(element(by.model('user.email')).isPresent()).to.eventually.equal(true);
-        return expect(element(by.model('user.email_notification_method')).isPresent()).to.eventually.equal(true);
     });
 
     this.Then("I should see the Account Login section", function() {
@@ -45,27 +55,5 @@ var editUserStepDefinitionsWrapper = function () {
         // Account Login
         return expect(element(by.model('user.username')).isPresent()).to.eventually.equal(false);
     });
-
-    this.Then("I should see the Password section", function() {
-        // Password
-        expect(element(by.model('password.oldpassword')).isPresent()).to.eventually.equal(true);
-        expect(element(by.model('password.newpassword')).isPresent()).to.eventually.equal(true);
-        return expect(element(by.model('password.verifypassword')).isPresent()).to.eventually.equal(true);
-    });
-
-    this.Then("I should see the Password section without old password", function() {
-        // Password
-        expect(element(by.model('password.oldpassword')).isPresent()).to.eventually.equal(false);
-        expect(element(by.model('password.newpassword')).isPresent()).to.eventually.equal(true);
-        return expect(element(by.model('password.verifypassword')).isPresent()).to.eventually.equal(true);
-    });
-
-    this.Then("I should not see the Password section", function() {
-        // Password
-        expect(element(by.model('password.oldpassword')).isPresent()).to.eventually.equal(false);
-        expect(element(by.model('password.newpassword')).isPresent()).to.eventually.equal(false);
-        return expect(element(by.model('password.verifypassword')).isPresent()).to.eventually.equal(false);
-    });
-
 };
 module.exports = editUserStepDefinitionsWrapper;
