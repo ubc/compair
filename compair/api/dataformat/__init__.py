@@ -63,7 +63,7 @@ def get_full_user():
     return full
 
 def get_full_users_in_course():
-    users = get_user(restrict_user)
+    users = get_user(False)
     users['group_name'] = fields.String
     users['course_role'] = UnwrapEnum(attribute='course_role')
     users['cas_username'] = fields.String

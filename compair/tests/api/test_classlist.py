@@ -145,6 +145,13 @@ class ClassListAPITest(ComPAIRAPITestCase):
             for key, (user, cas_username, group_name) in enumerate(expected):
                 self.assertEqual(user.uuid, rv.json['objects'][key]['id'])
 
+        with self.login("root"):
+            rv = self.client.get(self.url)
+            self.assert200(rv)
+            self.assertEqual(len(expected), len(rv.json['objects']))
+            for key, (user, cas_username, group_name) in enumerate(expected):
+                self.assertEqual(user.uuid, rv.json['objects'][key]['id'])
+
         self.app.config['EXPOSE_CAS_USERNAME_TO_INSTRUCTOR'] = False
 
     def test_get_instructor_labels(self):
