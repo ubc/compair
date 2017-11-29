@@ -146,9 +146,10 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         # adaptive min delta algo requires extra criterion specific parameters
         if pairing_algorithm == PairingAlgorithm.adaptive_min_delta:
             # retreive extra criterion score data
-            answers_with_criterion_score = Answer.query \
-                .with_entities(Answer, AnswerCriterionScore.criterion_id, AnswerCriterionScore.score) \
-                .join(AnswerCriterionScore) \
+            answer_criterion_scores = AnswerCriterionScore.query \
+                .with_entities(AnswerCriterionScore.answer_id,
+                    AnswerCriterionScore.criterion_id, AnswerCriterionScore.score) \
+                .join(Answer) \
                 .filter(and_(
                     Answer.user_id.notin_(ineligible_user_ids),
                     Answer.assignment_id == assignment_id,
@@ -167,11 +168,9 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
                 .all()
 
             criterion_scores = {}
-            for answer_with_criterion_score in answers_with_criterion_score:
-                key = answer_with_criterion_score.Answer.id
-                scores = criterion_scores.setdefault(key, {})
-                scores[answer_with_criterion_score.criterion_id] = \
-                    answer_with_criterion_score.score
+            for criterion_score in answer_criterion_scores:
+                scores = criterion_scores.setdefault(criterion_score.answer_id, {})
+                scores[criterion_score.criterion_id] = criterion_score.score
 
             criterion_weights = {}
             for the_weight in assignment_criterion_weights:
