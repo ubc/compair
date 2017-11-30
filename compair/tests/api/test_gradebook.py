@@ -43,7 +43,7 @@ class GradebookAPITests(ComPAIRAPITestCase):
 
             # get gradebook (with scores, no self eval)
             self.fixtures.assignment.enable_self_evaluation = False
-            self.fixtures.assignment.pairing_algorithm = PairingAlgorithm.adaptive
+            self.fixtures.assignment.pairing_algorithm = PairingAlgorithm.adaptive_min_delta
             db.session.commit()
 
             rv = self.client.get(self.base_url, data=json.dumps({}), content_type='application/json')

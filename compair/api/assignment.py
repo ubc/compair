@@ -68,7 +68,8 @@ on_assignment_users_comparisons_get = event.signal('ASSIGNMENT_USERS_COMPARISONS
 def check_valid_pairing_algorithm(pairing_algorithm):
     pairing_algorithms = [
         PairingAlgorithm.adaptive.value,
-        PairingAlgorithm.random.value
+        PairingAlgorithm.random.value,
+        PairingAlgorithm.adaptive_min_delta.value
     ]
     if pairing_algorithm not in pairing_algorithms:
         abort(400, title="Assignment Not Saved", message="'"+pairing_algorithm+"' is not a valid answer pairing algorithm. Please select one of the pairing algorithm options listed.")

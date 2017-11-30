@@ -106,7 +106,8 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     @classmethod
     def _get_new_comparison_pair(cls, course_id, assignment_id, user_id, pairing_algorithm, comparisons):
-        from . import Assignment, UserCourse, CourseRole, Answer, AnswerScore, PairingAlgorithm
+        from . import Assignment, UserCourse, CourseRole, Answer, AnswerScore, \
+            PairingAlgorithm, AnswerCriterionScore, AssignmentCriterion
 
         # ineligible authors - eg. instructors, TAs, dropped student, current user
         non_students = UserCourse.query \
@@ -142,12 +143,55 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
         comparison_pairs = [comparison.convert_to_comparison_pair() for comparison in comparisons]
 
-        comparison_pair = generate_pair(
-            package_name=pairing_algorithm.value,
-            scored_objects=scored_objects,
-            comparison_pairs=comparison_pairs,
-            log=current_app.logger
-        )
+        # adaptive min delta algo requires extra criterion specific parameters
+        if pairing_algorithm == PairingAlgorithm.adaptive_min_delta:
+            # retreive extra criterion score data
+            answer_criterion_scores = AnswerCriterionScore.query \
+                .with_entities(AnswerCriterionScore.answer_id,
+                    AnswerCriterionScore.criterion_id, AnswerCriterionScore.score) \
+                .join(Answer) \
+                .filter(and_(
+                    Answer.user_id.notin_(ineligible_user_ids),
+                    Answer.assignment_id == assignment_id,
+                    Answer.active == True,
+                    Answer.practice == False,
+                    Answer.draft == False
+                )) \
+                .all()
+
+            assignment_criterion_weights = AssignmentCriterion.query \
+                .with_entities(AssignmentCriterion.criterion_id, AssignmentCriterion.weight) \
+                .filter(and_(
+                    AssignmentCriterion.assignment_id == assignment_id,
+                    AssignmentCriterion.active == True
+                )) \
+                .all()
+
+            criterion_scores = {}
+            for criterion_score in answer_criterion_scores:
+                scores = criterion_scores.setdefault(criterion_score.answer_id, {})
+                scores[criterion_score.criterion_id] = criterion_score.score
+
+            criterion_weights = {}
+            for the_weight in assignment_criterion_weights:
+                criterion_weights[the_weight.criterion_id] = \
+                    the_weight.weight
+
+            comparison_pair = generate_pair(
+                package_name=pairing_algorithm.value,
+                scored_objects=scored_objects,
+                comparison_pairs=comparison_pairs,
+                criterion_scores=criterion_scores,
+                criterion_weights=criterion_weights,
+                log=current_app.logger
+            )
+        else:
+            comparison_pair = generate_pair(
+                package_name=pairing_algorithm.value,
+                scored_objects=scored_objects,
+                comparison_pairs=comparison_pairs,
+                log=current_app.logger
+            )
 
         return comparison_pair
 
