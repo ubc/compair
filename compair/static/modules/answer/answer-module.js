@@ -240,6 +240,7 @@ module.controller(
                     if (ret.draft) {
                         Toaster.success("Answer Draft Saved", "Remember to submit your answer before the deadline.");
                         $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/answer/' + $scope.answer.id + '/edit');
+                        $location.replace();
                     } else {
                         Toaster.success("Answer Submitted");
                         $location.path('/course/' + $scope.courseId + '/assignment/' +$scope.assignmentId);
