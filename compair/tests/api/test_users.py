@@ -1125,7 +1125,7 @@ class UsersCourseStatusAPITests(ComPAIRAPITestCase):
             submit_count += 1
             db.session.commit()
 
-            Comparison.calculate_scores(assignment.id)
+            Comparison.update_scores_1vs1(comparison)
         return submit_count
 
     def test_get_course_list(self):

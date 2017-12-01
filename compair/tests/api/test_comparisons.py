@@ -6,7 +6,7 @@ import datetime
 from data.fixtures.test_data import ComparisonTestData, LTITestData
 from data.factories import AssignmentCriterionFactory
 from compair.models import Answer, Comparison, CourseGrade, AssignmentGrade, \
-    WinningAnswer, SystemRole
+    WinningAnswer, SystemRole, AnswerScore, AnswerCriterionScore
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.core import db
 
@@ -418,15 +418,80 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             winner_ids.append(min_id)
             loser_ids.append(max_id)
 
+            min_score = AnswerScore.query.filter_by(answer_id=min_id).first()
+            min_stats = {
+                'overall': {
+                    'wins': min_score.wins if min_score else 0,
+                    'loses': min_score.loses if min_score else 0,
+                    'opponents': min_score.opponents if min_score else 0,
+                    'rounds': min_score.rounds if min_score else 0
+                }
+            }
+            max_score = AnswerScore.query.filter_by(answer_id=max_id).first()
+            max_stats = {
+                'overall': {
+                    'wins': max_score.wins if max_score else 0,
+                    'loses': max_score.loses if max_score else 0,
+                    'opponents': max_score.opponents if max_score else 0,
+                    'rounds': max_score.rounds if max_score else 0
+                }
+            }
+
             comparison.completed = True
             comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
             for comparison_criterion in comparison.comparison_criteria:
                 comparison_criterion.winner = comparison.winner
+
+                criterion_id = comparison_criterion.criterion_id
+                min_score = AnswerCriterionScore.query.filter_by(answer_id=min_id, criterion_id=criterion_id).first()
+                min_stats[criterion_id] = {
+                    'wins': min_score.wins if min_score else 0,
+                    'loses': min_score.loses if min_score else 0,
+                    'opponents': min_score.opponents if min_score else 0,
+                    'rounds': min_score.rounds if min_score else 0
+                }
+                max_score = AnswerCriterionScore.query.filter_by(answer_id=max_id, criterion_id=criterion_id).first()
+                max_stats[criterion_id] = {
+                    'wins': max_score.wins if max_score else 0,
+                    'loses': max_score.loses if max_score else 0,
+                    'opponents': max_score.opponents if max_score else 0,
+                    'rounds': max_score.rounds if max_score else 0
+                }
+
             db.session.add(comparison)
 
             db.session.commit()
 
-            Comparison.calculate_scores(self.assignment.id)
+            Comparison.update_scores_1vs1(comparison)
+
+            # ensure wins, loses, opponents, and rounds increment properly
+            min_score = AnswerScore.query.filter_by(answer_id=min_id).first()
+            self.assertEqual(min_score.wins, min_stats['overall']['wins']+1)
+            self.assertEqual(min_score.loses, min_stats['overall']['loses'])
+            self.assertIn(min_score.opponents, [min_stats['overall']['opponents'], min_stats['overall']['opponents']+1])
+            self.assertEqual(min_score.rounds, min_stats['overall']['rounds']+1)
+
+            max_score = AnswerScore.query.filter_by(answer_id=max_id).first()
+            self.assertEqual(max_score.wins, max_stats['overall']['wins'])
+            self.assertEqual(max_score.loses, max_stats['overall']['loses']+1)
+            self.assertIn(max_score.opponents, [max_stats['overall']['opponents'], max_stats['overall']['opponents']+1])
+            self.assertEqual(max_score.rounds, max_stats['overall']['rounds']+1)
+
+            for comparison_criterion in comparison.comparison_criteria:
+                criterion_id = comparison_criterion.criterion_id
+                min_score = AnswerCriterionScore.query.filter_by(answer_id=min_id, criterion_id=criterion_id).first()
+                self.assertEqual(min_score.wins, min_stats[criterion_id]['wins']+1)
+                self.assertEqual(min_score.loses, min_stats[criterion_id]['loses'])
+                self.assertIn(min_score.opponents, [min_stats[criterion_id]['opponents'], min_stats[criterion_id]['opponents']+1])
+                self.assertEqual(min_score.rounds, min_stats[criterion_id]['rounds']+1)
+
+                max_score = AnswerCriterionScore.query.filter_by(answer_id=max_id, criterion_id=criterion_id).first()
+                print(max_score)
+                self.assertEqual(max_score.wins, max_stats[criterion_id]['wins'])
+                self.assertEqual(max_score.loses, max_stats[criterion_id]['loses']+1)
+                self.assertIn(max_score.opponents, [max_stats[criterion_id]['opponents'], max_stats[criterion_id]['opponents']+1])
+                self.assertEqual(max_score.rounds, max_stats[criterion_id]['rounds']+1)
+
         return {
             'comparisons': {
                 'winners': winner_ids, 'losers': loser_ids
