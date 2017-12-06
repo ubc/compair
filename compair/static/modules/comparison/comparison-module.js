@@ -176,21 +176,23 @@ module.controller(
             $scope.submitted = true;
             // save comments for each individual answer
             angular.forEach([$scope.answer1, $scope.answer2], function(answer) {
-                var params = {
-                    courseId: $scope.courseId,
-                    assignmentId: $scope.assignmentId,
-                    answerId: answer.id,
-                    commentId: _.get(answer, 'comment.id')
-                };
-                answer.comment.comment_type = AnswerCommentType.evaluation;
-                answer.comment.draft = $scope.isDraft;
-                answer.comment.tracking = $scope.tracking.toParams();
-                AnswerCommentResource.save(params, answer.comment).$promise.then(
-                    function(ret) {
-                        // need comment id if saving draft
-                        answer.comment = ret;
-                    }
-                );
+                if (!$scope.canManageAssignment || answer.comment.content.length) {
+                    var params = {
+                        courseId: $scope.courseId,
+                        assignmentId: $scope.assignmentId,
+                        answerId: answer.id,
+                        commentId: _.get(answer, 'comment.id')
+                    };
+                    answer.comment.comment_type = AnswerCommentType.evaluation;
+                    answer.comment.draft = $scope.isDraft;
+                    answer.comment.tracking = $scope.tracking.toParams();
+                    AnswerCommentResource.save(params, answer.comment).$promise.then(
+                        function(ret) {
+                            // need comment id if saving draft
+                            answer.comment = ret;
+                        }
+                    );
+                }
             });
             var comparison_criteria = []
             var comparisons = []

@@ -151,22 +151,22 @@
                 <fieldset>
                     <legend>Peer Feedback</legend>
                     <div class="col-md-6">
-                        <label class="cke-label required-star">
+                        <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
                             Your private feedback for Answer {{firstAnsNum}}'s author
                             <i class="fa fa-arrow-down"></i>
                         </label>
                         <textarea
-                            ng-model="answer1.comment.content" rows="8" ckeditor="editor1Options" required>
+                            ng-model="answer1.comment.content" rows="8" ckeditor="editor1Options" ng-required="{{!canManageAssignment}}">
                         </textarea>
                     </div>
     
                     <div class="col-md-6">
-                        <label class="cke-label required-star">
+                        <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
                             Your private feedback for Answer {{secondAnsNum}}'s author
                             <i class="fa fa-arrow-down"></i>
                         </label>
                         <textarea
-                            ng-model="answer2.comment.content" rows="8" ckeditor="editor2Options" required>
+                            ng-model="answer2.comment.content" rows="8" ckeditor="editor2Options" ng-required="{{!canManageAssignment}}">
                         </textarea>
                     </div>
                 </fieldset>
