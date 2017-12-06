@@ -817,10 +817,11 @@ module.controller("AssignmentWriteController",
                 self_evaluation_grade_weight: 1
             }
 
-            $scope.date.astart.date.setDate(today.getDate()+1);
-            $scope.date.aend.date.setDate(today.getDate()+8);
-            $scope.date.cstart.date.setDate(today.getDate()+8);
-            $scope.date.cend.date.setDate(today.getDate()+15);
+            // no default date set when creating a new assignment
+            $scope.date.astart.date = null;
+            $scope.date.aend.date = null;
+            $scope.date.cstart.date = null;
+            $scope.date.cend.date = null;
 
         } else if ($scope.method == "edit") {
             if ($scope.assignment.file) {
@@ -926,26 +927,26 @@ module.controller("AssignmentWriteController",
 
         $scope.datePickerMinDate = function() {
             var dates = Array.prototype.slice.call(arguments).filter(function(val) {
-                return val !== null;
+                return typeof val !== 'undefined' && val !== null;
             });
             if (dates.length == 0) {
                 return null;
             }
-            return dates.reduce(function (left, right) {
+            return moment(dates.reduce(function (left, right) {
                 return moment(left) > moment(right) ? left : right;
-            }, dates[0]);
+            }, dates[0])).toDate();
         };
 
         $scope.datePickerMaxDate = function() {
             var dates = Array.prototype.slice.call(arguments).filter(function(val) {
-                return val !== null;
+                return typeof val !== 'undefined' && val !== null;
             });
             if (dates.length == 0) {
                 return null;
             }
-            return dates.reduce(function (left, right) {
+            return moment(dates.reduce(function (left, right) {
                 return moment(left) < moment(right) ? left : right;
-            }, dates[0]);
+            }, dates[0])).toDate();
         };
 
         $scope.getMinDate = function(startDate) {
@@ -1090,6 +1091,14 @@ module.controller("AssignmentWriteController",
 
         $scope.assignmentSubmit = function () {
             $scope.submitted = true;
+
+            if ($scope.date.astart.date == null || $scope.date.astart.time == null ||
+                $scope.date.aend.date == null || $scope.date.aend.time == null) {
+                Toaster.warning('Assignment Not Saved', 'Please specify the start date and end date of answering period.');
+                $scope.submitted = false;
+                return;
+            }
+
             $scope.assignment.answer_start = combineDateTime($scope.date.astart);
             $scope.assignment.answer_end = combineDateTime($scope.date.aend);
             $scope.assignment.compare_start = combineDateTime($scope.date.cstart);

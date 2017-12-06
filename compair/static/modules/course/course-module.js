@@ -382,26 +382,26 @@ module.controller(
 
         $scope.datePickerMinDate = function() {
             var dates = Array.prototype.slice.call(arguments).filter(function(val) {
-                return val !== null;
+                return typeof val !== 'undefined' && val !== null;
             });
             if (dates.length == 0) {
                 return null;
             }
-            return dates.reduce(function (left, right) {
+            return moment(dates.reduce(function (left, right) {
                 return moment(left) > moment(right) ? left : right;
-            }, dates[0]);
+            }, dates[0])).toDate();
         };
 
         $scope.datePickerMaxDate = function() {
             var dates = Array.prototype.slice.call(arguments).filter(function(val) {
-                return val !== null;
+                return typeof val !== 'undefined' && val !== null;
             });
             if (dates.length == 0) {
                 return null;
             }
-            return dates.reduce(function (left, right) {
+            return moment(dates.reduce(function (left, right) {
                 return moment(left) < moment(right) ? left : right;
-            }, dates[0]);
+            }, dates[0])).toDate();
         };
 
         $scope.duplicate = function() {

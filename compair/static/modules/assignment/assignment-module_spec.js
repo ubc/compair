@@ -1193,6 +1193,13 @@ describe('assignment-module', function () {
                 it('should warn when answer start is not before answer end', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
+
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
+                    
                     $rootScope.date.aend.date = $rootScope.date.astart.date;
                     $rootScope.date.aend.time = $rootScope.date.astart.time;
                     var currentPath = $location.path();
@@ -1207,6 +1214,15 @@ describe('assignment-module', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.availableCheck = true;
+
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
+                    $rootScope.date.cend.date = new Date();
+                    $rootScope.date.cend.date.setDate($rootScope.date.cend.date.getDate()+15);
+
                     $rootScope.date.cstart.date = angular.copy($rootScope.date.astart.date);
                     $rootScope.date.cstart.date.setDate($rootScope.date.cstart.date.getDate()-1);
                     var currentPath = $location.path();
@@ -1221,6 +1237,15 @@ describe('assignment-module', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.availableCheck = true;
+                    
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
+                    $rootScope.date.cstart.date = new Date();
+                    $rootScope.date.cstart.date.setDate($rootScope.date.cstart.date.getDate()+8);
+
                     $rootScope.date.cend.date = $rootScope.date.cstart.date;
                     $rootScope.date.cend.time = $rootScope.date.cstart.time;
                     var currentPath = $location.path();
@@ -1234,6 +1259,12 @@ describe('assignment-module', function () {
                 it('should enable save button even if save failed', function() {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
+                    
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
 
                     $httpBackend.expectPOST('/api/criteria', expectedCriterion).respond(200, mockNewCriterion);
                     $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments', $rootScope.assignment)
@@ -1247,6 +1278,13 @@ describe('assignment-module', function () {
                 it('should warn when comparison examples enabled and answer A is not set', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
+
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
+
                     $rootScope.assignment.addPractice = true;
                     $rootScope.comparison_example = {
                         answer1: {},
@@ -1263,6 +1301,13 @@ describe('assignment-module', function () {
                 it('should warn when comparison examples enabled and answer B is not set', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
+
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
+
                     $rootScope.assignment.addPractice = true;
                     $rootScope.comparison_example = {
                         answer1: mockPracticeAnswer1,
@@ -1280,6 +1325,12 @@ describe('assignment-module', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
 
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
+
                     $httpBackend.expectPOST('/api/criteria', expectedCriterion).respond(200, mockNewCriterion);
                     $httpBackend.expectPOST('/api/courses/1abcABC123-abcABC123_Z/assignments', $rootScope.assignment)
                         .respond(angular.merge({}, mockAssignment, {id: "2abcABC123-abcABC123_Z"}));
@@ -1293,6 +1344,13 @@ describe('assignment-module', function () {
                 it('should be able to save new assignment with comparison examples', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
+
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
+
                     $rootScope.assignment.addPractice = true;
                     $rootScope.comparison_example = {
                         answer1: mockPracticeAnswer1,
