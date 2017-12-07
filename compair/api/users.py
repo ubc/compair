@@ -272,6 +272,10 @@ class UserListAPI(Resource):
         if sess.get('oauth_create_user_link') and sess.get('LTI') and sess.get('CAS_CREATE'):
             user.username = None
             user.password = None
+        elif not current_app.config.get('APP_LOGIN_ENABLED'):
+            # if APP_LOGIN_ENABLED is not enabled, allow blank username and password
+            user.username = None
+            user.password = None
         else:
             # else enforce required password and unique username
             user.password = params.get("password")

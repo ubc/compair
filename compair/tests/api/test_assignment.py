@@ -567,7 +567,7 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
             submit_count += 1
             db.session.commit()
 
-            Comparison.calculate_scores(self.assignment.id)
+            Comparison.update_scores_1vs1(comparison)
         return submit_count
 
     def test_edit_compared_assignment(self):
@@ -677,7 +677,7 @@ class AssignmentStatusComparisonsAPITests(ComPAIRAPITestCase):
             submit_count += 1
             db.session.commit()
 
-            Comparison.calculate_scores(self.assignment.id)
+            Comparison.update_scores_1vs1(comparison)
         return submit_count
 
     def test_get_all_status(self):

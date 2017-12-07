@@ -150,6 +150,28 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertEqual("User Not Saved", rv.json['title'])
             self.assertEqual("Sorry, this student number already exists and student numbers must be unique in ComPAIR. Please enter another number and try saving again.", rv.json['message'])
 
+            # test missing password
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value,
+                password=None
+            )
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
+            self.assertStatus(rv, 400)
+            self.assertEqual("Account Not Saved", rv.json['title'])
+            self.assertEqual("The required field password is missing.", rv.json['message'])
+
+            # test missing username
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value,
+                username=None
+            )
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
+            self.assertStatus(rv, 400)
+            self.assertEqual("Account Not Saved", rv.json['title'])
+            self.assertEqual("The required field username is missing.", rv.json['message'])
+
             # test creating student
             expected = UserFactory.stub(
                 system_role=SystemRole.student.value,
@@ -177,6 +199,23 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            # test APP_LOGIN_ENABLED disabled
+            self.app.config['APP_LOGIN_ENABLED'] = False
+
+            # test creating student without username and password
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value,
+                username=None,
+                password=None
+            )
+            rv = self.client.post(
+                url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            self.app.config['APP_LOGIN_ENABLED'] = True
 
     def test_create_user_lti(self):
         url = '/api/users'
@@ -1108,7 +1147,7 @@ class UsersCourseStatusAPITests(ComPAIRAPITestCase):
             submit_count += 1
             db.session.commit()
 
-            Comparison.calculate_scores(assignment.id)
+            Comparison.update_scores_1vs1(comparison)
         return submit_count
 
     def test_get_course_list(self):
