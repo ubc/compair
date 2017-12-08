@@ -9,7 +9,7 @@ from flask import Blueprint, request, current_app, make_response
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from six import BytesIO
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from flask_restful.reqparse import RequestParser
@@ -67,6 +67,7 @@ on_classlist_unenrol = event.signal('CLASSLIST_UNENROL')
 on_classlist_instructor_label = event.signal('CLASSLIST_INSTRUCTOR_LABEL_GET')
 on_classlist_instructor = event.signal('CLASSLIST_INSTRUCTOR_GET')
 on_classlist_student = event.signal('CLASSLIST_STUDENT_GET')
+on_classlist_instructional = event.signal('CLASSLIST_INSTRUCTIONAL_GET')
 on_classlist_update_users_course_roles = event.signal('CLASSLIST_UPDATE_USERS_COURSE_ROLES')
 
 
@@ -619,6 +620,59 @@ class StudentsAPI(Resource):
 
 api.add_resource(StudentsAPI, '/students')
 
+# /instructionals - return list of Instructors and TAs of the course
+class InstructionalsAPI(Resource):
+    @login_required
+    def get(self, course_uuid):
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        require(READ, course,
+            title="Instructional users Unavailable",
+            message="Instructional users can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
+        restrict_user = not allow(MANAGE, course)
+
+        instructionals = User.query \
+            .with_entities(User, UserCourse.group_name, UserCourse.course_role) \
+            .join(UserCourse, UserCourse.user_id == User.id) \
+            .filter(
+                UserCourse.course_id == course.id,
+                or_(
+                    UserCourse.course_role == CourseRole.instructor,
+                    UserCourse.course_role == CourseRole.teaching_assistant
+                )
+            ) \
+            .order_by(User.lastname, User.firstname) \
+            .all()
+
+        users = []
+        user_course = UserCourse(course_id=course.id)
+        for u in instructionals:
+            if allow(READ, user_course):
+                users.append({
+                    'id': u.User.uuid,
+                    'name': u.User.fullname_sortable,
+                    'group_name': u.group_name,
+                    'role': u.course_role.value
+                })
+            else:
+                name = u.User.displayname
+                users.append({
+                    'id': u.User.uuid,
+                    'name': name,
+                    'group_name': u.group_name,
+                    'role': u.course_role.value
+                })
+
+        on_classlist_instructional.send(
+            self,
+            event_name=on_classlist_instructional.name,
+            user=current_user,
+            course_id=course.id
+        )
+
+        return { 'objects': users }
+
+
+api.add_resource(InstructionalsAPI, '/instructionals')
 
 # /roles - set course role for multi users at once
 class UserCourseRoleAPI(Resource):

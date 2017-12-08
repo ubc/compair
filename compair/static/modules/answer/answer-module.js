@@ -102,10 +102,10 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
 module.controller(
     "AnswerWriteController",
     ["$scope", "$location", "$routeParams", "AnswerResource", "ClassListResource", "$route",
-        "AssignmentResource", "Toaster", "$timeout", "UploadValidator",
+        "AssignmentResource", "Toaster", "$timeout", "UploadValidator", "CourseRole",
         "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper", "resolvedData",
     function ($scope, $location, $routeParams, AnswerResource, ClassListResource, $route,
-        AssignmentResource, Toaster, $timeout, UploadValidator,
+        AssignmentResource, Toaster, $timeout, UploadValidator, CourseRole,
         answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, resolvedData)
     {
         $scope.courseId = $routeParams.courseId;
@@ -131,12 +131,16 @@ module.controller(
             );
         });
         $scope.showAssignment = true;
+        // since the "submit as" dropdown (if enabled) is default to current user (or empty if sys admin),
+        // the default value of submitAsInstructorOrTA is based on canManageAssignment
+        $scope.submitAsInstructorOrTA = resolvedData.canManageAssignment;
 
         if ($scope.method == "create") {
             $scope.answer = {
                 draft: true,
                 course_id: $scope.courseId,
-                assignment_id: $scope.assignmentId
+                assignment_id: $scope.assignmentId,
+                comparable: true
             };
             if (!resolvedData.answerUnsaved.objects.length) {
                 // if no answers found, create a new draft answer
@@ -212,6 +216,20 @@ module.controller(
                 $scope.assignment, $scope.tracking.getRegistration(), $scope.tracking.getDuration()
             );
         };
+
+        $scope.onSubmitAsChanged = function(selectedUserId) {
+            var instructorOrTA = selectedUserId != null &&
+                $scope.classlist.filter(function (el) {
+                    return el.id == selectedUserId &&
+                        (el.course_role == CourseRole.instructor ||
+                         el.course_role == CourseRole.teaching_assistant)
+                }).length > 0;
+
+            $scope.submitAsInstructorOrTA = selectedUserId == null || instructorOrTA;
+            if (!instructorOrTA) {
+                $scope.answer.comparable = true;
+            }
+        }
 
         $scope.answerSubmit = function () {
             $scope.submitted = true;
@@ -302,6 +320,8 @@ module.controller(
                 file, $scope.answer, $scope.tracking.getRegistration()
             );
         });
+
+        $scope.submitAsInstructorOrTA = $scope.canManageAssignment;
 
         $scope.deleteFile = function(file) {
             $scope.answer.file = null;

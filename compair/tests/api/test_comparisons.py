@@ -230,16 +230,16 @@ class ComparisonAPITests(ComPAIRAPITestCase):
         users = [self.data.get_authorized_student(), self.data.get_authorized_instructor(), self.data.get_authorized_ta()]
         for user in users:
             max_comparisons = self.assignment.number_of_comparisons
-            other_student_answers = 0
+            other_people_answers = 0
             valid_answer_uuids = set()
-            for answer in self.data.get_student_answers():
+            for answer in self.data.get_comparable_answers():
                 if answer.assignment.id == self.assignment.id and answer.user_id != user.id:
-                    other_student_answers += 1
+                    other_people_answers += 1
                     valid_answer_uuids.add(answer.uuid)
 
             # instructors and tas can compare every possible pair
             if user.id in [self.data.get_authorized_instructor().id, self.data.get_authorized_ta().id]:
-                max_comparisons = int(other_student_answers * (other_student_answers - 1) / 2)
+                max_comparisons = int(other_people_answers * (other_people_answers - 1) / 2)
 
             if user.id == self.data.get_authorized_student().id:
                 for comparison_example in self.data.comparisons_examples:
@@ -277,6 +277,14 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                     self.assertNotEqual(actual_answer1_uuid, actual_answer2_uuid)
                     self.assertTrue(rv.json['new_pair'])
                     self.assertEqual(rv.json['current'], current)
+                    # no user info should be included in the answer
+                    self.assertFalse('user' in rv.json['comparison']['answer1'] or
+                        'user_id' in rv.json['comparison']['answer1'])
+                    self.assertFalse('user' in rv.json['comparison']['answer2'] or
+                        'user_id' in rv.json['comparison']['answer2'])
+                    # no score info should be included in the answer
+                    self.assertFalse('score' in rv.json['comparison']['answer1'])
+                    self.assertFalse('score' in rv.json['comparison']['answer2'])
 
                     # fetch again
                     rv = self.client.get(self.base_url)
@@ -317,7 +325,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                     actual_comparison = rv.json['comparison']
                     self._validate_comparison_submit(comparison_submit, actual_comparison, expected_comparison)
 
-                    # grades should increase for every comparison
+                    # grades should increase for every comparison, unless student has done more than required by assignment
                     if user.id == self.data.get_authorized_student().id:
                         new_course_grade = CourseGrade.get_user_course_grade(self.course, user)
                         new_assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, user)
@@ -391,6 +399,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
     def _submit_all_possible_comparisons_for_user(self, user_id):
         example_winner_ids = []
         example_loser_ids = []
+        submit_count = 0
 
         for comparison_example in self.data.comparisons_examples:
             if comparison_example.assignment_id == self.assignment.id:
@@ -406,6 +415,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 comparison.winner = WinningAnswer.answer1 if comparison.answer1_id < comparison.answer2_id else WinningAnswer.answer2
                 for comparison_criterion in comparison.comparison_criteria:
                     comparison_criterion.winner = comparison.winner
+                submit_count += 1
                 db.session.add(comparison)
 
                 db.session.commit()
@@ -413,11 +423,14 @@ class ComparisonAPITests(ComPAIRAPITestCase):
         # self.login(username)
         # calculate number of comparisons to do before user has compared all the pairs it can
         num_eligible_answers = 0  # need to minus one to exclude the logged in user's own answer
-        for answer in self.data.get_student_answers():
+        for answer in self.data.get_comparable_answers():
             if answer.assignment_id == self.assignment.id and answer.user_id != user_id:
                 num_eligible_answers += 1
         # n(n-1)/2 possible pairs before all answers have been compared
-        num_possible_comparisons = int(num_eligible_answers * (num_eligible_answers - 1) / 2)
+        # don't compare more than the assignment required (minus example done).
+        num_possible_comparisons = min(
+            int(num_eligible_answers * (num_eligible_answers - 1) / 2), \
+            self.assignment.total_comparisons_required - submit_count)
         winner_ids = []
         loser_ids = []
         for i in range(num_possible_comparisons):
@@ -495,7 +508,6 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 self.assertEqual(min_score.rounds, min_stats[criterion_id]['rounds']+1)
 
                 max_score = AnswerCriterionScore.query.filter_by(answer_id=max_id, criterion_id=criterion_id).first()
-                print(max_score)
                 self.assertEqual(max_score.wins, max_stats[criterion_id]['wins'])
                 self.assertEqual(max_score.loses, max_stats[criterion_id]['loses']+1)
                 self.assertIn(max_score.opponents, [max_stats[criterion_id]['opponents'], max_stats[criterion_id]['opponents']+1])
@@ -534,7 +546,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             num_wins_by_id[winner_id] = num_wins + 1
 
         # Get the actual score calculated for each answer
-        answers = self.data.get_student_answers()
+        answers = self.data.get_comparable_answers()
         answer_scores = {}
         for answer in answers:
             if answer.assignment.id == self.assignment.id:
@@ -542,14 +554,46 @@ class ComparisonAPITests(ComPAIRAPITestCase):
 
         # Check that ranking by score and by wins match, this only works for low number of
         # comparisons
-        sorted_expect_ranking = sorted(num_wins_by_id.items(), key=operator.itemgetter(0))
-        sorted_expect_ranking = sorted(sorted_expect_ranking, key=operator.itemgetter(1))
-        expected_ranking_by_wins = [answer_id for (answer_id, wins) in sorted_expect_ranking]
+        id_by_win = {}
+        for the_id in num_wins_by_id:
+            id_by_win.setdefault(num_wins_by_id[the_id], []).append(the_id)
+         # list of lists of id, ordered by # of wins. id with same # of wins grouped in the same sub-list
+        expected_ranking_by_wins = [i[1] for i in sorted(id_by_win.items(), key=lambda x: x[0])]
 
         sorted_actual_ranking = sorted(answer_scores.items(), key=operator.itemgetter(1))
         actual_ranking_by_scores = [answer_id for (answer_id, score) in sorted_actual_ranking]
 
-        self.assertSequenceEqual(actual_ranking_by_scores, expected_ranking_by_wins)
+        for ids in expected_ranking_by_wins:
+            while len(ids) > 0:
+                actual_id = actual_ranking_by_scores.pop(0)
+                self.assertIn(actual_id, ids)
+                ids.remove(actual_id)
+
+        self.assertFalse(len(actual_ranking_by_scores))
+
+    # test score and rank are in the same order
+    @mock.patch('random.shuffle')
+    def test_score_rank_order(self, mock_shuffle):
+        # Make sure all answers are compared first
+        comparisons_auth = self._submit_all_possible_comparisons_for_user(
+            self.data.get_authorized_student().id)
+        comparisons_secondary = self._submit_all_possible_comparisons_for_user(
+            self.data.get_secondary_authorized_student().id)
+
+        # Get the actual score calculated and the rank for each answer
+        answers = self.data.get_comparable_answers()
+        answer_scores = {}
+        answer_ranks = {}
+        for answer in answers:
+            if answer.assignment.id == self.assignment.id:
+                answer_scores[answer.id] = answer.score.score
+                answer_ranks[answer.id] = answer.score.rank
+
+        # Answer id sorted by scores and ranks. Highest score / lowest rank first
+        sorted_by_scores = sorted(answer_scores, key=answer_scores.get, reverse=True)
+        sorted_by_ranks = sorted(answer_ranks, key=answer_ranks.get)
+
+        self.assertSequenceEqual(sorted_by_scores, sorted_by_ranks)
 
     def test_comparison_count_matched_pairing(self):
         # Make sure all answers are compared first

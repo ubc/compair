@@ -21,6 +21,7 @@ api = new_restful_api(answers_api)
 
 new_answer_parser = RequestParser()
 new_answer_parser.add_argument('user_id', default=None)
+new_answer_parser.add_argument('comparable', type=bool, default=True)
 new_answer_parser.add_argument('content', default=None)
 new_answer_parser.add_argument('file_id', default=None)
 new_answer_parser.add_argument('draft', type=bool, default=False)
@@ -28,6 +29,7 @@ new_answer_parser.add_argument('draft', type=bool, default=False)
 existing_answer_parser = RequestParser()
 existing_answer_parser.add_argument('id', required=True, help="Answer id is required.")
 existing_answer_parser.add_argument('user_id', default=None)
+existing_answer_parser.add_argument('comparable', type=bool, default=True)
 existing_answer_parser.add_argument('content', default=None)
 existing_answer_parser.add_argument('file_id', default=None)
 existing_answer_parser.add_argument('draft', type=bool, default=False)
@@ -72,7 +74,7 @@ class AnswerRootAPI(Resource):
         """
         Return a list of answers for a assignment based on search criteria. The
         list of the answers are paginated. If there is any answers from instructor
-        or TA, their answers will be on top of the list.
+        or TA, their answers will be on top of the list (unless they are comparable).
 
         :param course_uuid: course uuid
         :param assignment_uuid: assignment uuid
@@ -103,8 +105,14 @@ class AnswerRootAPI(Resource):
                 UserCourse.course_id == course.id
             )) \
             .add_columns(
-                UserCourse.course_role.__eq__(CourseRole.instructor).label("instructor_role"),
-                UserCourse.course_role.__eq__(CourseRole.teaching_assistant).label("ta_role")
+                and_(
+                    UserCourse.course_role.__eq__(CourseRole.instructor),
+                    not Answer.comparable
+                ).label("instructor_role"),
+                and_(
+                    UserCourse.course_role.__eq__(CourseRole.teaching_assistant),
+                    not Answer.comparable
+                ).label("ta_role")
             ) \
             .filter(and_(
                 Answer.assignment_id == assignment.id,
@@ -194,11 +202,19 @@ class AnswerRootAPI(Resource):
         if user_uuid and not allow(MANAGE, Answer(course_id=course.id)):
             abort(400, title="Answer Not Submitted", message="Only instructors and teaching assistants can submit an answer on behalf of another.")
 
+        explicitSubmitAsStudent = False
         if user_uuid:
             user = User.get_by_uuid_or_404(user_uuid)
             answer.user_id = user.id
+            explicitSubmitAsStudent = user.get_course_role(course.id) == CourseRole.student
         else:
             answer.user_id = current_user.id
+
+        # instructor / TA can mark the answer as non-comparable, unless the answer is for a student
+        if allow(MANAGE, Answer(course_id=course.id)) and not explicitSubmitAsStudent:
+            answer.comparable = params.get("comparable")
+        else:
+            answer.comparable = True
 
         user_course = UserCourse.query \
             .filter_by(
@@ -302,6 +318,15 @@ class AnswerIdAPI(Resource):
         answer.content = params.get("content")
 
         user_uuid = params.get("user_id")
+        explicitSubmitAsStudent = False
+        if user_uuid:
+            user = User.get_by_uuid_or_404(user_uuid)
+            explicitSubmitAsStudent = user.get_course_role(course.id) == CourseRole.student
+
+        # instructor / TA can mark the answer as non-comparable if it is not a student answer
+        if allow(MANAGE, Answer(course_id=course.id)) and not explicitSubmitAsStudent:
+            answer.comparable = params.get("comparable")
+
         # we allow instructor and TA to submit multiple answers for other users in the class
         if user_uuid and user_uuid != answer.user_uuid:
             if not allow(MANAGE, answer) or not answer.draft:

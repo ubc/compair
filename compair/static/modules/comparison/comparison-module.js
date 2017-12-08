@@ -417,6 +417,17 @@ module.controller(
             }
         );
 
+        CourseResource.getInstructionals({'id': $scope.courseId}).$promise.then(
+            function(ret) {
+                $scope.allInstructionals = ret.objects;
+                instructionalIds = $scope.getUserIds(ret.objects);
+            }
+        );
+
+        $scope.isInstructional = function(user_id) {
+            return user_id in instructionalIds;
+        }
+
         $scope.loadAnswerByAuthor = function(author_id) {
             if (_.find($scope.answers, {user_id: author_id})) return;
             AnswerResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId, 'author': author_id}, function(response) {

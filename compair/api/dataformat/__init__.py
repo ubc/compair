@@ -178,12 +178,11 @@ def get_assignment(restrict_user=True):
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
-def get_answer(restrict_user=True):
-    return {
+def get_answer(restrict_user=True, include_answer_user=True, include_score=True):
+    ret = {
         'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
         'assignment_id': fields.String(attribute="assignment_uuid"),
-        'user_id': fields.String(attribute="user_uuid"),
 
         'content': fields.String,
         'file': fields.Nested(get_file(), allow_null=True),
@@ -191,15 +190,22 @@ def get_answer(restrict_user=True):
         'draft': fields.Boolean,
         'top_answer': fields.Boolean,
 
-        'score': fields.Nested(get_score(restrict_user), allow_null=True),
-
         'comment_count': fields.Integer,
         'private_comment_count': fields.Integer,
         'public_comment_count': fields.Integer,
 
-        'user': get_partial_user(restrict_user),
-        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created)),
+        'comparable': fields.Boolean
     }
+
+    if include_score:
+        ret['score'] = fields.Nested(get_score(restrict_user), allow_null=True)
+
+    if include_answer_user:
+        ret['user_id'] = fields.String(attribute="user_uuid")
+        ret['user'] = get_partial_user(restrict_user)
+
+    return ret
 
 
 def get_assignment_comment(restrict_user=True):
@@ -253,7 +259,7 @@ def get_kaltura_media():
     }
 
 
-def get_comparison(restrict_user=True, with_answers=True, with_feedback=False):
+def get_comparison(restrict_user=True, with_answers=True, with_feedback=False, include_answer_user=True, include_score=True):
     ret = {
         'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
@@ -269,8 +275,8 @@ def get_comparison(restrict_user=True, with_answers=True, with_feedback=False):
     }
 
     if with_answers:
-        ret['answer1'] = fields.Nested(get_answer(restrict_user))
-        ret['answer2'] = fields.Nested(get_answer(restrict_user))
+        ret['answer1'] = fields.Nested(get_answer(restrict_user, include_answer_user, include_score))
+        ret['answer2'] = fields.Nested(get_answer(restrict_user, include_answer_user, include_score))
 
     if with_feedback:
         ret['answer1_feedback'] = fields.List(fields.Nested(get_answer_comment(restrict_user)))

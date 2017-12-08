@@ -278,6 +278,28 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             group="counts"
         )
 
+        # Comparable answer count
+        # To be consistent with student_answer_count, we are not counting
+        # answers from sys admin here
+        cls.comparable_answer_count = column_property(
+            select([func.count(Answer.id)]).
+            select_from(join(Answer, UserCourse, UserCourse.user_id == Answer.user_id)).
+            where(and_(
+                Answer.assignment_id == cls.id,
+                Answer.active == True,
+                Answer.draft == False,
+                Answer.practice == False,
+                UserCourse.course_id == cls.course_id,
+                UserCourse.course_role.in_(
+                    [CourseRole.student, CourseRole.instructor, \
+                        CourseRole.teaching_assistant]
+                ),
+                Answer.comparable == True
+            )),
+            deferred=True,
+            group="counts"
+        )
+
         cls.top_answer_count = column_property(
             select([func.count(Answer.id)]).
             select_from(join(Answer, UserCourse, UserCourse.user_id == Answer.user_id)).

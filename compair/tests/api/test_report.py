@@ -236,15 +236,17 @@ class ReportAPITest(ComPAIRAPITestCase):
 
                 overall_stats = {}
 
+                course_users = sorted(self.fixtures.students + [self.fixtures.instructor, self.fixtures.ta],
+                    key=lambda u: (u.lastname, u.firstname, u.id))
                 for assignment in assignments:
-                    for student in self.fixtures.students:
+                    for user in course_users:
                         next_row = next(reader)
-                        user_stats = self._check_participation_stat_report_user_row(assignment, student, next_row, overall_stats)
+                        user_stats = self._check_participation_stat_report_user_row(assignment, user, next_row, overall_stats)
 
                 # overall
-                for student in self.fixtures.students:
+                for user in course_users:
                     next_row = next(reader)
-                    self._check_participation_stat_report_user_overall_row(student, next_row, overall_stats)
+                    self._check_participation_stat_report_user_overall_row(user, next_row, overall_stats)
 
             # test authorized user one assignment
             single_assignment_input = input.copy()
@@ -264,9 +266,12 @@ class ReportAPITest(ComPAIRAPITestCase):
 
                 overall_stats = {}
 
-                for student in self.fixtures.students:
+                course_users = sorted(self.fixtures.students + [self.fixtures.instructor, self.fixtures.ta],
+                    key=lambda u: (u.lastname, u.firstname, u.id))
+
+                for user in course_users:
                     next_row = next(reader)
-                    user_stats = self._check_participation_stat_report_user_row(self.fixtures.assignments[0], student, next_row, overall_stats)
+                    user_stats = self._check_participation_stat_report_user_row(self.fixtures.assignments[0], user, next_row, overall_stats)
 
             # test authorized user entire course with group_name filter
             group_name_input = input.copy()
@@ -287,19 +292,18 @@ class ReportAPITest(ComPAIRAPITestCase):
 
                 overall_stats = {}
 
+                group_members = [u for u in self.fixtures.students if u.user_courses[0].group_name == self.fixtures.groups[0]]
+                group_members = sorted(group_members, key=lambda m: (m.lastname, m.firstname, m.id))
+
                 for assignment in assignments:
-                    for student in self.fixtures.students:
-                        if student.user_courses[0].group_name != self.fixtures.groups[0]:
-                            continue
+                    for member in group_members:
                         next_row = next(reader)
-                        user_stats = self._check_participation_stat_report_user_row(assignment, student, next_row, overall_stats)
+                        user_stats = self._check_participation_stat_report_user_row(assignment, member, next_row, overall_stats)
 
                 # overall
-                for student in self.fixtures.students:
-                    if student.user_courses[0].group_name != self.fixtures.groups[0]:
-                        continue
+                for member in group_members:
                     next_row = next(reader)
-                    self._check_participation_stat_report_user_overall_row(student, next_row, overall_stats)
+                    self._check_participation_stat_report_user_overall_row(member, next_row, overall_stats)
 
             # test authorized user one assignment
             group_name_input = input.copy()
@@ -320,11 +324,12 @@ class ReportAPITest(ComPAIRAPITestCase):
 
                 overall_stats = {}
 
-                for student in self.fixtures.students:
-                    if student.user_courses[0].group_name != self.fixtures.groups[0]:
-                        continue
+                group_members = [u for u in self.fixtures.students if u.user_courses[0].group_name == self.fixtures.groups[0]]
+                group_members = sorted(group_members, key=lambda m: (m.lastname, m.firstname, m.id))
+
+                for member in group_members:
                     next_row = next(reader)
-                    user_stats = self._check_participation_stat_report_user_row(self.fixtures.assignments[0], student, next_row, overall_stats)
+                    user_stats = self._check_participation_stat_report_user_row(self.fixtures.assignments[0], member, next_row, overall_stats)
 
         # peer_feedback with valid instructor
         with self.login(self.fixtures.instructor.username):
@@ -499,14 +504,16 @@ class ReportAPITest(ComPAIRAPITestCase):
             self.files_to_cleanup.append(file_name)
 
     def _check_participation_stat_report_heading_rows(self, heading):
-        expected_heading = ['Assignment', 'User UUID', 'Last Name', 'First Name',
-            'Answer Submitted', 'Answer ID', 'Evaluations Submitted', 'Evaluations Required',
-            'Evaluation Requirements Met', 'Replies Submitted']
+        expected_heading = [
+            'Assignment', 'User UUID', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
+            'Answer', 'Students Ranked', 'Overall Score',
+            'Evaluations Submitted', 'Evaluations Required', 'Evaluation Requirements Met',
+            'Replies Submitted']
 
         self.assertEqual(expected_heading, heading)
 
     def _check_participation_stat_report_user_overall_row(self, student, row, overall_stats):
-        excepted_row = []
+        expected_row = []
 
         overall_stats.setdefault(student.id, {
             'answers_submitted': 0,
@@ -517,22 +524,25 @@ class ReportAPITest(ComPAIRAPITestCase):
         })
         user_stats = overall_stats[student.id]
 
-        excepted_row.append("(Overall in Course)")
-        excepted_row.append(student.uuid)
-        excepted_row.append(student.lastname)
-        excepted_row.append(student.firstname)
-        excepted_row.append(str(user_stats["answers_submitted"]))
-        excepted_row.append("(Overall in Course)")
-        excepted_row.append(str(user_stats["evaluations_submitted"]))
-        excepted_row.append(str(user_stats["evaluations_required"]))
-        excepted_row.append("Yes" if user_stats["evaluation_requirements_met"] else "No")
-        excepted_row.append(str(user_stats["replies_submitted"]))
+        expected_row.append("(Overall in Course)")
+        expected_row.append(student.uuid)
+        expected_row.append(student.lastname)
+        expected_row.append(student.firstname)
+        expected_row.append(str(user_stats["answers_submitted"]))
+        expected_row.append("(Overall in Course)")
+        expected_row.append("(Overall in Course)")
+        expected_row.append("")
+        expected_row.append("")
+        expected_row.append(str(user_stats["evaluations_submitted"]))
+        expected_row.append(str(user_stats["evaluations_required"]))
+        expected_row.append("Yes" if user_stats["evaluation_requirements_met"] else "No")
+        expected_row.append(str(user_stats["replies_submitted"]))
 
-        self.assertEqual(row, excepted_row)
+        self.assertEqual(row, expected_row)
 
 
     def _check_participation_stat_report_user_row(self, assignment, student, row, overall_stats):
-        excepted_row = []
+        expected_row = []
 
         overall_stats.setdefault(student.id, {
             'answers_submitted': 0,
@@ -543,10 +553,10 @@ class ReportAPITest(ComPAIRAPITestCase):
         })
         user_stats = overall_stats[student.id]
 
-        excepted_row.append(assignment.name)
-        excepted_row.append(student.uuid)
-        excepted_row.append(student.lastname)
-        excepted_row.append(student.firstname)
+        expected_row.append(assignment.name)
+        expected_row.append(student.uuid)
+        expected_row.append(student.lastname)
+        expected_row.append(student.firstname)
 
         answer = Answer.query \
             .filter_by(
@@ -560,11 +570,21 @@ class ReportAPITest(ComPAIRAPITestCase):
 
         if answer:
             user_stats["answers_submitted"] += 1
-            excepted_row.append("1")
-            excepted_row.append(answer.uuid)
+            expected_row.append("1")
+            expected_row.append(answer.uuid)
+            expected_row.append(self._snippet(answer.content))
         else:
-            excepted_row.append("0")
-            excepted_row.append("N/A")
+            expected_row.append("0")
+            expected_row.append("N/A")
+            expected_row.append("N/A")
+
+        if answer and answer.score:
+            expected_row.append(str(answer.score.rank))
+            expected_row.append(str(round(answer.score.normalized_score, 3)))   # round the floating point value for comparison
+            row[8] = str(round(float(row[8]), 3))
+        else:
+            expected_row.append("Not Evaluated")
+            expected_row.append("Not Evaluated")
 
         comparisons = Comparison.query \
             .filter(
@@ -575,16 +595,16 @@ class ReportAPITest(ComPAIRAPITestCase):
         evaluations_submitted = len(comparisons)
 
         user_stats["evaluations_submitted"] += evaluations_submitted
-        excepted_row.append(str(evaluations_submitted))
+        expected_row.append(str(evaluations_submitted))
 
         user_stats["evaluations_required"] += assignment.total_comparisons_required
-        excepted_row.append(str(assignment.total_comparisons_required))
+        expected_row.append(str(assignment.total_comparisons_required))
 
         if assignment.total_comparisons_required > evaluations_submitted:
             user_stats["evaluation_requirements_met"] = False
-            excepted_row.append("No")
+            expected_row.append("No")
         else:
-            excepted_row.append("Yes")
+            expected_row.append("Yes")
 
         answer_comments = AnswerComment.query \
             .filter(
@@ -596,9 +616,9 @@ class ReportAPITest(ComPAIRAPITestCase):
         replies_submitted = len(answer_comments)
 
         user_stats["replies_submitted"] += replies_submitted
-        excepted_row.append(str(replies_submitted))
+        expected_row.append(str(replies_submitted))
 
-        self.assertEqual(row, excepted_row)
+        self.assertEqual(row, expected_row)
 
 
     def _check_participation_report_heading_rows(self, assignments, heading1, heading2):
@@ -743,3 +763,13 @@ class ReportAPITest(ComPAIRAPITestCase):
         text = text.replace('&quot;', '"')
         text = text.replace('&#39;', '\'')
         return text
+
+    def _snippet(self, content, length=100, suffix='...'):
+        if content == None:
+            return ""
+        content = self._strip_html(content)
+        content = content.replace('\n', ' ').replace('\r', '').strip()
+        if len(content) <= length:
+            return content
+        else:
+            return ' '.join(content[:length+1].split(' ')[:-1]) + suffix

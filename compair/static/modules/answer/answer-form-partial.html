@@ -37,7 +37,7 @@
         </div>
 
         <div class="instructional-text">
-                <p ng-if="canManageAssignment && !comparison_example">Answers submitted as an instructor or TA will <strong>not be included in comparisons</strong> and appear to students only after they answer/compare.</p>
+                <p ng-if="canManageAssignment && !comparison_example">Answers submitted as an instructor or TA <strong>will be included</strong> in comparisons unless this option is unchecked below. All answers will appear to students when the assignment completes.</p>
                 <p>Allowed file types for attachments include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}, with a maximum file size of <strong>{{UploadValidator.getAttachmentUploadLimit() | filesize }}</strong>. Any files you upload will be attached when you <strong>save or submit this answer</strong> but not before.</p>
         </div>
 
@@ -45,9 +45,20 @@
             <label class="required-star" for="user_id">Submit As</label>
             <select id="user_id" name="user_id" required
                     ng-model="answer.user_id" class="form-control" chosen width="'100%'"
-                    ng-options="u.id as u.fullname_sortable for u in classlist">
+                    ng-options="u.id as u.fullname_sortable for u in classlist"
+                    ng-change="onSubmitAsChanged(answer.user_id)">
                 <option value="">- Select a user -</option>
             </select>
+        </div>
+
+        <div class="form-group" ng-if="canManageAssignment && submitAsInstructorOrTA && comparison_example !== true">
+            <label for="comparable" ng-class="!answer.draft ? 'text-muted not-bold' : ''">
+                <input type="checkbox" id="comparable" name="comparable"
+                    ng-model="answer.comparable"
+                    ng-false-value="false"
+                    ng-disabled="!answer.draft" >&nbsp;
+                Allow this instructor answer to appear in comparison pairings (when the algorithm selects it)
+            </label>
         </div>
 
         <div>

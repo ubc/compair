@@ -27,6 +27,7 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         nullable=True)
     draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False, index=True)
     top_answer = db.Column(db.Boolean(name='top_answer'), default=False, nullable=False, index=True)
+    comparable = db.Column(db.Boolean(name='comparable'), default=True, nullable=False)
 
     # relationships
     # assignment via Assignment Model

@@ -484,8 +484,8 @@ class AssignmentIdStatusAPI(Resource):
 
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
         comparison_draft_count = assignment.draft_comparison_count_for_user(current_user.id)
-        other_student_answers = assignment.student_answer_count - answer_count
-        comparison_available = comparison_count < other_student_answers * (other_student_answers - 1) / 2
+        other_comparable_answers = assignment.comparable_answer_count - answer_count
+        comparison_available = comparison_count < other_comparable_answers * (other_comparable_answers - 1) / 2
 
         status = {
             'answers': {
@@ -659,8 +659,8 @@ class AssignmentRootStatusAPI(Resource):
             assignment_drafts = [draft for draft in drafts if draft.assignment_id == assignment.id]
             comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
             comparison_draft_count = assignment.draft_comparison_count_for_user(current_user.id)
-            other_student_answers = assignment.student_answer_count - answer_count
-            comparison_available = comparison_count < other_student_answers * (other_student_answers - 1) / 2
+            other_comparable_answers = assignment.comparable_answer_count - answer_count
+            comparison_available = comparison_count < other_comparable_answers * (other_comparable_answers - 1) / 2
 
             statuses[assignment.uuid] = {
                 'answers': {
