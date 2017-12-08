@@ -158,8 +158,8 @@ class UsersAPITests(ComPAIRAPITestCase):
             )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 400)
-            self.assertEqual("Account Not Saved", rv.json['title'])
-            self.assertEqual("The required field password is missing.", rv.json['message'])
+            self.assertEqual("User Not Saved", rv.json['title'])
+            self.assertEqual("A password is required. Please enter a password and try saving again.", rv.json['message'])
 
             # test missing username
             expected = UserFactory.stub(
@@ -169,8 +169,8 @@ class UsersAPITests(ComPAIRAPITestCase):
             )
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assertStatus(rv, 400)
-            self.assertEqual("Account Not Saved", rv.json['title'])
-            self.assertEqual("The required field username is missing.", rv.json['message'])
+            self.assertEqual("User Not Saved", rv.json['title'])
+            self.assertEqual("A username is required. Please enter a username and try saving again.", rv.json['message'])
 
             # test creating student
             expected = UserFactory.stub(
