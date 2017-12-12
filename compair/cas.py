@@ -47,7 +47,7 @@ class CustomCASClient(CASClient):
             response_text = response.text.encode('utf-8') if response.text else None
             return CASResponse(response_text)
         except Exception:
-            current_app.logging.exception("CASLIB: Error retrieving a response")
+            current_app.logger.exception("CASLIB: Error retrieving a response")
             return None
 
 
