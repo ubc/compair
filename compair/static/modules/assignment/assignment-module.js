@@ -233,9 +233,9 @@ module.directive('assignmentActionButton', function() {
                                 }
                             },
                             'selfEval' : {
-                                'label' : ($scope.canManageAssignment || !permissions.hasDraftSelfEval) ? "Compare Pairs" : "Finish Comparison",
+                                'label' : !permissions.hasDraftSelfEval ? "Compare Pairs" : "Finish Comparison",
                                 'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/self_evaluation",
-                                'title' : ($scope.canManageAssignment || !permissions.hasDraftSelfEval) ? "Compare Pairs" : "Finish Comparison",
+                                'title' : !permissions.hasDraftSelfEval ? "Compare Pairs" : "Finish Comparison",
                                 'disabled' : !permissions.canSelfEval,
                                 'show' : {
                                     'user' : permissions.needsSelfEval,
