@@ -68,54 +68,16 @@
 
                     <!-- Metadata -->
                     <ul class="list-inline course-metadata-list">
-                        <!-- Edit Link (instructors only) -->
-                        <li ng-if="course.canEditCourse">
-                            <a ng-href="#/course/{{course.id}}/edit" title="Edit">
-                                Edit
-                            </a>
-                        </li>
-                        <!-- Duplicate Link (instructors only) -->
-                        <li ng-if="course.canEditCourse">
-                            <a ng-href="#/course/{{course.id}}/duplicate" title="Duplicate">
-                                Duplicate
-                            </a>
-                        </li>
-                        <!-- Instructor Total Assignments (instructors only) -->
-                        <li title="{{course.assignment_count}} assignments" ng-if="course.canManageAssignment">
-                                {{course.assignment_count}} assignment<span ng-if="course.assignment_count != 1">s</span>
-                        </li>
-                        <!-- Student Total Assignments (students only) -->
-                        <li title="{{course.student_assignment_count}} assignments" ng-if="!course.canManageAssignment">
-                                {{course.student_assignment_count}} assignment<span ng-if="course.student_assignment_count != 1">s</span> total
-                        </li>
-                        <!-- Total Unfinished (students only) -->
-                        <!-- number of unfinished assignments for student user that can still be completed for each course, i.e.,
-                             the student has not answered && the answer period is active ||
-                             the student has not compared/self-eval'ed && the compare/eval period is active -->
-                        <li ng-if="course.status && course.status.incomplete_assignments > 0 && !course.canManageAssignment" title="{{course.status.incomplete_assignments}} unfinished">
-                            <label class="label label-warning">{{course.status.incomplete_assignments}} assignment<span ng-if="course.status.incomplete_assignments != 1">s</span> to do</label>
-                        </li>
-                        <li ng-if="course.status && course.status.incomplete_assignments == 0 && !course.canManageAssignment" title="{{course.status.incomplete_assignments}} unfinished">
-                            No assignments to do
-                        </li>
-                        <!-- Total Users (instructors only) -->
-                        <li ng-if="course.canEditCourse" title="{{course.student_count}} students">
-                            {{course.student_count}} student<span ng-if="course.student_count != 1">s</span>
-                        </li>
-                        <!-- Course Dates (all) -->
-                        <li title="Course year and term">
-                            {{course.year}} {{course.term}}
-                        </li>
-                        <!-- Course Sandbox -->
-                        <li ng-if="course.sandbox && course.canEditCourse">
-                            Sandbox Course
-                        </li>
-                        <!-- Delete Link -->
-                        <li ng-if="course.canDeleteCourse">
-                            <a confirmation-needed="deleteCourse(course)" confirmation-warning="{{course.delete_warning}}" keyword="course and its assignments" title="Delete" href="">
-                                <i class="fa fa-trash-o"></i>
-                            </a>
-                        </li>
+                        <course-metadata name="editLink"></course-metadata>
+                        <course-metadata name="duplicateLink"></course-metadata>
+                        <course-metadata name="assignmentCount"></course-metadata>
+                        <course-metadata name="assignmentCountStudent"></course-metadata>
+                        <course-metadata name="assignmentsToDo"></course-metadata>
+                        <course-metadata name="noAssignmentsToDo"></course-metadata>
+                        <course-metadata name="studentCount"></course-metadata>
+                        <course-metadata name="courseDates"></course-metadata>
+                        <course-metadata name="sandbox"></course-metadata>
+                        <course-metadata name="deleteLink"></course-metadata>
                     </ul>
 
                 </div>
@@ -124,11 +86,7 @@
 
             <!-- Assignment Actions -->
             <div class="col-sm-3 text-right action-btns">
-
-                <a ng-href="#/course/{{course.id}}/" class="btn btn-success" title="View Course">
-                    See Assignments
-                </a>
-
+                <course-action-button name="viewCourse"></course-action-button>
             </div>
 
         </div>

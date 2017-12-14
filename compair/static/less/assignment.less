@@ -27,14 +27,12 @@
     li {
 
       margin-top: .3em;
-      padding: .2em .5em;
-      border-right: 1px solid @green-blue;
+      padding: .2em .5em .2em 0;
 
-      &:first-child {
-        padding-left: 0;
-      }
-      &:last-child {
-        border-right: none;
+      // add padding+border to the left of all elements except the first non-empty one
+      &:not(.ng-hide) ~ li {
+        padding-left: .5em;
+        border-left: 1px solid @green-blue;
       }
       
       &.label {
@@ -45,6 +43,10 @@
           border-left: 1px solid @green-blue;
         }
       
+      }
+
+      .label {
+          font-size: 1.05em;
       }
 
     }//closes li

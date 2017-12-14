@@ -41,6 +41,184 @@ var module = angular.module('ubc.ctlt.compair.course',
     ]
 );
 
+/***** Directives *****/
+module.directive('courseMetadata', function() {
+    
+    return {
+        restrict : 'E',
+        scope: true,
+        templateUrl: 'modules/common/element-metadata-template.html',
+        replace: true,
+        link: function ($scope, $element, $attributes) {
+            $scope.metadataName = $attributes.name;
+        },
+        controller: ["$scope", "$filter", "CoursePermissions", 
+            function ($scope, $filter, CoursePermissions) {
+                $scope.$watchCollection("[course, course.status, metadataName]", function(newStatus){
+
+                    var permissions = CoursePermissions.getAll($scope.course);
+
+                    if ($scope.course.status !== undefined) {
+                        var courseId = $scope.course.id;
+                        var course = $scope.course;
+                        var allMetadata = {
+                            'editLink' : {
+                                'label': "Edit",
+                                'href' : "#/course/" + courseId + "/edit",
+                                'show' : {
+                                    'user' : false,
+                                    'instructor' : permissions.canEdit
+                                }
+                            },
+                            'duplicateLink' : {
+                                'label': "Duplicate",
+                                'href' : "#/course/" + courseId + "/duplicate",
+                                'show' : {
+                                    'user' : false,
+                                    'instructor' : permissions.canEdit
+                                }
+                            },
+                            'assignmentCount' : {
+                                'label': course.assignment_count + " assignment" + (course.assignment_count != 1 ? "s" : ""),
+                                'title': course.assignment_count + " assignment" + (course.assignment_count != 1 ? "s" : ""),
+                                'show' : {
+                                    'user' : false,
+                                    'instructor' : true
+                                }
+                            },
+                            'assignmentCountStudent' : {
+                                'label': course.student_assignment_count + " assignment" + (course.student_assignment_count != 1 ? "s" : "") + " total",
+                                'title': course.student_assignment_count + " assignment" + (course.student_assignment_count != 1 ? "s" : ""),
+                                'show' : {
+                                    'user' : true,
+                                    'instructor' : false
+                                }
+                            },
+                            'assignmentsToDo' : {
+                                'label': course.status.incomplete_assignments + " assignment" + (course.status.incomplete_assignments != 1 ? "s" : "") + " to do",
+                                'title': course.status.incomplete_assignments + " unfinished",
+                                'class': 'label label-warning',
+                                'show' : {
+                                    'user' : permissions.hasAssignmentsLeft,
+                                    'instructor' : false
+                                }
+                            },
+                            'noAssignmentsToDo' : {
+                                'label': "No assignments to do",
+                                'title': course.status.incomplete_assignments + " unfinished",
+                                'show' : {
+                                    'user' : !permissions.hasAssignmentsLeft,
+                                    'instructor' : false
+                                }
+                            },
+                            'studentCount' : {
+                                'label': course.student_count + " student" + (course.student_count != 1 ? "s" : ""),
+                                'show' : {
+                                    'user' : false,
+                                    'instructor' : permissions.canEdit
+                                }
+                            },
+                            'courseDates' : {
+                                'label': course.year + " " + course.term,
+                                'show' : {
+                                    'user' : true,
+                                    'instructor' : true
+                                }
+                            },
+                            'sandbox' : {
+                                'label': "Sandbox Course",
+                                'show' : {
+                                    'user' : false,
+                                    'instructor' : permissions.canEdit && course.isSandbox
+                                }
+                            },
+                            'deleteLink' : {
+                                'label': '<i class="fa fa-trash-o"></i>',
+                                'title' : "Delete",
+                                'confirmationNeeded' : 'deleteCourse(course)' ,
+                                'confirmationWarning': course.delete_warning, 
+                                'keyword' : "course and its assignments",
+                                'show' : {
+                                    'user' : false,
+                                    'instructor' : permissions.canDelete
+                                }
+                            }
+                        };
+
+                        if (allMetadata[$scope.metadataName]) {
+                            if (course.canManageAssignment && allMetadata[$scope.metadataName].show.instructor) {
+                                $scope.meta = allMetadata[$scope.metadataName];
+                            }
+                            else if (!course.canManageAssignment && allMetadata[$scope.metadataName].show.user) {
+                                $scope.meta = allMetadata[$scope.metadataName];
+                            }
+                            else {
+                                $scope.meta = { 'hide': true };
+                            }
+                        }
+                    }
+                    else {
+                        $scope.meta = { 'hide': true };
+                    }
+                });
+            }
+        ]
+    };
+});
+
+module.directive('courseActionButton', function() {
+
+    return {
+        restrict : 'E',
+        scope: false,
+        templateUrl: 'modules/common/element-button-template.html',
+        replace: true,
+        link: function ($scope, $element, $attributes) {
+            $scope.actionElementName = $attributes.name;
+        },
+        controller: ["$scope", "$filter", "CoursePermissions", 
+            function ($scope, $filter, CoursePermissions) {
+                $scope.$watchCollection("[course, course.status, actionElementName]", function(newStatus){
+
+                    var permissions = CoursePermissions.getAll($scope.course);
+
+                    if ($scope.course.status !== undefined) {
+                        var courseId = $scope.course.id;
+                        var course = $scope.course;
+                        var allButtons = {
+                            'viewCourse' : {
+                                'label' : "See Assignments",
+                                'href'  : "#/course/" + courseId + "/",
+                                'class' : 'btn-success',
+                                'title' : "See Assignments",
+                                'show' : {
+                                    'user' : true,
+                                    'instructor' : true
+                                }
+                            },
+                        };
+                        
+                        if (allButtons[$scope.actionElementName]) {
+                            if (course.canManageAssignment && allButtons[$scope.actionElementName].show.instructor) {
+                                $scope.button = allButtons[$scope.actionElementName];
+                            }
+                            else if (!course.canManageAssignment && allButtons[$scope.actionElementName].show.user) {
+                                $scope.button = allButtons[$scope.actionElementName];
+                            }
+                            else {
+                                $scope.button = { 'hide': true };
+                            }
+                        }
+                    }
+                    else {
+                        $scope.button = { 'hide': true };
+                    }
+                });
+            }
+        ]
+    };
+});
+
 /***** Providers *****/
 module.factory('CourseResource',
     ["$q", "$routeParams", "$resource", "Interceptors",
@@ -66,6 +244,20 @@ module.factory('CourseResource',
     return ret;
 }]);
 
+module.factory( "CoursePermissions", function (){
+
+    return {
+        'getAll' : function(course) {
+            return {
+                'canEdit'   : !!course.canEditCourse,
+                'canDelete' : !!course.canDeleteCourse,
+                'isSandbox' : !!course.sandbox,
+                'hasAssignmentsLeft' : !!course.status && course.status.incomplete_assignments > 0,
+            }
+        }
+    }
+});
+
 /***** Controllers *****/
 module.controller(
     'CourseAssignmentsController',
@@ -78,6 +270,7 @@ module.controller(
         $scope.courseId = $routeParams.courseId;
 
         $scope.course = resolvedData.course;
+        $scope.loggedInUserId = resolvedData.loggedInUser.id;
         $scope.assignments = resolvedData.courseAssignments.objects;
         $scope.count = {};
         $scope.canEditCourse = resolvedData.canEditCourse;

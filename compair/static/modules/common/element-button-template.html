@@ -1,0 +1,7 @@
+<a  ng-show="!button.hide"
+    ng-href="{{ button.hide || button.disabled ? '' : button.href }}"
+    ng-class="{'btn':true, 'btn-success':!button.disabled, 'btn-default disabled':button.disabled, 'hide':button.hide}"
+    title="{{ button.hide ? '' : button.title }}"
+    ng-disabled="{{ button.disabled }}">
+    {{ button.label }}
+</a>

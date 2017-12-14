@@ -25,92 +25,25 @@
 
         <!-- Assignment Metadata Footer -->
         <ul class="list-inline assignment-metadata-list">
-            <li ng-show="canManageAssignment">
-                <em>Answering:</em> {{assignment.answer_start | amDateFormat: 'MMM D @ h:mm a'}} - {{assignment.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
-            </li>
-            <li ng-show="canManageAssignment">
-                <em>Comparing:</em> {{assignment.compare_start | amDateFormat: 'MMM D @ h:mm a'}} - {{assignment.compare_end | amDateFormat: 'MMM D @ h:mm a'}}
-            </li>
-            <li ng-if="!canManageAssignment && assignment.status.answers.feedback">
-                <strong>{{assignment.status.answers.feedback}} feedback comment<span ng-if="assignment.status.answers.feedback != 1">s</span></strong> below
-            </li>
-            <li ng-if="!canManageAssignment && !assignment.status.answers.feedback">
-                No feedback received
-            </li>
-            <li ng-if="!canManageAssignment && (assignment.status.comparisons.count > 0 || assignment.status.answers.answered)">
-                You
-                <span ng-if="assignment.status.answers.answered"><strong>answered</strong> <span ng-if="assignment.status.comparisons.count > 0">and </span></span>
-                <span ng-if="assignment.status.comparisons.count > 0"><strong>compared {{assignment.status.comparisons.count}} pair<span ng-if="assignment.status.comparisons.count > 1">s</span></strong></span>
-            </li>
-            <li ng-if="!canManageAssignment && ((!assignment.compare_period && steps_left > 0) || (!assignment.answer_period && !assignment.status.answers.answered))">
-                You missed
-                <span ng-if="!assignment.status.answers.answered">answering <span ng-if="!assignment.compare_period && steps_left > 0">and </span></span>
-                <span ng-if="!assignment.compare_period && steps_left > 0">comparing <span ng-if="assignment.status.comparisons.count != 0">{{steps_left}} pair<span ng-if="steps_left > 1">s</span></span></span>
-            </li>
-            <li ng-if="!canManageAssignment && assignment.answer_period && !assignment.status.answers.answered" class="label label-warning">
-                Answer due {{assignment.answer_end | amDateFormat: 'MMM D @ h:mm a'}}
-            </li>
-            <li ng-if="!canManageAssignment && assignment.compare_period && (steps_left > 0) && assignment.compare_end" class="label label-warning">
-                Comparisons due {{assignment.compare_end | amDateFormat: 'MMM D @ h:mm a'}}
-            </li>
-            <li ng-if="!canManageAssignment && assignment.compare_period && (steps_left > 0) && !assignment.compare_end" class="label label-warning">
-                {{ steps_left }} comparison<span ng-if="steps_left != 1">s</span> needed
-            </li>
+            <assignment-metadata name="answeringDates"></assignment-metadata>
+            <assignment-metadata name="comparingDates"></assignment-metadata>
+            <assignment-metadata name="feedbackCountBelow"></assignment-metadata>
+            <assignment-metadata name="feedbackCountEmpty"></assignment-metadata>
+            <assignment-metadata name="completedFeedback"></assignment-metadata>
+            <assignment-metadata name="missedFeedback"></assignment-metadata>
+            <assignment-metadata name="answerDue"></assignment-metadata>
+            <assignment-metadata name="comparisonsDue"></assignment-metadata>
+            <assignment-metadata name="missingComparisonsFeedback"></assignment-metadata>
         </ul>
 
         <!-- Assignment Actions -->
-
         <div class="text-right">
-
-            <!-- BUTTON when user does not have an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
-            <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/create" class="btn btn-success" title="Answer Assignment"
-               ng-show="!assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
-                Answer
-            </a>
-
-            <!-- BUTTON when user has an answer draft AND (user is admin OR (user has not answered AND the answer period is active) -->
-            <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" class="btn btn-success" title="Answer Assignment"
-               ng-show="assignment.status.answers.has_draft && (canManageAssignment || (!assignment.status.answers.answered && assignment.answer_period))">
-                Finish Answer
-            </a>
-
-            <!-- BUTTON when user is not an admin AND the comparison period is active AND the user has not finished pair comparisons AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)
-                 basically we force users to answer first, if they can
-                 enabled only when answer pairs are available for comparison (so when no logic is false)
-            -->
-            <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Pairs" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
-               ng-show="!canManageAssignment && assignment.compare_period && comparisons_left > 0 && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)" ng-disabled="!assignment.status.comparisons.available">
-                <span ng-if="!assignment.status.comparisons.has_draft">Compare Pairs</span>
-                <span ng-if="assignment.status.comparisons.has_draft">Finish Comparison</span>
-            </a>
-
-            <!-- BUTTON when user is not an admin AND the comparison period is active AND user has finished pair comparisons AND has a self-evaluation remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)
-                 basically we force users to answer first, if they can
-                 enabled only when user has answered assignment
-            -->
-            <a class="btn" ng-class="{'btn-success': assignment.status.answers.answered, 'btn-default': !assignment.status.answers.answered}" title="Self-Evaluation" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/self_evaluation"
-               ng-show="!canManageAssignment && assignment.compare_period && comparisons_left == 0 && self_evaluation_needed && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)" ng-disabled="!assignment.status.answers.answered">
-                <span ng-if="!assignment.status.comparisons.self_evaluation_draft">Compare Pairs</span>
-                <span ng-if="assignment.status.comparisons.self_evaluation_draft">Finish Comparison</span>
-            </a>
-
-            <!-- BUTTON when user is an admin AND the comparison period is active AND admins can compare -->
-            <a class="btn" ng-class="{'btn-success': assignment.status.comparisons.available, 'btn-default': !assignment.status.comparisons.available}" title="Compare Pairs" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare"
-               ng-show="canManageAssignment && assignment.compare_period && assignment.educators_can_compare">
-                <span ng-if="!assignment.status.comparisons.has_draft">Compare Pairs</span>
-                <span ng-if="assignment.status.comparisons.has_draft">Finish Comparison</span>
-            </a>
-            
-            <!-- ADDITIONAL TEXT when answer pairs are not available for comparison AND (user is not an admin OR admins can compare) AND the comparison period is active AND user has comparisons remaining AND either (the answer period is active AND the assignment has been answered) OR (the answer period is not active)-->
-            <p ng-if="!assignment.status.comparisons.available && (!canManageAssignment || assignment.educators_can_compare) && assignment.compare_period && (steps_left > 0) && ((assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period)">
-                <em>Not enough answers to compare right now</em>
-            </p>
-            
-            <!-- ADDITIONAL TEXT when user is not an admin AND the comparison period is active AND user has completed pair comparisons AND has a self-evaluation remaining AND has not answered assignment -->
-            <p ng-if="!canManageAssignment && assignment.compare_period && comparisons_left == 0 && self_evaluation_needed && !assignment.status.answers.answered">
-                <em>Self-evaluation comparison unavailable</em>
-            </p>
-
+            <assignment-action-button name="answer"></assignment-action-button>
+            <assignment-action-button name="finishAnswer"></assignment-action-button>
+            <assignment-action-button name="compare"></assignment-action-button>
+            <assignment-action-button name="selfEval"></assignment-action-button>
+            <assignment-text name="notEnoughAnswers"></assignment-text>
+            <assignment-text name="noSelfEval"></assignment-text>
         </div>
 
     </div><!-- closes Assignment box -->

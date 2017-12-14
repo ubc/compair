@@ -338,6 +338,7 @@ myApp.config(
                         return ResolveDeferredRouteData({
                             course: RouteResolves.course(),
                             courseAssignments: RouteResolves.courseAssignments(),
+                            loggedInUser: RouteResolves.loggedInUser(),
                             canEditCourse: RouteResolves.canEditCourse(),
                             canCreateAssignment: RouteResolves.canCreateAssignment(),
                             canManageAssignment: RouteResolves.canManageAssignment(),

@@ -165,7 +165,7 @@ describe('user-module', function () {
                 expect($route.current).toBeUndefined();
                 $httpBackend.flush();
 
-                expect(Session.getUser).not.toHaveBeenCalled();
+                expect(Session.getUser).toHaveBeenCalled();
                 expect(Authorize.can).toHaveBeenCalledWith(Authorize.EDIT, "Course", mockCourseId);
                 expect(Authorize.can).toHaveBeenCalledWith(Authorize.CREATE, "Assignment", mockCourseId);
                 expect(Authorize.can).toHaveBeenCalledWith(Authorize.MANAGE, "Assignment", mockCourseId);
@@ -186,7 +186,7 @@ describe('user-module', function () {
                 expect($route.current).toBeUndefined();
                 $httpBackend.flush();
 
-                expect(Session.getUser).not.toHaveBeenCalled();
+                expect(Session.getUser).toHaveBeenCalled();
                 expect(Authorize.can).toHaveBeenCalledWith(Authorize.EDIT, "Course", mockCourseId);
                 expect(Authorize.can).toHaveBeenCalledWith(Authorize.CREATE, "Assignment", mockCourseId);
                 expect(Authorize.can).toHaveBeenCalledWith(Authorize.MANAGE, "Assignment", mockCourseId);
