@@ -19,6 +19,12 @@ var ltiConsumerFactory = new LTIConsumerFactory();
 var LTIContextFactory = require('../../factories/lti_context_factory.js');
 var ltiContextFactory = new LTIContextFactory();
 
+var LTIUserFactory = require('../../factories/lti_user_factory.js');
+var ltiUserFactory = new LTIUserFactory();
+
+var ThirdPartyUserFactory = require('../../factories/third_party_user_factory.js');
+var thirdPartyUserFactory = new ThirdPartyUserFactory();
+
 var storage = {
     session: {},
     users: {},
@@ -30,6 +36,8 @@ var storage = {
     criteria: {},
     lti_consumers: {},
     lti_contexts: {},
+    user_lti_users: {},
+    user_third_party_users: {},
     user_search_results: {}
 }
 
@@ -116,7 +124,6 @@ var criterion3 = criterionFactory.generateCriterion("3abcABC123-abcABC123_Z",  a
     "compared": true
 });
 storage.criteria[criterion3.id] = criterion3;
-
 
 // user_courses
 storage.user_courses[admin.id] = [
@@ -212,6 +219,49 @@ var context3 = ltiContextFactory.generateContext("3abcABC123-abcABC123_Z", consu
 storage.lti_contexts[context1.id] = context1;
 storage.lti_contexts[context2.id] = context2;
 storage.lti_contexts[context3.id] = context3;
+
+// lti_users
+
+var lti_user1 = ltiUserFactory.generateLTIUser("1abcABC123-abcABC123_Z", consumer1, student1, {
+    "lti_user_id": "12345000001",
+    "lis_person_name_full": "Student One",
+    "oauth_consumer_key": 'consumer_key_1',
+});
+
+var lti_user2 = ltiUserFactory.generateLTIUser("2abcABC123-abcABC123_Z", consumer1, student1, {
+    "lti_user_id": "12345000002",
+    "lis_person_name_full": "Student One",
+    "oauth_consumer_key": 'consumer_key_1',
+});
+
+var lti_user3 = ltiUserFactory.generateLTIUser("3abcABC123-abcABC123_Z", consumer1, student2, {
+    "lti_user_id": "12345000003",
+    "lis_person_name_full": "Student Two",
+    "oauth_consumer_key": 'consumer_key_1',
+});
+
+storage.user_lti_users[student1.id] = [lti_user2, lti_user1];
+storage.user_lti_users[student2.id] = [lti_user3];
+
+// third_party_users
+
+var third_party_user1 = thirdPartyUserFactory.generatethirdPartyUser("1abcABC123-abcABC123_Z", student1, {
+    "third_party_type": "CAS",
+    "unique_identifier": "CAS0001",
+});
+
+var third_party_user2 = thirdPartyUserFactory.generatethirdPartyUser("2abcABC123-abcABC123_Z", student1, {
+    "third_party_type": "CAS",
+    "unique_identifier": "CAS0002",
+});
+
+var third_party_user3 = thirdPartyUserFactory.generatethirdPartyUser("3abcABC123-abcABC123_Z", student2, {
+    "third_party_type": "CAS",
+    "unique_identifier": "CAS0003",
+});
+
+storage.user_third_party_users[student1.id] = [third_party_user2, third_party_user1];
+storage.user_third_party_users[student2.id] = [third_party_user3];
 
 // user_search_results
 storage.user_search_results.objects = [student2];

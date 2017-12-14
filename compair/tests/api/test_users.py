@@ -10,7 +10,7 @@ from data.fixtures import DefaultFixture, UserFactory, AssignmentFactory
 from data.fixtures.test_data import BasicTestData, LTITestData, ThirdPartyAuthTestData, ComparisonTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, AnswerComment, AnswerCommentType, Comparison, \
-    LTIContext, ThirdPartyUser, ThirdPartyType, WinningAnswer, EmailNotificationMethod
+    LTIContext, LTIUser, ThirdPartyUser, ThirdPartyType, WinningAnswer, EmailNotificationMethod
 from compair.core import db
 
 
@@ -758,6 +758,213 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
+
+    def test_get_user_lti_users_list(self):
+
+        # setup
+        lti_data = LTITestData()
+        lti_consumer = lti_data.create_consumer()
+
+        student1 = self.data.get_authorized_student()
+        lti_user1 = lti_data.create_user(lti_consumer, SystemRole.student, student1)
+        lti_user2 = lti_data.create_user(lti_consumer, SystemRole.student, student1)
+
+        lti_users = [lti_user1, lti_user2]
+
+        # sort by user_id (asc)
+        lti_users.sort(key=lambda u: u.user_id)
+
+        # test login required
+        url = '/api/users/'+ student1.uuid +'/lti/users'
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        # test non-admin
+        with self.login(self.data.get_authorized_instructor().username):
+            url = '/api/users/'+ student1.uuid +'/lti/users'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_ta().username):
+            url = '/api/users/'+ student1.uuid +'/lti/users'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_student().username):
+            url = '/api/users/'+ student1.uuid +'/lti/users'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test admin
+        with self.login('root'):
+            # test invalid data
+            url = '/api/users/999/lti/users'
+            rv = self.client.get(url)
+            self.assert404(rv)
+
+            # test list content and sort order: by user_id (asc)
+            url = '/api/users/'+ student1.uuid +'/lti/users'
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(2, len(rv.json['objects']))
+            for index, result in enumerate(rv.json['objects']):
+                self.assertEqual(student1.uuid, rv.json['objects'][index]['compair_user_id'])
+                self.assertEqual(lti_consumer.uuid, rv.json['objects'][index]['lti_consumer_id'])
+                self.assertEqual(lti_users[index].user_id, rv.json['objects'][index]['lti_user_id'])
+
+    def test_delete_user_lti_user(self):
+
+        # setup
+        lti_data = LTITestData()
+        lti_consumer = lti_data.create_consumer()
+
+        student1 = self.data.get_authorized_student()
+        lti_user1 = lti_data.create_user(lti_consumer, SystemRole.student, student1)
+        lti_user2 = lti_data.create_user(lti_consumer, SystemRole.student, student1)
+
+        student2 = self.data.create_normal_user()
+        lti_user1_2 = lti_data.create_user(lti_consumer, SystemRole.student, student2)
+
+        # test login required
+        url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user2.uuid
+        rv = self.client.delete(url)
+        self.assert401(rv)
+
+        # test non-admin
+        with self.login(self.data.get_authorized_instructor().username):
+            url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user2.uuid
+            rv = self.client.delete(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_ta().username):
+            url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user2.uuid
+            rv = self.client.delete(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_student().username):
+            url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user2.uuid
+            rv = self.client.delete(url)
+            self.assert403(rv)
+
+        # test admin
+        with self.login('root'):
+            # test invalid user
+            url = '/api/users/999/lti/users/'+ lti_user1.uuid
+            rv = self.client.delete(url)
+            self.assert404(rv)
+
+            # test valid
+            url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user1.uuid
+            rv = self.client.delete(url)
+            self.assert200(rv)
+            self.assertEqual(rv.json['success'], True)
+
+            lti_users = LTIUser.query \
+                .filter_by(compair_user_id=student1.id) \
+                .all()
+            self.assertEqual(len(lti_users), 1)
+
+    def test_get_user_third_party_users_list(self):
+
+        # setup
+        auth_data = ThirdPartyAuthTestData()
+
+        student1 = self.data.get_authorized_student()
+        third_party_user1 = auth_data.create_third_party_user(user=student1)
+        third_party_user2 = auth_data.create_third_party_user(user=student1)
+
+        third_party_users = [third_party_user1, third_party_user2]
+
+        # sort by unique_identifier (asc)
+        third_party_users.sort(key=lambda u: u.unique_identifier)
+
+        # test login required
+        url = '/api/users/'+ student1.uuid +'/third_party/users'
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        # test non-admin
+        with self.login(self.data.get_authorized_instructor().username):
+            url = '/api/users/'+ student1.uuid +'/third_party/users'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_ta().username):
+            url = '/api/users/'+ student1.uuid +'/third_party/users'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_student().username):
+            url = '/api/users/'+ student1.uuid +'/third_party/users'
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test admin
+        with self.login('root'):
+            # test invalid data
+            url = '/api/users/999/third_party/users'
+            rv = self.client.get(url)
+            self.assert404(rv)
+
+            # test list length and sort order: by unique_identifier (asc)
+            url = '/api/users/'+ student1.uuid +'/third_party/users'
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(2, len(rv.json['objects']))
+            for index, result in enumerate(rv.json['objects']):
+                self.assertEqual(student1.uuid, rv.json['objects'][index]['compair_user_id'])
+                self.assertEqual(third_party_users[index].unique_identifier, rv.json['objects'][index]['unique_identifier'])
+
+    def test_delete_user_third_party_user(self):
+
+        # setup
+        auth_data = ThirdPartyAuthTestData()
+
+        student1 = self.data.get_authorized_student()
+        third_party_user1 = auth_data.create_third_party_user(user=student1)
+        third_party_user2 = auth_data.create_third_party_user(user=student1)
+
+        student2 = self.data.create_normal_user()
+        third_party_user1_2 = auth_data.create_third_party_user(user=student2)
+
+        # test login required
+        url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user2.uuid
+        rv = self.client.delete(url)
+        self.assert401(rv)
+
+        # test non-admin
+        with self.login(self.data.get_authorized_instructor().username):
+            url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user2.uuid
+            rv = self.client.delete(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_ta().username):
+            url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user2.uuid
+            rv = self.client.delete(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_student().username):
+            url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user2.uuid
+            rv = self.client.delete(url)
+            self.assert403(rv)
+
+        # test admin
+        with self.login('root'):
+            # test invalid user
+            url = '/api/users/999/third_party/users/'+ third_party_user1.uuid
+            rv = self.client.delete(url)
+            self.assert404(rv)
+
+            # test valid
+            url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user1.uuid
+            rv = self.client.delete(url)
+            self.assert200(rv)
+            self.assertEqual(rv.json['success'], True)
+
+            third_party_users = ThirdPartyUser.query \
+                .filter_by(user_id=student1.id) \
+                .all()
+            self.assertEqual(len(third_party_users), 1)
 
     def test_get_user_course_list(self):
         # test login required
