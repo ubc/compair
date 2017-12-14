@@ -36,6 +36,24 @@ module.factory('UserResource', ['$resource', function($resource) {
     return User;
 }]);
 
+module.factory('UserLTIUsersResource', ['$resource', function($resource) {
+    var UserLTIUsers = $resource('/api/users/:id/lti/users', {id: '@id'}, {
+        deleteById: { method: 'DELETE',  url: '/api/users/:id/lti/users/:ltiUserId'},
+    });
+    UserLTIUsers.MODEL = "User";
+
+    return UserLTIUsers;
+}]);
+
+module.factory('UserThirdPartyUsersResource', ['$resource', function($resource) {
+    var UserThirdPartyUsers = $resource('/api/users/:id/third_party/users', {id: '@id'}, {
+        deleteById: { method: 'DELETE',  url: '/api/users/:id/third_party/users/:thirdPartyUserId'},
+    });
+    UserThirdPartyUsers.MODEL = "User";
+
+    return UserThirdPartyUsers;
+}]);
+
 module.constant('UserSettings', {
     notifications: false,
     expose_email_to_instructor: false
@@ -256,11 +274,13 @@ module.controller("UserListController",
     }]
 );
 
-module.controller("UserCourseController",
-    ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'CourseResource', 'GroupResource', 'ClassListResource',
-     'Toaster', 'breadcrumbs', 'CourseRole', 'xAPIStatementHelper', "moment", "resolvedData",
-    function($scope, $location, $route, $routeParams, UserResource, CourseResource, GroupResource, ClassListResource,
-             Toaster, breadcrumbs, CourseRole, xAPIStatementHelper, moment, resolvedData)
+module.controller("UserManageController",
+    ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'CourseResource', 'GroupResource',
+     'UserLTIUsersResource', 'UserThirdPartyUsersResource', 'ClassListResource', 'Toaster', 'breadcrumbs',
+     'CourseRole', 'AuthTypesEnabled', 'xAPIStatementHelper', "moment", "resolvedData",
+    function($scope, $location, $route, $routeParams, UserResource, CourseResource, GroupResource,
+             UserLTIUsersResource, UserThirdPartyUsersResource, ClassListResource, Toaster, breadcrumbs,
+             CourseRole, AuthTypesEnabled, xAPIStatementHelper, moment, resolvedData)
     {
         $scope.userId = $routeParams.userId;
 
@@ -277,7 +297,11 @@ module.controller("UserCourseController",
             includeSandbox: null
         };
 
-        breadcrumbs.options = {'Manage User Courses': "Manage {0}'s Courses".format($scope.user.displayname)};
+        $scope.third_party_users = resolvedData.userThirdPartyUsers.objects;
+        $scope.lti_users = resolvedData.userLTIs.objects;
+        $scope.AuthTypesEnabled = AuthTypesEnabled;
+
+        breadcrumbs.options = {'User Courses & Accounts': "{0}'s Courses & Accounts".format($scope.user.displayname)};
         $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
 
         if (!$scope.canManageUsers) {
@@ -346,6 +370,32 @@ module.controller("UserCourseController",
                 );
             }
         };
+
+        $scope.unlinkLTI = function(lti_user) {
+            var params = {
+                id: $scope.userId,
+                ltiUserId: lti_user.id,
+            }
+            UserLTIUsersResource.deleteById(params).$promise.then(
+                function (ret) {
+                    Toaster.success("LTI Unlink", "Successfully unlinked the LTI user as requested.");
+                    $route.reload();
+                }
+            );
+        }
+
+        $scope.deleteThirdPartyUser = function(third_party_user) {
+            var params = {
+                id: $scope.userId,
+                thirdPartyUserId: third_party_user.id,
+            }
+            UserThirdPartyUsersResource.deleteById(params).$promise.then(
+                function (ret) {
+                    Toaster.success("Third Party User Delete", "Successfully deleted the third party user as requested.");
+                    $route.reload();
+                }
+            );
+        }
 
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;

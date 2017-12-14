@@ -116,7 +116,7 @@ var commonStepDefinitionsWrapper = function() {
             'create user': /.*\/user\/create$/,
             'edit profile': /.*\/user\/[A-Za-z0-9_-]{22}\/edit$/,
             'users': /.*\/users(\?.+)?$/,
-            'user courses': /.*\/users\/[A-Za-z0-9_-]{22}\/course(\?.+)?$/,
+            'user manage': /.*\/users\/[A-Za-z0-9_-]{22}\/manage(\?.+)?$/,
             'manage lti': /.*\/lti\/consumer(\?.+)?$/,
             'create lti consumer': /.*\/lti\/consumer\/create$/,
             'edit lti consumer': /.*\/lti\/consumer\/[A-Za-z0-9_-]{22}\/edit$/,

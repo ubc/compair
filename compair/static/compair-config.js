@@ -135,10 +135,12 @@ myApp.factory('RouteResolves',
      "CourseResource", "AssignmentResource", "ClassListResource", "GroupResource",
      "UserResource", "ComparisonExampleResource", "CriterionResource", "AssignmentCommentResource",
      "AnswerResource", "TimerResource", "GradebookResource", "LTIConsumerResource",
+     "UserLTIUsersResource", "UserThirdPartyUsersResource", "AuthTypesEnabled",
     function($q, $route, Toaster, Authorize, Session, LTI,
              CourseResource, AssignmentResource, ClassListResource, GroupResource,
              UserResource, ComparisonExampleResource, CriterionResource, AssignmentCommentResource,
-             AnswerResource, TimerResource, GradebookResource, LTIConsumerResource)
+             AnswerResource, TimerResource, GradebookResource, LTIConsumerResource,
+             UserLTIUsersResource, UserThirdPartyUsersResource, AuthTypesEnabled)
 {
     return {
 
@@ -244,6 +246,20 @@ myApp.factory('RouteResolves',
             var courseId = $route.current.params.courseId;
             var assignmentId = $route.current.params.assignmentId;
             return AnswerResource.userUnsaved({'courseId': courseId, 'assignmentId': assignmentId}).$promise;
+        },
+        userLTIs: function() {
+            if (AuthTypesEnabled.lti) {
+                var userId = $route.current.params.userId;
+                return UserLTIUsersResource.get({'id': userId}).$promise;
+            }
+            return $q.when({'objects':[]});
+        },
+        userThirdPartyUsers: function() {
+            if (AuthTypesEnabled.cas) {
+                var userId = $route.current.params.userId;
+                return UserThirdPartyUsersResource.get({'id': userId}).$promise;
+            }
+            return $q.when({'objects':[]});
         },
 
         //other
@@ -641,17 +657,19 @@ myApp.config(
                     }
                 }
             })
-        .when('/users/:userId/course',
+        .when('/users/:userId/manage',
             {
-                title: "Manage User Courses",
-                templateUrl: 'modules/user/user-course-partial.html',
-                label: "Manage User Courses",
-                controller: 'UserCourseController',
+                title: "User Courses & Accounts",
+                templateUrl: 'modules/user/user-manage-partial.html',
+                label: "User Courses & Accounts",
+                controller: 'UserManageController',
                 resolve: {
                     resolvedData: function() {
                         return ResolveDeferredRouteData({
                             user: RouteResolves.user(),
                             canManageUsers: RouteResolves.canManageUsers(),
+                            userLTIs: RouteResolves.userLTIs(),
+                            userThirdPartyUsers: RouteResolves.userThirdPartyUsers()
                         }, ['user']);
                     }
                 }

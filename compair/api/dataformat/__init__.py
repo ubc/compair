@@ -81,6 +81,23 @@ def get_users_in_course(restrict_user=True):
 
     return users
 
+def get_lti_user():
+    return {
+        'id': fields.String(attribute="uuid"),
+        'lti_consumer_id': fields.String(attribute="lti_consumer_uuid"),
+        'lti_user_id': fields.String(attribute="user_id"),
+        'compair_user_id': fields.String(attribute="compair_user_uuid"),
+        'oauth_consumer_key': fields.String,
+        'lis_person_name_full': fields.String
+    }
+
+def get_third_party_user():
+    return {
+        'id': fields.String(attribute="uuid"),
+        'third_party_type': UnwrapEnum(attribute="third_party_type"),
+        'unique_identifier': fields.String(attribute="unique_identifier"),
+        'compair_user_id': fields.String(attribute="compair_user_uuid")
+    }
 
 def get_course():
     return {

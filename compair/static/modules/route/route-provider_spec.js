@@ -887,12 +887,14 @@ describe('user-module', function () {
             });
         });
 
-        describe('"/users/:userId/course"', function() {
-            var path = '/users/'+mockUserId+'/course';
+        describe('"/users/:userId/manage"', function() {
+            var path = '/users/'+mockUserId+'/manage';
 
             it('should handle pre-loading errors', function() {
                 $httpBackend.expectGET('/api/users/'+mockUserId).respond(404, '');
-                $httpBackend.expectGET('modules/user/user-course-partial.html').respond('');
+                $httpBackend.expectGET('/api/users/'+mockUserId+'/lti/users').respond({});
+                $httpBackend.expectGET('/api/users/'+mockUserId+'/third_party/users').respond({});
+                $httpBackend.expectGET('modules/user/user-manage-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();
                 $location.path(path);
@@ -905,13 +907,15 @@ describe('user-module', function () {
 
                 expect(toaster.error).toHaveBeenCalled();
                 expect($rootScope.routeResolveLoadError).not.toBeUndefined();
-                expect($route.current.templateUrl).toBe('modules/user/user-course-partial.html');
-                expect($route.current.controller).toBe('UserCourseController');
+                expect($route.current.templateUrl).toBe('modules/user/user-manage-partial.html');
+                expect($route.current.controller).toBe('UserManageController');
             });
 
             it('should load correctly', function() {
                 $httpBackend.expectGET('/api/users/'+mockUserId).respond({});
-                $httpBackend.expectGET('modules/user/user-course-partial.html').respond('');
+                $httpBackend.expectGET('/api/users/'+mockUserId+'/lti/users').respond({});
+                $httpBackend.expectGET('/api/users/'+mockUserId+'/third_party/users').respond({});
+                $httpBackend.expectGET('modules/user/user-manage-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();
                 $location.path(path);
@@ -923,8 +927,8 @@ describe('user-module', function () {
 
                 expect(toaster.error).not.toHaveBeenCalled();
                 expect($rootScope.routeResolveLoadError).toBeUndefined();
-                expect($route.current.templateUrl).toBe('modules/user/user-course-partial.html');
-                expect($route.current.controller).toBe('UserCourseController');
+                expect($route.current.templateUrl).toBe('modules/user/user-manage-partial.html');
+                expect($route.current.controller).toBe('UserManageController');
             });
         });
 
