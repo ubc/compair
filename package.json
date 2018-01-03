@@ -13,7 +13,7 @@
     "gulp-bower": "latest",
     "gulp-concat": "latest",
     "gulp-concat-vendor": "latest",
-    "gulp-connect": "latest",
+    "gulp-connect": "~5.0.0",
     "gulp-html-replace": "latest",
     "gulp-inject": "~3.0",
     "gulp-less": "latest",
