@@ -52,12 +52,17 @@ class CompareRootAPI(Resource):
             message="Comparisons can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, assignment)
 
+        comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
+
         if not assignment.compare_grace:
             abort(403, title="Comparisons Unavailable",
                 message="Sorry, the comparison deadline has passed. No comparisons can be done after the deadline.")
         elif not restrict_user and not assignment.educators_can_compare:
             abort(403, title="Comparisons Unavailable",
                 message="Only students can currently compare answers for this assignment. To change these settings to include instructors and teaching assistants, edit the assignment.")
+        elif restrict_user and comparison_count >= assignment.total_comparisons_required:
+            abort(400, title="Comparisons Completed",
+                message="More comparisons aren't available, since you've finished your comparisons for this assignment. Good job!")
 
         # check if user has a comparison they have not completed yet
         new_pair = False
@@ -97,8 +102,6 @@ class CompareRootAPI(Resource):
                 abort(400, title="Comparisons Unavailable", message="You have compared all the currently available answer pairs. Please check back later for more answers.")
             except UnknownPairGeneratorException:
                 abort(500, title="Comparisons Unavailable", message="Generating scored pairs failed, this really shouldn't happen.")
-
-        comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
 
         return {
             'comparison': marshal(comparison, dataformat.get_comparison(restrict_user)),
