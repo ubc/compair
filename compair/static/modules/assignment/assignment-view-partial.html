@@ -97,7 +97,7 @@
                                     <option value="">All groups</option>
                                 </select>
                                 <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen
-                                        ng-options="u.id as u.name for u in students">
+                                        ng-options="u.id as u.name for u in [].concat(allInstructionals).concat(students)">
                                     <option value="">All answers</option>
                                 </select>
                             </span><br />
@@ -171,7 +171,7 @@
             <div class="all-answers">
 
                 <!-- Instructor Answers Section -->
-                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:adminFilter() as adminResults" ng-if="instructors[answer.user_id] && (see_answers || canManageAssignment)">
+                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:adminFilter() as adminResults" ng-if="answerFilters.orderBy!='score' && instructors[answer.user_id] && (see_answers || canManageAssignment)">
 
                     <!-- Instructor Answer Metadata Header -->
                     <div class="each-header clearfix">
@@ -180,12 +180,27 @@
                         <strong>said</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment">
                             <em>{{instructors[answer.user_id]}} Response</em>
+                            <span ng-if="canManageAssignment && !answerFilters.anonymous && answer.score && answer.comparable" class="label label-warning score-tooltip" uib-tooltip="Scores are normalized, so the top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
+                                Score: {{answer.score.normalized_score}}%
+                            </span>
                             <a title="Delete this answer" href="" confirmation-needed="deleteAnswer(answer)" keyword="instructor answer">
                                 <i class="fa fa-trash-o"></i>
                             </a>
                             <a href="" title="Edit this answer" ng-click="editAnswer(answer)">
                                 Edit
                             </a>
+                        </div>
+                        <div class="manager-actions pull-right" ng-if="!canManageAssignment">
+                            <!-- Ranking for Instructor Answers -->
+                            <span class="students-ranked" ng-if="!canManageAssignment && !answerFilters.anonymous && answerFilters.orderBy=='score' && answer.score">
+                                <span ng-if="answer.score.rank <= rankLimit">
+                                    Students Ranked: <strong>#{{answer.score.rank}} <span ng-if="rankCount[answer.score.rank] > 1">(tied)</span></strong>
+                                </span>
+                                <span class="score-tooltip" ng-if="answer.score.rank > 0 && answer.score.rank > rankLimit" uib-tooltip="Answers that are ranked outside the top {{rankLimit}} do not receive a rank number for this assignment." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
+                                    Students Ranked: <strong>N/A</strong>
+                                </span>
+                                <i class="fa fa-arrow-down"></i>
+                            </span>
                         </div>
                     </div>
 

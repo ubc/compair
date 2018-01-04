@@ -700,8 +700,8 @@ module.filter("excludeInstr", function() {
     return function(items, instructors) {
         var filtered = [];
         angular.forEach(items, function(item) {
-            // if user id is NOT in the instructors array, keep it
-            if (!instructors[item.user_id]) {
+            // exclude instructor answer unless it is comparable
+            if (!instructors[item.user_id] || item.comparable) {
                 filtered.push(item);
             }
         });
@@ -831,8 +831,8 @@ module.controller("AssignmentViewController",
 
         $scope.adminFilter = function() {
             return function (answer) {
-                // assume if any filter is applied - instructor/TAs answer will not meet requirement
-                return !$scope.answerFilters.author && !$scope.answerFilters.group
+                // true for non-comparable instructor/TA answer
+                return $scope.instructors[answer.user_id] && !answer.comparable;
             }
         };
 
@@ -1169,6 +1169,18 @@ module.controller("AssignmentViewController",
         };
         $scope.updateAnswerList();
         $scope.resetStudents($scope.allStudents);
+
+        CourseResource.getInstructionals({'id': $scope.courseId}).$promise.then(
+            function(ret) {
+                $scope.allInstructionals = ret.objects;
+                // Order by role, then name
+                // Underscore sorting is stable, so first sort by name, then role
+                $scope.allInstructionals = _($scope.allInstructionals).chain()
+                    .sortBy(function(o) { return o.name; })
+                    .sortBy(function(o) { return o.role; })
+                    .value();
+            }
+        );
 
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;

@@ -89,6 +89,7 @@ class ReportRootAPI(Resource):
 
             title = [
                 'Assignment', 'User UUID', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
+                'Answer', 'Students Ranked', 'Overall Score',
                 'Evaluations Submitted', 'Evaluations Required', 'Evaluation Requirements Met',
                 'Replies Submitted']
             titles = [title]
@@ -134,6 +135,7 @@ class ReportRootAPI(Resource):
             ]
             data = peer_feedback_report(course, assignments, group_name)
             titles = [titles1, titles2]
+
         else:
             abort(400, title="Report Not Run", message="Please try again with a report type from the list of report types provided.")
 
@@ -163,29 +165,45 @@ api.add_resource(ReportRootAPI, '')
 def participation_stat_report(course, assignments, group_name, overall):
     report = []
 
-    user_course_students = UserCourse.query \
-        .filter_by(
-            course_id=course.id,
-            course_role=CourseRole.student
+    classlist = UserCourse.query \
+        .join(User, User.id == UserCourse.user_id) \
+        .filter(
+            and_(
+                UserCourse.course_id == course.id,
+                or_(
+                    UserCourse.course_role == CourseRole.teaching_assistant,
+                    UserCourse.course_role == CourseRole.instructor,
+                    UserCourse.course_role == CourseRole.student
+                )
+            )
         )
     if group_name:
-        user_course_students = user_course_students.filter_by(group_name=group_name)
-    user_course_students = user_course_students.all()
+        classlist = classlist.filter(group_name == UserCourse.group_name)
+    classlist = classlist.order_by(User.lastname, User.firstname, User.id).all()
+
+    class_ids = [u.user.id for u in classlist]
 
     total_req = 0
     total = {}
 
     for assignment in assignments:
-        # ANSWERS: assume max one answer per user
+        # ANSWERS: instructors / TAs could submit multiple answers. normally 1 answer per student
         answers = Answer.query \
-            .filter_by(
-                active=True,
-                assignment_id=assignment.id,
-                draft=False,
-                practice=False
-            ) \
+            .options(joinedload('score')) \
+            .filter(and_(
+                Answer.active == True,
+                Answer.assignment_id == assignment.id,
+                Answer.comparable == True,
+                Answer.draft == False,
+                Answer.practice == False,
+                Answer.user_id.in_(class_ids)
+            )) \
+            .order_by(Answer.created) \
             .all()
-        answers = {a.user_id: a.uuid for a in answers}
+        user_answers = {}   # structure - user_id/[answer list]
+        for answer in answers:
+            user_answers_list = user_answers.setdefault(answer.user_id, [])
+            user_answers_list.append(answer)
 
         # EVALUATIONS
         evaluations = Comparison.query \
@@ -208,8 +226,8 @@ def participation_stat_report(course, assignments, group_name, overall):
 
         total_req += assignment.total_comparisons_required  # for overall required
 
-        for user_course_student in user_course_students:
-            user = user_course_student.user
+        for user_course in classlist:
+            user = user_course.user
             temp = [assignment.name, user.uuid, user.lastname, user.firstname]
 
             # OVERALL
@@ -219,10 +237,15 @@ def participation_stat_report(course, assignments, group_name, overall):
                 'total_comments': 0
             })
 
-            submitted = 1 if user.id in answers else 0
-            answer_uuid = answers[user.id] if submitted else 'N/A'
+            # each user has at least 1 line per assignment, regardless whether there is an answer
+            submitted = len(user_answers.get(user.id, []))
+            the_answer = user_answers[user.id][0] if submitted else None
+            answer_uuid = the_answer.uuid if submitted else 'N/A'
+            answer_text = snippet(the_answer.content) if submitted else 'N/A'
+            answer_rank = the_answer.score.rank if submitted and the_answer.score else 'Not Evaluated'
+            answer_score = the_answer.score.normalized_score if submitted and the_answer.score else 'Not Evaluated'
             total[user.id]['total_answers'] += submitted
-            temp.extend([submitted, answer_uuid])
+            temp.extend([submitted, answer_uuid, answer_text, answer_rank, answer_score])
 
             evaluations = evaluation_submitted.get(user.id, 0)
             evaluation_req_met = 'Yes' if evaluations >= assignment.total_comparisons_required else 'No'
@@ -235,8 +258,23 @@ def participation_stat_report(course, assignments, group_name, overall):
 
             report.append(temp)
 
+            # handle multiple answers from the user (normally only apply for instructors / TAs)
+            if submitted > 1:
+                for answer in user_answers[user.id][1:]:
+                    answer_uuid = answer.uuid
+                    answer_text = snippet(answer.content)
+                    answer_rank = answer.score.rank if submitted and answer.score else 'Not Evaluated'
+                    answer_score = answer.score.normalized_score if submitted and answer.score else 'Not Evaluated'
+                    temp = [assignment.name, user.uuid, user.lastname,
+                        user.firstname, submitted, answer_uuid, answer_text,
+                        answer_rank, answer_score,
+                        evaluations, assignment.total_comparisons_required,
+                        evaluation_req_met, comment_count]
+
+                    report.append(temp)
+
     if overall:
-        for user_course_student in user_course_students:
+        for user_course_student in classlist:
             user = user_course_student.user
             sum_submission = total.setdefault(user.id, {
                 'total_answers': 0,
@@ -247,7 +285,8 @@ def participation_stat_report(course, assignments, group_name, overall):
             req_met = 'Yes' if sum_submission['total_evaluations'] >= total_req else 'No'
             temp = [
                 '(Overall in Course)', user.uuid, user.lastname, user.firstname,
-                sum_submission['total_answers'], '(Overall in Course)',
+                sum_submission['total_answers'], '(Overall in Course)', '(Overall in Course)',
+                '', '',
                 sum_submission['total_evaluations'], total_req, req_met,
                 sum_submission['total_comments']]
             report.append(temp)
@@ -447,6 +486,7 @@ def peer_feedback_report(course, assignments, group_name):
 
     return report
 
+
 def strip_html(text):
     text = re.sub('<[^>]+>', '', text)
     text = text.replace('&nbsp;', ' ')
@@ -456,3 +496,13 @@ def strip_html(text):
     text = text.replace('&quot;', '"')
     text = text.replace('&#39;', '\'')
     return text
+
+def snippet(content, length=100, suffix='...'):
+    if content == None:
+        return ""
+    content = strip_html(content)
+    content = content.replace('\n', ' ').replace('\r', '').strip()
+    if len(content) <= length:
+        return content
+    else:
+        return ' '.join(content[:length+1].split(' ')[:-1]) + suffix

@@ -197,6 +197,21 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(result), 1)
             self.assertEqual(result[0]['user_id'], self.fixtures.students[0].uuid)
 
+            # test data retrieve before answer period ended with non-privileged user
+            self.fixtures.assignment.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
+            db.session.add(self.fixtures.assignment)
+            db.session.commit()
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+            actual_answers = rv.json['objects']
+            self.assertEqual(1, len(actual_answers))
+            self.assertEqual(1, rv.json['page'])
+            self.assertEqual(1, rv.json['pages'])
+            self.assertEqual(20, rv.json['per_page'])
+            self.assertEqual(1, rv.json['total'])
+
+        # test data retrieve before answer period ended with privileged user
+        with self.login(self.fixtures.instructor.username):
             # add instructor answer
             answer = AnswerFactory(
                 assignment=self.fixtures.assignment,
@@ -215,21 +230,6 @@ class AnswersAPITests(ComPAIRAPITestCase):
             for dropped_student in self.fixtures.dropped_students:
                 self.assertNotIn(dropped_student.uuid, user_uuids)
 
-            # test data retrieve before answer period ended with non-privileged user
-            self.fixtures.assignment.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
-            db.session.add(self.fixtures.assignment)
-            db.session.commit()
-            rv = self.client.get(self.base_url)
-            self.assert200(rv)
-            actual_answers = rv.json['objects']
-            self.assertEqual(1, len(actual_answers))
-            self.assertEqual(1, rv.json['page'])
-            self.assertEqual(1, rv.json['pages'])
-            self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(1, rv.json['total'])
-
-        # test data retrieve before answer period ended with privileged user
-        with self.login(self.fixtures.instructor.username):
             rv = self.client.get(self.base_url)
             self.assert200(rv)
             actual_answers = rv.json['objects']
@@ -281,6 +281,23 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 data=json.dumps(expected_answer), content_type='application/json')
             self.assert404(rv)
 
+        # student answers can only be comparable
+        for comparable in [True, False, None]:
+            self.fixtures.add_students(1)
+            with self.login(self.fixtures.students[-1].username):
+                comp_ans = expected_answer.copy()
+                if comparable is not None:
+                    comp_ans['comparable'] = comparable
+                rv = self.client.post(
+                    self.base_url,
+                    data=json.dumps(comp_ans),
+                    content_type='application/json')
+                self.assert200(rv)
+                # retrieve again and verify
+                actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
+                self.assertEqual(comp_ans['content'], actual_answer.content)
+                self.assertTrue(actual_answer.comparable)
+
         # test create successful
         with self.login(self.fixtures.instructor.username):
             rv = self.client.post(
@@ -291,6 +308,20 @@ class AnswersAPITests(ComPAIRAPITestCase):
             # retrieve again and verify
             actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
+
+            # test comparable instructor answers
+            for comparable in [True, False]:
+                comp_ans = expected_answer.copy()
+                comp_ans['comparable'] = comparable
+                rv = self.client.post(
+                    self.base_url,
+                    data=json.dumps(comp_ans),
+                    content_type='application/json')
+                self.assert200(rv)
+                # retrieve again and verify
+                actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
+                self.assertEqual(comp_ans['content'], actual_answer.content)
+                self.assertEqual(comparable, actual_answer.comparable)
 
             # user should not have grades
             new_course_grade = CourseGrade.get_user_course_grade( self.fixtures.course, self.fixtures.instructor)

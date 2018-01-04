@@ -109,14 +109,20 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         from . import Assignment, UserCourse, CourseRole, Answer, AnswerScore, \
             PairingAlgorithm, AnswerCriterionScore, AssignmentCriterion
 
-        # ineligible authors - eg. instructors, TAs, dropped student, current user
-        non_students = UserCourse.query \
+        # exclude current user and those not with proper role.
+        # note that sys admin (not enrolled in the course and thus no course role) can create answers.
+        # they are considered eligible
+        ineligibles = UserCourse.query \
+            .with_entities(UserCourse.user_id) \
             .filter(and_(
                 UserCourse.course_id == course_id,
-                UserCourse.course_role != CourseRole.student
+                UserCourse.course_role.notin_(
+                    [ CourseRole.student, CourseRole.instructor, \
+                        CourseRole.teaching_assistant ]
+                )
             ))
-        ineligible_user_ids = [non_student.user_id \
-            for non_student in non_students]
+        ineligible_user_ids = [ineligible.user_id \
+            for ineligible in ineligibles]
         ineligible_user_ids.append(user_id)
 
         answers_with_score = Answer.query \
@@ -127,7 +133,8 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
                 Answer.assignment_id == assignment_id,
                 Answer.active == True,
                 Answer.practice == False,
-                Answer.draft == False
+                Answer.draft == False,
+                Answer.comparable == True
             )) \
             .all()
 

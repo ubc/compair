@@ -242,6 +242,77 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(students[0]['id'], expected['id'])
             self.assertEqual(students[0]['name'], expected['name'] + ' (You)')
 
+    def test_get_instructional_course(self):
+        url = self.url + "/instructionals"
+
+        # test login required
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        # test dropped instructor - unauthorized
+        with self.login(self.data.get_dropped_instructor().username):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # test unauthorized instructor
+        with self.login(self.data.get_unauthorized_instructor().username):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test invalid course id
+            rv = self.client.get('/api/courses/999/users/instructionals')
+            self.assert404(rv)
+
+            # test success - instructor
+            rv = self.client.get(url)
+            self.assert200(rv)
+            instructionals = rv.json['objects']
+            expected = [
+                {
+                    'role': 'Teaching Assistant',
+                    'id': self.data.get_authorized_ta().uuid,
+                    'name': self.data.get_authorized_ta().fullname_sortable
+                },
+                {
+                    'role': 'Instructor',
+                    'id': self.data.get_authorized_instructor().uuid,
+                    'name': self.data.get_authorized_instructor().fullname_sortable
+                }
+            ]
+
+            self.assertEqual(len(instructionals), len(expected))
+            for expect in expected:
+                actual = next((x for x in instructionals if x['id'] == expect['id']), None)
+                self.assertIsNotNone(actual)
+                for key in expect:
+                    self.assertEqual(actual[key], expect[key])
+
+        # test success - student
+        with self.login(self.data.get_authorized_student().username):
+            rv = self.client.get(url)
+            self.assert200(rv)
+            instructionals = rv.json['objects']
+            expected = [
+                {
+                    'role': 'Teaching Assistant',
+                    'id': self.data.get_authorized_ta().uuid,
+                    'name': self.data.get_authorized_ta().displayname
+                },
+                {
+                    'role': 'Instructor',
+                    'id': self.data.get_authorized_instructor().uuid,
+                    'name': self.data.get_authorized_instructor().displayname
+                }
+            ]
+
+            self.assertEqual(len(instructionals), len(expected))
+            for expect in expected:
+                actual = next((x for x in instructionals if x['id'] == expect['id']), None)
+                self.assertIsNotNone(actual)
+                for key in expect:
+                    self.assertEqual(actual[key], expect[key])
+
     def test_enrol_instructor(self):
         url = self._create_enrol_url(self.url, self.data.get_dropped_instructor().uuid)
         role = {'course_role': 'Instructor'}  # defaults to Instructor

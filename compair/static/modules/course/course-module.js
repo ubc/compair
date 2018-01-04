@@ -235,7 +235,8 @@ module.factory('CourseResource',
             'createDuplicate': {method: 'POST', url: '/api/courses/:id/duplicate'},
             'getCurrentUserStatus': {url: '/api/courses/:id/assignments/status'},
             'getInstructorsLabels': {url: '/api/courses/:id/users/instructors/labels'},
-            'getStudents': {url: '/api/courses/:id/users/students'}
+            'getStudents': {url: '/api/courses/:id/users/students'},
+            'getInstructionals': {url: '/api/courses/:id/users/instructionals'}
         }
     );
     ret.MODEL = "Course"; // add constant to identify the model

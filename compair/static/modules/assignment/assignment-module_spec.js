@@ -793,6 +793,14 @@ describe('assignment-module', function () {
                 });
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/groups').respond(mockGroups);
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers?page=1&perPage=20').respond(mockAnswers);
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/users/instructionals').respond({
+                    "objects": [{
+                        "group_name": null,
+                        "id": "1",
+                        "name": "One, Instructor",
+                        "role": "Instructor"
+                    }]
+                });
                 $httpBackend.flush();
             });
 

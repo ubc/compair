@@ -104,7 +104,7 @@ class CompareRootAPI(Resource):
                 abort(500, title="Comparisons Unavailable", message="Generating scored pairs failed, this really shouldn't happen.")
 
         return {
-            'comparison': marshal(comparison, dataformat.get_comparison(restrict_user)),
+            'comparison': marshal(comparison, dataformat.get_comparison(restrict_user, include_answer_user=False, include_score=False)),
             'new_pair': new_pair,
             'current': comparison_count+1
         }
@@ -248,6 +248,6 @@ class CompareRootAPI(Resource):
             is_comparison_example=is_comparison_example,
             data=marshal(comparison, dataformat.get_comparison(restrict_user)))
 
-        return {'comparison': marshal(comparison, dataformat.get_comparison(restrict_user))}
+        return {'comparison': marshal(comparison, dataformat.get_comparison(restrict_user, include_answer_user=False, include_score=False))}
 
 api.add_resource(CompareRootAPI, '')
