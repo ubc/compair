@@ -261,10 +261,10 @@ module.factory( "CoursePermissions", function (){
 /***** Controllers *****/
 module.controller(
     'CourseAssignmentsController',
-    ["$scope", "$routeParams", "CourseResource", "AssignmentResource", "resolvedData",
-     "Toaster", "xAPIStatementHelper",
-    function($scope, $routeParams, CourseResource, AssignmentResource, resolvedData,
-             Toaster, xAPIStatementHelper)
+    ["$scope", "$routeParams", "CourseResource", "AssignmentResource", "AssignmentPermissions",
+    "moment", "resolvedData", "Toaster", "xAPIStatementHelper",
+    function($scope, $routeParams, CourseResource, AssignmentResource, AssignmentPermissions,
+             moment, resolvedData, Toaster, xAPIStatementHelper)
     {
         // get course info
         $scope.courseId = $routeParams.courseId;
@@ -314,9 +314,12 @@ module.controller(
         if ($scope.canManageAssignment) {
             $scope.filters.push('Assignments being answered', 'Assignments being compared', 'Upcoming assignments');
         } else {
-            $scope.filters.push('My unfinished assignments');
+            $scope.filters.push('My unfinished assignments', 'Assignments with drafts', 'Assignments with feedback');
         }
         $scope.filter = $scope.filters[0];
+
+        $scope.sortOptions = ['Assignment start date', 'Answer due date', 'Comparisons due date'];
+        $scope.sortOrder = $scope.sortOptions[0];
 
         $scope.deleteAssignment = function(assignment) {
             AssignmentResource.delete({'courseId': assignment.course_id, 'assignmentId': assignment.id}).$promise.then(
@@ -331,6 +334,9 @@ module.controller(
 
         $scope.assignmentFilter = function(filter) {
             return function(assignment) {
+
+                var permissions = AssignmentPermissions.getAll(assignment, $scope.canManageAssignment, $scope.loggedInUserId);
+
                 switch(filter) {
                     // return all assignments
                     case "All course assignments":
@@ -346,11 +352,50 @@ module.controller(
                         return !assignment.available;
                     // STUDENTS: return all assignments that need to be answered or compared
                     case "My unfinished assignments":
-                        return (assignment.answer_period && !assignment.status.answers.answered) ||
-                            (assignment.compare_period && assignment.steps_left > 0);
+                        return (permissions.canAnswer && permissions.needsAnswer) ||
+                            (permissions.canCompare && permissions.needsCompareOrSelfEval);
+                    // STUDENTS: return all assignments that have a saved draft answer, comparison, or self-eval
+                    case "Assignments with drafts":
+                        return (permissions.canAnswer && permissions.needsAnswer && permissions.hasDraftAnswer) ||
+                            (permissions.canCompare && permissions.needsCompare && permissions.hasDraftComparison) ||
+                            (permissions.canCompare && permissions.needsSelfEval && permissions.hasDraftSelfEval);
+                    // STUDENTS: return all assignments that have received feedback
+                    case "Assignments with feedback":
+                        return permissions.hasFeedback;
                     default:
                         return false;
                 }
+            }
+        }
+
+        $scope.assignmentSortOrder = function(sortOrder) {
+            switch (sortOrder) {
+                case "Answer due date":
+                    return function(assignment) {
+                        // return rather undefined if empty, otherwise answer_end if it occurs in the future
+                        if (moment(assignment.answer_end).diff(moment()) > 0) {
+                            return moment(assignment.answer_end).valueOf();
+                        }
+                        return undefined;
+                    };
+                    break;
+                case "Comparisons due date":
+                    return function(assignment) {
+                        // return rather undefined if empty, otherwise compare_end if it occurs in the future
+                        if (assignment.compare_end && moment(assignment.compare_end).diff(moment()) > 0) {
+                            return moment(assignment.compare_end).valueOf();
+                        }
+                        else if (!assignment.compare_end && moment(assignment.answer_end).diff(moment()) > 0) {
+                            return moment(assignment.answer_end).valueOf();
+                        }
+                        return undefined;
+                    };
+                    break;
+                case "Assignment start date":
+                default:
+                    return function(assignment) {
+                        return - moment(assignment.answer_start).valueOf();
+                    }
             }
         }
 

@@ -203,7 +203,7 @@ module.directive('assignmentActionButton', function() {
                         var courseId = $scope.course.id;
                         var course = $scope.course;
 
-                        var allMetadata = {
+                        var allButtons = {
                             'answer' : {
                                 'label' : "Answer",
                                 'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/answer/create",
@@ -253,12 +253,12 @@ module.directive('assignmentActionButton', function() {
                             },
                         };
 
-                        if (allMetadata[$scope.actionElementName]) {
-                            if ($scope.canManageAssignment && allMetadata[$scope.actionElementName].show.instructor) {
-                                $scope.button = allMetadata[$scope.actionElementName];
+                        if (allButtons[$scope.actionElementName]) {
+                            if ($scope.canManageAssignment && allButtons[$scope.actionElementName].show.instructor) {
+                                $scope.button = allButtons[$scope.actionElementName];
                             }
-                            else if (!$scope.canManageAssignment && allMetadata[$scope.actionElementName].show.user) {
-                                $scope.button = allMetadata[$scope.actionElementName];
+                            else if (!$scope.canManageAssignment && allButtons[$scope.actionElementName].show.user) {
+                                $scope.button = allButtons[$scope.actionElementName];
                             }
                             else {
                                 $scope.button = { 'hide': true };
@@ -294,7 +294,7 @@ module.directive('assignmentText', function() {
 
                         var assignment = $scope.assignment;
 
-                        var allMetadata = {
+                        var allDirText = {
                             'answerDue' : {
                                 'label' : assignment.answer_end ? "<em>Answer due </em> " + $filter('date')(assignment.answer_end, 'MMM d') : "",
                                 'show' : {
@@ -325,12 +325,12 @@ module.directive('assignmentText', function() {
                             },
                         };
 
-                        if (allMetadata[$scope.textElementName]) {
-                            if ($scope.canManageAssignment && allMetadata[$scope.textElementName].show.instructor) {
-                                $scope.dirText = allMetadata[$scope.textElementName];
+                        if (allDirText[$scope.textElementName]) {
+                            if ($scope.canManageAssignment && allDirText[$scope.textElementName].show.instructor) {
+                                $scope.dirText = allDirText[$scope.textElementName];
                             }
-                            else if (!$scope.canManageAssignment && allMetadata[$scope.textElementName].show.user) {
-                                $scope.dirText = allMetadata[$scope.textElementName];
+                            else if (!$scope.canManageAssignment && allDirText[$scope.textElementName].show.user) {
+                                $scope.dirText = allDirText[$scope.textElementName];
                             }
                             else {
                                 $scope.dirText = { 'hide': true };

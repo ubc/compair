@@ -180,6 +180,23 @@ dt {
   padding-bottom: 100%
 }
 
+/* class for divs that contain multiple filters */
+.multi-filters {
+
+  margin-bottom: .5em;
+
+  /* wrapper */
+  > div {
+    margin-top: 1.6em;
+  }
+
+  /* each filter */
+  .filter {
+    margin: 0 0 .5em 0.8em;
+  }
+
+}//closes multi-filters
+
 /* class for filters */
 .filter {
 
@@ -192,7 +209,7 @@ dt {
   }
 
   select {
-    margin: .5em 0 0.5em;
+    margin: 0;
     padding: .2em;
     max-width: 20em;
   }
@@ -200,6 +217,14 @@ dt {
   .chosen-container {
     max-width: 24em;
     min-width: 12em;
+  }
+
+  &:last-child {
+
+    select {
+      margin-bottom: 0.5em;
+    }
+
   }
 
 }//closes .filter

@@ -1,10 +1,10 @@
 <div class="course-screen">
 
     <div class="row">
-        <header ng-class="{'col-sm-6': canManageAssignment, 'col-sm-12': !canManageAssignment}">
+        <header ng-class="{'col-sm-6 col-lg-7': canManageAssignment, 'col-sm-12': !canManageAssignment}">
             <h1><i class="fa fa-book"></i> {{course.name}} ({{course.year}} {{course.term}})</h1>
         </header>
-        <div ng-if="canManageAssignment" class="col-sm-6 sub-nav">
+        <div ng-if="canManageAssignment" class="col-sm-6 col-lg-5 sub-nav">
             <span ng-if="canCreateAssignment">
                 <a ng-href="#/course/{{course.id}}/assignment/create"
                     class="btn btn-primary" id="add-assignment-btn">
@@ -45,15 +45,19 @@
 
     <div class="row">
 
-        <div class="col-sm-8">
+        <div class="col-lg-5 col-sm-6">
             <h2>{{filter}} <span ng-if="results.length != assignments.length">({{results.length}})</span></h2>
         </div>
 
-        <div class="col-sm-4 text-right">
+        <div class="col-lg-7 col-sm-6 text-right">
             <form class="form-inline searchCourse" role="search" ng-show="assignments.length">
-                <div class="form-group filter">
+                <div class="form-group filter" id="assignment-filter">
                     <label>Show: &nbsp;</label>
-                    <select ng-model="filter" ng-options="f for f in filters"></select>
+                    <select ng-model="filter" chosen ng-options="f for f in filters"></select>
+                </div>
+                <div class="form-group filter" id="assignment-sort" ng-hide="canMangeAssignments || sortOptions.length < 2">
+                    <label>Order by: &nbsp;</label>
+                    <select ng-model="sortOrder" chosen ng-options="s for s in sortOptions"></select>
                 </div>
             </form>
         </div>
@@ -67,7 +71,7 @@
 
     <!-- Assignments List -->
     <div class="row each-assignment" ng-class="{'first-child': $first}"
-        ng-repeat="assignment in assignments | filter:assignmentFilter(filter) as results">
+        ng-repeat="assignment in assignments | filter:assignmentFilter(filter) | orderBy:[assignmentSortOrder(sortOrder), '-created'] as results">
 
         <!-- Assignment Display -->
         <div class="col-sm-9 media">

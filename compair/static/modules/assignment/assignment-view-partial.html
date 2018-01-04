@@ -100,7 +100,7 @@
                                         ng-options="u.id as u.name for u in users">
                                     <option value="">All answers</option>
                                 </select>
-                            </span><br />
+                            </span>
                             <span class="filter" ng-if="(canManageAssignment || rankLimit) && assignment.pairing_algorithm != PairingAlgorithm.random">
                                 <label>Order by: &nbsp;</label>
                                 <select ng-model="answerFilters.orderBy" chosen ng-disabled="answerFilters.top == true">
@@ -108,7 +108,7 @@
                                     <option value="score" ng-if="canManageAssignment">Answer score</option>
                                     <option value="score" ng-if="!canManageAssignment">Answer rank</option>
                                 </select>
-                            </span><br />
+                            </span>
                             <span class="filter hidden-xs" ng-if="canManageAssignment">
                                  <a href="" uib-tooltip="Hide student names, scores, and feedback when sharing this screen with students" tooltip-trigger tooltip-animation="false" tooltip-placement="left">
                                     <i class="fa fa-question-circle"></i>
