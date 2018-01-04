@@ -21,19 +21,28 @@ The backend uses the python web application framework [Flask](http://flask.pocoo
 Developer Installation - Docker
 -------------------------------
 
-### Prerequisites
+### Development Prerequisites
 
 * [Docker Engine](https://docs.docker.com/engine/installation/)
 * [Docker Compose](https://docs.docker.com/compose/install/)
+* [npm](https://www.npmjs.com/get-npm)
 
 ### Clone Repo and Start Server
 
     git clone git@github.com:ubc/compair.git compair
+    cd compair
+    npm install
+    node_modules/gulp/bin/gulp.js
+    node_modules/gulp/bin/gulp.js prod
     docker-compose up -d
 
 After initialization is finished, run the following command if it is the first time:
 
     docker exec -it compair_app_1 python manage.py database create
+
+Alternatively you can create a pre-populated database with demo data:
+
+    docker exec -it compair_app_1 python manage.py database create -s
 
 ComPAIR is accessible at
 

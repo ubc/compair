@@ -11,7 +11,7 @@ from compair.manage.user import manager as user_manager
 from compair.manage.utils import manager as util_manager
 from compair import create_app
 
-manager = Manager(create_app)
+manager = Manager(create_app(skip_assets=True))
 # register sub-managers
 manager.add_command("database", database_manager)
 manager.add_command("report", report_generator)

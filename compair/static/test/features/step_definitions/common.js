@@ -145,7 +145,7 @@ var commonStepDefinitionsWrapper = function() {
 
     // pause test (helpful for debugging)
     this.Then("pause", function () {
-        browser.pause();
+        return browser.pause();
     });
 };
 module.exports = commonStepDefinitionsWrapper;

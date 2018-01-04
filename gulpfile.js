@@ -16,14 +16,7 @@ var gulp = require('gulp'),
     mainBowerFiles = require('main-bower-files'),
     cleanCss = require('gulp-clean-css'),
     rev = require('gulp-rev'),
-    Server = require('karma').Server,
-    protractor = require('gulp-protractor').protractor,
-    webdriver_standalone = require('gulp-protractor').webdriver_standalone,
-    webdriver_update = require('gulp-protractor').webdriver_update,
     exec = require('child_process').exec,
-    connect = require('gulp-connect'),
-    sauceConnectLauncher = require('sauce-connect-launcher'),
-    del = require('del').sync, // use sync method, gulp doesn't seem to wait for async del
     sort = require('gulp-sort'), // gulp.src with wildcard doesn't give us a stable file order
     streamqueue = require('streamqueue'), // queued streams one by one
     templateCache = require('gulp-angular-templatecache');
@@ -188,6 +181,8 @@ gulp.task('tdd', function (done) {
  * Behavior driven development. This task runs acceptance tests
  */
 gulp.task('bdd', ['webdriver_update'], function (done) {
+    var protractor = require('gulp-protractor').protractor;
+    var connect = require('gulp-connect');
     gulp.src(["compair/static/test/features/*.feature"])
         .pipe(protractor({
             configFile: "compair/static/test/config/protractor_cucumber.js"
@@ -207,6 +202,7 @@ gulp.task('bdd', ['webdriver_update'], function (done) {
  * Run test once and exit
  */
 gulp.task('test:unit', function (done) {
+    var Server = require('karma').Server;
     new Server({
         configFile: __dirname + '/' + karmaCommonConf,
         singleRun: true
@@ -230,6 +226,7 @@ gulp.task('generate_index', function() {
  * Delete generated index.html
  */
 gulp.task('delete_index', function() {
+    var del = require('del').sync; // use sync method, gulp doesn't seem to wait for async del
     return del([
         './compair/static/index.html'
     ]);
@@ -247,6 +244,8 @@ gulp.task('test:acceptance', ['server:frontend', 'bdd'], function() {
  */
 gulp.task('test:ci', ['server:frontend', '_test:ci']);
 gulp.task('_test:ci', function (done) {
+    var protractor = require('gulp-protractor').protractor;
+    var connect = require('gulp-connect');
     gulp.src(["compair/static/test/features/*.feature"])
         .pipe(protractor({
             configFile: "compair/static/test/config/protractor_saucelab.js"
@@ -268,6 +267,9 @@ gulp.task('_test:ci', function (done) {
  */
 gulp.task('test:acceptance:sauce', ['server:frontend', '_test:acceptance:sauce']);
 gulp.task('_test:acceptance:sauce', ['sauce:connect'], function(done) {
+    var protractor = require('gulp-protractor').protractor;
+    var connect = require('gulp-connect');
+    var sauceConnectLauncher = require('sauce-connect-launcher');
     gulp.src(["compair/static/test/features/*.feature"])
         .pipe(protractor({
             configFile: "compair/static/test/config/protractor_saucelab_local.js",
@@ -300,6 +302,7 @@ gulp.task('server:backend', function() {
  * Run frontend server
  */
 gulp.task('server:frontend', ['generate_index'], function(done) {
+    var connect = require('gulp-connect');
     app = connect.server({
         root: 'compair/static',
         livereload: false, // set to false, otherwise gulp will not exit
@@ -340,6 +343,7 @@ gulp.task('server:frontend', ['generate_index'], function(done) {
  * Run sauce connect
  */
 gulp.task('sauce:connect', function(done) {
+    var sauceConnectLauncher = require('sauce-connect-launcher');
     // auto kills on process end
     sauceConnectLauncher({
         username: process.env.SAUCE_USERNAME,
@@ -359,14 +363,20 @@ gulp.task('sauce:connect', function(done) {
 /**
  * Downloads the selenium webdriver
  */
-gulp.task('webdriver_update', webdriver_update);
+gulp.task('webdriver_update', function(done) {
+    var webdriver_update = require('gulp-protractor').webdriver_update;
+    webdriver_update({}, done);
+});
 
 /**
  * Start the standalone selenium server
  * NOTE: This is not needed if you reference the
  * seleniumServerJar in your protractor.conf.js
  */
-gulp.task('webdriver_standalone', webdriver_standalone);
+gulp.task('webdriver_standalone', function(done) {
+    var webdriver_standalone = require('gulp-protractor').webdriver_standalone;
+    webdriver_standalone(done);
+});
 
 
 gulp.task("default", ['bowerInstall', 'bowerWiredep', 'copy_pdf_viewer_html_template'], function(){});
