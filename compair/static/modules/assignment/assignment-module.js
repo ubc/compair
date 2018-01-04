@@ -180,7 +180,7 @@ module.directive('comparisonPreview', function() {
 });
 
 module.directive('assignmentActionButton', function() {
-    
+
     return {
         restrict : 'E',
         scope: true,
@@ -189,14 +189,14 @@ module.directive('assignmentActionButton', function() {
         link: function ($scope, $element, $attributes) {
             $scope.actionElementName = $attributes.name;
         },
-        controller: ["$scope", "$filter", "AssignmentPermissions", 
+        controller: ["$scope", "$filter", "AssignmentPermissions",
             function ($scope, $filter, AssignmentPermissions) {
                 $scope.$watchCollection("[assignment, assignment.status, actionElementName]", function(newStatus){
 
                     var permissions = AssignmentPermissions.getAll($scope.assignment, $scope.canManageAssignment, $scope.loggedInUserId);
 
                     if ($scope.assignment.status !== undefined) {
-                        
+
                         var assignmentId = $scope.assignment.id;
                         var assignmentStatus = $scope.assignment.status;
                         var assignment = $scope.assignment;
@@ -275,23 +275,23 @@ module.directive('assignmentActionButton', function() {
 });
 
 module.directive('assignmentText', function() {
-    
+
     return {
         restrict : 'E',
         scope: true,
         templateUrl: 'modules/common/element-text-template.html',
-        replace: true,
+        replace: false,
         link: function ($scope, $element, $attributes) {
             $scope.textElementName = $attributes.name;
         },
-        controller: ["$scope", "$filter", "AssignmentPermissions", 
+        controller: ["$scope", "$filter", "AssignmentPermissions",
             function ($scope, $filter, AssignmentPermissions) {
                 $scope.$watchCollection("[assignment, assignment.status, textElementName]", function(newStatus){
 
                     var permissions = AssignmentPermissions.getAll($scope.assignment, $scope.canManageAssignment, $scope.loggedInUserId);
 
                     if ($scope.assignment.status !== undefined) {
-                        
+
                         var assignment = $scope.assignment;
 
                         var allMetadata = {
@@ -347,7 +347,7 @@ module.directive('assignmentText', function() {
 });
 
 module.directive('assignmentMetadata', function() {
-    
+
     return {
         restrict : 'E',
         scope: true,
@@ -356,20 +356,20 @@ module.directive('assignmentMetadata', function() {
         link: function ($scope, $element, $attributes) {
             $scope.metadataName = $attributes.name;
         },
-        controller: ["$scope", "$filter", "AssignmentPermissions", 
+        controller: ["$scope", "$filter", "AssignmentPermissions",
             function ($scope, $filter, AssignmentPermissions) {
                 $scope.$watchCollection("[assignment, assignment.status, metadataName]", function(newStatus){
 
                     var permissions = AssignmentPermissions.getAll($scope.assignment, $scope.canManageAssignment, $scope.loggedInUserId);
 
                     if ($scope.assignment.status !== undefined) {
-                        
+
                         var assignmentId = $scope.assignment.id;
                         var assignmentStatus = $scope.assignment.status;
                         var assignment = $scope.assignment;
                         var courseId = $scope.course.id;
                         var course = $scope.course;
-                        
+
                         var allMetadata = {
                             'editLink' : {
                                 'label' : "Edit",
@@ -451,9 +451,9 @@ module.directive('assignmentMetadata', function() {
                                 }
                             },
                             'completedFeedback' : {
-                                'label': "You " + 
-                                        (!permissions.needsAnswer ? "<strong>answered</strong>" + 
-                                        (permissions.hasCompared ? " and " : "") : "") + 
+                                'label': "You " +
+                                        (!permissions.needsAnswer ? "<strong>answered</strong>" +
+                                        (permissions.hasCompared ? " and " : "") : "") +
                                         (permissions.hasCompared ? "<strong>compared " + assignment.status.comparisons.count + " pair" + (assignment.status.comparisons.count != 0 ? "s" : "") + "</strong>" : ""),
                                 'show' : {
                                     'user' : permissions.hasCompared || !permissions.needsAnswer,
@@ -461,9 +461,9 @@ module.directive('assignmentMetadata', function() {
                                 }
                             },
                             'missedFeedback' : {
-                                'label': "You missed " + 
-                                        (permissions.hasMissedAnswer ? "answering " + 
-                                        (permissions.hasMissedCompare ? " and " : "") : "") + 
+                                'label': "You missed " +
+                                        (permissions.hasMissedAnswer ? "answering " +
+                                        (permissions.hasMissedCompare ? " and " : "") : "") +
                                         (permissions.hasMissedCompare ? "comparing " + (permissions.needsCompare ? assignment.steps_left + " pair" + (assignment.steps_left != 0 ? "s" : "") : "") : ""),
                                 'show' : {
                                     'user' : permissions.hasMissedAnswer || permissions.hasMissedCompare,
@@ -471,8 +471,8 @@ module.directive('assignmentMetadata', function() {
                                 }
                             },
                             'missingFeedback' : {
-                                'label': (permissions.canAnswer && permissions.needsAnswer ? "1 answer " + 
-                                         (permissions.isComparePeriod && permissions.needsCompareOrSelfEval > 0 ? ", " : "") : "") + 
+                                'label': (permissions.canAnswer && permissions.needsAnswer ? "1 answer " +
+                                         (permissions.isComparePeriod && permissions.needsCompareOrSelfEval > 0 ? ", " : "") : "") +
                                          (permissions.isComparePeriod && permissions.needsCompareOrSelfEval > 0 ? assignment.steps_left + " comparison" + (assignment.steps_left != 0 ? "s" : "") : "") + " needed",
                                 'class': 'label label-warning',
                                 'show' : {
@@ -553,7 +553,7 @@ module.directive('assignmentMetadata', function() {
                                 'label': '<i class="fa fa-trash-o"></i>',
                                 'title' : "Delete",
                                 'confirmationNeeded' : 'deleteAssignment(assignment)' ,
-                                'confirmationWarning': assignment.delete_warning, 
+                                'confirmationWarning': assignment.delete_warning,
                                 'keyword' : "assignment",
                                 'show' : {
                                     'user'  : permissions.isOwner,
@@ -653,16 +653,16 @@ module.factory( "AssignmentPermissions", function (){
 
                     // compare
                     'isComparePeriod'   : assignment.compare_period,
-                    'canCompare'        : assignment.compare_period && 
+                    'canCompare'        : assignment.compare_period &&
                                             // regular users
-                                            (!canManageAssignment && 
+                                            (!canManageAssignment &&
                                                 (
                                                 // either (the answer period is active AND the assignment has been answered)
-                                                (assignment.answer_period && assignment.status.answers.answered) || 
+                                                (assignment.answer_period && assignment.status.answers.answered) ||
                                                 // OR the answer period is not active
                                                 !assignment.answer_period
                                                 )
-                                            ) || 
+                                            ) ||
                                             // instructors
                                             (canManageAssignment && assignment.educators_can_compare),
                     'needsCompare'      : assignment.status.comparisons.left > 0,
@@ -689,7 +689,7 @@ module.factory( "AssignmentPermissions", function (){
                 permissions.hasMissedAnswer = permissions.isAfterAnswerDue && permissions.needsAnswer;
                 permissions.hasMissedCompare = permissions.isAfterCompareDue && permissions.needsCompare;
             }
-            
+
             return permissions;
         }
     }
