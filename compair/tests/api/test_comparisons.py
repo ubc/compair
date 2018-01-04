@@ -84,7 +84,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             # expected_comparisons = rv.json
             comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
 
-        # test deny access to unenroled users
+        # test deny access to unenrolled users
         with self.login(self.data.get_unauthorized_student().username):
             rv = self.client.post(
                 self.base_url,
@@ -229,14 +229,17 @@ class ComparisonAPITests(ComPAIRAPITestCase):
 
         users = [self.data.get_authorized_student(), self.data.get_authorized_instructor(), self.data.get_authorized_ta()]
         for user in users:
-            max_comparisons = 0
+            max_comparisons = self.assignment.number_of_comparisons
             other_student_answers = 0
             valid_answer_uuids = set()
             for answer in self.data.get_student_answers():
                 if answer.assignment.id == self.assignment.id and answer.user_id != user.id:
                     other_student_answers += 1
                     valid_answer_uuids.add(answer.uuid)
-            max_comparisons = int(other_student_answers * (other_student_answers - 1) / 2)
+
+            # instructors and tas can compare every possible pair
+            if user.id in [self.data.get_authorized_instructor().id, self.data.get_authorized_ta().id]:
+                max_comparisons = int(other_student_answers * (other_student_answers - 1) / 2)
 
             if user.id == self.data.get_authorized_student().id:
                 for comparison_example in self.data.comparisons_examples:
@@ -350,6 +353,12 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 # all answers has been compared by the user, errors out when trying to get another pair
                 rv = self.client.get(self.base_url)
                 self.assert400(rv)
+                if user.id == self.data.get_authorized_student().id:
+                    self.assertEqual("Comparisons Completed", rv.json['title'])
+                    self.assertEqual("More comparisons aren't available, since you've finished your comparisons for this assignment. Good job!", rv.json['message'])
+                else:
+                    self.assertEqual("Comparisons Unavailable", rv.json['title'])
+                    self.assertEqual("You have compared all the currently available answer pairs. Please check back later for more answers.", rv.json['message'])
 
     def _validate_comparison_submit(self, comparison_submit, actual_comparison, expected_comparison):
         self.assertEqual(
