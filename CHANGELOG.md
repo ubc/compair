@@ -1,3 +1,21 @@
+# v1.1
+
+## Notable changes
+
+* The addition of multidimensional scaling to the pair selection algorithm, meaning that answer pairs should be selected more accurately when multiple criteria are used
+* Adding an option for instructors to include their own answers in assignments to see how students respond to and score/rank them (the latter applies only when the adaptive setting is used)
+* Interface changes to improve the student experience (based on results from in-depth usability testing this fall)
+* Most notably, more clearly labeling and indicating where to find peer feedback as well as showing completed student work over two tabs in each assignment (one labeled "Your Answer + Feedback" and the other "Your Comparisons")
+* General updates to the mobile view of the application
+* Removing assignment help comments (this tab will no longer need to be monitored by instructors or instructional teams)
+* Sorting student work by last name on the "Comparisons" tab for easier grading
+* Refining the consistency and readability of pop-up messages
+* The ability for instructors to mark courses as test environments ("sandboxes")
+* Improving the LTI integration (i.e., allowing ComPAIR to work more smoothly with other learning platforms like Canvas)
+* New system settings for controlling the visibility of some private student data from instructor (default hides email and CAS username from instructor view/reports)
+
+For full list of changes: https://github.com/ubc/compair/issues?utf8=%E2%9C%93&q=milestone%3A%22Version%201.1%22%20
+
 # v1.0
 
 ## Notable changes
