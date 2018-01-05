@@ -17,7 +17,7 @@
                         <option value="">All groups</option>
                     </select>
                     <select id="comparison-filter" ng-model="comparisonFilters.author" class="nullable" chosen
-                            ng-options="u.id as u.name for u in [].concat(users).concat(allInstructionals) | orderBy: 'name'">
+                            ng-options="u.id as u.name for u in users | orderBy: 'name'">
                         <option value="">All</option>
                     </select>
                 </span>

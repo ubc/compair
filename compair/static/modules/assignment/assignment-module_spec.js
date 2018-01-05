@@ -216,6 +216,15 @@ describe('assignment-module', function () {
         ]
     };
 
+    var mockInstructors = {
+        "objects": [{
+            "group_name": null,
+            "id": "15bcABC123-abcABC123_Z",
+            "name": "One, Instructor",
+            "role": "Instructor"
+        }]
+    };
+
     var mockInstructorLabels = {
         "instructors": {
             "1": "Instructor"
@@ -793,20 +802,15 @@ describe('assignment-module', function () {
                 });
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/groups').respond(mockGroups);
                 $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answers?page=1&perPage=20').respond(mockAnswers);
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/users/instructionals').respond({
-                    "objects": [{
-                        "group_name": null,
-                        "id": "1",
-                        "name": "One, Instructor",
-                        "role": "Instructor"
-                    }]
-                });
+                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/users/instructionals').respond(mockInstructors);
                 $httpBackend.flush();
             });
 
             it('should be correctly initialized', function () {
+                var expectedInstructors = angular.copy(mockInstructors.objects)
                 var expectedStudents = _.sortBy(angular.copy(mockStudents.objects), 'name');
-                expectedStudents.unshift({
+                var expectedUsers = [].concat(expectedInstructors, expectedStudents)
+                expectedUsers.unshift({
                     id: "top-picks",
                     name: "Instructor's top picks"
                 });
@@ -815,7 +819,7 @@ describe('assignment-module', function () {
                 expect($rootScope.courseId).toEqual(mockCourse.id);
 
                 expect($rootScope.allStudents).toEqual(mockStudents.objects);
-                expect($rootScope.students).toEqual(expectedStudents);
+                expect($rootScope.users).toEqual(expectedUsers);
 
                 expect($rootScope.totalNumAnswers).toEqual(mockAnswers.total);
 
@@ -1207,7 +1211,7 @@ describe('assignment-module', function () {
                     $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
                     $rootScope.date.aend.date = new Date();
                     $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
-                    
+
                     $rootScope.date.aend.date = $rootScope.date.astart.date;
                     $rootScope.date.aend.time = $rootScope.date.astart.time;
                     var currentPath = $location.path();
@@ -1245,7 +1249,7 @@ describe('assignment-module', function () {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
                     $rootScope.assignment.availableCheck = true;
-                    
+
                     // no default dates set. populate with values before proceeding
                     $rootScope.date.astart.date = new Date();
                     $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
@@ -1267,7 +1271,7 @@ describe('assignment-module', function () {
                 it('should enable save button even if save failed', function() {
                     $rootScope.assignment = angular.copy(mockAssignment);
                     $rootScope.assignment.id = undefined;
-                    
+
                     // no default dates set. populate with values before proceeding
                     $rootScope.date.astart.date = new Date();
                     $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);

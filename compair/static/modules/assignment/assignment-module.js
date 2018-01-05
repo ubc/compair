@@ -743,6 +743,7 @@ module.controller("AssignmentViewController",
         $scope.canManageAssignment = resolvedData.canManageAssignment;
         $scope.allStudents = resolvedData.students.objects;
         $scope.instructors = resolvedData.instructorLabels.instructors;
+        $scope.users = [];
 
         $scope.AnswerCommentType = AnswerCommentType;
         $scope.PairingAlgorithm = PairingAlgorithm;
@@ -1137,12 +1138,17 @@ module.controller("AssignmentViewController",
             );
         };
 
-        $scope.resetStudents = function(students) {
-            $scope.students = _.sortBy(students, 'name');
-            $scope.students.unshift({
-                id: "top-picks",
-                name: "Instructor's top picks"
-            });
+        $scope.resetUsers = function(instructors, students, addTopPicks) {
+            addTopPicks = addTopPicks !== undefined ? addTopPicks : true;
+            instructors = _.sortBy(instructors, 'name');
+            students = _.sortBy(students, 'name');
+            $scope.users = [].concat(instructors, students);
+            if (addTopPicks) {
+                $scope.users.unshift({
+                    id: "top-picks",
+                    name: "Instructor's top picks"
+                });
+            }
         };
 
         $scope.updateAnswerList = function() {
@@ -1168,7 +1174,7 @@ module.controller("AssignmentViewController",
             });
         };
         $scope.updateAnswerList();
-        $scope.resetStudents($scope.allStudents);
+        $scope.resetUsers($scope.allInstructionals, $scope.allStudents);
 
         CourseResource.getInstructionals({'id': $scope.courseId}).$promise.then(
             function(ret) {
@@ -1179,6 +1185,8 @@ module.controller("AssignmentViewController",
                     .sortBy(function(o) { return o.name; })
                     .sortBy(function(o) { return o.role; })
                     .value();
+
+                $scope.resetUsers($scope.allInstructionals, $scope.allStudents);
             }
         );
 
@@ -1189,11 +1197,11 @@ module.controller("AssignmentViewController",
                     $scope.answerFilters.author = null;
                 }
                 if ($scope.answerFilters.group == null) {
-                    $scope.resetStudents($scope.allStudents);
+                    $scope.resetUsers($scope.allInstructionals, $scope.allStudents);
                 } else {
                     GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.answerFilters.group},
                         function (ret) {
-                            $scope.resetStudents(ret.students);
+                            $scope.resetUsers([], ret.students, false);
                         }
                     );
                 }

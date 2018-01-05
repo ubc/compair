@@ -97,7 +97,7 @@
                                     <option value="">All groups</option>
                                 </select>
                                 <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen
-                                        ng-options="u.id as u.name for u in [].concat(allInstructionals).concat(students)">
+                                        ng-options="u.id as u.name for u in users">
                                     <option value="">All answers</option>
                                 </select>
                             </span><br />
