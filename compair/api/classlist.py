@@ -64,10 +64,8 @@ on_classlist_get = event.signal('CLASSLIST_GET')
 on_classlist_upload = event.signal('CLASSLIST_UPLOAD')
 on_classlist_enrol = event.signal('CLASSLIST_ENROL')
 on_classlist_unenrol = event.signal('CLASSLIST_UNENROL')
-on_classlist_instructor_label = event.signal('CLASSLIST_INSTRUCTOR_LABEL_GET')
 on_classlist_instructor = event.signal('CLASSLIST_INSTRUCTOR_GET')
 on_classlist_student = event.signal('CLASSLIST_STUDENT_GET')
-on_classlist_instructional = event.signal('CLASSLIST_INSTRUCTIONAL_GET')
 on_classlist_update_users_course_roles = event.signal('CLASSLIST_UPDATE_USERS_COURSE_ROLES')
 
 
@@ -539,36 +537,6 @@ class EnrolAPI(Resource):
 
 api.add_resource(EnrolAPI, '/<user_uuid>')
 
-
-# /instructors/labels - return list of TAs and Instructors labels
-class TeachersAPI(Resource):
-    @login_required
-    def get(self, course_uuid):
-        course = Course.get_active_by_uuid_or_404(course_uuid)
-        require(READ, course,
-            title="Instructors Unavailable",
-            message="Instructors can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
-
-        instructors = UserCourse.query \
-            .filter(and_(
-                UserCourse.course_id==course.id,
-                UserCourse.course_role.in_([CourseRole.teaching_assistant, CourseRole.instructor])
-            )) \
-            .all()
-        instructor_uuids = {u.user_uuid: u.course_role.value for u in instructors}
-
-        on_classlist_instructor_label.send(
-            self,
-            event_name=on_classlist_instructor_label.name,
-            user=current_user,
-            course_id=course.id)
-
-        return {'instructors': instructor_uuids}
-
-
-api.add_resource(TeachersAPI, '/instructors/labels')
-
-
 # /students - return list of Students in the course
 class StudentsAPI(Resource):
     @login_required
@@ -620,17 +588,17 @@ class StudentsAPI(Resource):
 
 api.add_resource(StudentsAPI, '/students')
 
-# /instructionals - return list of Instructors and TAs of the course
-class InstructionalsAPI(Resource):
+# /instructors - return list of Instructors and TAs of the course
+class InstructorsAPI(Resource):
     @login_required
     def get(self, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         require(READ, course,
-            title="Instructional users Unavailable",
-            message="Instructional users can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
+            title="Instructors Unavailable",
+            message="Instructors can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not allow(MANAGE, course)
 
-        instructionals = User.query \
+        instructors = User.query \
             .with_entities(User, UserCourse.group_name, UserCourse.course_role) \
             .join(UserCourse, UserCourse.user_id == User.id) \
             .filter(
@@ -645,7 +613,7 @@ class InstructionalsAPI(Resource):
 
         users = []
         user_course = UserCourse(course_id=course.id)
-        for u in instructionals:
+        for u in instructors:
             if allow(READ, user_course):
                 users.append({
                     'id': u.User.uuid,
@@ -654,17 +622,16 @@ class InstructionalsAPI(Resource):
                     'role': u.course_role.value
                 })
             else:
-                name = u.User.displayname
                 users.append({
                     'id': u.User.uuid,
-                    'name': name,
+                    'name': u.User.displayname,
                     'group_name': u.group_name,
                     'role': u.course_role.value
                 })
 
-        on_classlist_instructional.send(
+        on_classlist_instructor.send(
             self,
-            event_name=on_classlist_instructional.name,
+            event_name=on_classlist_instructor.name,
             user=current_user,
             course_id=course.id
         )
@@ -672,7 +639,7 @@ class InstructionalsAPI(Resource):
         return { 'objects': users }
 
 
-api.add_resource(InstructionalsAPI, '/instructionals')
+api.add_resource(InstructorsAPI, '/instructors')
 
 # /roles - set course role for multi users at once
 class UserCourseRoleAPI(Resource):

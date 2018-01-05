@@ -97,7 +97,7 @@
                                     <option value="">All groups</option>
                                 </select>
                                 <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen
-                                        ng-options="u.id as u.name for u in [].concat(allInstructionals).concat(students)">
+                                        ng-options="u.id as u.name for u in users">
                                     <option value="">All answers</option>
                                 </select>
                             </span><br />
@@ -160,7 +160,7 @@
                 <p class="intro-text" ng-if="!canManageAssignment && comparisons_left == 0 && !self_evaluation_needed && !see_answers">
                     You have successfully finished comparisons for this assignment! Answers written by your classmates and instructors will be available here beginning <strong>{{ answerAvail | amDateFormat: 'MMM D @ h:mm a'}}</strong>.
                 </p>
-                
+
                 <!-- Students see when answers exist and visible -->
                 <p class="intro-text" ng-if="!canManageAssignment && see_answers && !answerFilters.author">
                     Answers for this assignment submitted by you, your classmates, and instructors are available below. Any public feedback left for other student answers can be found underneath the student answer. Private feedback you receive does not appear to the class.
@@ -171,12 +171,12 @@
             <div class="all-answers">
 
                 <!-- Instructor Answers Section -->
-                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:adminFilter() as adminResults" ng-if="answerFilters.orderBy!='score' && instructors[answer.user_id] && (see_answers || canManageAssignment)">
+                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | filter:adminFilter() as adminResults" ng-if="answerFilters.orderBy!='score' && isInstructor(answer.user_id) && (see_answers || canManageAssignment)">
 
                     <!-- Instructor Answer Metadata Header -->
                     <div class="each-header clearfix">
                         <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" display-name="answer.user.displayname" full-name="answer.user.fullname"></compair-avatar>
-                        <span class="label label-default" ng-if="instructors[answer.user_id]">{{instructors[answer.user_id]}}</span>
+                        <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
                         <strong>said</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment">
                             <em>{{instructors[answer.user_id]}} Response</em>
@@ -212,12 +212,13 @@
                 </div><!-- closes each-answer (instructor) -->
 
                 <!-- Student Answers Section -->
-                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd | excludeInstr:instructors as results" ng-if="(see_answers || canManageAssignment)">
+                <div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd | excludeInstr:allInstructors as results" ng-if="(see_answers || canManageAssignment)">
                 <!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && assignment.answer_period) || canManageAssignment)"> -->
                     <!-- Student Answer Metadata Header -->
                     <div class="each-header clearfix">
                         <compair-avatar ng-show="!answerFilters.anonymous" user-id="answer.user_id" avatar="answer.user.avatar" display-name="answer.user.displayname" full-name="answer.user.fullname" me="!canManageAssignment && answer.user_id == loggedInUserId"></compair-avatar>
                         <span ng-show="answerFilters.anonymous">Student</span>
+                        <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
                         <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right">
                             <!-- Student Score (not used for instructor answers) -->
@@ -300,7 +301,7 @@
                             <!-- Student Reply Metadata Header -->
                             <div class="each-header clearfix">
                                 <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" display-name="comment.user.displayname" full-name="comment.user.fullname"></compair-avatar>
-                                <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
+                                <span class="label label-default" ng-if="isInstructor(comment.user_id)">{{instructorLabel(comment.user_id)}}</span>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation"> gave private feedback <span class="glyphicon glyphicon-lock"></span></strong>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"> self-evaluated <span class="glyphicon glyphicon-lock"></span></strong>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.public"> gave public feedback <span class="glyphicon glyphicon-eye-open"></span> </strong>
@@ -335,7 +336,7 @@
                 <div class="each-answer clearfix" ng-if="assignment.answer_count == 0 && (see_answers || canManageAssignment)">
                     <p>(No answers submitted yet.)</p>
                 </div>
-                
+
                 <!-- Anyone sees when there are answers, a filter is set, but no answers show in results (and user has permission to view answers) -->
                 <div class="each-answer clearfix" ng-if="assignment.answer_count > 0 && (answerFilters.group || answerFilters.author || answerFilters.orderBy) && (results.length < 1 && adminResults.length < 1) && (see_answers || canManageAssignment)">
                     <p>No answers were found with these filter settings. Try another choice above.</p>
@@ -361,7 +362,7 @@
                     <p class="intro-text">The answer you submitted for this assignment appears below. Any peer, instructor, or self-evaluation feedback&mdash;<strong>{{assignment.status.answers.feedback}} feedback comments</strong> currently&mdash;for your answer can be found underneath the answer. Only feedback marked as public can be seen by other students.</p>
                 </div>
             </div>
-            
+
             <div class="each-evaluation" ng-if="user_answers.objects.length == 0">
                 <p>(You have not submitted an answer.<span ng-if="assignment.answer_period"> Would you like to <span ng-show="!assignment.status.answers.has_draft"><a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/create" title="Answer the assignment">answer</a></span><span ng-show="assignment.status.answers.has_draft"><a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" title="Finish answering the assignment">finish answering</a></span> this assignment?</span>)</p>
             </div>
@@ -370,6 +371,7 @@
             <div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
                 <div class="each-header clearfix">
                     <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" me="true"></compair-avatar>
+                    <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
                     <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                     <div class="manager-actions pull-right" ng-if="canManageAssignment || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
                         <!--
@@ -416,7 +418,7 @@
                         <!-- Student Reply Metadata Header -->
                         <div class="each-header clearfix">
                             <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" display-name="comment.user.displayname" full-name="comment.user.fullname"></compair-avatar>
-                            <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
+                            <span class="label label-default" ng-if="isInstructor(comment.user_id)">{{instructorLabel(comment.user_id)}}</span>
                             <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation"> gave private feedback <span class="glyphicon glyphicon-lock"></span></strong>
                             <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"> self-evaluated <span class="glyphicon glyphicon-lock"></span></strong>
                             <strong ng-if="comment.comment_type == AnswerCommentType.public"> gave public feedback <span class="glyphicon glyphicon-eye-open"></span></strong>
@@ -442,7 +444,7 @@
             </div>
 
         </div><!-- closes your_feedback-tab -->
-        
+
         <div class="tab-pane" ng-class="{active: showTab('your_comparisons')}" id="your_comparisons-tab" ng-if="!canManageAssignment">
 
             <!-- Your Comparisons Header -->
@@ -451,11 +453,11 @@
                 <br />
                 <p class="intro-text">Comparisons you've submitted for this assignment&mdash;<strong>{{comparison_set.comparisons.length}} comparisons</strong> currently&mdash;appear below. Each comparison shows the answers you compared, the feedback you gave for each answer, and which answer in the pair you chose for each criterion.</p>
             </div>
-            
+
             <div class="each-evaluation" ng-if="comparison_set.comparisons.length == 0">
                 <p>(You have not submitted any comparisons.<span ng-if="assignment.compare_period && comparisons_left > 0 "> Would you like to <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare" title="Compare answers">compare answer pairs</a> for this assignment?</span>)</p>
             </div>
-            
+
             <!-- Comparisons Section -->
             <div class="each-evaluation" ng-repeat="comparison in comparison_set.comparisons">
 
@@ -508,7 +510,7 @@
                 </div>
 
             </div><!-- closes each-evaluation -->
-            
+
         </div><!-- closes your_comparisons-tab -->
 
         <!-- <div class="tab-pane" ng-class="{active: showTab('help')}" id="comments-tab">-->
@@ -535,7 +537,7 @@
                 <!-- Comment Metadata Header -->
                 <!-- <div class="each-header clearfix">
                     <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" display-name="comment.user.displayname" full-name="comment.user.fullname" me="comment.user_id == loggedInUserId"></compair-avatar>
-                    <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
+                    <span class="label label-default" ng-if="isInstructor(comment.user_id)">{{instructorLabel(comment.user_id)}}</span>
                     <strong>commented</strong> on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
                     <div class="manager-actions pull-right" ng-if="canManageAssignment || comment.user_id == loggedInUserId">
                         <a title="Delete this comment" confirmation-needed="deleteComment(commentKey, courseId, assignment.id, comment.id)" keyword="comment" href="">

@@ -83,6 +83,6 @@ class GroupNameAPI(Resource):
             course_id=course.id,
             data={'group_name': group_name})
 
-        return {'students': [{'id': u.uuid, 'name': u.fullname_sortable} for u in members]}
+        return {'objects': [{'id': u.uuid, 'name': u.fullname_sortable} for u in members]}
 
 api.add_resource(GroupNameAPI, '/<group_name>')

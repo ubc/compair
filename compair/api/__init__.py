@@ -324,13 +324,11 @@ def log_events(log):
 
     # classlist events
     from .classlist import on_classlist_get, on_classlist_upload, on_classlist_enrol, on_classlist_unenrol, \
-        on_classlist_instructor_label, on_classlist_instructor, on_classlist_student, \
-        on_classlist_update_users_course_roles
+        on_classlist_instructor, on_classlist_student, on_classlist_update_users_course_roles
     on_classlist_get.connect(log)
     on_classlist_upload.connect(log)
     on_classlist_enrol.connect(log)
     on_classlist_unenrol.connect(log)
-    on_classlist_instructor_label.connect(log)
     on_classlist_instructor.connect(log)
     on_classlist_student.connect(log)
     on_classlist_update_users_course_roles.connect(log)

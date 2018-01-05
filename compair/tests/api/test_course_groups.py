@@ -69,15 +69,15 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
             # test authorized instructor
             rv = self.client.get(url)
             self.assert200(rv)
-            self.assertEqual(10, len(rv.json['students']))
-            self.assertEqual(self.fixtures.students[0].uuid, rv.json['students'][0]['id'])
+            self.assertEqual(10, len(rv.json['objects']))
+            self.assertEqual(self.fixtures.students[0].uuid, rv.json['objects'][0]['id'])
 
         # test authorized teaching assistant
         with self.login(self.fixtures.ta.username):
             rv = self.client.get(url)
             self.assert200(rv)
-            self.assertEqual(10, len(rv.json['students']))
-            self.assertEqual(self.fixtures.students[0].uuid, rv.json['students'][0]['id'])
+            self.assertEqual(10, len(rv.json['objects']))
+            self.assertEqual(self.fixtures.students[0].uuid, rv.json['objects'][0]['id'])
 
     def test_group_enrolment(self):
         # frequently used objects

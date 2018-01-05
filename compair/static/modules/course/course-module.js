@@ -43,7 +43,7 @@ var module = angular.module('ubc.ctlt.compair.course',
 
 /***** Directives *****/
 module.directive('courseMetadata', function() {
-    
+
     return {
         restrict : 'E',
         scope: true,
@@ -52,7 +52,7 @@ module.directive('courseMetadata', function() {
         link: function ($scope, $element, $attributes) {
             $scope.metadataName = $attributes.name;
         },
-        controller: ["$scope", "$filter", "CoursePermissions", 
+        controller: ["$scope", "$filter", "CoursePermissions",
             function ($scope, $filter, CoursePermissions) {
                 $scope.$watchCollection("[course, course.status, metadataName]", function(newStatus){
 
@@ -136,7 +136,7 @@ module.directive('courseMetadata', function() {
                                 'label': '<i class="fa fa-trash-o"></i>',
                                 'title' : "Delete",
                                 'confirmationNeeded' : 'deleteCourse(course)' ,
-                                'confirmationWarning': course.delete_warning, 
+                                'confirmationWarning': course.delete_warning,
                                 'keyword' : "course and its assignments",
                                 'show' : {
                                     'user' : false,
@@ -176,7 +176,7 @@ module.directive('courseActionButton', function() {
         link: function ($scope, $element, $attributes) {
             $scope.actionElementName = $attributes.name;
         },
-        controller: ["$scope", "$filter", "CoursePermissions", 
+        controller: ["$scope", "$filter", "CoursePermissions",
             function ($scope, $filter, CoursePermissions) {
                 $scope.$watchCollection("[course, course.status, actionElementName]", function(newStatus){
 
@@ -197,7 +197,7 @@ module.directive('courseActionButton', function() {
                                 }
                             },
                         };
-                        
+
                         if (allButtons[$scope.actionElementName]) {
                             if (course.canManageAssignment && allButtons[$scope.actionElementName].show.instructor) {
                                 $scope.button = allButtons[$scope.actionElementName];
@@ -234,9 +234,8 @@ module.factory('CourseResource',
             'delete': {method: 'DELETE', url: url, interceptor: Interceptors.cache},
             'createDuplicate': {method: 'POST', url: '/api/courses/:id/duplicate'},
             'getCurrentUserStatus': {url: '/api/courses/:id/assignments/status'},
-            'getInstructorsLabels': {url: '/api/courses/:id/users/instructors/labels'},
             'getStudents': {url: '/api/courses/:id/users/students'},
-            'getInstructionals': {url: '/api/courses/:id/users/instructionals'}
+            'getInstructors': {url: '/api/courses/:id/users/instructors'},
         }
     );
     ret.MODEL = "Course"; // add constant to identify the model
@@ -435,7 +434,7 @@ module.controller(
                 $scope.submitted = false;
             });
         };
-        
+
         $scope.closeDuplicate = function(courseId) {
             $scope.selectCourse(courseId);
         };
@@ -467,7 +466,7 @@ module.controller(
     'CourseDuplicateController',
     ["$rootScope", "$scope", "AssignmentResource", "moment", '$routeParams', '$location',
      "Session", "CourseResource", "Toaster", "UserResource",
-    function ($rootScope, $scope, AssignmentResource, moment, $routeParams, $location, 
+    function ($rootScope, $scope, AssignmentResource, moment, $routeParams, $location,
               Session, CourseResource, Toaster, UserResource) {
 
         $scope.showAssignments = false;
