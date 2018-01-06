@@ -564,7 +564,8 @@ class ReportAPITest(ComPAIRAPITestCase):
                 assignment_id=assignment.id,
                 draft=False,
                 practice=False,
-                active=True
+                active=True,
+                comparable=True
             ) \
             .first()
 

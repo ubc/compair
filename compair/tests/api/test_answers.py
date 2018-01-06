@@ -11,9 +11,12 @@ from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCas
 
 
 class AnswersAPITests(ComPAIRAPITestCase):
+    NUM_NON_COMPARABLE_INSTRUCTOR_ANSWER = 2
+
     def setUp(self):
         super(AnswersAPITests, self).setUp()
-        self.fixtures = TestFixture().add_course(num_students=30, num_groups=2, with_draft_student=True)
+        self.fixtures = TestFixture().add_course(num_students=30, num_groups=2,
+            with_draft_student=True, num_non_comparable_ans=self.NUM_NON_COMPARABLE_INSTRUCTOR_ANSWER)
         self.base_url = self._build_url(self.fixtures.course.uuid, self.fixtures.assignment.uuid)
         self.lti_data = LTITestData()
 
@@ -60,11 +63,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
                 self.assertEqual(expected.content, actual['content'])
-                if expected.score:
-                    self.assertEqual(expected.score.rank, actual['score']['rank'])
-                    self.assertFalse('normalized_score' in actual['score'])
-                else:
-                    self.assertIsNone(actual['score'])
+                # students should NOT see rank/score when not retrieving answers ordered by score
+                self.assertFalse('score' in actual)
             self.assertEqual(1, rv.json['page'])
             self.assertEqual(2, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
@@ -82,11 +82,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
             for i, expected in enumerate(expected_answers.items):
                 actual = actual_answers[i]
                 self.assertEqual(expected.content, actual['content'])
-                if expected.score:
-                    self.assertEqual(expected.score.rank, actual['score']['rank'])
-                    self.assertFalse('normalized_score' in actual['score'])
-                else:
-                    self.assertIsNone(actual['score'])
+                # students should NOT see rank/score when not retrieving answers ordered by score
+                self.assertFalse('score' in actual)
             self.assertEqual(2, rv.json['page'])
             self.assertEqual(2, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
@@ -104,6 +101,10 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 key=lambda ans: (ans.score.score, ans.created),
                 reverse=True)[:10]
             self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
+            for ans in result:
+                self.assertTrue('score' in ans)
+                self.assertFalse('normalized_score' in ans['score'])
+                self.assertTrue('rank' in ans['score'])
             self.assertEqual(1, rv.json['page'])
             self.assertEqual(1, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
@@ -121,27 +122,24 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 key=lambda ans: (ans.score.score, ans.created),
                 reverse=True)[:20]
             self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
+            for ans in result:
+                self.assertTrue('score' in ans)
+                self.assertFalse('normalized_score' in ans['score'])
+                self.assertTrue('rank' in ans['score'])
             self.assertEqual(1, rv.json['page'])
             self.assertEqual(1, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
             self.assertEqual(len(expected), rv.json['total'])
 
-            # test sorting by rank (display_rank_limit None)
+            # test sorting by rank (display_rank_limit None).
+            # expect to see errors if the course has no display rank limit set
             self.fixtures.assignment.rank_display_limit = None
             db.session.commit()
             rv = self.client.get(self.base_url + '?orderBy=score')
-            self.assert200(rv)
-            result = rv.json['objects']
-            # test the result is paged and sorted
-            expected = sorted(
-                [answer for answer in self.fixtures.answers if answer.score],
-                key=lambda ans: (ans.score.score, ans.created),
-                reverse=True)[:20]
-            self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
-            self.assertEqual(1, rv.json['page'])
-            self.assertEqual(1, rv.json['pages'])
-            self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(len(expected), rv.json['total'])
+            self.assert400(rv)
+
+            self.fixtures.assignment.rank_display_limit = 20
+            db.session.commit()
 
             # test author filter
             rv = self.client.get(self.base_url + '?author={}'.format(self.fixtures.students[0].uuid))
@@ -154,7 +152,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self.base_url + '?group={}'.format(self.fixtures.groups[0]))
             self.assert200(rv)
             result = rv.json['objects']
-            self.assertEqual(len(result), len(self.fixtures.answers) / len(self.fixtures.groups))
+            self.assertEqual(len(result),
+                (len(self.fixtures.answers) - self.NUM_NON_COMPARABLE_INSTRUCTOR_ANSWER) / len(self.fixtures.groups))
 
             # test ids filter
             ids = {a.uuid for a in self.fixtures.answers[:3]}
@@ -179,10 +178,10 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             result = rv.json['objects']
             # test the result is paged and sorted
-            answers_per_group = int(len(self.fixtures.answers) / len(self.fixtures.groups)) if len(
+            answers_per_group = int((len(self.fixtures.answers) - self.NUM_NON_COMPARABLE_INSTRUCTOR_ANSWER) / len(self.fixtures.groups)) if len(
                 self.fixtures.groups) else 0
             answers = self.fixtures.answers[:answers_per_group]
-            expected = sorted(answers, key=lambda ans: ans.score.score, reverse=True)
+            expected = sorted([ ans for ans in answers if ans.comparable and ans.score ], key=lambda ans: ans.score.score, reverse=True)
             self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
 
             # all filters
@@ -238,6 +237,35 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(2, rv.json['pages'])
             self.assertEqual(20, rv.json['per_page'])
             self.assertEqual(len(self.fixtures.answers), rv.json['total'])
+
+            # test sorting by score
+            # for instructors, all comparable answers should be included, regardless whether they are compared or not
+            rv = self.client.get(self.base_url + '?orderBy=score')
+            self.assert200(rv)
+            result = rv.json['objects']
+            # test the result is paged and sorted
+            expected = sorted(
+                [answer for answer in self.fixtures.answers if answer.comparable],
+                key=lambda ans: (ans.score.score if ans.score else float('-inf'), ans.created),
+                reverse=True)
+            self.assertEqual([a.uuid for a in expected[:20]], [a['id'] for a in result])
+            self.assertEqual(1, rv.json['page'])
+            self.assertEqual(2, rv.json['pages'])
+            self.assertEqual(20, rv.json['per_page'])
+            self.assertEqual(len(expected), rv.json['total'])
+            # get the second page
+            rv = self.client.get(self.base_url, query_string={'orderBy': 'score', 'page': 2})
+            self.assert200(rv)
+            result = rv.json['objects']
+            expected = sorted(
+                [answer for answer in self.fixtures.answers if answer.comparable],
+                key=lambda ans: (ans.score.score if ans.score else float('-inf'), ans.created),
+                reverse=True)
+            self.assertEqual([a.uuid for a in expected[20:]], [a['id'] for a in result])
+            self.assertEqual(2, rv.json['page'])
+            self.assertEqual(2, rv.json['pages'])
+            self.assertEqual(20, rv.json['per_page'])
+            self.assertEqual(len(expected), rv.json['total'])
 
     @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
     @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
@@ -550,8 +578,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(answer.content, rv.json['content'])
             self.assertFalse(rv.json['draft'])
 
-            self.assertEqual(answer.score.rank, rv.json['score']['rank'])
-            self.assertFalse('normalized_score' in rv.json['score'])
+            # students should not see score/rank when retrieving answer by id
+            self.assertFalse('score' in rv.json)
 
         # test authorized student draft answer
         with self.login(self.fixtures.draft_student.username):
@@ -861,24 +889,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
 
-            # test unsaved query
-            rv = self.client.get(url, query_string={'unsaved': True})
-            self.assert200(rv)
-            self.assertEqual(1, len(rv.json['objects']))
-            self.assertEqual(answer.uuid, rv.json['objects'][0]['id'])
-            self.assertEqual(answer.content, rv.json['objects'][0]['content'])
-            self.assertEqual(answer.draft, rv.json['objects'][0]['draft'])
-
-            answer.content = answer.content+"123"
-            db.session.commit()
-
-            rv = self.client.get(url, query_string={'unsaved': True})
-            self.assert200(rv)
-            self.assertEqual(0, len(rv.json['objects']))
-
-
         with self.login(self.fixtures.draft_student.username):
-             # test successful query
+            # test successful query
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
@@ -891,7 +903,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
             self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
 
-            # test unsaved query
+            # test unsaved query. 'draft' is default to be False.
+            # hence no result will be retrived
             rv = self.client.get(url, query_string={'unsaved': True})
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
@@ -904,17 +917,28 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
             self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
 
+            # update the answer so it is no longer in unsaved state (but still in draft)
             draft_answer.content = draft_answer.content+"123"
             db.session.commit()
 
-            rv = self.client.get(url, query_string={'draft': True, 'unsaved': True})
+            rv = self.client.get(url, query_string={'draft': True})
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
+            self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
+            self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
+            rv = self.client.get(url, query_string={'unsaved': True, 'draft': True})
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+            # not draft and not unsaved. nothing will be retrieved
+            rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
 
         with self.login(self.fixtures.instructor.username):
             rv = self.client.get(url)
             self.assert200(rv)
-            self.assertEqual(0, len(rv.json['objects']))
+            self.assertEqual(self.NUM_NON_COMPARABLE_INSTRUCTOR_ANSWER, len(rv.json['objects']))
 
             # test draft query
             rv = self.client.get(url, query_string={'draft': True})
@@ -922,7 +946,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(0, len(rv.json['objects']))
 
             # test unsaved query
-            rv = self.client.get(url, query_string={'unsaved': True})
+            rv = self.client.get(url, query_string={'unsaved': True, 'draft': True})
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
 

@@ -545,6 +545,7 @@ class TestFixture:
         self.dropped_answers = []
         self.removed_answers = []
         self.draft_answers = []
+        self.non_comparable_answers =[]
         self.groups = []
         self.unauthorized_instructor = UserFactory(system_role=SystemRole.instructor)
         self.unauthorized_student = UserFactory(system_role=SystemRole.student)
@@ -556,7 +557,7 @@ class TestFixture:
         db.session.commit()
 
     def add_course(self, num_students=5, num_assignments=1, num_additional_criteria=0, num_groups=0, num_answers='#',
-            with_comments=False, with_draft_student=False, with_comparisons=False, with_self_eval=False):
+            with_comments=False, with_draft_student=False, with_comparisons=False, with_self_eval=False, num_non_comparable_ans=1):
         self.course = CourseFactory()
         self.instructor = UserFactory(system_role=SystemRole.instructor)
         self.enrol_user(self.instructor, self.course, CourseRole.instructor)
@@ -572,6 +573,7 @@ class TestFixture:
         self.assignment = self.assignments[0]
 
         self.add_answers(num_answers, with_comments=with_comments)
+        self.add_non_comparable_answers(num_non_comparable_ans)
 
         if with_comparisons:
             self.add_comparisons(with_comments=with_comments, with_self_eval=with_self_eval)
@@ -671,9 +673,21 @@ class TestFixture:
                     user=dropped_student
                 )
                 self.dropped_answers.append(answer)
+
         db.session.commit()
 
         return self
+
+    def add_non_comparable_answers(self, num_non_comparable_ans):
+        for assignment in self.assignments:
+            for i in range(num_non_comparable_ans):
+                answer = AnswerFactory(
+                    assignment=assignment,
+                    user=self.instructor,
+                    comparable=False)
+                self.answers.append(answer)
+                self.non_comparable_answers.append(answer)
+        db.session.commit()
 
     def add_comparisons(self, with_comments=False, with_self_eval=False):
         for assignment in self.assignments:
