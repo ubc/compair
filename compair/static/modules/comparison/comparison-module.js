@@ -409,23 +409,14 @@ module.controller(
         $scope.WinningAnswer = WinningAnswer;
         breadcrumbs.options = {'Course assignments': $scope.course.name};
 
-        CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
-            function (ret) {
-                $scope.allStudents = ret.objects;
-                $scope.users = ret.objects;
-                userIds = $scope.getUserIds(ret.objects);
-            }
-        );
+        $scope.resetUsers = function(instructors, students) {
+            instructors = _.sortBy(instructors, 'name');
+            students = _.sortBy(students, 'name');
+            $scope.users = [].concat(instructors, students);
+        };
 
-        CourseResource.getInstructionals({'id': $scope.courseId}).$promise.then(
-            function(ret) {
-                $scope.allInstructionals = ret.objects;
-                instructionalIds = $scope.getUserIds(ret.objects);
-            }
-        );
-
-        $scope.isInstructional = function(user_id) {
-            return user_id in instructionalIds;
+        $scope.isInstructor = function(user_id) {
+            return _.find($scope.allInstructors, {id: user_id});
         }
 
         $scope.loadAnswerByAuthor = function(author_id) {
@@ -442,11 +433,11 @@ module.controller(
                 $scope.comparisonFilters.author = null;
                 $scope.comparisonFilters.page = 1;
                 if ($scope.comparisonFilters.group == null) {
-                    $scope.users = $scope.allStudents;
+                    $scope.resetUsers($scope.allInstructors, $scope.allStudents);
                 } else {
                     GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.comparisonFilters.group}).$promise.then(
                         function (ret) {
-                            $scope.users = ret.students;
+                            $scope.resetUsers([], ret.objects);
                         }
                     );
                 }
@@ -469,6 +460,7 @@ module.controller(
             });
         };
         $scope.updateList();
+        $scope.resetUsers($scope.allInstructors, $scope.allStudents);
     }]
 );
 

@@ -701,7 +701,7 @@ module.filter("excludeInstr", function() {
         var filtered = [];
         angular.forEach(items, function(item) {
             // exclude instructor answer unless it is comparable
-            if (!instructors[item.user_id] || item.comparable) {
+            if (!_.find(instructors, {id: item.user_id}) || item.comparable) {
                 filtered.push(item);
             }
         });
@@ -742,7 +742,8 @@ module.controller("AssignmentViewController",
         $scope.assignment = resolvedData.assignment;
         $scope.canManageAssignment = resolvedData.canManageAssignment;
         $scope.allStudents = resolvedData.students.objects;
-        $scope.instructors = resolvedData.instructorLabels.instructors;
+        $scope.allInstructors = resolvedData.instructors.objects;
+        $scope.users = [];
 
         $scope.AnswerCommentType = AnswerCommentType;
         $scope.PairingAlgorithm = PairingAlgorithm;
@@ -821,20 +822,21 @@ module.controller("AssignmentViewController",
             });
         }
 
-        $scope.getUserIds = function(students) {
-            var users = {};
-            angular.forEach(students, function(s){
-                users[s.id] = 1;
-            });
-            return users;
-        };
-
         $scope.adminFilter = function() {
             return function (answer) {
                 // true for non-comparable instructor/TA answer
-                return $scope.instructors[answer.user_id] && !answer.comparable;
+                return _.find($scope.allInstructors, {id: answer.user_id}) && !answer.comparable;
             }
         };
+
+        $scope.isInstructor = function(user_id) {
+            return _.find($scope.allInstructors, {id: user_id});
+        }
+
+        $scope.instructorLabel = function(user_id) {
+            var instructor = _.find($scope.allInstructors, {id: user_id});
+            return instructor ? instructor.role : "";
+        }
 
         //TODO: this filter should be implemented in backend
         $scope.commentFilter = function(answer) {
@@ -1137,9 +1139,11 @@ module.controller("AssignmentViewController",
             );
         };
 
-        $scope.resetStudents = function(students) {
-            $scope.students = _.sortBy(students, 'name');
-            $scope.students.unshift({
+        $scope.resetUsers = function(instructors, students) {
+            instructors = _.sortBy(instructors, 'name');
+            students = _.sortBy(students, 'name');
+            $scope.users = [].concat(instructors, students);
+            $scope.users.unshift({
                 id: "top-picks",
                 name: "Instructor's top picks"
             });
@@ -1168,19 +1172,7 @@ module.controller("AssignmentViewController",
             });
         };
         $scope.updateAnswerList();
-        $scope.resetStudents($scope.allStudents);
-
-        CourseResource.getInstructionals({'id': $scope.courseId}).$promise.then(
-            function(ret) {
-                $scope.allInstructionals = ret.objects;
-                // Order by role, then name
-                // Underscore sorting is stable, so first sort by name, then role
-                $scope.allInstructionals = _($scope.allInstructionals).chain()
-                    .sortBy(function(o) { return o.name; })
-                    .sortBy(function(o) { return o.role; })
-                    .value();
-            }
-        );
+        $scope.resetUsers($scope.allInstructors, $scope.allStudents);
 
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
@@ -1189,11 +1181,11 @@ module.controller("AssignmentViewController",
                     $scope.answerFilters.author = null;
                 }
                 if ($scope.answerFilters.group == null) {
-                    $scope.resetStudents($scope.allStudents);
+                    $scope.resetUsers($scope.allInstructors, $scope.allStudents);
                 } else {
                     GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.answerFilters.group},
                         function (ret) {
-                            $scope.resetStudents(ret.students);
+                            $scope.resetUsers([], ret.objects);
                         }
                     );
                 }

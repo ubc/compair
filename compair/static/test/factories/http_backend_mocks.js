@@ -471,6 +471,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                             userList.push({
                                 course_role: userCoruseInfo.courseRole,
                                 id: user.id,
+                                name: user.displayname,
                                 group_name: userCoruseInfo.groupName
                             });
                         }
@@ -481,31 +482,8 @@ module.exports.httpbackendMock = function(storageFixtures) {
             return [200, { 'objects': userList }, {}];
         });
 
-        // get course instructor labels
-        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/instructors\/labels$/).respond(function(method, url, data, headers){
-            var courseId = url.replace('/users', '').split('/').pop();
-
-            var userList = {};
-
-            angular.forEach(storageFixture.storage().users, function(user) {
-                if (storageFixture.storage().user_courses[user.id]) {
-                    angular.forEach(storageFixture.storage().user_courses[user.id], function(userCoruseInfo) {
-                        if (courseId == userCoruseInfo.courseId) {
-                            if (userCoruseInfo.courseRole == "Instructor") {
-                                userList[user.id] = "Instructor";
-                            } else if (userCoruseInfo.courseRole == "Teaching Assistant") {
-                                userList[user.id] = "Teaching Assistant";
-                            }
-                        }
-                    });
-                }
-            });
-
-            return [200, { 'objects': userList }, {}];
-        });
-
-        // get course instructor labels
-        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/instructionals$/).respond(function(method, url, data, headers){
+        // get course instructors
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/instructors$/).respond(function(method, url, data, headers){
             var courseId = url.split('/')[3];
             var userList = [];
 
@@ -517,6 +495,7 @@ module.exports.httpbackendMock = function(storageFixtures) {
                                 userList.push({
                                     course_role: userCoruseInfo.courseRole,
                                     id: user.id,
+                                    name: user.displayname,
                                     group_name: userCoruseInfo.groupName
                                 });
                             }

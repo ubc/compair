@@ -154,38 +154,6 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
         self.app.config['EXPOSE_CAS_USERNAME_TO_INSTRUCTOR'] = False
 
-    def test_get_instructor_labels(self):
-        url = self.url + "/instructors/labels"
-
-        # test login required
-        rv = self.client.get(url)
-        self.assert401(rv)
-
-        # test dropped instructor - unauthorized
-        with self.login(self.data.get_dropped_instructor().username):
-            rv = self.client.get(url)
-            self.assert403(rv)
-
-        # test unauthorized instructor
-        with self.login(self.data.get_unauthorized_instructor().username):
-            rv = self.client.get(url)
-            self.assert403(rv)
-
-        # test invalid course id
-        with self.login(self.data.get_authorized_instructor().username):
-            rv = self.client.get('/api/courses/999/users/instructors/labels')
-            self.assert404(rv)
-
-            # test success
-            rv = self.client.get(url)
-            self.assert200(rv)
-            labels = rv.json['instructors']
-            expected = {
-                self.data.get_authorized_ta().uuid: 'Teaching Assistant',
-                self.data.get_authorized_instructor().uuid: 'Instructor'
-            }
-            self.assertEqual(labels, expected)
-
     def test_get_students_course(self):
         url = self.url + "/students"
 
@@ -242,8 +210,8 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(students[0]['id'], expected['id'])
             self.assertEqual(students[0]['name'], expected['name'] + ' (You)')
 
-    def test_get_instructional_course(self):
-        url = self.url + "/instructionals"
+    def test_get_instructors_course(self):
+        url = self.url + "/instructors"
 
         # test login required
         rv = self.client.get(url)
@@ -261,13 +229,13 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
         with self.login(self.data.get_authorized_instructor().username):
             # test invalid course id
-            rv = self.client.get('/api/courses/999/users/instructionals')
+            rv = self.client.get('/api/courses/999/users/instructors')
             self.assert404(rv)
 
             # test success - instructor
             rv = self.client.get(url)
             self.assert200(rv)
-            instructionals = rv.json['objects']
+            instructors = rv.json['objects']
             expected = [
                 {
                     'role': 'Teaching Assistant',
@@ -281,10 +249,9 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 }
             ]
 
-            self.assertEqual(len(instructionals), len(expected))
+            self.assertEqual(len(instructors), len(expected))
             for expect in expected:
-                actual = next((x for x in instructionals if x['id'] == expect['id']), None)
-                self.assertIsNotNone(actual)
+                actual = next((x for x in instructors if x['id'] == expect['id']), None)
                 for key in expect:
                     self.assertEqual(actual[key], expect[key])
 
@@ -292,7 +259,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_student().username):
             rv = self.client.get(url)
             self.assert200(rv)
-            instructionals = rv.json['objects']
+            instructors = rv.json['objects']
             expected = [
                 {
                     'role': 'Teaching Assistant',
@@ -306,10 +273,9 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 }
             ]
 
-            self.assertEqual(len(instructionals), len(expected))
+            self.assertEqual(len(instructors), len(expected))
             for expect in expected:
-                actual = next((x for x in instructionals if x['id'] == expect['id']), None)
-                self.assertIsNotNone(actual)
+                actual = next((x for x in instructors if x['id'] == expect['id']), None)
                 for key in expect:
                     self.assertEqual(actual[key], expect[key])
 

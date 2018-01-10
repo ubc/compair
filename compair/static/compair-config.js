@@ -205,9 +205,9 @@ myApp.factory('RouteResolves',
             var courseId = $route.current.params.courseId;
             return CourseResource.getStudents({'id': courseId}).$promise;
         },
-        instructorLabels: function() {
+        instructors: function() {
             var courseId = $route.current.params.courseId;
-            return CourseResource.getInstructorsLabels({'id': courseId}).$promise;
+            return CourseResource.getInstructors({'id': courseId}).$promise;
         },
         assignment: function() {
             var courseId = $route.current.params.courseId;
@@ -443,10 +443,10 @@ myApp.config(
                             course: RouteResolves.course(),
                             assignment: RouteResolves.assignment(),
                             students: RouteResolves.students(),
-                            instructorLabels: RouteResolves.instructorLabels(),
+                            instructors: RouteResolves.instructors(),
                             loggedInUser: RouteResolves.loggedInUser(),
                             canManageAssignment: RouteResolves.canManageAssignment(),
-                        }, ['course', 'assignment', 'students', 'instructorLabels']);
+                        }, ['course', 'assignment', 'students', 'instructors']);
                     }
                 },
                 reloadOnSearch: false,

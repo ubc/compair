@@ -44,11 +44,18 @@ module.controller("GradebookController",
         $scope.isNumber = angular.isNumber;
         $scope.gradebook = [];
 
+        $scope.updateUserIds = function(students) {
+            userIds = {};
+            angular.forEach(students, function(s){
+                userIds[s.id] = 1;
+            });
+        };
+
         CourseResource.getStudents({'id': $scope.courseId}).$promise.then(
             function (ret) {
                 $scope.allStudents = ret.objects;
                 $scope.users = ret.objects;
-                userIds = $scope.getUserIds(ret.objects);
+                $scope.updateUserIds(ret.objects);
             }
         );
 
@@ -91,7 +98,7 @@ module.controller("GradebookController",
 
         $scope.groupFilter = function() {
             return function (entry) {
-                return entry.user && entry.user.id in userIds;
+                return entry.user && userIds[entry.user.id];
             }
         };
 
@@ -106,13 +113,11 @@ module.controller("GradebookController",
             if (oldValue.group != newValue.group) {
                 $scope.gradebookFilters.student = null;
                 if ($scope.gradebookFilters.group == null) {
-                    userIds = $scope.getUserIds($scope.allStudents);
-                    $scope.users = $scope.allStudents;
+                    $scope.updateUserIds($scope.allStudents);
                 } else {
                     GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.gradebookFilters.group}).$promise.then(
                         function (ret) {
-                            $scope.users = ret.students;
-                            userIds = $scope.getUserIds(ret.students);
+                            $scope.updateUserIds(ret.objects);
                         }
                     );
                 }
@@ -120,7 +125,7 @@ module.controller("GradebookController",
             if (oldValue.student != newValue.student) {
                 userIds = {};
                 if ($scope.gradebookFilters.student == null) {
-                    userIds = $scope.getUserIds($scope.users);
+                    $scope.updateUserIds($scope.users);
                 } else {
                     userIds[$scope.gradebookFilters.student.id] = 1;
                 }
