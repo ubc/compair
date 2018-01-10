@@ -504,6 +504,30 @@ module.exports.httpbackendMock = function(storageFixtures) {
             return [200, { 'objects': userList }, {}];
         });
 
+        // get course instructor labels
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/users\/instructionals$/).respond(function(method, url, data, headers){
+            var courseId = url.split('/')[3];
+            var userList = [];
+
+            angular.forEach(storageFixture.storage().users, function(user) {
+                if (storageFixture.storage().user_courses[user.id]) {
+                    angular.forEach(storageFixture.storage().user_courses[user.id], function(userCoruseInfo) {
+                        if (courseId == userCoruseInfo.courseId) {
+                            if (userCoruseInfo.courseRole == "Instructor" || userCoruseInfo.courseRole == "Teaching Assistant") {
+                                userList.push({
+                                    course_role: userCoruseInfo.courseRole,
+                                    id: user.id,
+                                    group_name: userCoruseInfo.groupName
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+
+            return [200, { 'objects': userList }, {}];
+        });
+
         // get course groups by course id
         $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/groups$/).respond(function(method, url, data, headers) {
             return [200, { 'objects': storageFixture.storage().groups }, {}];

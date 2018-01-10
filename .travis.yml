@@ -8,15 +8,65 @@ services:
   - docker
   - mysql
 
-cache: pip
+addons:
+  mariadb: '5.5'
+
+cache:
+  apt: true
+  directories:
+      - $HOME/.cache/pip
+      - $HOME/.cache/bower
+      - $HOME/.npm
 
 before_cache:
   - rm -f $HOME/.cache/pip/log/debug.log
 
 python:
   - "2.7"
-  - "3.3"
-  - "3.4"
+  - "3.6"
+
+stages:
+  - test
+  - acceptance test + deploy
+
+jobs:
+  fast_finish: true
+  include:
+    - &test-acceptance-chrome
+      stage: acceptance test + deploy
+      python: "3.6"
+      env: TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=63 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+      script: node_modules/.bin/gulp test:ci
+      addons:
+        sauce_connect: true
+    - &test-acceptance-firefox
+      <<: *test-acceptance-chrome
+      env: TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=57 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+    - stage: acceptance test + deploy
+      python: "3.6"
+      env: COMPILE_ASSETS=true
+      before_install:
+      - make docker-image
+      install:
+      - docker-compose up -d; sleep 10;
+      before_script: true
+      script:
+      # test image in dev mode, e.g. settings from docker-compose
+      - curl -sSfL http://localhost:8080 | grep '<title ng-bind=".*">ComPAIR Learning Application</title>' > /dev/null && curl -sSf http://localhost:8080/api/healthz > /dev/null
+      # test image in prod mode
+      - docker-compose stop app
+      - docker run -d --name compair_app_prod --network compair_default -e DATABASE_URI=mysql+pymysql://compair:compair@db:3306/compair ubcctlt/compair-app
+      - curl -sSfL http://localhost:8080 | grep '<title ng-bind=".*">ComPAIR Learning Application</title>' > /dev/null && curl -sSf http://localhost:8080/api/healthz > /dev/null
+      # copy assets from docker image for s3 deployment
+      - docker cp compair_app_prod:/code/compair/static/dist compair/static/dist
+      after_success:
+      - ./scripts/deploy_dockerhub.sh
+      - ./scripts/deploy.sh
+      after_failure:
+      - timeout 3s docker-compose logs app db web
+  allow_failures:
+    - env: TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=63 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+    - env: TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=57 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
 
 env:
   global:
@@ -33,46 +83,19 @@ env:
   matrix:
     - DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - DB=mysql DATABASE_URI="mysql+pymysql://root@localhost/compair"
-matrix:
-  include:
-    - python: "3.4"
-      env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=52 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
-      addons:
-        sauce_connect: true
-    - python: "3.4"
-      env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
-      addons:
-        sauce_connect: true
-    - python: "3.4"
-      env: DOCKER=true
-  fast_finish: true
-  allow_failures:
-    - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=52 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
-    - env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
 
-addons:
-  mariadb: '5.5'
+before_install:
+  - nvm install 6.4
+
+install:
+  - make deps
 
 before_script:
   - if [ '$DB' = 'mysql' ]; then mysql -e 'create database IF NOT EXISTS compair;'; fi
 
-before_install:
-  - if [ "$DOCKER" != "true" ]; then nvm install 6.4; fi
-  - if [ "$DOCKER" = "true" ]; then make docker-image; fi
-
-# command to install dependencies
-install:
-  - if [ "$DOCKER" != "true" ]; then make deps; node_modules/gulp/bin/gulp.js prod; fi
-  - if [ "$DOCKER" = "true" ]; then docker-compose up -d; sleep 10; fi
-
 script:
-  - ./scripts/travis_script.sh
-
-after_success:
-  - if [ "$DOCKER" = "true" ]; then scripts/deploy_dockerhub.sh; scripts/deploy.sh; fi
-
-after_failure:
-  - if [ "$DOCKER" = "true" ]; then timeout 3s docker-compose logs app db web; fi
+  - nosetests
+  - node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js --single-run --browsers PhantomJS
 
 deploy:
   provider: s3
@@ -86,7 +109,7 @@ deploy:
   upload-dir: dist
   on:
     all_branches: true
-    condition: "$DOCKER = true"
+    condition: "$COMPILE_ASSETS = true"
 
 notifications:
   slack: ubcctlt:cyfS7OeXqRjqhyrpIMHJ0SRd

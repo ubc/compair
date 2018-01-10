@@ -15,9 +15,6 @@ exports.config = {
     capabilities: {
         'name': 'ComPAIR suite tests',
         'browserName': 'chrome',
-        'version': '52',
-        'chromedriverVersion': '2.22',
-        'selenium-version': '2.53.1',
         'maxDuration': 3600, // 1 hour
         'loggingPrefs': {"browser": "SEVERE"}
     },

@@ -8,8 +8,6 @@
 *.egg-info
 dist
 build
-compair/templates/static/*.css
-compair/templates/static/*.html
 eggs
 parts
 bin

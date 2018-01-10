@@ -76,14 +76,13 @@ var viewLTIConsumersStepDefinitionsWrapper = function () {
     this.When("I unlink the second lti context", function () {
         element.all(by.exactRepeater("context in contexts"))
             .get(1)
-            .element(by.cssContainingText('a', 'Unlink'))
+            .element(by.css('a'))
             .click();
 
         browser.wait(protractor.ExpectedConditions.alertIsPresent(), 1000);
 
         browser.driver.switchTo().alert().accept();
-        browser.driver.switchTo().defaultContent();
-        return element(by.css("body")).click();
+        return browser.driver.switchTo().defaultContent();
     });
 };
 

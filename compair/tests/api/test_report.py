@@ -506,7 +506,7 @@ class ReportAPITest(ComPAIRAPITestCase):
     def _check_participation_stat_report_heading_rows(self, heading):
         expected_heading = [
             'Assignment', 'User UUID', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
-            'Answer', 'Students Ranked', 'Overall Score',
+            'Answer', 'Overall Rank', 'Overall Score',
             'Evaluations Submitted', 'Evaluations Required', 'Evaluation Requirements Met',
             'Replies Submitted']
 
@@ -529,8 +529,8 @@ class ReportAPITest(ComPAIRAPITestCase):
         expected_row.append(student.lastname)
         expected_row.append(student.firstname)
         expected_row.append(str(user_stats["answers_submitted"]))
-        expected_row.append("(Overall in Course)")
-        expected_row.append("(Overall in Course)")
+        expected_row.append("")
+        expected_row.append("")
         expected_row.append("")
         expected_row.append("")
         expected_row.append(str(user_stats["evaluations_submitted"]))

@@ -89,7 +89,7 @@ class ReportRootAPI(Resource):
 
             title = [
                 'Assignment', 'User UUID', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
-                'Answer', 'Students Ranked', 'Overall Score',
+                'Answer', 'Overall Rank', 'Overall Score',
                 'Evaluations Submitted', 'Evaluations Required', 'Evaluation Requirements Met',
                 'Replies Submitted']
             titles = [title]
@@ -285,7 +285,7 @@ def participation_stat_report(course, assignments, group_name, overall):
             req_met = 'Yes' if sum_submission['total_evaluations'] >= total_req else 'No'
             temp = [
                 '(Overall in Course)', user.uuid, user.lastname, user.firstname,
-                sum_submission['total_answers'], '(Overall in Course)', '(Overall in Course)',
+                sum_submission['total_answers'], '', '',
                 '', '',
                 sum_submission['total_evaluations'], total_req, req_met,
                 sum_submission['total_comments']]
