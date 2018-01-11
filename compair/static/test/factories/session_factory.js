@@ -94,9 +94,8 @@ var permissionTemplates = {
 function SessionFactory() {};
 
 
-SessionFactory.prototype.generateSession = function (userId, type, additionalPermissions) {
-    var newSession = objectAssign({}, permissionTemplates[type]);
-    newSession.id = userId;
+SessionFactory.prototype.generateSession = function (user, additionalPermissions) {
+    var newSession = objectAssign({}, permissionTemplates[user.system_role], {'id': user.id});
 
     if(additionalPermissions) {
         for(var domain in additionalPermissions) {

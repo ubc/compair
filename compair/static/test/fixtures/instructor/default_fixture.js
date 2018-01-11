@@ -247,7 +247,7 @@ storage.course_assignments[course.id].push(assignment_upcoming.id);
 storage.assignment_status[assignment_upcoming.id] = assignmentStatusFactory.generateAssignmentStatus(assignment_upcoming.id, instructor, {});
 
 storage.loginDetails = { id: instructor.id, username: instructor.username, password: "password" };
-var session = sessionFactory.generateSession(instructor.id, instructor.system_role, {
+var session = sessionFactory.generateSession(instructor, {
     "Course": {
         "1abcABC123-abcABC123_Z": [
             "delete",

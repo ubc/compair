@@ -336,7 +336,7 @@ storage.user_search_results.objects = [student2];
 storage.user_search_results.total = 1;
 
 storage.loginDetails = { id: admin.id, username: admin.username, password: "password" };
-var session = sessionFactory.generateSession(admin.id, admin.system_role, {});
+var session = sessionFactory.generateSession(admin, {});
 storage.session = session;
 
 module.exports = storage;

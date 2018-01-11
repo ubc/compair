@@ -19,7 +19,7 @@ var module = angular.module('ubc.ctlt.compair.classlist',
         'ubc.ctlt.compair.authorization',
         'ubc.ctlt.compair.oauth',
         'ui.bootstrap',
-        'fileSaver'
+        'ngFileSaver'
     ]
 );
 
@@ -60,10 +60,10 @@ module.factory(
 module.controller(
     'ClassViewController',
     ["$scope", "$routeParams", "$route", "ClassListResource", "CourseResource",
-             "CourseRole", "GroupResource", "Toaster", "SaveAs", "LTIResource",
+             "CourseRole", "GroupResource", "Toaster", "FileSaver", "Blob", "LTIResource",
              "UserResource", "$uibModal", "xAPIStatementHelper", "resolvedData",
     function($scope, $routeParams, $route, ClassListResource, CourseResource,
-             CourseRole, GroupResource, Toaster, SaveAs, LTIResource,
+             CourseRole, GroupResource, Toaster, FileSaver, Blob, LTIResource,
              UserResource, $uibModal, xAPIStatementHelper, resolvedData)
     {
 
@@ -231,7 +231,8 @@ module.controller(
 
         $scope.export = function() {
             ClassListResource.export({'courseId': $scope.courseId}, function(ret) {
-                SaveAs.download(ret.content, 'classlist_'+$scope.course.name+'.csv', {type: "text/csv;charset=utf-8"});
+                var data = new Blob([ret.content], { type: "text/csv;charset=utf-8" });
+                FileSaver.saveAs(data, 'classlist_'+$scope.course.name+'.csv');
             });
         };
 

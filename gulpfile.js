@@ -304,6 +304,7 @@ gulp.task('server:backend', function() {
 gulp.task('server:frontend', ['generate_index'], function(done) {
     var connect = require('gulp-connect');
     app = connect.server({
+        port: 8700,
         root: 'compair/static',
         livereload: false, // set to false, otherwise gulp will not exit
         middleware: function(connect, o) {
@@ -311,23 +312,8 @@ gulp.task('server:frontend', ['generate_index'], function(done) {
             var proxy = require('proxy-middleware');
             return [ (function() {  // rewrite all requests against /app to /
                 // because generated index.html has a base /app
-                var options = url.parse('http://localhost:8080/');
+                var options = url.parse('http://localhost:8700/');
                 options.route = '/app';
-                return proxy(options);
-            })(),
-            (function() {  // proxy api calls
-                var options = url.parse('http://localhost:8081/api');
-                options.route = '/api';
-                return proxy(options);
-            })(),
-            (function() { // proxy CAS login
-                var options = url.parse('http://localhost:8081/login');
-                options.route = '/login';
-                return proxy(options);
-            })(),
-            (function() { // proxy CAS logout
-                var options = url.parse('http://localhost:8081/logout');
-                options.route = '/logout';
                 return proxy(options);
             })()];
         }

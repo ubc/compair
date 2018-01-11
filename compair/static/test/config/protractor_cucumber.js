@@ -8,8 +8,7 @@ exports.config = {
     framework: 'custom',
     frameworkPath: require.resolve('protractor-cucumber-framework'),
     cucumberOpts: {
-        require: ['../features/**/*.js'],
-        format: 'pretty'
+        require: ['../features/**/*.js']
     },
     capabilities: {
         'name': 'ComPAIR suite tests',

@@ -1,32 +1,6 @@
 describe('Service: Session', function() {
     var sessionService, $httpBackend, localStorageService;
     var id = "1abcABC123-abcABC123_Z";
-    var expectedSession = {
-        "id": id,
-        "permissions": {
-            "Course": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
-            },
-            "Assignment": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
-            },
-            "User": {
-                "create": true,
-                "delete": true,
-                "edit": true,
-                "manage": true,
-                "read": true
-            }
-        }
-    };
     var expectedUser = {
         avatar: "63a9f0ea7bb98050796b649e85481845",
         created: "Tue, 27 May 2014 00:02:38 -0000",
@@ -43,6 +17,38 @@ describe('Service: Session', function() {
         system_role: "System Administrator",
         uses_compair_login: true,
         email_notification_method: 'enable'
+    };
+    var expectedSession = {
+        "id": id,
+        "permissions": {
+            "Course": {
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
+            },
+            "Assignment": {
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
+            },
+            "User": {
+                "global": [
+                    "create",
+                    "delete",
+                    "edit",
+                    "manage",
+                    "read"
+                ]
+            }
+        }
     };
 
     beforeEach(module('ubc.ctlt.compair.session'));
