@@ -774,6 +774,11 @@ module.exports.httpbackendMock = function(storageFixtures) {
             return [200, newAssignment, {}]
         });
 
+        $httpBackend.whenGET(/\/api\/timer$/).respond(function(method, url, data, headers) {
+
+            return [200, {}, {}]
+        });
+
         $httpBackend.whenPOST(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
             data = JSON.parse(data);
 

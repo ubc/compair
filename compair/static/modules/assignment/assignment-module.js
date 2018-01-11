@@ -206,7 +206,8 @@ module.directive('assignmentActionButton', function() {
                         var allButtons = {
                             'answer' : {
                                 'label' : "Answer",
-                                'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/answer/create",
+                                'click' : $scope.openAnswerModal,
+                                'clickargs' : {'assignment':assignment},
                                 'title' : "Answer Assignment",
                                 'show' : {
                                     'user'  : permissions.canAnswer && permissions.needsAnswer && !permissions.hasDraftAnswer,
@@ -215,7 +216,8 @@ module.directive('assignmentActionButton', function() {
                             },
                             'finishAnswer' : {
                                 'label' : "Finish Answer",
-                                'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/answer/" + assignmentStatus.answers.draft_ids[0] + "/edit",
+                                'click' : $scope.openAnswerModal,
+                                'clickargs' : {'assignment':assignment, 'answerId':assignmentStatus.answers.draft_ids[0]},
                                 'title' : "Finish Answering Assignment",
                                 'show' : {
                                     'user'  : permissions.canAnswer && permissions.needsAnswer && permissions.hasDraftAnswer,
@@ -727,11 +729,11 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("AssignmentViewController",
-    ["$scope", "$routeParams", "$location", "AnswerResource", "AssignmentResource", "AssignmentCommentResource",
-             "ComparisonResource", "CourseResource", "Toaster", "AnswerCommentResource", "resolvedData",
+    ["$scope", "$routeParams", "$location", "AnswerResource", "AssignmentResource", "AssignmentCommentResource", "$anchorScroll",
+             "ComparisonResource", "CourseResource", "Toaster", "AnswerCommentResource", "resolvedData", "$timeout", "$route",
              "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$uibModal", "xAPIStatementHelper", "WinningAnswer",
-    function($scope, $routeParams, $location, AnswerResource, AssignmentResource, AssignmentCommentResource,
-             ComparisonResource, CourseResource, Toaster, AnswerCommentResource, resolvedData,
+    function($scope, $routeParams, $location, AnswerResource, AssignmentResource, AssignmentCommentResource, $anchorScroll,
+             ComparisonResource, CourseResource, Toaster, AnswerCommentResource, resolvedData, $timeout, $route,
              GroupResource, AnswerCommentType, PairingAlgorithm, $uibModal, xAPIStatementHelper, WinningAnswer)
     {
         $scope.courseId = $routeParams.courseId;
@@ -792,6 +794,46 @@ module.controller("AssignmentViewController",
             $scope.answerAvail = $scope.assignment.compare_end;
         } else {
             $scope.answerAvail = $scope.assignment.answer_end;
+        }
+
+        $scope.openAnswerModal = function($args) {
+
+            var modalScope = $scope.$new();
+            modalScope.assignment = $args.assignment;
+            modalScope.courseId = angular.copy($scope.courseId);
+            modalScope.assignmentId = angular.copy($args.assignment.id);
+
+            modalScope.course = $scope.course;
+            modalScope.answer = {};
+            modalScope.loggedInUserId = resolvedData.loggedInUser.id;
+            modalScope.canManageAssignment = resolvedData.canManageAssignment;
+            modalScope.answerUnsaved = resolvedData.answerUnsaved;
+
+            if ($args.answerId) {
+                modalScope.answerId = $args.answerId;
+                AnswerResource.get({'courseId': modalScope.courseId, 'assignmentId': modalScope.assignmentId, 'answerId': modalScope.answerId}).$promise.then(
+                    function (ret) {
+                        modalScope.answer = ret;
+                        $scope.modalInstance = $uibModal.open({
+                            animation: true,
+                            backdrop: 'static',
+                            controller: "AnswerWriteModalController",
+                            templateUrl: 'modules/answer/answer-modal-partial.html',
+                            scope: modalScope
+                        });
+                    }
+                );
+            }
+            else {
+                $scope.modalInstance = $uibModal.open({
+                    animation: true,
+                    backdrop: 'static',
+                    controller: "AnswerWriteModalController",
+                    templateUrl: 'modules/answer/answer-modal-partial.html',
+                    scope: modalScope
+                });
+            }
+
         }
 
         AssignmentResource.getCurrentUserStatus({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
@@ -864,6 +906,18 @@ module.controller("AssignmentViewController",
             $scope.loadTabData();
         });
 
+        // Highlight the answer if it's in the URL
+        $scope.highlightAnswer = $location.search().highlightAnswer;
+        if ($scope.highlightAnswer) {
+
+            $location.hash('my-answer');
+            $anchorScroll();
+
+            $timeout(function() {
+                $('#my-answer').addClass('highlight-off');
+            }, 5000);
+        }
+
         $scope.loadTabData = function() {
             // tabs: answers, participation, your_feedback, your_comparisons, comparisons
             if (tab == "your_feedback") {
@@ -898,7 +952,6 @@ module.controller("AssignmentViewController",
         $scope.deleteAnswer = function(answer) {
             AnswerResource.delete({'courseId': answer.course_id, 'assignmentId': answer.assignment_id, 'answerId':answer.id},
                 function (ret) {
-                    Toaster.success("Answer Deleted");
                     var authorId = answer['user_id'];
                     $scope.assignment.answer_count -= 1;
                     if ($scope.loggedInUserId == authorId) {
@@ -906,6 +959,10 @@ module.controller("AssignmentViewController",
                         $scope.assignment.status.answers.answered = $scope.assignment.status.answers.count > 0;
                     }
                     $scope.updateAnswerList();
+                    $location.hash(null);
+                    $location.search({'tab':'your_feedback'});
+                    $route.reload();
+                    Toaster.success("Answer Deleted");
                 }
             );
         };
@@ -949,7 +1006,7 @@ module.controller("AssignmentViewController",
             $scope.modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
-                controller: "AnswerEditModalController",
+                controller: "AnswerWriteModalController",
                 templateUrl: 'modules/answer/answer-modal-partial.html',
                 scope: modalScope
             });
