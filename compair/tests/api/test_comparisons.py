@@ -6,7 +6,8 @@ import datetime
 from data.fixtures.test_data import ComparisonTestData, LTITestData
 from data.factories import AssignmentCriterionFactory
 from compair.models import Answer, Comparison, CourseGrade, AssignmentGrade, \
-    WinningAnswer, SystemRole, AnswerScore, AnswerCriterionScore
+    WinningAnswer, SystemRole, AnswerScore, AnswerCriterionScore, \
+    AnswerComment, AnswerCommentType
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.core import db
 
@@ -167,10 +168,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             db.session.add(self.assignment)
             db.session.commit()
             ok_comparisons = copy.deepcopy(comparison_submit)
-            rv = self.client.post(
-                self.base_url,
-                data=json.dumps(ok_comparisons),
-                content_type='application/json')
+            rv = self.client.post(self.base_url, data=json.dumps(ok_comparisons), content_type='application/json')
             self.assert200(rv)
 
         self.assignment.educators_can_compare = False
@@ -270,11 +268,15 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                     # establish expected data by first getting an answer pair
                     rv = self.client.get(self.base_url)
                     self.assert200(rv)
-                    actual_answer1_uuid = rv.json['comparison']['answer1_id']
-                    actual_answer2_uuid = rv.json['comparison']['answer2_id']
-                    self.assertIn(actual_answer1_uuid, valid_answer_uuids)
-                    self.assertIn(actual_answer2_uuid, valid_answer_uuids)
-                    self.assertNotEqual(actual_answer1_uuid, actual_answer2_uuid)
+                    answer1_uuid = rv.json['comparison']['answer1_id']
+                    answer1_feedback = rv.json['comparison']['answer1_feedback']
+                    answer1 = Answer.query.filter_by(uuid=answer1_uuid).first()
+                    answer2_uuid = rv.json['comparison']['answer2_id']
+                    answer2_feedback = rv.json['comparison']['answer2_feedback']
+                    answer2 = Answer.query.filter_by(uuid=answer2_uuid).first()
+                    self.assertIn(answer1_uuid, valid_answer_uuids)
+                    self.assertIn(answer2_uuid, valid_answer_uuids)
+                    self.assertNotEqual(answer1_uuid, answer2_uuid)
                     self.assertTrue(rv.json['new_pair'])
                     self.assertEqual(rv.json['current'], current)
                     # no user info should be included in the answer
@@ -285,15 +287,30 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                     # no score info should be included in the answer
                     self.assertFalse('score' in rv.json['comparison']['answer1'])
                     self.assertFalse('score' in rv.json['comparison']['answer2'])
+                    # feedback should be empty or have 1 evaluation
+                    answer1_comment = next((c for c in answer1.comments if c.user_id == user.id and c.comment_type == AnswerCommentType.evaluation), None)
+                    answer2_comment = next((c for c in answer2.comments if c.user_id == user.id and c.comment_type == AnswerCommentType.evaluation), None)
+                    for expected, actual in [(answer1_comment, answer1_feedback), (answer2_comment, answer2_feedback)]:
+                        if expected:
+                            self.assertEqual(len(actual), 1)
+                            self.assertEqual(actual[0]['id'], expected.uuid)
+                        else:
+                            self.assertEqual(len(actual), 0)
 
                     # fetch again
                     rv = self.client.get(self.base_url)
                     self.assert200(rv)
                     expected_comparison = rv.json['comparison']
-                    self.assertEqual(actual_answer1_uuid, rv.json['comparison']['answer1_id'])
-                    self.assertEqual(actual_answer2_uuid, rv.json['comparison']['answer2_id'])
+                    self.assertEqual(answer1_uuid, rv.json['comparison']['answer1_id'])
+                    self.assertEqual(answer2_uuid, rv.json['comparison']['answer2_id'])
                     self.assertFalse(rv.json['new_pair'])
                     self.assertEqual(rv.json['current'], current)
+                    for expected, actual in [(answer1_comment, answer1_feedback), (answer2_comment, answer2_feedback)]:
+                        if expected:
+                            self.assertEqual(len(actual), 1)
+                            self.assertEqual(actual[0]['id'], expected.uuid)
+                        else:
+                            self.assertEqual(len(actual), 0)
 
                     # test draft post
                     comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value, True)
@@ -357,6 +374,13 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                         data=json.dumps(comparison_submit),
                         content_type='application/json')
                     self.assert400(rv)
+
+                    # fake submit evaulations for each anwser if student
+                    if user.id == self.data.get_authorized_student().id:
+                        if not answer1_comment:
+                            self.data.create_answer_comment(answer1, user, AnswerCommentType.evaluation)
+                        if not answer2_comment:
+                            self.data.create_answer_comment(answer2, user, AnswerCommentType.evaluation)
 
                 # all answers has been compared by the user, errors out when trying to get another pair
                 rv = self.client.get(self.base_url)

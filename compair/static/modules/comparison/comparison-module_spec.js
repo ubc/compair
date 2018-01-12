@@ -216,6 +216,23 @@ describe('comparison-module', function () {
             "user_id": "162cABC123-abcABC123_Z"
         };
 
+        var mockAnswer2Comments = [{
+            "answer_id": "279cABC123-abcABC123_Z",
+            "content": "<p>test123213t4453123123</p>\n",
+            "course_id": "3abcABC123-abcABC123_Z",
+            'assignment_id': "9abcABC123-abcABC123_Z",
+            "created": "Thu, 24 Sep 2015 00:22:34 -0000",
+            "id": "3703ABC123-abcABC123_Z",
+            "comment_type": 'Evaluation',
+            "draft": false,
+            "user": {
+                "id": "1abcABC123-abcABC123_Z",
+                "avatar": "63a9f0ea7bb98050796b649e85481845",
+                "displayname": "root"
+            },
+            "user_id": "1abcABC123-abcABC123_Z"
+        }];
+
         var mockComparison = {
             'id': "1abcABC123-abcABC123_Z",
             'course_id': "1abcABC123-abcABC123_Z",
@@ -224,7 +241,9 @@ describe('comparison-module', function () {
             'answer1_id': "407cABC123-abcABC123_Z",
             'answer2_id': "279cABC123-abcABC123_Z",
             'answer1': angular.copy(mockAnswer1),
+            'answer1_feedback': [],
             'answer2': angular.copy(mockAnswer2),
+            'answer2_feedback': angular.copy(mockAnswer2Comments),
             'winner': null,
 
             'comparison_criteria': [
@@ -275,23 +294,6 @@ describe('comparison-module', function () {
             'created': "Fri, 09 Jan 2015 18:35:58 -0000",
         };
 
-        var mockComments = [{
-            "answer_id": "279cABC123-abcABC123_Z",
-            "content": "<p>test123213t4453123123</p>\n",
-            "course_id": "3abcABC123-abcABC123_Z",
-            'assignment_id': "9abcABC123-abcABC123_Z",
-            "created": "Thu, 24 Sep 2015 00:22:34 -0000",
-            "id": "3703ABC123-abcABC123_Z",
-            "comment_type": 'Evaluation',
-            "draft": false,
-            "user": {
-                "id": "1abcABC123-abcABC123_Z",
-                "avatar": "63a9f0ea7bb98050796b649e85481845",
-                "displayname": "root"
-            },
-            "user_id": "1abcABC123-abcABC123_Z"
-        }];
-
         var mockNewComment = {
             "answer_id": "407cABC123-abcABC123_Z",
             "content": "",
@@ -314,6 +316,7 @@ describe('comparison-module', function () {
         };
 
         var expectedNewComment = {
+            "answer_id": "407cABC123-abcABC123_Z",
             "draft": true,
             "comment_type": "Evaluation"
         };
@@ -359,7 +362,6 @@ describe('comparison-module', function () {
                 'new_pair': true,
                 'current': 1
             });
-            $httpBackend.expectGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
             $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedNewComment).respond(mockNewComment);
 
             createController({courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"}, {
@@ -380,10 +382,10 @@ describe('comparison-module', function () {
 
             answer1 = angular.copy(mockComparison.answer1);
             answer2 = angular.copy(mockComparison.answer2);
-            answer1.comment = mockNewComment;
-            answer2.comment = mockComments[0];
             expect($rootScope.answer1).toEqualData(answer1);
             expect($rootScope.answer2).toEqualData(answer2);
+            expect($rootScope.answer1_feedback).toEqualData(mockNewComment);
+            expect($rootScope.answer2_feedback).toEqualData(mockAnswer2Comments[0]);
         });
 
         describe('actions:', function() {
@@ -402,7 +404,6 @@ describe('comparison-module', function () {
                     'new_pair': true,
                     'current': 1
                 });
-                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedNewComment).respond(mockNewComment);
                 controller = createController({courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"}, {
                     course: angular.copy(mockCourse),
@@ -415,7 +416,7 @@ describe('comparison-module', function () {
             });
 
             it('should load the comment saved before when the same answer is shown', function() {
-                expect($rootScope.answer2.comment).toEqualData(mockComments[0]);
+                expect($rootScope.answer2_feedback).toEqualData(mockAnswer2Comments[0]);
             });
 
             it('should submit comparisons when comparisonSubmit is called', function() {
@@ -437,9 +438,9 @@ describe('comparison-module', function () {
                 var mockTrackingComment = mockTracking.toParams();
                 // save answer feedback/comments
                 var expectedAnswerComment1 = angular.extend({}, mockNewComment, {"content":"Feedback 1", "comment_type":'Evaluation', "draft": false, "tracking": mockTrackingComment});
-                var expectedAnswerComment2 = angular.extend({}, mockComments[0], {"content":"Feedback 2", "comment_type":'Evaluation', "draft": false, "tracking": mockTrackingComment});
-                $rootScope.answer1.comment.content = 'Feedback 1';
-                $rootScope.answer2.comment.content = 'Feedback 2';
+                var expectedAnswerComment2 = angular.extend({}, mockAnswer2Comments[0], {"content":"Feedback 2", "comment_type":'Evaluation', "draft": false, "tracking": mockTrackingComment});
+                $rootScope.answer1_feedback.content = 'Feedback 1';
+                $rootScope.answer2_feedback.content = 'Feedback 2';
                 // save comparison selection and comments
                 $rootScope.comparison.comparison_criteria[0].winner = 'answer1';
                 $rootScope.comparison.comparison_criteria[0].content = 'criterion comment 1';
@@ -475,7 +476,6 @@ describe('comparison-module', function () {
                     'new_pair': true,
                     'current': 1
                 });
-                $httpBackend.whenGET('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answer_comments?answer_ids=279cABC123-abcABC123_Z,407cABC123-abcABC123_Z&draft=true&evaluation=only&user_ids=1abcABC123-abcABC123_Z').respond(mockComments);
                 $httpBackend.expectPOST('/api/courses/3abcABC123-abcABC123_Z/assignments/9abcABC123-abcABC123_Z/answers/407cABC123-abcABC123_Z/comments', expectedNewComment).respond(mockNewComment);
                 controller = createController({courseId: "3abcABC123-abcABC123_Z", assignmentId: "9abcABC123-abcABC123_Z"}, {
                     course: angular.copy(mockCourse),
@@ -507,9 +507,9 @@ describe('comparison-module', function () {
                 var mockTrackingComment = mockTracking.toParams();
                 // save answer feedback/comments
                 var expectedAnswerComment1 = angular.extend({}, mockNewComment, {"content":"Feedback 1", "comment_type":'Evaluation', "draft": true, "tracking": mockTrackingComment});
-                var expectedAnswerComment2 = angular.extend({}, mockComments[0], {"content":"Feedback 2", "comment_type":'Evaluation', "draft": true, "tracking": mockTrackingComment});
-                $rootScope.answer1.comment.content = 'Feedback 1';
-                $rootScope.answer2.comment.content = 'Feedback 2';
+                var expectedAnswerComment2 = angular.extend({}, mockAnswer2Comments[0], {"content":"Feedback 2", "comment_type":'Evaluation', "draft": true, "tracking": mockTrackingComment});
+                $rootScope.answer1_feedback.content = 'Feedback 1';
+                $rootScope.answer2_feedback.content = 'Feedback 2';
                 // save comparison selection and comments
                 $rootScope.comparison.comparison_criteria[0].winner = 'answer1';
                 $rootScope.comparison.comparison_criteria[0].content = 'criterion comment 1';
