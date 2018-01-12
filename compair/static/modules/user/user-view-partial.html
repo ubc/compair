@@ -20,11 +20,11 @@
             <strong class="col-md-3">Display Name:</strong>
             <div id="user_displayname" class="col-md-9">{{ user.displayname }}</div>
         </div>
-	    <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+        <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
             <strong class="col-md-3">Name:</strong>
             <div id="user_fullname" class="col-md-9">{{ user.fullname }}</div>
         </div>
-	    <div class="row" ng-if="(canManageUsers || loggedInUserIsInstructor || ownProfile) && user.system_role == SystemRole.student">
+        <div class="row" ng-if="(canManageUsers || loggedInUserIsInstructor || ownProfile) && user.system_role == SystemRole.student">
             <strong class="col-md-3">Student Number:</strong>
             <div id="user_student_number"  class="col-md-9">{{ user.student_number }}</div>
         </div>
@@ -34,19 +34,19 @@
         </div>
         <div class="row" ng-if="UserSettings.notifications && (canManageUsers || (UserSettings.expose_email_to_instructor && showEditButton.available) || ownProfile)">
             <strong class="col-md-3">Notifications:</strong>
-		    <div class="col-md-9" ng-show="!user.email">N/A</div>
-		    <div id="user_email_notification_method" class="col-md-9" ng-show="user.email">
+            <div class="col-md-9" ng-show="!user.email">N/A</div>
+            <div id="user_email_notification_method" class="col-md-9" ng-show="user.email">
                 <input id="email_notification_method" type="checkbox" ng-model="user.email_notification_method" ng-disabled="!user.email || submitted"
                     ng-true-value="'{{EmailNotificationMethod.enable}}'" ng-false-value="'{{EmailNotificationMethod.disable}}'"
                     ng-change="updateNotificationSettings()">
                 Receive email notifications from ComPAIR about assignments
             </div>
         </div>
-	    <div class="row" ng-if="(canManageUsers || loggedInUserIsInstructor || ownProfile) && user.uses_compair_login">
+        <div class="row" ng-if="(canManageUsers || loggedInUserIsInstructor || ownProfile) && user.uses_compair_login">
             <strong class="col-md-3">Username:</strong>
             <div id="user_username" class="col-md-9">{{ user.username }}</div>
         </div>
-	    <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
+        <div class="row" ng-if="canManageUsers || loggedInUserIsInstructor || ownProfile">
             <strong class="col-md-3">Application Role:</strong>
             <div id="user_system_role" class="col-md-9">{{ user.system_role }}</div>
         </div>

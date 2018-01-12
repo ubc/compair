@@ -23,10 +23,10 @@ var module = angular.module('ubc.ctlt.compair.home',
 /***** Controllers *****/
 module.controller(
     'HomeController',
-    ["$rootScope", "$scope", "$location", "AssignmentResource",
-     "Authorize", "CourseResource", "Toaster", "UserResource", "$uibModal", "xAPIStatementHelper", "resolvedData",
-    function ($rootScope, $scope, $location, AssignmentResource,
-              Authorize, CourseResource, Toaster, UserResource, $uibModal, xAPIStatementHelper, resolvedData)
+    ["$rootScope", "$scope", "AssignmentResource", "Authorize", "CourseResource",
+     "Toaster", "UserResource", "$uibModal", "xAPIStatementHelper", "resolvedData",
+    function ($rootScope, $scope, AssignmentResource, Authorize, CourseResource,
+              Toaster, UserResource, $uibModal, xAPIStatementHelper, resolvedData)
     {
         $scope.totalNumCourses = 0;
         $scope.courseFilters = {

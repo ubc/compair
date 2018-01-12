@@ -24,7 +24,7 @@
             <input id="comment_type" type="checkbox" ng-model="comment.comment_type" ng-disabled="!(comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)"
                    ng-true-value="'{{AnswerCommentType.public}}'" ng-false-value="'{{AnswerCommentType.private}}'">
             <label for="comment_type"><span class="text-muted not-bold" ng-if="!(comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)">(cannot show this feedback to the whole class)</span> <span ng-if="comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private">Show this feedback to the whole class</span></label>
-            
+
         </div>
     </fieldset>
 

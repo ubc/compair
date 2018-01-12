@@ -103,13 +103,13 @@ gulp.task('prod_templatecache', function () {
         .pipe(gulp.dest('./compair/static/build'));
 });
 gulp.task('prod_copy_fonts', function () {
-	// bootstrap fonts is loaded by bootstrap.css and default location is
+    // bootstrap fonts is loaded by bootstrap.css and default location is
     // ../fonts/
     return gulp.src('bower_components/bootstrap/fonts/*.*')
         .pipe(gulp.dest('compair/static/fonts/'));
 });
 gulp.task('prod_copy_images', function () {
-	// chosen image is loaded by chosen.css and default location is
+    // chosen image is loaded by chosen.css and default location is
     // ./
     return gulp.src(['bower_components/chosen/*.png', './compair/static/img/*.png', './compair/static/img/*.ico'])
         .pipe(gulp.dest('compair/static/dist/'));
@@ -332,7 +332,7 @@ gulp.task('server:frontend', ['generate_index'], function(done) {
             })()];
         }
     });
-	// clean up after server close
+    // clean up after server close
     app.server.on('close', function() {
         gulp.start('delete_index');
         done();

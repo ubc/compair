@@ -16,7 +16,7 @@
                 },
                 templateUrl: 'modules/user/user-form-partial.html',
                 link: function (scope, element, attrs) {
-		            scope.method = 'create';
+                    scope.method = 'create';
                     scope.canManageUsers = false;
                     scope.submitted = false;
 

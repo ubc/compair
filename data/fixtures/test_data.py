@@ -484,9 +484,9 @@ class ComparisonTestData(CriterionTestData):
             self.comparable_answers.append(answer)
             # add a comparison example
             answer1 = self.create_answer(assignment, self.get_authorized_ta())
-            self.answers.append(answer)
+            self.answers.append(answer1)
             answer2 = self.create_answer(assignment, self.get_authorized_instructor())
-            self.answers.append(answer)
+            self.answers.append(answer2)
             comparison_example = self.create_comparison_example(assignment, answer1, answer2)
             self.comparisons_examples.append(comparison_example)
 

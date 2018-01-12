@@ -742,14 +742,13 @@ describe('assignment-module', function () {
     });
 
     describe('AssignmentViewController', function () {
-        var $rootScope, createController, $location, $uibModal, $q, $route;
+        var $rootScope, createController, $uibModal, $q, $route;
         var controller;
         var toaster;
         var xAPISettings;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$location_, _$uibModal_, _$q_, _Toaster_, _xAPISettings_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$uibModal_, _$q_, _Toaster_, _xAPISettings_) {
             $rootScope = _$rootScope_;
-            $location = _$location_;
             $uibModal = _$uibModal_;
             $q = _$q_;
             toaster = _Toaster_;

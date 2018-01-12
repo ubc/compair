@@ -341,7 +341,7 @@ module.service('xAPI',
             text = String(text) || '';
             text = text.replace(/<[^>]+>/g, '');
             text = text.replace('&nbsp;', ' ');
-		    return _.unescape(text);
+            return _.unescape(text);
         };
 
         this._characterCount = function(text) {

@@ -247,9 +247,9 @@ module.controller(
 
 module.controller(
     'ClassImportController',
-    ["$scope", "$location", "$routeParams", "ClassListResource", "CourseResource",
+    ["$scope", "$routeParams", "ClassListResource", "CourseResource",
         "Toaster", "importService", "ThirdPartyAuthType", "AuthTypesEnabled", "resolvedData",
-    function($scope, $location, $routeParams, ClassListResource, CourseResource,
+    function($scope, $routeParams, ClassListResource, CourseResource,
              Toaster, importService, ThirdPartyAuthType, AuthTypesEnabled, resolvedData)
     {
         $scope.courseId = $routeParams['courseId'];

@@ -1,7 +1,7 @@
 <li ng-show="!meta.hide">
     <a  ng-if="!meta.hide && meta.confirmationNeeded"
-        ng-href="{{ meta.href }}" 
-        class="{{ meta.class }}" 
+        ng-href="{{ meta.href }}"
+        class="{{ meta.class }}"
         title="{{ meta.title }}"
         ng-disabled="{{ meta.disabled }}"
         confirmation-needed="{{ meta.confirmationNeeded }}"
@@ -9,12 +9,12 @@
         keyword="{{ meta.keyword }}"
         ng-bind-html="meta.label"></a>
     <a  ng-if="!meta.hide && meta.href && !meta.confirmationNeeded"
-        ng-href="{{ meta.href }}" 
-        class="{{ meta.class }}" 
+        ng-href="{{ meta.href }}"
+        class="{{ meta.class }}"
         title="{{ meta.title }}"
         ng-disabled="{{ meta.disabled }}"
         ng-bind-html="meta.label"></a>
-    <span ng-if="!meta.hide && !meta.href && !meta.confirmationNeeded" 
-        class="{{ meta.class }}" 
+    <span ng-if="!meta.hide && !meta.href && !meta.confirmationNeeded"
+        class="{{ meta.class }}"
         ng-bind-html="meta.label"></span>
 </li>

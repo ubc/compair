@@ -177,8 +177,8 @@ module.service('importService',
 }]);
 
 module.service('attachService',
-        ["FileUploader", "$location", "Toaster", "UploadValidator", "KalturaResource",
-        function(FileUploader, $location, Toaster, UploadValidator, KalturaResource) {
+        ["FileUploader", "Toaster", "UploadValidator", "KalturaResource",
+        function(FileUploader, Toaster, UploadValidator, KalturaResource) {
     var file = null;
 
     var getUploader = function() {
@@ -288,8 +288,8 @@ module.service('attachService',
 }]);
 
 module.service('answerAttachService',
-        ["FileUploader", "$location", "Toaster", "UploadValidator", "KalturaResource",
-        function(FileUploader, $location, Toaster, UploadValidator, KalturaResource) {
+        ["FileUploader", "Toaster", "UploadValidator", "KalturaResource",
+        function(FileUploader, Toaster, UploadValidator, KalturaResource) {
     var file = null;
 
     var getUploader = function(initParams) {

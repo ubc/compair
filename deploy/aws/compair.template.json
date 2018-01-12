@@ -394,7 +394,7 @@
         "AllocatedStorage"  : { "Ref" : "DBAllocatedStorage" },
         "VPCSecurityGroups": { "Fn::If" : [ "Is-EC2-VPC", [ { "Fn::GetAtt": [ "DBEC2SecurityGroup", "GroupId" ] } ], { "Ref" : "AWS::NoValue"}]},
         "DBSecurityGroups": { "Fn::If" : [ "Is-EC2-Classic", [ { "Ref": "DBSecurityGroup" } ], { "Ref" : "AWS::NoValue"}]},
-		"DBSubnetGroupName": { "Ref": "DBSubnetGroup" }
+        "DBSubnetGroupName": { "Ref": "DBSubnetGroup" }
       }
     },
 
@@ -528,7 +528,7 @@
               }
             }
           },
-		  "setup" : {
+          "setup" : {
             "packages" : {
               "yum" : {
                 "nfs-utils" : []
@@ -640,7 +640,7 @@
         }
       },
       "Properties": {
-		"AssociatePublicIpAddress" : "true",
+        "AssociatePublicIpAddress" : "true",
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionToAMI", { "Ref" : "AWS::Region" }, "AMIID" ] },
         "InstanceType"   : { "Ref" : "InstanceType" },
         "IamInstanceProfile": { "Ref": "EC2InstanceProfile" },

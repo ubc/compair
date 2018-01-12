@@ -68,9 +68,9 @@ module.directive('autoFocus', ["$timeout", function($timeout) {
 /***** Listeners *****/
 // display the login page if user is not logged in
 module.run(
-    ["$rootScope", "$route", "$location", "$log", "$uibModal", "$cacheFactory", "AuthenticationService",
+    ["$rootScope", "$route", "$log", "$uibModal", "$cacheFactory", "AuthenticationService",
      "Toaster", "$http",
-    function ($rootScope, $route, $location, $log, $uibModal, $cacheFactory, AuthenticationService,
+    function ($rootScope, $route, $log, $uibModal, $cacheFactory, AuthenticationService,
               Toaster, $http) {
     // Create a modal dialog box for containing the login form
     var loginBox;
