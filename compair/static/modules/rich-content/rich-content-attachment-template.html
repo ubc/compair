@@ -12,7 +12,7 @@
     <iframe src="{{content.url}}" class="content-item embed-responsive-item"></iframe>
 </div>
 <div ng-if="content.type == 'image'">
-    <img ng-src="{{content.url}}" ng-alt="{{content.title}}" class="content-item" />
+    <img ng-src="{{content.url}}" ng-alt="{{content.title}}" class="content-item attachment-view"/>
 </div>
 <div ng-if="content.type == 'video'" class="embed-responsive embed-responsive-16by9">
     <video ng-src="{{content.url}}" controls class="content-item embed-responsive-item"></video>

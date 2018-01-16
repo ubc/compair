@@ -8,6 +8,7 @@ var module = angular.module('ubc.ctlt.compair.rich.content',
         'ubc.ctlt.compair.rich.content.mathjax',
         'ubc.ctlt.compair.rich.content.highlightjs',
         'ubc.ctlt.compair.rich.content.twttr',
+        'ubc.ctlt.compair.image.viewer',
     ]
 );
 

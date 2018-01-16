@@ -65,26 +65,47 @@
             <label class="required-star" for="importFile">Answer Attachment and/or Text</label>
             <input type="file" nv-file-select uploader="uploader" ng-click="answerForm.$setDirty()" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
             <br />
-            <div class="row" ng-repeat="item in uploader.queue">
-                <div class="col-md-2">
-                    <a href="" ng-click="item.cancel();item.remove();resetFileUploader();">
-                        Remove
-                    </a>
+            <div ng-repeat="item in uploader.queue">
+                <div class="row">
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-primary btn-xs" ng-click="item.cancel();item.remove();resetFileUploader();">
+                            <span class="glyphicon glyphicon-trash"></span> Remove
+                        </button>
+                    </div>
+                    <div class="col-md-5">
+                        <div ng-if="!canSupportPreview(item) || item.isReady || item.isUploading || item.isSuccess">
+                            <i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-2">{{item.file.size/1024/1024|number:2}} MB</div>
+                    <div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
+                    <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
+                    <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
                 </div>
-                <div class="col-md-7"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
-                <div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
-                <div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
-                <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
-                <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div ng-if="canSupportPreview(item)">
+                            <div ng-init="initImageOrientation(item)"></div>
+                            <!-- trigger upload once preview is loaded -->
+                            <div img-file="item._file" image-viewer orientation="imageOrientation[item.$$hashKey]" upload-file="item._file" on-load-callback="item.upload()"/>
+                        </div>
+                    </div>
+                </div>
                 <br /><br />
             </div>
+            <br />
         </div>
-        <div ng-show="answer.file && answer.uploadedFile">
+        <div ng-show="answer.file && answer.uploadedFile && !uploader.queue.length">
             <div class="row">
                 <div class="col-md-1">
-                    <a href="" ng-click="deleteFile(answer.file)">
-                        Remove
-                    </a>
+                    <button type="button" class="btn btn-primary btn-xs" ng-click="deleteFile(answer.file)">
+                        <span class="glyphicon glyphicon-trash"></span> Remove
+                    </button>
+                </div>
+                <div class="col-md-1">
+                    <button ng-if="canSupportPreview(answer.file)" type="button" class="btn btn-primary btn-xs" ng-click="reuploadFile(answer.file)">
+                        <span class="glyphicon glyphicon-edit"></span> Adjust
+                    </button>
                 </div>
                 <div class="col-md-4">
                     <i class="fa fa-paperclip"></i> Attached File: <strong>{{answer.file.alias}}</strong>

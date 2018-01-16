@@ -32,26 +32,43 @@
             <label for="importFile">Related Attachment</label>
             <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
 
-            <div class="row" ng-repeat="item in uploader.queue">
-                <div class="col-md-1">
-                    <a href="" ng-click="item.cancel();item.remove();resetFileUploader();">
-                        Remove
-                    </a>
+            <div ng-repeat="item in uploader.queue">
+                <div class="row">
+                    <div class="col-md-1">
+                        <button type="button" class="btn btn-primary btn-xs" ng-click="item.cancel();item.remove();resetFileUploader();">
+                            <span class="glyphicon glyphicon-trash"></span> Remove
+                        </button>
+                    </div>
+                    <div class="col-md-8"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
+                    <div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
+                    <div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
+                    <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
+                    <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
                 </div>
-                <div class="col-md-8"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
-                <div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
-                <div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
-                <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
-                <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
+                <br>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div ng-if="canSupportPreview(item)">
+                            <div ng-init="initImageOrientation(item)"></div>
+                            <!-- trigger upload once preview is loaded -->
+                            <div img-file="item._file" image-viewer orientation="imageOrientation[item.$$hashKey]" upload-file="item._file" on-load-callback="item.upload()"/>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div ng-show="assignment.file && assignment.uploadedFile">
+        <div ng-show="assignment.file && assignment.uploadedFile && !uploader.queue.length">
             <div class="row">
                 <div class="col-md-1">
-                    <a href="" ng-click="deleteFile(assignment.file)">
-                        Remove
-                    </a>
+                    <button type="button" class="btn btn-primary btn-xs" ng-click="deleteFile(assignment.file)">
+                        <span class="glyphicon glyphicon-trash"></span> Remove
+                    </button>
+                </div>
+                <div class="col-md-1">
+                    <button ng-if="canSupportPreview(assignment.file)" type="button" class="btn btn-primary btn-xs" ng-click="reuploadFile(assignment.file)">
+                        <span class="glyphicon glyphicon-edit"></span> Adjust
+                    </button>
                 </div>
                 <div class="col-md-11">
                     <i class="fa fa-paperclip"></i> Attached File: <strong>{{assignment.file.alias}}</strong>
