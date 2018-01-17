@@ -60,9 +60,14 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
         lti_user_resource_link.lis_result_sourcedid = tool_provider.lis_result_sourcedid
 
         # set course role every time
-        if tool_provider.is_instructor():
+        if tool_provider.roles and any(
+                    role.lower().find("instructor") >= 0 or
+                    role.lower().find("faculty") >= 0 or
+                    role.lower().find("staff") >= 0
+                    for role in tool_provider.roles
+                ):
             lti_user_resource_link.course_role = CourseRole.instructor
-        elif tool_provider.has_role("TeachingAssistant"):
+        elif tool_provider.roles and any(role.lower().find("teachingassistant") >= 0 for role in tool_provider.roles):
             lti_user_resource_link.course_role = CourseRole.teaching_assistant
         else:
             lti_user_resource_link.course_role = CourseRole.student

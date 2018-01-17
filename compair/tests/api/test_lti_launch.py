@@ -23,8 +23,15 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         lti_consumer = self.lti_data.get_consumer()
         roles = {
             "Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "Faculty": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Faculty": (SystemRole.instructor, CourseRole.instructor),
+            "Staff": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Staff": (SystemRole.instructor, CourseRole.instructor),
             "Student": (SystemRole.student, CourseRole.student),
-            "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
+            "urn:lti:role:ims/lis/Student": (SystemRole.student, CourseRole.student),
+            "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant),
+            "urn:lti:role:ims/lis/TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
         }
 
         for lti_role, (system_role, course_role) in roles.items():
@@ -371,8 +378,15 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         lti_consumer = self.lti_data.get_consumer()
         roles = {
             "Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "Faculty": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Faculty": (SystemRole.instructor, CourseRole.instructor),
+            "Staff": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Staff": (SystemRole.instructor, CourseRole.instructor),
             "Student": (SystemRole.student, CourseRole.student),
-            "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
+            "urn:lti:role:ims/lis/Student": (SystemRole.student, CourseRole.student),
+            "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant),
+            "urn:lti:role:ims/lis/TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
         }
 
         for lti_role, (system_role, course_role) in roles.items():
@@ -2231,8 +2245,15 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         lti_consumer = self.lti_data.get_consumer()
         roles = {
             "Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "Faculty": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Faculty": (SystemRole.instructor, CourseRole.instructor),
+            "Staff": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Staff": (SystemRole.instructor, CourseRole.instructor),
             "Student": (SystemRole.student, CourseRole.student),
-            "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
+            "urn:lti:role:ims/lis/Student": (SystemRole.student, CourseRole.student),
+            "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant),
+            "urn:lti:role:ims/lis/TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
         }
 
         for lti_role, (system_role, course_role) in roles.items():

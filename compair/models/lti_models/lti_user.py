@@ -56,7 +56,12 @@ class LTIUser(DefaultTableMixin, WriteTrackingMixin):
                 lti_consumer_id=lti_consumer.id,
                 user_id=tool_provider.user_id,
                 system_role=SystemRole.instructor  \
-                    if tool_provider.is_instructor() \
+                    if tool_provider.roles and any(
+                        role.lower().find("instructor") >= 0 or
+                        role.lower().find("faculty") >= 0 or
+                        role.lower().find("staff") >= 0
+                        for role in tool_provider.roles
+                    ) \
                     else SystemRole.student
             )
             db.session.add(lti_user)
