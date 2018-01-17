@@ -120,8 +120,13 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 None
             )
             roles = member.get('roles')
-            has_instructor_role = next((role for role in roles if role.find("Instructor") >= 0), None)
-            has_ta_role = next((role for role in roles if role.find("TeachingAssistant") >= 0), None)
+            has_instructor_role = any(
+                role.lower().find("instructor") >= 0 or
+                role.lower().find("faculty") >= 0 or
+                role.lower().find("staff") >= 0
+                for role in roles
+            )
+            has_ta_role =  any(role.lower().find("teachingassistant") >= 0 for role in roles)
 
             # create lti user if doesn't exist
             if not lti_user:
