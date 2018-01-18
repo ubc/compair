@@ -1207,7 +1207,7 @@ module.controller("AssignmentViewController",
                 }
                 $scope.answerFilters.page = 1;
             }
-            if (oldValue.top != newValue.top) {
+            if (oldValue.top != newValue.top || oldValue.orderBy != newValue.orderBy) {
                 $scope.answerFilters.page = 1;
             }
 
