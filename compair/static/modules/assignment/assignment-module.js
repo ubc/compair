@@ -244,7 +244,7 @@ module.directive('assignmentActionButton', function() {
                             },
                             'viewResults' : {
                                 'label' : "See Results",
-                                'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/",
+                                'href'  : "#/course/" + courseId +"/assignment/" + assignmentId,
                                 'title' : "View Results",
                                 'show' : {
                                     'user' : permissions.canViewAnswers,

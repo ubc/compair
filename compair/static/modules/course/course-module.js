@@ -188,7 +188,7 @@ module.directive('courseActionButton', function() {
                         var allButtons = {
                             'viewCourse' : {
                                 'label' : "See Assignments",
-                                'href'  : "#/course/" + courseId + "/",
+                                'href'  : "#/course/" + courseId,
                                 'class' : 'btn-success',
                                 'title' : "See Assignments",
                                 'show' : {
