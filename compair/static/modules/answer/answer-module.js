@@ -98,11 +98,11 @@ module.controller(
     "AnswerWriteModalController",
     ["$scope", "$location", "AnswerResource", "ClassListResource", "$route", "TimerResource",
         "AssignmentResource", "Toaster", "$timeout", "UploadValidator", "CourseRole", "$uibModalInstance",
-        "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper", "$q", "Session",
+        "answerAttachService", "EditorOptions", "$timeout", "xAPI", "xAPIStatementHelper", "$q", "Session",
         "CourseResource", "GroupResource",
     function ($scope, $location, AnswerResource, ClassListResource, $route, TimerResource,
         AssignmentResource, Toaster, $timeout, UploadValidator, CourseRole, $uibModalInstance,
-        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, $q, Session,
+        answerAttachService, EditorOptions, $timeout, xAPI, xAPIStatementHelper, $q, Session,
         CourseResource, GroupResource)
     {
         if ($scope.answer.file) {
@@ -255,63 +255,76 @@ module.controller(
             $scope.answer.user_id = null;
         }
 
-        $scope.answerSubmit = function (saveDraft) {
+        $scope.answerSubmit = function (saveDraft, answerForm) {
             $scope.submitted = true;
             $scope.saveDraft = saveDraft;
-            var wasDraft = $scope.answer.draft;
 
-            $q.all(answerAttachService.reUploadPromises($scope.uploader)).then(function() {
-                var file = answerAttachService.getFile();
-                if (file) {
-                    $scope.answer.file = file;
-                    $scope.answer.file_id = file.id;
-                } else if ($scope.answer.file) {
-                    $scope.answer.file_id = $scope.answer.file.id;
-                } else {
-                    $scope.answer.file_id = null;
-                }
+            $timeout(function() {
+                if (answerForm.$valid) {
+                    var wasDraft = $scope.answer.draft;
 
-                // copy answer so we don't lose draft state on failed submit
-                var answer = angular.copy($scope.answer);
-                answer.draft = !!saveDraft;
-                answer.tracking = $scope.tracking.toParams();
-
-                AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, answer).$promise.then(
-                    function (ret) {
-                        $scope.answer = ret;
-                        $scope.preventExit = false; // user has saved answer, does not need warning when leaving page
-                        $scope.refreshOnExit = ret.draft; // if draft was saved, we need to refresh to show updated data when modal is closed
-
-                        if (ret.draft) {
-                            Toaster.success("Answer Draft Saved", "Remember to submit your answer before the deadline.");
+                    $q.all(answerAttachService.reUploadPromises($scope.uploader)).then(function() {
+                        var file = answerAttachService.getFile();
+                        if (file) {
+                            $scope.answer.file = file;
+                            $scope.answer.file_id = file.id;
+                        } else if ($scope.answer.file) {
+                            $scope.answer.file_id = $scope.answer.file.id;
                         } else {
-                            if (wasDraft) {
-                                Toaster.success("Answer Submitted");
-                            }
-                            else {
-                                Toaster.success("Answer Updated");
-                            }
-                            $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId);
-                            $route.reload();
-
-                            if (!$scope.canManageAssignment) {
-                                $location.search({'tab':'your_feedback', 'highlightAnswer':'1'});
-                            }
+                            $scope.answer.file_id = null;
                         }
+
+                        // copy answer so we don't lose draft state on failed submit
+                        var answer = angular.copy($scope.answer);
+                        answer.draft = !!saveDraft;
+                        answer.tracking = $scope.tracking.toParams();
+
+                        AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, answer).$promise.then(
+                            function (ret) {
+                                $scope.answer = ret;
+                                $scope.preventExit = false; // user has saved answer, does not need warning when leaving page
+                                $scope.refreshOnExit = ret.draft; // if draft was saved, we need to refresh to show updated data when modal is closed
+
+                                if (ret.draft) {
+                                    Toaster.success("Answer Draft Saved", "Remember to submit your answer before the deadline.");
+                                } else {
+                                    if (wasDraft) {
+                                        Toaster.success("Answer Submitted");
+                                    }
+                                    else {
+                                        Toaster.success("Answer Updated");
+                                    }
+                                    $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId);
+                                    $route.reload();
+
+                                    if (!$scope.canManageAssignment) {
+                                        $location.search({'tab':'your_feedback', 'highlightAnswer':'1'});
+                                    }
+                                }
+                            }
+                        );
+                    }).finally(function() {
+                        $scope.submitted = false;
+                    });
+                }
+                else {
+                    $scope.submitted = false;
+                    Toaster.warning("Answer Not Saved", "Please check the highlighted fields and try saving again.");
+                    var firstErrorField = jQuery('.form-group.has-error')[0];
+                    if (firstErrorField) {
+                        firstErrorField.scrollIntoView();
                     }
-                );
-            }).finally(function() {
-                $scope.submitted = false;
-            });
+                }
+            }, 500);
         };
     }
 ]);
 
 module.controller(
     "ComparisonExampleModalController",
-    ["$scope", "AnswerResource", "Toaster", "UploadValidator",
+    ["$scope", "AnswerResource", "Toaster", "UploadValidator", "$anchorScroll", "$timeout",
         "answerAttachService", "EditorOptions", "$uibModalInstance", "$q",
-    function ($scope, AnswerResource, Toaster, UploadValidator,
+    function ($scope, AnswerResource, Toaster, UploadValidator, $anchorScroll, $timeout,
         answerAttachService, EditorOptions, $uibModalInstance, $q)
     {
         //$scope.courseId
@@ -357,38 +370,49 @@ module.controller(
             $scope.answer.uploadedFile = false;
         };
 
-        $scope.answerSubmit = function (saveDraft) {
+        $scope.answerSubmit = function (saveDraft, answerForm) {
             $scope.saveDraft = saveDraft;
             $scope.submitted = true;
 
-            $q.all(answerAttachService.reUploadPromises($scope.uploader)).then(function() {
-
-                var file = answerAttachService.getFile();
-                if (file) {
-                    $scope.answer.file = file;
-                    $scope.answer.file_id = file.id
-                } else if ($scope.answer.file) {
-                    $scope.answer.file_id = $scope.answer.file.id;
-                } else {
-                    $scope.answer.file_id = null;
-                }
-
-                if ($scope.method == 'create') {
-                    // save the uploaded file info in case modal is reopened
-                    $uibModalInstance.close($scope.answer);
-                } else {
-                    // save the answer
-                    AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
-                        function (ret) {
-                            $scope.answer = ret;
-                            Toaster.success("Practice Answer Saved");
-                            $uibModalInstance.close($scope.answer);
+            $timeout(function() {
+                $q.all(answerAttachService.reUploadPromises($scope.uploader)).then(function() {
+                    if (answerForm.$valid) {
+                        var file = answerAttachService.getFile();
+                        if (file) {
+                            $scope.answer.file = file;
+                            $scope.answer.file_id = file.id
+                        } else if ($scope.answer.file) {
+                            $scope.answer.file_id = $scope.answer.file.id;
+                        } else {
+                            $scope.answer.file_id = null;
                         }
-                    );
-                }
-            }).finally(function() {
-                $scope.submitted = false;
-            });
+
+                        if ($scope.method == 'create') {
+                            // save the uploaded file info in case modal is reopened
+                            $uibModalInstance.close($scope.answer);
+                        } else {
+                            // save the answer
+                            AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
+                                function (ret) {
+                                    $scope.answer = ret;
+                                    Toaster.success("Practice Answer Saved");
+                                    $uibModalInstance.close($scope.answer);
+                                }
+                            );
+                        }
+                    }
+                    else {
+                        $scope.submitted = false;
+                        Toaster.warning("Answer Not Saved", "Please check the highlighted fields and try saving again.");
+                        var firstErrorField = jQuery('.has-error')[0];
+                        if (firstErrorField) {
+                            firstErrorField.scrollIntoView();
+                        }
+                    }
+                }).finally(function() {
+                    $scope.submitted = false;
+                });
+            }, 500);
         };
     }
 ]);

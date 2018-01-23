@@ -1,0 +1,24 @@
+<div>
+    <span ng-transclude></span>
+    <div class="{{ dateClass }} date-error-container" ng-class="{'has-error': datetimeRequired && !formControl.date}">
+        <span class="input-group">
+            <input type="text" class="form-control" uib-datepicker-popup="{{dateFormat}}" ng-model="formControl.date"
+                is-open="formControl.opened" ng-required="datetimeRequired" name="{{ inputName }}"
+                datepicker-options="datePickerOptions"
+                />
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, formControl)"><i class="glyphicon glyphicon-calendar"></i></button>
+            </span>
+        </span>
+        <div class="form-control-error" ng-if="datetimeRequired && (!formControl.date || !formControl.time)">
+            Please select a valid
+            <span ng-if="!formControl.date">date
+                <span ng-if="!formControl.time"> and </span>
+            </span>
+            <span ng-if="!formControl.time">time</span>
+        </div>
+    </div>
+    <div class="{{ dateClass }}" ng-class="{'has-error': datetimeRequired && !formControl.time}">
+        <div uib-timepicker ng-model="formControl.time" minute-step="1" mousewheel="false"></div>
+    </div>
+</div>

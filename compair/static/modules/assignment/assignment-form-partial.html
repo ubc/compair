@@ -5,7 +5,7 @@
 <br ng-if="method == 'copy'">
 <p class="intro-text" ng-if="method == 'copy'">Please update the schedule and any other fields requiring changes to duplicate your assignment. This process will <em>not</em> copy submitted answers or comparisons.</p>
 
-<form name="assignmentForm" class="form" ng-submit="assignmentSubmit()" novalidate>
+<form name="assignmentForm" class="form" ng-submit="assignmentSubmit(assignmentForm)" novalidate validate-compair-form keyword="Assignment">
 
     <fieldset>
         <legend>Assignment Details</legend>
@@ -24,7 +24,7 @@
             <label for="assignmentName" class="required-star">Short Name</label>
             <input class="form-control" id="assignmentName" type="text"
                 name="assignmentName" ng-model="assignment.name" placeholder="short question or title that will link to the assignment"
-                required ng-maxlength="255" auto-focus />
+                ng-required="assignmentForm.$submitted" ng-maxlength="255" auto-focus />
             <span ng-if="assignmentForm.assignmentName.$error.maxlength" class="help-block has-error">Maximum length is 255 characters</span>
         </compair-field-with-feedback>
 
@@ -116,38 +116,26 @@
 
         <div class="row">
             <div class="col-md-6 form-group">
-                <label class="required-star">Answering Begins</label><br />
-                <div class="assignment-date">
-                    <span class="input-group">
-                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.astart.date"
-                            is-open="date.astart.opened" required
-                            datepicker-options="{ minDate: datePickerMinDate(course.start_date), maxDate: datePickerMaxDate(date.aend.date, course.end_date) }"
-                            />
-                        <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.astart)"><i class="glyphicon glyphicon-calendar"></i></button>
-                        </span>
-                    </span>
-                </div>
-                <div class="assignment-date">
-                    <div uib-timepicker ng-model="date.astart.time" minute-step="1" mousewheel="false"></div>
-                </div>
+                <compair-datetime-with-feedback
+                    date-class="assignment-date"
+                    input-name="answer-start"
+                    form-control="date.astart"
+                    date-format="format"
+                    datetime-required="assignmentForm.$submitted"
+                    date-picker-options="{ minDate: datePickerMinDate(), maxDate: datePickerMaxDate(date.aend.date, course.end_date) }">
+                    <label class="required-star">Answering Begins</label><br />
+                </compair-datetime-with-feedback>
             </div>
             <div class="col-md-6 form-group">
-                <label class="required-star">Answering Ends</label><br />
-                <div class="assignment-date">
-                    <span class="input-group">
-                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.aend.date"
-                            is-open="date.aend.opened" required
-                            datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
-                            />
-                        <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.aend)"><i class="glyphicon glyphicon-calendar"></i></button>
-                        </span>
-                    </span>
-                </div>
-                <div class="assignment-date">
-                    <div uib-timepicker ng-model="date.aend.time" minute-step="1" mousewheel="false"></div>
-                </div>
+                <compair-datetime-with-feedback
+                    date-class="assignment-date"
+                    input-name="answer-end"
+                    form-control="date.aend"
+                    date-format="format"
+                    datetime-required="assignmentForm.$submitted"
+                    date-picker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }">
+                    <label class="required-star">Answering Ends</label><br />
+                </compair-datetime-with-feedback>
             </div>
         </div>
 
@@ -161,38 +149,26 @@
 
             <div class="row">
                 <div class="col-md-6 form-group">
-                    <label class="required-star">Comparing Begins</label><br />
-                    <div class="assignment-date">
-                        <span class="input-group">
-                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cstart.date"
-                                is-open="date.cstart.opened" ng-required="assignment.availableCheck"
-                                datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(date.cend.date, course.end_date) }"
-                                />
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.cstart)"><i class="glyphicon glyphicon-calendar"></i></button>
-                            </span>
-                        </span>
-                    </div>
-                    <div class="assignment-date">
-                        <div uib-timepicker ng-model="date.cstart.time" minute-step="1" mousewheel="false"></div>
-                    </div>
+                    <compair-datetime-with-feedback
+                        date-class="assignment-date"
+                        input-name="compare-start"
+                        form-control="date.cstart"
+                        date-format="format"
+                        datetime-required="assignmentForm.$submitted && assignment.availableCheck"
+                        date-picker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(date.cend.date, course.end_date) }">
+                        <label class="required-star">Comparing Begins</label><br />
+                    </compair-datetime-with-feedback>
                 </div>
                 <div class="col-md-6 form-group">
-                    <label class="required-star">Comparing Ends</label><br />
-                    <div class="assignment-date">
-                        <span class="input-group">
-                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cend.date"
-                                is-open="date.cend.opened" ng-required="assignment.availableCheck"
-                                datepicker-options="{ minDate: datePickerMinDate(date.cstart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
-                                />
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.cend)"><i class="glyphicon glyphicon-calendar"></i></button>
-                            </span>
-                        </span>
-                    </div>
-                    <div class="assignment-date">
-                        <div uib-timepicker ng-model="date.cend.time" minute-step="1" mousewheel="false"></div>
-                    </div>
+                    <compair-datetime-with-feedback
+                        date-class="assignment-date"
+                        input-name="compare-end"
+                        form-control="date.cend"
+                        date-format="format"
+                        datetime-required="assignmentForm.$submitted && assignment.availableCheck"
+                        date-picker-options="{ minDate: datePickerMinDate(date.cstart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }">
+                        <label class="required-star">Comparing Ends</label><br />
+                    </compair-datetime-with-feedback>
                 </div>
             </div>
         </div>
@@ -207,39 +183,27 @@
 
                 <div class="row">
                     <div class="col-md-6 form-group">
-                        <label class="required-star">Self-Evaluation Begins</label><br />
-                        <div class="assignment-date">
-                            <span class="input-group">
-                                <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.sestart.date"
-                                    is-open="date.sestart.opened" ng-required="assignment.selfEvalCheck"
-                                    datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(date.seend.date, course.end_date) }"
-                                    />
-                                <span class="input-group-btn">
-                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.sestart)"><i class="glyphicon glyphicon-calendar"></i></button>
-                                </span>
-                            </span>
-                        </div>
-                        <div class="assignment-date">
-                            <div uib-timepicker ng-model="date.sestart.time" minute-step="1" mousewheel="false"></div>
-                        </div>
+                        <compair-datetime-with-feedback
+                            date-class="assignment-date"
+                            input-name="selfeval-start"
+                            form-control="date.sestart"
+                            date-format="format"
+                            datetime-required="assignmentForm.$submitted && assignment.selfEvalCheck"
+                            date-picker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(date.seend.date, course.end_date) }">
+                            <label class="required-star">Self-Evaluation Begins</label><br />
+                        </compair-datetime-with-feedback>
                     </div>
                     <div class="col-md-6 form-group">
-                        <label>Self-Evaluation Ends</label><br />
-                        <div class="assignment-date">
-                            <span class="input-group">
-                                <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.seend.date"
-                                    is-open="date.seend.opened"
-                                    datepicker-options="{ minDate: datePickerMinDate(date.astart.date, date.sestart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
-                                    />
-                                <span class="input-group-btn">
-                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.seend)"><i class="glyphicon glyphicon-calendar"></i></button>
-                                </span>
-                            </span>
-                        </div>
-                        <div class="assignment-date">
-                            <div uib-timepicker ng-model="date.seend.time" minute-step="1" mousewheel="false"></div>
-                        </div>
-                    </div>
+                        <compair-datetime-with-feedback
+                            date-class="assignment-date"
+                            input-name="selfeval-end"
+                            form-control="date.seend"
+                            date-format="format"
+                            datetime-required="assignmentForm.$submitted && assignment.selfEvalCheck"
+                            date-picker-options="{ minDate: datePickerMinDate(date.astart.date, date.sestart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }">
+                            <label class="required-star">Self-Evaluation Ends</label><br />
+                        </compair-datetime-with-feedback>
+                    </div
                 </div>
             </div>
         </div>
@@ -353,7 +317,7 @@
         <div class="form-group">
             <compair-field-with-feedback form-control="assignmentForm.number_of_comparisons">
                 <label class="required-star">Comparisons Required from Each Student</label>
-                <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" required placeholder="number of comparisons required from each student">
+                <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" ng-required="assignmentForm.$submitted" placeholder="number of comparisons required from each student">
             </compair-field-with-feedback>
         </div>
 
@@ -436,26 +400,35 @@
         <div class="form-group">
             <label class="required-star">Grade Weights</label>
             <div class="row">
-                <div class="col-md-2">
+                <div class="col-md-2" ng-class="{'has-error': assignmentForm.$submitted && assignmentForm.answer_grade_weight.$invalid && assignmentForm.answer_grade_weight.$error.required}">
                     <span class="text-muted">Answer ({{getGradeWeightAsPercent(assignment.answer_grade_weight)|number:2}}%)</span>
-                    <input class="form-control" type="number" min="0" required
+                    <input class="form-control" type="number" min="0" ng-required="assignmentForm.$submitted"
                            id="answer_grade_weight" name="answer_grade_weight" ng-model="assignment.answer_grade_weight">
+                    <div class="form-control-error" ng-if="assignmentForm.$submitted && assignmentForm.answer_grade_weight.$invalid && assignmentForm.answer_grade_weight.$error.required">
+                        Please enter a weight
+                    </div>
                 </div>
                 <div class="col-md-1 text-center">
                     +
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-2" ng-class="{'has-error': assignmentForm.$submitted && assignmentForm.comparison_grade_weight.$invalid && assignmentForm.comparison_grade_weight.$error.required}">
                     <span class="text-muted">Comparisons ({{getGradeWeightAsPercent(assignment.comparison_grade_weight)|number:2}}%)</span>
-                    <input class="form-control" type="number" min="0" required
+                    <input class="form-control" type="number" min="0" ng-required="assignmentForm.$submitted"
                            id="comparison_grade_weight" name="comparison_grade_weight" ng-model="assignment.comparison_grade_weight">
+                    <div class="form-control-error" ng-if="assignmentForm.$submitted && assignmentForm.comparison_grade_weight.$invalid && assignmentForm.comparison_grade_weight.$error.required">
+                        Please enter a weight
+                    </div>
                 </div>
                 <div class="col-md-1 text-center" ng-show="assignment.enable_self_evaluation">
                     +
                 </div>
-                <div class="col-md-3" ng-show="assignment.enable_self_evaluation">
+                <div class="col-md-3" ng-show="assignment.enable_self_evaluation" ng-class="{'has-error': assignmentForm.$submitted && assignmentForm.self_evaluation_grade_weight.$invalid && assignmentForm.self_evaluation_grade_weight.$error.required}">
                     <span class="text-muted">Self-Evaluation ({{getGradeWeightAsPercent(assignment.self_evaluation_grade_weight)|number:2}}%)</span>
-                    <input class="form-control" type="number" min="0" required
+                    <input class="form-control" type="number" min="0" ng-required="assignmentForm.$submitted"
                            id="self_evaluation_grade_weight" name="self_evaluation_grade_weight" ng-model="assignment.self_evaluation_grade_weight">
+                    <div class="form-control-error" ng-if="assignmentForm.$submitted && assignmentForm.self_evaluation_grade_weight.$invalid && assignmentForm.self_evaluation_grade_weight.$error.required">
+                        Please enter a weight
+                    </div>
                 </div>
                 <div class="col-md-1 text-center">
                     =
@@ -468,8 +441,8 @@
     </fieldset>
 
     <input ng-if="method == 'copy'" type="submit" class="btn btn-success btn-lg center-block" value="Duplicate"
-        ng-disabled="assignmentForm.$invalid || assignment.criteria.length == 0 || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+        ng-disabled="(assignmentForm.$submitted && (assignment.criteria.length == 0 || submitted)) || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
     <input ng-if="method != 'copy'" type="submit" class="btn btn-success btn-lg center-block" value="Save"
-        ng-disabled="assignmentForm.$invalid || assignment.criteria.length == 0 || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+        ng-disabled="(assignmentForm.$submitted && (assignment.criteria.length == 0 || submitted)) || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
 
 </form>

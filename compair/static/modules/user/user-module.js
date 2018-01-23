@@ -86,10 +86,10 @@ module.constant('CourseRole', {
 module.controller("UserWriteController",
     ['$scope', '$route', '$routeParams', '$location', 'breadcrumbs', 'Session',
      'AuthTypesEnabled', 'UserResource', 'SystemRole', 'Toaster', 'resolvedData',
-     'UserSettings', 'EmailNotificationMethod', "$uibModal",
+     'UserSettings', 'EmailNotificationMethod', "$uibModal", "$anchorScroll", "$timeout",
     function($scope, $route, $routeParams, $location, breadcrumbs, Session,
              AuthTypesEnabled, UserResource, SystemRole, Toaster, resolvedData,
-             UserSettings, EmailNotificationMethod, $uibModal)
+             UserSettings, EmailNotificationMethod, $uibModal, $anchorScroll, $timeout)
     {
         $scope.userId = $routeParams.userId;
 
@@ -120,23 +120,36 @@ module.controller("UserWriteController",
             $scope.user.system_role = SystemRole.student;
         }
 
-        $scope.save = function() {
+        $scope.save = function(userForm) {
             $scope.submitted = true;
 
-            UserResource.save({'id': $scope.userId}, $scope.user, function(ret) {
-                if ($scope.method == 'edit') {
-                    Toaster.success('User Saved');
-                } else if ($scope.method == 'create') {
-                    Toaster.success('User Saved', 'This user now has access to ComPAIR.');
+            $timeout(function() {
+                if (userForm.$valid) {
+                    UserResource.save({'id': $scope.userId}, $scope.user, function(ret) {
+                        if ($scope.method == 'edit') {
+                            Toaster.success('User Saved');
+                        } else if ($scope.method == 'create') {
+                            Toaster.success('User Saved', 'This user now has access to ComPAIR.');
+                        }
+                        // refresh User's info on editing own profile and displayname changed
+                        if ($scope.ownProfile && $scope.user.displayname != $scope.loggedInUser.displayname) {
+                            Session.refresh();
+                        }
+                        $location.path('/user/' + ret.id);
+                    }).$promise.finally(function() {
+                        $scope.submitted = false;
+                    });
                 }
-                // refresh User's info on editing own profile and displayname changed
-                if ($scope.ownProfile && $scope.user.displayname != $scope.loggedInUser.displayname) {
-                    Session.refresh();
+                else {
+                    $scope.submitted = false;
+                    Toaster.warning("User Not Saved", "Please check the highlighted fields and try saving again.");
+                    var firstErrorField = jQuery('.form-group.has-error')[0];
+                    if (firstErrorField) {
+                        firstErrorField.scrollIntoView();
+                    }
                 }
-                $location.path('/user/' + ret.id);
-            }).$promise.finally(function() {
-                $scope.submitted = false;
-            });
+            }, 500);
+
         };
 
         $scope.showPasswordModal = function() {

@@ -19,6 +19,64 @@ module.directive('compairFieldWithFeedback', function() {
     };
 });
 
+module.directive('compairDatetimeWithFeedback', function() {
+    return {
+        restrict: 'E',
+        scope: {
+            dateClass: '@',
+            inputName: '@',
+            formControl: '=',
+            dateFormat: '=',
+            datetimeRequired: '=',
+            datePickerOptions: '='
+        },
+        controller: function($scope){
+
+            $scope.datePickerOpen = function($event, object) {
+                $event.preventDefault();
+                $event.stopPropagation();
+
+                object.opened = true;
+            };
+        },
+        transclude: true,
+        templateUrl: 'modules/common/form-datetime-with-feedback-template.html'
+    };
+});
+
+module.directive(
+    'validateCompairForm',
+    [ "Toaster",
+    function(Toaster) {
+        return {
+            restrict: 'A',
+            link: function(scope, elements, attributes) {
+                elements[0].onsubmit = function() {
+                    scope.$watch( attributes.name + '.$valid', function(){
+                        if (!scope[attributes.name].$valid) {
+                            var firstErrorField = null;
+                            angular.forEach(scope[attributes.name].$error, function(formError, formControlKey) {
+                                if ( Array.isArray(formError) ) {
+                                    angular.forEach(formError, function(formControl, formControlKey) {
+                                        if (!firstErrorField) {
+                                            Toaster.warning(attributes.keyword + " Not Saved", "Please check the highlighted fields and try saving again.");
+                                            firstErrorField = document.getElementsByName(formControl.$name)[0];
+                                            if (firstErrorField) {
+                                                firstErrorField.scrollIntoView();
+                                                window.scrollBy(0, -200);
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        };
+    }
+]);
+
 /* check for matching passwords; can be modified to be more general to check for the matching of any fields*/
 module.directive('pwMatch', function(){
     return {

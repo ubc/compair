@@ -41,14 +41,17 @@
                 <p>Allowed file types for attachments include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}, with a maximum file size of <strong>{{UploadValidator.getAttachmentUploadLimit() | filesize }}</strong>. Any files you upload will be attached when you <strong>save or submit this answer</strong> but not before.</p>
         </div>
 
-        <div class="form-group" ng-if="!assignment.enable_group_answers && canManageAssignment && answer.draft && comparison_example !== true">
+        <div class="form-group" ng-if="!assignment.enable_group_answers && canManageAssignment && answer.draft && comparison_example !== true" ng-class="{'has-error': answerForm.user_id.$invalid}">
             <label class="required-star" for="user_id">Submit As</label>
-            <select id="user_id" name="user_id" required
+            <select id="user_id" name="user_id" ng-required="answerForm.$submitted"
                     ng-model="answer.user_id" class="form-control" chosen width="'100%'"
                     ng-options="user.id as user.fullname_sortable for user in classlist"
                     ng-change="submitAsUserChanged(answer.user_id)">
                 <option value="">- Select a user -</option>
             </select>
+            <div class="form-control-error" ng-if="answerForm.$submitted && answerForm.user_id.$invalid && answerForm.user_id.$error.required">
+                Please select a user
+            </div>
         </div>
 
         <div class="form-group" ng-if="assignment.enable_group_answers && canManageAssignment && answer.draft && comparison_example !== true">
@@ -129,18 +132,18 @@
         </div>
         <div class="form-group">
             <textarea ng-model="answer.content" id="answerContent"
-                class="form-control" rows="8" ckeditor="editorOptions" ng-required="!(uploader.queue.length || uploadedFile || answer.file)">
+                class="form-control" rows="8" ckeditor="editorOptions" ng-required="answerForm.$submitted && !(uploader.queue.length || uploadedFile || answer.file)">
             </textarea>
         </div>
     </fieldset>
     <div class="text-center" ng-show="answer.draft && (!canManageAssignment || answer.user_id == loggedInUserId)">
         <input type="submit" class="btn btn-default btn-lg" value="Save Draft"
-            ng-click="answerSubmit(true)"
-            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+            ng-click="answerSubmit(true, answerForm)"
+            ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
         &nbsp; &nbsp;
         <input type="submit" class="btn btn-success btn-lg" value="Submit"
-            ng-click="answerSubmit()"
-            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+            ng-click="answerSubmit(false, answerForm)"
+            ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
         <p ng-if="submitted && !saveDraft && !isImpersonating">
                 <i class="fa fa-spin fa-spinner"></i>
                 &nbsp; Submitting answer...
@@ -152,8 +155,8 @@
     </div>
     <div ng-show="!answer.draft || (canManageAssignment && answer.user_id != loggedInUserId)" class="text-center">
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-            ng-click="answerSubmit()"
-            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+            ng-click="answerSubmit(false, answerForm)"
+            ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
         <p ng-if="submitted">
                 <i class="fa fa-spin fa-spinner"></i>
                 &nbsp; Saving answer...

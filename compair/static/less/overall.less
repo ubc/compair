@@ -36,6 +36,10 @@ pre {
     padding: 0px;
 }
 
+.toast-warning {
+  background-color: @warning-orange;
+}
+
 /* fieldsets for forms look like blue box */
 fieldset {
 
@@ -54,6 +58,67 @@ fieldset {
     color: #4AADC3;
     font-size: 1.1em;
     border: 2px dotted @green-blue;
+  }
+
+  .has-error{
+
+    .form-control,
+    .chosen-container .chosen-single {
+      border-bottom-right-radius: 0;
+      border-color: @warning-orange;
+    }
+
+    .uib-timepicker {
+
+      .form-control {
+        border-bottom-right-radius: 5px;
+      }
+      .am-pm > .btn-default {
+        border-color: @warning-orange;
+      }
+    }
+
+    .form-control:focus,
+    .chosen-container.chosen-container-active .chosen-single {
+      border-color: @warning-orange;
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px @warning-orange;
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075), 0 0 6px @warning-orange;
+    }
+
+    .form-control-feedback {
+      color: @warning-orange;
+    }
+  }
+
+  .form-control-error {
+    color: #FFF;
+    background-color: @warning-orange;
+    border: solid 1px @warning-orange;
+    -moz-box-shadow: 0 2px 3px #999;
+    -webkit-box-shadow: 0 2px 3px #999;
+    box-shadow: 0 2px 3px #999;
+    padding: 4px 7px 3px;
+    float: right;
+    border-radius: 5px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    margin-top: -1px;
+  }
+
+  .date-error-container {
+    vertical-align: top;
+    padding-top: 33px;
+
+    &.has-error .input-group-btn > .btn-default {
+      border-color: @warning-orange;
+      border-left: none;
+      border-bottom: none;
+      border-radius: 0;
+    }
+  }
+
+  .assignment-date .form-control-error {
+    margin-right: 3px !important;
   }
 
   hr {
@@ -103,6 +168,11 @@ input[type=checkbox] {
     margin: 0 1em;
   }
 
+}
+
+/* date and time */
+.uib-timepicker .am-pm button {
+  margin-left: 4px;
 }
 
 /* increase emphasis for certain buttons */
