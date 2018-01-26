@@ -63,7 +63,11 @@ myApp.factory('StandardErrorHandler',
             case 403:
                 message = message || "Sorry, you don't have permission for this action.";
                 $log.error(error.status, title, message);
-                Toaster.error(title, message);
+                if (error.data.disabled_by_impersonation) {
+                    Toaster.warning(title, message);
+                } else {
+                    Toaster.error(title, message);
+                }
                 break;
             case 404:
                 message = message || "Resource not found.";

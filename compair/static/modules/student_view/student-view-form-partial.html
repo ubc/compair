@@ -1,0 +1,42 @@
+<div class="evaluate-screen">
+
+    <h1>Student View</h1>
+
+    <p class="intro-text">
+        With student view, you can see what your students see in ComPAIR.
+        Please note <strong>you won't be able to save any changes</strong> when you are in student view,
+        as only the actual student can make actual updates. (To submit an answer on behalf of a student,
+        use the "Answer" button when viewing ComPAIR normally.)
+    </p>
+
+    <form name="studentViewForm" ng-submit="studentViewSubmit()" novalidate form-type="compare">
+        <fieldset>
+            <legend>View Details</legend>
+
+            <div class="form-group">
+                <label for="studentViewCourseId" class="required-star">Course</label>
+                <select class="form-control" ng-model="studentView.courseId" name="studentViewCourseId" ng-change="getClassList()"
+                        ng-options="c.id as c.name for c in courses | orderBy:'name'" required>
+                    <option value="">- Select course -</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="studentViewClasslist" class="required-star">View As This Student</label>
+                <select class="form-control" ng-model="studentView.userId" name="studentViewClasslist" ng-enable="classlist.length > 0"
+                        ng-options="s.id as (s.lastname + ', ' + s.firstname + ' (' + s.student_number + ')') for s in classlist | filter:{course_role:'Student'} | orderBy:['lastname', 'firstname', 'student_number']" required>
+                    <option value="">- Select student -</option>
+                </select>
+            </div>
+
+            <div class="form-group sub-step text-center">
+                <input ng-disabled="studentViewForm.$invalid || submitted" type="submit"
+                     value="Submit" class="btn btn-success btn-lg" />
+            </div>
+            <p ng-if="submitted">
+                <i class="fa fa-spin fa-spinner"></i>&nbsp; Loading...
+            </p>
+        </fieldset>
+    </form>
+
+</div>
+

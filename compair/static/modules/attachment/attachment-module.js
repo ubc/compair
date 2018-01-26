@@ -238,7 +238,11 @@ module.service('attachService',
                 var limit_size = upload_limit / 1048576; // convert to MB
                 Toaster.error("File Not Uploaded", "The file is larger than the "+limit_size.toFixed(0)+"MB maximum. Please upload a smaller file instead.");
             } else if (response.title && response.message) {
-                Toaster.error(response.title, response.message);
+                if (response.disabled_by_impersonation) {
+                    Toaster.warning(response.title, response.message);
+                } else {
+                    Toaster.error(response.title, response.message);
+                }
             } else {
                 // e.g. network disconnected
                 Toaster.error("File Not Uploaded", "Please try again.");
@@ -341,7 +345,11 @@ module.service('answerAttachService',
                 var limit_size = upload_limit / 1048576; // convert to MB
                 Toaster.error("File Not Uploaded", "The file is larger than the "+limit_size.toFixed(0)+"MB maximum. Please upload a smaller file instead.");
             } else if (response.title && response.message) {
-                Toast.error(response.title, response.message);
+                if (response.disabled_by_impersonation) {
+                    Toaster.warning(response.title, response.message);
+                } else {
+                    Toaster.error(response.title, response.message);
+                }
             } else {
                 // e.g. network disconnected
                 Toaster.error("File Not Uploaded", "Please try again.");

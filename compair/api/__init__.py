@@ -111,6 +111,9 @@ def register_api_blueprints(app):
     from .healthz import healthz_api
     app.register_blueprint(healthz_api)
 
+    from .impersonation import impersonation_api, IMPERSONATION_API_BASE_URL
+    app.register_blueprint(impersonation_api, url_prefix=IMPERSONATION_API_BASE_URL)
+
     @app.route('/app/')
     def route_app():
         if app.debug or app.config.get('TESTING', False):
@@ -135,6 +138,7 @@ def register_api_blueprints(app):
                 xapi_enabled=app.config['XAPI_ENABLED'],
                 xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
                 demo=app.config.get('DEMO_INSTALLATION'),
+                impersonation_enabled=app.config['IMPERSONATION_ENABLED'],
             )
 
         # running in prod mode, figure out asset location
@@ -166,6 +170,7 @@ def register_api_blueprints(app):
             xapi_enabled=app.config['XAPI_ENABLED'],
             xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
             demo=app.config.get('DEMO_INSTALLATION'),
+            impersonation_enabled=app.config['IMPERSONATION_ENABLED'],
         )
 
     @app.route('/')
@@ -382,6 +387,10 @@ def log_events(log):
     # misc
     on_get_file.connect(log)
 
+    # impersonation
+    from .impersonation import on_impersonation_started, on_impersonation_stopped
+    on_impersonation_started.connect(log)
+    on_impersonation_stopped.connect(log)
 
 def log_demo_events(log):
     # demo events

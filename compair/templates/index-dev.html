@@ -139,6 +139,7 @@
         <script src="{{ url_for('static', filename='modules/group/group-module.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/report/report-module.js') }}"></script>
         <script src="{{ url_for('static', filename='modules/oauth/oauth-module.js') }}"></script>
+        <script src="{{ url_for('static', filename='modules/student_view/student-view-module.js') }}"></script>
         <!-- endbuild -->
 
         <script type="text/javascript">
@@ -175,6 +176,10 @@
                     UserSettings.allow_student_change_display_name = {{ 'true' if allow_student_change_display_name else 'false' }};
                     UserSettings.allow_student_change_student_number = {{ 'true' if allow_student_change_student_number else 'false' }};
                     UserSettings.allow_student_change_email = {{ 'true' if allow_student_change_email else 'false' }};
+                }]);
+                angular.module('ubc.ctlt.compair.session')
+                .run(['ImpersonationSettings', function(ImpersonationSettings) {
+                    ImpersonationSettings.enabled = {{ 'true' if impersonation_enabled else 'false' }};
                 }]);
             })();
         </script>

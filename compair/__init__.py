@@ -2,22 +2,25 @@ import json
 import os
 import ssl
 import requests
+import re
 
-from flask import Flask, redirect, session as sess, jsonify, url_for
+from flask import Flask, redirect, session as sess, jsonify, url_for, make_response
+from flask_bouncer import ensure
 from jinja2 import Markup
 from flask_login import current_user
 from sqlalchemy.orm import joinedload
 from werkzeug.routing import BaseConverter
+from werkzeug.exceptions import Unauthorized
 from lxml.html.clean import clean_html
 
 from .authorization import define_authorization
-from .core import login_manager, bouncer, db, celery, abort, mail
+from .core import login_manager, bouncer, db, celery, abort, mail, impersonation
 from .configuration import config
 from .models import User, File
 from .activity import log
 from .api import register_api_blueprints, log_events, \
     register_demo_api_blueprints, log_demo_events, \
-    register_statement_api_blueprints
+    register_statement_api_blueprints, impersonation as impersonation_api
 from compair.xapi import capture_xapi_events
 from compair.notifications import capture_notification_events
 
@@ -26,6 +29,7 @@ class RegexConverter(BaseConverter):
         super(RegexConverter, self).__init__(url_map)
         self.regex = items[0]
 
+_impersonation_url_whitelist = {}
 
 def get_asset_names(app):
     manifest_path = app.static_folder + '/build/rev-manifest.json'
@@ -70,6 +74,25 @@ def create_persistent_dirs(conf, logger):
         elif not os.path.isdir(directory):
             logger.warning('{} is not a directory.'.format(directory))
 
+def _populate_impersonation_url_whitelist():
+    _impersonation_url_whitelist['GET'] = [
+        re.compile('.*'),   # allow GET to any URL
+    ]
+    _impersonation_url_whitelist['DELETE'] = [
+        re.compile('^' + re.escape(impersonation_api.IMPERSONATION_API_BASE_URL)),  # allow ending impersonation
+    ]
+    _impersonation_url_whitelist['POST'] = [
+        re.compile('^' + re.escape('/api/statements')),   # allow XAPI
+    ]
+
+def is_allowed_during_impersonation(request):
+    # TODO if there is a performance issue, could hard-code and allow all GET requests to pass without using regex,
+    # assuming most requests will be GET
+    allowed = _impersonation_url_whitelist.get(request.method, [])
+    for url in allowed:
+        if url.match(request.full_path):
+            return True
+    return False
 
 def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_assets=False):
     """Return a :class:`Flask` application instance
@@ -158,7 +181,10 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         # Assigns permissions to the current logged in user
         @bouncer.authorization_method
         def bouncer_define_authorization(user, they):
-            define_authorization(user, they)
+            original_user = None
+            if impersonation.is_impersonating():
+                original_user = User.query.get(impersonation.get_impersonation_original_user_id())
+            define_authorization(user, they, original_user)
 
         # Loads the current logged in user. Note that although Flask-Bouncer advertises
         # compatibility with Flask-Login, it looks like it's compatible with an older
@@ -166,6 +192,50 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         @bouncer.user_loader
         def bouncer_user_loader():
             return current_user
+
+        # setup impersonation
+        if app.config.get('IMPERSONATION_ENABLED', False):
+            impersonation.init_app(app)
+
+            @impersonation.user_loader
+            def load_user(user_id):
+                return User.query.get(int(user_id))
+
+            @impersonation.authorize
+            def authorize(act_as_user_id):
+                try:
+                    ensure(impersonation.IMPERSONATE, load_user(act_as_user_id))
+                    return True
+                except Unauthorized as e:
+                    abort(403, title="Impersonation Failed", message="Sorry, your role in the system does not allow you see a student's view.")
+
+                return False    # normally won't reach here
+
+            @impersonation.process_request
+            def process_request(request):
+                """
+                Callback invoked during impersonation to check incoming requests
+                """
+                if current_user and current_user.is_authenticated and not current_user.is_anonymous:
+                    if not is_allowed_during_impersonation(request):
+                        # abort(403, title="Action Temporarily Disabled", \
+                        #     message="Sorry, you can't perform that action in the student view. Only the real student can do this.", \
+                        #     disabled_by_impersonation=True)
+
+                        # TODO aborting a DELETE request seems to generate response in html instead of json.
+                        # The following code can get around it. Need to check why though
+                        if (request.method in ['DELETE']):
+                            # use make_response and jsonify here to make sure the reply is in JSON
+                            abort(make_response(jsonify(title="Action Temporarily Disabled", \
+                                message="Sorry, you can't perform that action in the student view. Only the real student can do this.", \
+                                disabled_by_impersonation=True), 403))
+                        else:
+                            abort(403, title="Action Temporarily Disabled", \
+                                message="Sorry, you can't perform that action in the student view. Only the real student can do this.", \
+                                disabled_by_impersonation=True)
+
+                # proceed with the request
+                return None
 
         # register regex route converter
         app.url_map.converters['regex'] = RegexConverter
@@ -186,3 +256,4 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
     return app
 
 log_events(log)
+_populate_impersonation_url_whitelist()

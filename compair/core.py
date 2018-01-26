@@ -13,6 +13,7 @@ from flask_login import LoginManager, user_logged_in
 from flask_sqlalchemy import SQLAlchemy
 
 from .configuration import config
+from .impersonation import Impersonation
 
 # initialize database
 db = SQLAlchemy(session_options={
@@ -24,6 +25,9 @@ bouncer = Bouncer()
 
 # initialize Flask-Login
 login_manager = LoginManager()
+
+# initialize impersonation
+impersonation = Impersonation()
 
 # initialize celery
 celery = Celery(
