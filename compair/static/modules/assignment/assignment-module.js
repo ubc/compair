@@ -1262,7 +1262,7 @@ module.controller("AssignmentWriteController",
         $scope.editorOptions = EditorOptions.basic;
         $scope.PairingAlgorithm = PairingAlgorithm;
         $scope.uploader = attachService.getUploader();
-        $scope.resetFileUploader = attachService.reset();
+        $scope.resetFileUploader = attachService.reset;
         $scope.recommended_comparisons = Math.floor(required_rounds / 2);
 
         $scope.rankLimitOptions = [
