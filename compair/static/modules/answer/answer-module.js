@@ -257,8 +257,13 @@ module.controller(
 
                     if (ret.draft) {
                         Toaster.success("Answer Draft Saved", "Remember to submit your answer before the deadline.");
-                        $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/answer/' + $scope.answer.id + '/edit');
-                        $location.replace();
+                        var newPath = '/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/answer/' + $scope.answer.id + '/edit';
+                        if ($location.path() == newPath) {
+                            $route.reload();
+                        } else {
+                            $location.path(newPath);
+                            $location.replace();
+                        }
                     } else {
                         Toaster.success("Answer Submitted");
                         $location.path('/course/' + $scope.courseId + '/assignment/' +$scope.assignmentId);
