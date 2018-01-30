@@ -19,6 +19,7 @@
   "dependencies": {
     "bootstrap": "3.3.7",
     "angular": "1.5.11",
+    "angular-aria": "1.5.11",
     "angular-animate": "1.5.11",
     "angular-resource": "1.5.11",
     "angular-route": "1.5.11",
@@ -30,7 +31,7 @@
     "angular-loading-bar": "~0.8.0",
     "AngularJS-Toaster": "~2.1.0",
     "angular-chosen-localytics": "~1.8.0",
-    "chosen-bootstrap-theme":  "~1.0.4",
+    "chosen-bootstrap-theme": "~1.0.4",
     "angular-moment": "~0.10.3",
     "angular-file-upload": "~2.5.0",
     "angular-mocks": "1.5.11",
@@ -44,7 +45,9 @@
     "angular-local-storage": "~0.5.2",
     "angular-promise-extras": "~0.1.8",
     "ng-kaltura-player": "~1.2.1",
-    "pdf.js-viewer": "~1.6.211"
+    "pdf.js-viewer": "~1.6.211",
+    "angular-messages": "1.5.11",
+    "angular-material": "1.1.6"
   },
   "resolutions": {
     "angular": "1.5.11"

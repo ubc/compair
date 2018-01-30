@@ -28,6 +28,7 @@ var gulp = require('gulp'),
         './bower_components/AngularJS-Toaster/toaster.css',
         './bower_components/chosen/chosen.css',
         './bower_components/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css',
+        './bower_components/angular-material/angular-material.css',
         './compair/static/build/compair.css'
     ],
     targetCssFilename = 'compair.css',
