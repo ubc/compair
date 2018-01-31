@@ -1,6 +1,7 @@
 # sqlalchemy
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_enum34 import EnumType
 
 from . import *
@@ -29,6 +30,10 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_user", lazy="dynamic")
 
     # hyprid and other functions
+    lti_consumer_uuid = association_proxy('lti_consumer', 'uuid')
+    oauth_consumer_key = association_proxy('lti_consumer', 'oauth_consumer_key')
+    compair_user_uuid = association_proxy('compair_user', 'uuid')
+
     def is_linked_to_user(self):
         return self.compair_user_id != None
 
@@ -74,6 +79,14 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         db.session.commit()
 
         return lti_user
+
+    @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "LTI User Unavailable"
+        if not message:
+            message = "Sorry, this LTI user was deleted or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     def upgrade_system_role(self):
         # upgrade system role is needed

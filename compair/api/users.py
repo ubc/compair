@@ -11,8 +11,8 @@ from . import dataformat
 from compair.authorization import is_user_access_restricted, require, allow
 from compair.core import db, event, abort
 from .util import new_restful_api, get_model_changes, pagination_parser
-from compair.models import User, SystemRole, Course, UserCourse, CourseRole, \
-    Assignment, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
+from compair.models import User, SystemRole, Course, UserCourse, CourseRole, Assignment, \
+    LTIConsumer, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
     Answer, Comparison, AnswerComment, AnswerCommentType, EmailNotificationMethod
 from compair.api.login import authenticate
 from distutils.util import strtobool
@@ -90,6 +90,10 @@ on_teaching_course_get = event.signal('USER_TEACHING_COURSE_GET')
 on_user_edit_button_get = event.signal('USER_EDIT_BUTTON_GET')
 on_user_notifications_update = event.signal('USER_NOTIFICATIONS_UPDATE')
 on_user_password_update = event.signal('USER_PASSWORD_UPDATE')
+on_user_lti_users_get = event.signal('USER_LTI_USERS_GET')
+on_user_lti_user_unlink = event.signal('USER_LTI_USER_UNLINK')
+on_user_third_party_users_get = event.signal('USER_THIRD_PARTY_USERS_GET')
+on_user_third_party_user_delete = event.signal('USER_THIRD_PARTY_USER_DELETE')
 
 def check_valid_system_role(system_role):
     system_roles = [
@@ -597,6 +601,109 @@ class UserCourseStatusListAPI(Resource):
 
         return {"statuses": statuses}
 
+# /id/lti/users
+class UserLTIListAPI(Resource):
+    @login_required
+    def get(self, user_uuid):
+
+        user = User.get_by_uuid_or_404(user_uuid)
+
+        require(MANAGE, User,
+            title="User's LTI Account Links Unavailable",
+            message="Sorry, your system role does not allow you to view LTI account links for this user.")
+
+        lti_users = user.lti_user_links \
+                        .order_by(
+                            LTIUser.lti_consumer_id,
+                            LTIUser.user_id
+                            ) \
+                        .all()
+
+        on_user_lti_users_get.send(
+            self,
+            event_name=on_user_lti_users_get.name,
+            user=current_user,
+            data={'user_id': user.id})
+
+        return {"objects": marshal(lti_users, dataformat.get_lti_user())}
+
+# /id/lti/users/uuid
+class UserLTIAPI(Resource):
+    @login_required
+    def delete(self, user_uuid, lti_user_uuid):
+        """
+        unlink lti user from compair user
+        """
+
+        user = User.get_by_uuid_or_404(user_uuid)
+        lti_user = LTIUser.get_by_uuid_or_404(lti_user_uuid)
+
+        require(MANAGE, User,
+            title="User's LTI Account Links Unavailable",
+            message="Sorry, your system role does not allow you to remove LTI account links for this user.")
+
+        lti_user.compair_user_id = None
+        db.session.commit()
+
+        on_user_lti_user_unlink.send(
+            self,
+            event_name=on_user_lti_user_unlink.name,
+            user=current_user,
+            data={'user_id': user.id, 'lti_user_id': lti_user.id})
+
+        return { 'success': True }
+
+# /id/third_party/users
+class UserThirdPartyUserListAPI(Resource):
+    @login_required
+    def get(self, user_uuid):
+
+        user = User.get_by_uuid_or_404(user_uuid)
+
+        require(MANAGE, User,
+            title="User's Third Party Logins Unavailable",
+            message="Sorry, your system role does not allow you to view third party logins for this user.")
+
+        third_party_users = ThirdPartyUser.query \
+                                .filter(ThirdPartyUser.user_id == user.id) \
+                                .order_by(
+                                    ThirdPartyUser.third_party_type,
+                                    ThirdPartyUser.unique_identifier
+                                    ) \
+                                .all()
+
+        on_user_third_party_users_get.send(
+            self,
+            event_name=on_user_third_party_users_get.name,
+            user=current_user,
+            data={'user_id': user.id})
+
+        return {"objects": marshal(third_party_users, dataformat.get_third_party_user())}
+
+#/id/third_party/users/uuid
+class UserThirdPartyUserAPI(Resource):
+    @login_required
+    def delete(self, user_uuid, third_party_user_uuid):
+
+        user = User.get_by_uuid_or_404(user_uuid)
+        third_party_user = ThirdPartyUser.get_by_uuid_or_404(third_party_user_uuid)
+
+        require(MANAGE, User,
+            title="User's Third Party Logins Unavailable",
+            message="Sorry, your system role does not allow you to delete third party connections for this user.")
+
+        on_user_third_party_user_delete.send(
+            self,
+            event_name=on_user_third_party_user_delete.name,
+            user=current_user,
+            data={'user_id': user.id, 'third_party_type': third_party_user.third_party_type, 'unique_identifier': third_party_user.unique_identifier})
+
+        # TODO: consider adding soft delete to thrid_party_user in the future
+        ThirdPartyUser.query.filter(ThirdPartyUser.uuid == third_party_user_uuid).delete()
+        db.session.commit()
+
+        return { 'success': True }
+
 # courses/teaching
 class TeachingUserCourseListAPI(Resource):
     @login_required
@@ -697,6 +804,10 @@ api = new_restful_api(user_api)
 api.add_resource(UserAPI, '/<user_uuid>')
 api.add_resource(UserListAPI, '')
 api.add_resource(UserCourseListAPI, '/<user_uuid>/courses')
+api.add_resource(UserThirdPartyUserAPI, '/<user_uuid>/third_party/users/<third_party_user_uuid>')
+api.add_resource(UserThirdPartyUserListAPI, '/<user_uuid>/third_party/users')
+api.add_resource(UserLTIAPI, '/<user_uuid>/lti/users/<lti_user_uuid>')
+api.add_resource(UserLTIListAPI, '/<user_uuid>/lti/users')
 api.add_resource(CurrentUserCourseListAPI, '/courses')
 api.add_resource(UserCourseStatusListAPI, '/courses/status')
 api.add_resource(TeachingUserCourseListAPI, '/courses/teaching')

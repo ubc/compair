@@ -9,6 +9,7 @@ import time
 from sqlalchemy.orm import synonym
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_enum34 import EnumType
 
 from . import *
@@ -28,6 +29,7 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     # relationships
     # user via User Model
+    compair_user_uuid = association_proxy('user', 'uuid')
 
     # hyprid and other functions
 
@@ -48,3 +50,11 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         db.UniqueConstraint('third_party_type', 'unique_identifier', name='_unique_third_party_type_and_unique_identifier'),
         DefaultTableMixin.default_table_args
     )
+
+    @classmethod
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+        if not title:
+            title = "Third Party User Unavailable"
+        if not message:
+            message = "Sorry, this third party user was deleted or is no longer accessible."
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
