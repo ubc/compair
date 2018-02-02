@@ -271,9 +271,7 @@ module.service('attachService',
     };
 
     var reset = function() {
-        return function() {
-            file = null;
-        }
+        file = null;
     };
 
     var getFile = function() {
@@ -389,9 +387,7 @@ module.service('answerAttachService',
     var uploadedCallback = function(fileItem) {};
 
     var reset = function() {
-        return function() {
-            file = null;
-        };
+        file = null;
     };
 
     var getFile = function() {
