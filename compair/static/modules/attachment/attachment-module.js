@@ -214,14 +214,19 @@ module.service('attachService',
             }
         };
 
-        uploader.onErrorItem = function(fileItem, response, status) {
+        uploader.onErrorItem = function(fileItem, response, status, headers) {
             fileItem.cancel();
             fileItem.remove();
             reset();
-            if (response == '413') {
+            if (status == 413) {
                 var upload_limit = UploadValidator.getAttachmentUploadLimit();
                 var limit_size = upload_limit / 1048576; // convert to MB
                 Toaster.error("File Not Uploaded", "The file is larger than the "+limit_size.toFixed(0)+"MB maximum. Please upload a smaller file instead.");
+            } else if (response.title && response.message) {
+                Toast.error(response.title, response.message);
+            } else {
+                // e.g. network disconnected
+                Toaster.error("File Not Uploaded", "Please try again.");
             }
         };
 
@@ -302,18 +307,21 @@ module.service('answerAttachService',
 
         file = null;
 
-        uploader.onErrorItem = function() {
-            return function(fileItem, response, status) {
-                fileItem.cancel();
-                fileItem.remove();
-                reset();
-                if (response == '413') {
-                    var upload_limit = UploadValidator.getAttachmentUploadLimit();
-                    var limit_size = upload_limit / 1048576; // convert to MB
-                    Toaster.error("File Not Uploaded", "The file is larger than the "+limit_size.toFixed(0)+"MB maximum. Please upload a smaller file instead.");
-                }
-            };
-        }
+        uploader.onErrorItem = function(fileItem, response, status, headers) {
+            fileItem.cancel();
+            fileItem.remove();
+            reset();
+            if (status == 413) {
+                var upload_limit = UploadValidator.getAttachmentUploadLimit();
+                var limit_size = upload_limit / 1048576; // convert to MB
+                Toaster.error("File Not Uploaded", "The file is larger than the "+limit_size.toFixed(0)+"MB maximum. Please upload a smaller file instead.");
+            } else if (response.title && response.message) {
+                Toast.error(response.title, response.message);
+            } else {
+                // e.g. network disconnected
+                Toaster.error("File Not Uploaded", "Please try again.");
+            }
+        };
 
         uploader.onSuccessItem = function(fileItem, response) {
             var extension = fileItem.file.name.slice(fileItem.file.name.lastIndexOf('.') + 1).toLowerCase();
