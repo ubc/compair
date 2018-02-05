@@ -4,7 +4,7 @@
 </div>
 <div ng-show="!example">
     <h1 ng-if="method == 'create'">Answer</h1>
-    <h1 ng-if="method == 'edit'">Edit Answer</h1>
+    <h1 ng-if="method == 'edit'">Edit Answer {{ answer.draft ? 'Draft' : '' }}</h1>
 </div>
 
 <div ng-hide="comparison_example">
@@ -24,7 +24,7 @@
 
 </div>
 
-<form class="form" name="answerForm" ng-submit="answerSubmit()" novalidate confirm-form-exit form-type="answer">
+<form class="form" name="answerForm" novalidate confirm-form-exit form-type="answer">
     <fieldset>
         <legend>Answer Details</legend>
         <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown && comparison_example !== true">
@@ -100,20 +100,24 @@
     </fieldset>
     <div class="text-center" ng-show="answer.draft && (!canManageAssignment || answer.user_id == loggedInUserId)">
         <input type="submit" class="btn btn-default btn-lg" value="Save Draft"
-            ng-click="saveDraft = true"
+            ng-click="answerSubmit(true)"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
         &nbsp; &nbsp;
         <input type="submit" class="btn btn-success btn-lg" value="Submit"
-            ng-click="saveDraft = false"
+            ng-click="answerSubmit()"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
-        <p ng-if="submitted">
+        <p ng-if="submitted && !saveDraft">
                 <i class="fa fa-spin fa-spinner"></i>
                 &nbsp; Submitting answer...
+        </p>
+        <p ng-if="submitted && saveDraft">
+                <i class="fa fa-spin fa-spinner"></i>
+                &nbsp; Saving draft...
         </p>
     </div>
     <div ng-show="!answer.draft || (canManageAssignment && answer.user_id != loggedInUserId)" class="text-center">
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-            ng-click="saveDraft = false"
+            ng-click="answerSubmit()"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
         <p ng-if="submitted">
                 <i class="fa fa-spin fa-spinner"></i>

@@ -340,6 +340,19 @@ dt {
     color: inherit;
 }
 
+/* for highlighting items for a few seconds */
+.highlight-momentarily {
+  background: #fff3cd !important;
+  -webkit-transition-property: background; /* Safari */
+  -webkit-transition-duration: 4s; /* Safari */
+  transition-property: background;
+  transition-duration: 4s;
+
+  &.highlight-off {
+    background: #f9f9f9 !important;
+  }
+}
+
 /* for ie9 */
 .ie9 .search-courses:before {
   content: 'Filter courses by keyword:';

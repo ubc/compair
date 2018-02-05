@@ -490,45 +490,6 @@ myApp.config(
                     }
                 }
             })
-        .when ('/course/:courseId/assignment/:assignmentId/answer/create',
-            {
-                title: "Answer",
-                templateUrl: 'modules/answer/answer-form-partial.html',
-                label: "Answer",
-                controller: 'AnswerWriteController',
-                resolve: {
-                    resolvedData: function() {
-                        return ResolveDeferredRouteData({
-                            course: RouteResolves.course(),
-                            assignment: RouteResolves.assignment(),
-                            answerUnsaved: RouteResolves.answerUnsaved(),
-                            loggedInUser: RouteResolves.loggedInUser(),
-                            timer: RouteResolves.timer(),
-                            canManageAssignment: RouteResolves.canManageAssignment(),
-                        }, ['course', 'assignment', 'answerUnsaved']);
-                    }
-                }
-
-            })
-        .when ('/course/:courseId/assignment/:assignmentId/answer/:answerId/edit',
-            {
-                title: "Edit Answer",
-                templateUrl: 'modules/answer/answer-form-partial.html',
-                label: "Edit Answer",
-                controller: 'AnswerWriteController',
-                resolve: {
-                    resolvedData: function() {
-                        return ResolveDeferredRouteData({
-                            course: RouteResolves.course(),
-                            assignment: RouteResolves.assignment(),
-                            answer: RouteResolves.answer(),
-                            loggedInUser: RouteResolves.loggedInUser(),
-                            timer: RouteResolves.timer(),
-                            canManageAssignment: RouteResolves.canManageAssignment(),
-                        }, ['course', 'assignment', 'answer']);
-                    }
-                }
-            })
         .when ('/course/:courseId/assignment/:assignmentId/compare',
             {
                 title: "Compare Answer Pairs",

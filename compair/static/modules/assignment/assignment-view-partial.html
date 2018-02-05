@@ -137,7 +137,7 @@
                 <!-- Students should see before answering during the answer period -->
                 <p class="intro-text"
                    ng-if="!canManageAssignment && !assignment.status.answers.answered && assignment.answer_period">
-                    <span ng-show="!assignment.status.answers.has_draft"><a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/create" title="Answer the assignment">Answer</a></span><span ng-show="assignment.status.answers.has_draft"><a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" title="Finish answering the assignment">Finish answering</a></span> and compare answer pairs for the assignment first, then read all answers written by your classmates and instructors here.
+                    <span ng-show="!assignment.status.answers.has_draft"><a ng-click="openAnswerModal({'assignment':assignment})" href="" title="Answer the assignment">Answer</a></span><span ng-show="assignment.status.answers.has_draft"><a ng-click="openAnswerModal({'assignment':assignment, 'answerId':assignment.status.answers.draft_ids[0]})" href="" title="Finish answering the assignment">Finish answering</a></span> and compare answer pairs for the assignment first, then read all answers written by your classmates and instructors here.
                 </p>
 
                 <!-- Students should see before evaluating before the comparison period -->
@@ -364,11 +364,11 @@
             </div>
 
             <div class="each-evaluation" ng-if="user_answers.objects.length == 0">
-                <p>(You have not submitted an answer.<span ng-if="assignment.answer_period"> Would you like to <span ng-show="!assignment.status.answers.has_draft"><a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/create" title="Answer the assignment">answer</a></span><span ng-show="assignment.status.answers.has_draft"><a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/answer/{{assignment.status.answers.draft_ids[0]}}/edit" title="Finish answering the assignment">finish answering</a></span> this assignment?</span>)</p>
+                <p>(You have not submitted an answer.<span ng-if="assignment.answer_period"> Would you like to <span ng-show="!assignment.status.answers.has_draft"><a ng-click="openAnswerModal({'assignment':assignment})" href="" title="Answer the assignment">answer</a></span><span ng-show="assignment.status.answers.has_draft"><a ng-click="openAnswerModal({'assignment':assignment, 'answerId':assignment.status.answers.draft_ids[0]})" href="" title="Finish answering the assignment">finish answering</a></span> this assignment?</span>)</p>
             </div>
 
             <!-- Student Answer Metadata Header -->
-            <div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects">
+            <div class="each-evaluation clearfix" ng-repeat="answer in user_answers.objects"  ng-class="{'highlight-momentarily': highlightAnswer }">
                 <div class="each-header clearfix">
                     <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" me="true"></compair-avatar>
                     <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
@@ -393,7 +393,7 @@
                 </div>
 
                 <!-- Student Answer -->
-                <div class="content {{answer.id}}">
+                <div class="content {{answer.id}}" id="my-answer">
                     <rich-content content="answer.content" attachment="answer.file" ng-click="revealContent(answer)"></rich-content>
                 </div>
 

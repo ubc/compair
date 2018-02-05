@@ -262,9 +262,9 @@ module.factory( "CoursePermissions", function (){
 module.controller(
     'CourseAssignmentsController',
     ["$scope", "$routeParams", "CourseResource", "AssignmentResource", "AssignmentPermissions",
-    "moment", "resolvedData", "Toaster", "xAPIStatementHelper",
-    function($scope, $routeParams, CourseResource, AssignmentResource, AssignmentPermissions,
-             moment, resolvedData, Toaster, xAPIStatementHelper)
+    "AnswerResource", "moment", "resolvedData", "Toaster", "xAPIStatementHelper", "$uibModal",
+   function($scope, $routeParams, CourseResource, AssignmentResource, AssignmentPermissions,
+            AnswerResource, moment, resolvedData, Toaster, xAPIStatementHelper, $uibModal)
     {
         // get course info
         $scope.courseId = $routeParams.courseId;
@@ -284,6 +284,46 @@ module.controller(
                 assignment.delete_warning = "This will also unlink all LTI direct links to this assignment.";
             }
         });
+
+        $scope.openAnswerModal = function($args) {
+
+            var modalScope = $scope.$new();
+            modalScope.assignment = $args.assignment;
+            modalScope.courseId = angular.copy($scope.courseId);
+            modalScope.assignmentId = angular.copy($args.assignment.id);
+
+            modalScope.course = $scope.course;
+            modalScope.answer = {};
+            modalScope.loggedInUserId = resolvedData.loggedInUser.id;
+            modalScope.canManageAssignment = resolvedData.canManageAssignment;
+            modalScope.answerUnsaved = resolvedData.answerUnsaved;
+
+            if ($args.answerId) {
+                modalScope.answerId = $args.answerId;
+                AnswerResource.get({'courseId': modalScope.courseId, 'assignmentId': modalScope.assignmentId, 'answerId': modalScope.answerId}).$promise.then(
+                    function (ret) {
+                        modalScope.answer = ret;
+                        $scope.modalInstance = $uibModal.open({
+                            animation: true,
+                            backdrop: 'static',
+                            controller: "AnswerWriteModalController",
+                            templateUrl: 'modules/answer/answer-modal-partial.html',
+                            scope: modalScope
+                        });
+                    }
+                );
+            }
+            else {
+                $scope.modalInstance = $uibModal.open({
+                    animation: true,
+                    backdrop: 'static',
+                    controller: "AnswerWriteModalController",
+                    templateUrl: 'modules/answer/answer-modal-partial.html',
+                    scope: modalScope
+                });
+            }
+
+        }
 
         CourseResource.getCurrentUserStatus({'id': $scope.courseId}).$promise.then(
             function(ret) {
