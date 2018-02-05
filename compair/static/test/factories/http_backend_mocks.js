@@ -615,18 +615,25 @@ module.exports.httpbackendMock = function(storageFixtures) {
             // setup default data
             if (storageFixture.storage().course_assignments[courseId]) {
                 angular.forEach(storageFixture.storage().course_assignments[courseId], function(assignmentId) {
-                    statuses[assignmentId] = {
-                        "answers": {
-                            "answered": false,
-                            "count": 0,
-                            "draft_ids": [],
-                            "has_draft": true
-                        },
-                        "comparisons": {
-                            "available": true,
-                            "count": 0,
-                            "left": 3,
-                            "has_draft": false
+                    if (storageFixture.storage().assignment_status[assignmentId]) {
+                        statuses[assignmentId] = storageFixture.storage().assignment_status[assignmentId];
+                    }
+                    else {
+                        statuses[assignmentId] = {
+                            "answers": {
+                                "has_draft": false,
+                                "draft_ids": [],
+                                "answered": false,
+                                "feedback": false,
+                                "count": 0
+                            },
+                            "comparisons": {
+                                "available": true,
+                                "has_draft": false,
+                                "count": 0,
+                                "left": 3,
+                                "self_evaluation_draft": false
+                            }
                         }
                     }
                 });

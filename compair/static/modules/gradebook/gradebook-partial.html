@@ -1,22 +1,24 @@
 <div class="tab-header">
     <div class="row">
-        <h2 class="col-sm-6">
+        <h2 class="col-sm-6 col-md-8">
             Participation
             <span ng-show="gradebookFilters.group && !gradebookFilters.student">for "{{gradebookFilters.group}}"</span>
             <span ng-show="gradebookFilters.student">for "{{ gradebookFilters.student.name }}"</span>
         </h2>
-        <div class="col-sm-6 text-right multi-filters">
-            <span class="filter" ng-if="canManageAssignment">
-                <label>Show: &nbsp;</label>
-                <select ng-if="groups.length > 0" ng-model="gradebookFilters.group" class="nullable" chosen
-                        ng-options="g as g for g in groups | orderBy: 'toString()'">
-                    <option value="">All groups</option>
-                </select>
-                <select ng-model="gradebookFilters.student" class="nullable" chosen
-                        ng-options="u as u.name for u in users | orderBy: 'name'">
-                    <option value="">All students</option>
-                </select>
-            </span>
+        <div class="col-sm-6 col-md-4 text-right multi-filters">
+            <div>
+                <span class="filter" ng-if="canManageAssignment">
+                    <label>Show: &nbsp;</label>
+                    <select ng-if="groups.length > 0" ng-model="gradebookFilters.group" class="nullable" chosen
+                            ng-options="g as g for g in groups | orderBy: 'toString()'">
+                        <option value="">All groups</option>
+                    </select>
+                    <select ng-model="gradebookFilters.student" class="nullable" chosen
+                            ng-options="u as u.name for u in users | orderBy: 'name'">
+                        <option value="">All students</option>
+                    </select>
+                </span>
+            </div>
         </div>
     </div>
     <p class="intro-text"><span ng-if="canManageAssignment">To export data reports for participation and other application statistics, go to <a ng-href="#/report">Download Reports</a>.</span> <span ng-if="includeScores">Note that <strong>answer scores are normalized</strong> from the scores assigned using ComPAIR's <a href="http://ubc.github.io/compair/site/best-practices.html#scores" target="_blank">scoring algorithm</a> and are not reflective of a straight win-loss record. The top-ranked answer(s) for the assignment receive 100%. All others receive a lower percentage based on how well they did in comparison.</span></p>

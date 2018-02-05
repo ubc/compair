@@ -31,6 +31,7 @@ var assignmentTemplate = {
     "compare_end": null,
     "compare_start": null,
     "peer_feedback_prompt": null,
+    "created": "Tue, 19 Apr 2016 20:06:43 -0000",
     "modified": "Tue, 19 Apr 2016 20:06:43 -0000",
     "user": {
         "id": null,
