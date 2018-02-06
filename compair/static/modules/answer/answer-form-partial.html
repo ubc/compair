@@ -67,20 +67,20 @@
             <br />
             <div ng-repeat="item in uploader.queue">
                 <div class="row">
-                    <div class="col-md-3">
-                        <button type="button" class="btn btn-primary btn-xs" ng-click="item.cancel();item.remove();resetFileUploader();">
-                            <span class="glyphicon glyphicon-trash"></span> Remove
-                        </button>
+                    <div class="col-md-2">
+                        <a ng-click="item.cancel();item.remove();resetFileUploader();" href="">
+                            Remove
+                        </a>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-6">
                         <div ng-if="!canSupportPreview(item) || item.isReady || item.isUploading || item.isSuccess">
-                            <i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong>
+                            <i class="fa fa-paperclip"></i> File: {{item.file.name}}
                         </div>
                     </div>
                     <div class="col-md-2">{{item.file.size/1024/1024|number:2}} MB</div>
                     <div class="col-md-2" ng-if="item.progress < 100"><strong>{{item.progress}}% uploaded</strong></div>
                     <div class="col-md-2" ng-if="item.progress == 100 && !item.isSuccess"><strong>Storing file...</strong></div>
-                    <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess"><strong>Attached</strong></div>
+                    <div class="col-md-2" ng-if="item.progress == 100 && item.isSuccess">Attached</div>
                 </div>
                 <div class="row">
                     <div class="col-md-12">
@@ -97,18 +97,18 @@
         </div>
         <div ng-show="answer.file && answer.uploadedFile && !uploader.queue.length">
             <div class="row">
-                <div class="col-md-1">
-                    <button type="button" class="btn btn-primary btn-xs" ng-click="deleteFile(answer.file)">
-                        <span class="glyphicon glyphicon-trash"></span> Remove
-                    </button>
+                <div class="col-md-2">
+                    <a ng-click="deleteFile(answer.file)" href="">
+                        Remove
+                    </a>
                 </div>
-                <div class="col-md-1">
-                    <button ng-if="canSupportPreview(answer.file)" type="button" class="btn btn-primary btn-xs" ng-click="reuploadFile(answer.file)">
-                        <span class="glyphicon glyphicon-edit"></span> Adjust
-                    </button>
+                <div class="col-md-2">
+                    <a ng-if="canSupportPreview(answer.file)" ng-click="reuploadFile(answer.file)" href="">
+                        Rotate
+                    </a>
                 </div>
-                <div class="col-md-4">
-                    <i class="fa fa-paperclip"></i> Attached File: <strong>{{answer.file.alias}}</strong>
+                <div class="col-md-8">
+                    <i class="fa fa-paperclip"></i> File: {{answer.file.alias}}
                 </div>
             </div>
             <br />
