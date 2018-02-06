@@ -50,8 +50,8 @@
                     <p class="content"><a href="" ng-click="loadAnswerByAuthor(comparison.user_id);showMyAnswer = !showMyAnswer;">
                         <i ng-show="showMyAnswer" class="fa fa-chevron-down"></i>
                         <i ng-hide="showMyAnswer" class="fa fa-chevron-right"></i>
-                        <em ng-if="isInstructional(comparison.user_id)">Show instructor/TA's answer</em>
-                        <em ng-if="!isInstructional(comparison.user_id)">Show student's answer</em>
+                        <span ng-if="isInstructional(comparison.user_id)">Show instructor/TA's answer</span>
+                        <span ng-if="!isInstructional(comparison.user_id)">Show student's answer</span>
                     </a></p>
                     <compair-student-answer class="answer" answer="(answers | filter:{user_id:comparison.user_id}:true)[0]" ng-show="showMyAnswer"></compair-student-answer>
                     <br />
