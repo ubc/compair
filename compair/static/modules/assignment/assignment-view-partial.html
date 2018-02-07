@@ -179,7 +179,7 @@
                         <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
                         <strong>said</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment">
-                            <em>{{instructors[answer.user_id]}} Response</em>
+                            <em>{{instructorLabel(answer.user_id)}} Response</em>
                             <span ng-if="canManageAssignment && !answerFilters.anonymous && answer.score && answer.comparable" class="label label-warning score-tooltip" uib-tooltip="Scores are normalized, so the top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
                                 Score: {{answer.score.normalized_score}}%
                             </span>

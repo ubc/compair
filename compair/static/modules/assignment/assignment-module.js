@@ -959,9 +959,7 @@ module.controller("AssignmentViewController",
                         $scope.assignment.status.answers.answered = $scope.assignment.status.answers.count > 0;
                     }
                     $scope.updateAnswerList();
-                    $location.hash(null);
-                    $location.search({'tab':'your_feedback'});
-                    $route.reload();
+                    $scope.loadTabData();
                     Toaster.success("Answer Deleted");
                 }
             );
