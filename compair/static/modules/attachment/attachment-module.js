@@ -315,7 +315,9 @@ module.service('attachService',
 
 module.service('answerAttachService',
         ["FileUploader", "Toaster", "UploadValidator", "KalturaResource",
-        function(FileUploader, Toaster, UploadValidator, KalturaResource) {
+        "embeddableRichContent", "$http", "$q",
+        function(FileUploader, Toaster, UploadValidator, KalturaResource,
+            embeddableRichContent, $http, $q) {
     var file = null;
 
     var getUploader = function(initParams) {
@@ -430,7 +432,46 @@ module.service('answerAttachService',
 
     var canSupportPreview = function(item) {
         return UploadValidator.canSupportPreview(item);
-    }
+    };
+
+    // download the file and inject it to uploader
+    var reuploadFile = function(file, uploader) {
+        var content = embeddableRichContent.generateAttachmentContent(file);
+        var url = content.url? content.url : '';
+        if (url && canSupportPreview(file)) {
+            $http.get(url, { responseType: "blob" }).success(function(image) {
+                // IE / Edge can't create new File objects. need alternate approach
+                // var imageFile = new File([image], file.alias, { type: file.mimetype });
+                // $scope.uploader.addToQueue(imageFile);
+                image.name = file.alias;
+                uploader.addToQueue(image);
+                // uploader is using a FileLikeObject for the _file. replace it with our blob.
+                uploader.queue[uploader.queue.length-1]._file = image;
+            });
+        } else {
+            Toaster.error("Cannot adjust attachment", "Please remove the attachment and upload again.");
+        }
+    };
+
+    // returns an array of Promises for uploading modified items in the uploader
+    var reUploadPromises = function(uploader) {
+        return uploader.queue.map(function(item) {
+            var defer = $q.defer();
+            if (canSupportPreview(item) && item._file && item._file.rotateDirty) {
+                item.onComplete = function(response, status, headers) {
+                    if (status === 200) {
+                        defer.resolve();
+                    } else {
+                        defer.reject();
+                    }
+                }
+                item.upload();
+            } else {
+                defer.resolve();    // no need to reupload. resolve immediately
+            }
+            return defer.promise;
+        });
+    };
 
     return {
         getUploader: getUploader,
@@ -440,6 +481,8 @@ module.service('answerAttachService',
             uploadedCallback = callback;
         },
         canSupportPreview: canSupportPreview,
+        reuploadFile: reuploadFile,
+        reUploadPromises: reUploadPromises
     };
 }]);
 

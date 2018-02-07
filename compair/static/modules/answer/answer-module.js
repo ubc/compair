@@ -104,11 +104,9 @@ module.controller(
     ["$scope", "$location", "AnswerResource", "ClassListResource", "$route", "TimerResource",
         "AssignmentResource", "Toaster", "$timeout", "UploadValidator", "CourseRole", "$uibModalInstance",
         "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper", "$q",
-        "embeddableRichContent", "$http",
     function ($scope, $location, AnswerResource, ClassListResource, $route, TimerResource,
         AssignmentResource, Toaster, $timeout, UploadValidator, CourseRole, $uibModalInstance,
-        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, $q,
-        embeddableRichContent, $http)
+        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, $q)
     {
         if ($scope.answer.file) {
             $scope.answer.uploadedFile = true;
@@ -190,11 +188,6 @@ module.controller(
             });
         }
 
-        $scope.imageOrientation = { };
-        $scope.initImageOrientation = function(item) {
-            $scope.imageOrientation[item.$$hashKey] = { rotate: 0 };
-        }
-
         $scope.uploader = answerAttachService.getUploader();
         $scope.resetFileUploader = function() {
             var file = answerAttachService.getFile();
@@ -204,7 +197,6 @@ module.controller(
                 );
             }
             answerAttachService.reset();
-            $scope.imageOrientation = { };
         };
         answerAttachService.setUploadedCallback(function(file) {
             xAPIStatementHelper.attached_answer_attachment(
@@ -212,33 +204,19 @@ module.controller(
             );
         });
         $scope.canSupportPreview = answerAttachService.canSupportPreview;
-
-        // download the file and inject it to uploader
-        $scope.reuploadFile = function(file) {
-            var content = embeddableRichContent.generateAttachmentContent(file);
-            var url = content.url? content.url : '';
-            if (url && $scope.canSupportPreview(file)) {
-                $http.get(url, { responseType: "blob" }).success(function(image) {
-                    // IE / Edge can't create new File objects. need alternate approach
-                    // var imageFile = new File([image], file.alias, { type: file.mimetype });
-                    // $scope.uploader.addToQueue(imageFile);
-                    image.name = file.alias;
-                    $scope.uploader.addToQueue(image);
-                    // uploader is using a FileLikeObject for the _file. replace it with our blob.
-                    $scope.uploader.queue[$scope.uploader.queue.length-1]._file = image;
-                });
-            } else {
-                Toaster.error("Cannot adjust attachment", "Please remove the attachment and upload again.");
-            }
-        };
+        if ($scope.answer.file && $scope.canSupportPreview($scope.answer.file)) {
+            answerAttachService.reuploadFile($scope.answer.file, $scope.uploader);
+        }
 
         $scope.deleteFile = function(file) {
             $scope.answer.file = null;
             $scope.answer.uploadedFile = false;
 
-            xAPIStatementHelper.deleted_answer_attachment(
-                file, $scope.answer, $scope.tracking.getRegistration()
-            );
+            if (file) {
+                xAPIStatementHelper.deleted_answer_attachment(
+                    file, $scope.answer, $scope.tracking.getRegistration()
+                );
+            }
         };
 
         $scope.modalInstance.result.then(function (answerUpdated) {
@@ -275,27 +253,7 @@ module.controller(
             $scope.saveDraft = saveDraft;
             var wasDraft = $scope.answer.draft;
 
-            var reUploadPromises = $scope.uploader.queue.map(function(item) {
-                var defer = $q.defer();
-                if ($scope.canSupportPreview(item) &&
-                    $scope.imageOrientation[item.$$hashKey] && $scope.imageOrientation[item.$$hashKey].rotate != 0) {
-                    item.onComplete = function(response, status, headers) {
-                        if (status === 200) {
-                            defer.resolve();
-                        } else {
-                            defer.reject();
-                        }
-                    }
-                    item.upload();
-                } else {
-                    defer.resolve();    // no need to reupload. resolve immediately
-                }
-                return defer.promise;
-            });
-
-            $q.all(reUploadPromises).then(function() {
-                $scope.imageOrientation = { };
-
+            $q.all(answerAttachService.reUploadPromises($scope.uploader)).then(function() {
                 var file = answerAttachService.getFile();
                 if (file) {
                     $scope.answer.file = file;
@@ -372,14 +330,12 @@ module.controller(
                     $scope.answer = ret;
                     if (ret.file) {
                         $scope.answer.uploadedFile = true;
+                        if (answerAttachService.canSupportPreview(ret.file)) {
+                            answerAttachService.reuploadFile(ret.file, $scope.uploader);
+                        }
                     }
                 }
             );
-        }
-
-        $scope.imageOrientation = { };
-        $scope.initImageOrientation = function(item) {
-            $scope.imageOrientation[item.$$hashKey] = { rotate: 0 };
         }
 
         $scope.uploader = answerAttachService.getUploader();
@@ -396,25 +352,7 @@ module.controller(
             $scope.saveDraft = saveDraft;
             $scope.submitted = true;
 
-            var reUploadPromises = $scope.uploader.queue.map(function(item) {
-                var defer = $q.defer();
-                if ($scope.canSupportPreview(item) &&
-                    $scope.imageOrientation[item.$$hashKey] && $scope.imageOrientation[item.$$hashKey].rotate != 0) {
-                    item.onComplete = function(response, status, headers) {
-                        if (status === 200) {
-                            defer.resolve();
-                        } else {
-                            defer.reject();
-                        }
-                    }
-                    item.upload();
-                } else {
-                    defer.resolve();    // no need to reupload. resolve immediately
-                }
-                return defer.promise;
-            });
-
-            $q.all(reUploadPromises).then(function() {
+            $q.all(answerAttachService.reUploadPromises($scope.uploader)).then(function() {
 
                 var file = answerAttachService.getFile();
                 if (file) {

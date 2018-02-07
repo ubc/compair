@@ -1,40 +1,38 @@
 (function() {
 
-var module = angular.module('ubc.ctlt.compair.image.viewer', []);
+var module = angular.module('ubc.ctlt.compair.attachment.image.viewer', []);
 
-// Directive for viewing images with rotation
-// Simplified version of https://github.com/fcrohas/angular-canvas-viewer
+// Directive for viewing images with rotation.
+// Based on https://github.com/fcrohas/angular-canvas-viewer
+// Image source can be specified as url ('ng-src') or File/Blob object ('ng-model').
+// In case of using File / Blob, rotatation will update the image object.
 module.directive('imageViewer', ['$window', '$q',
     function($window, $q) {
         var template =
             '<div class="text-center image-viewer">' +
-                '<div class="btn btn-sm btn-info" ng-click="rotate(-1)"><span class="fa fa-rotate-left"></span></div>'+
-                '<div class="btn btn-sm btn-info" ng-click="rotate(1)"><span class="fa fa-rotate-right"></span></div>'+
+                '<div class="btn btn-sm btn-info" ng-click="rotate(-1)"><span class="fa fa-rotate-left"></span></div>' +
+                '<div class="btn btn-sm btn-info" ng-click="rotate(1)"><span class="fa fa-rotate-right"></span></div>' +
                 '<br/>' +
-                '<i class="fa fa-spin fa-spinner" ng-show="!canvasLoaded"></i>' +
-                '<canvas class="attachment-view" ng-show="canvasLoaded" />'+
+                '<span ng-if="!canvasLoaded"><i class="fa fa-spin fa-spinner"></i></span>' +
+                '<br/>' +
+                '<canvas class="attachment-view" ng-show="canvasLoaded" />' +
             '</div>';
 
         return {
-            restrict: 'A',
+            restrict: 'AE',
             replace: true,
             scope: {
-                src: '@?ngSrc',     // Can specify image as source URL...
-                imgFile: '<?',      // ... or File / Blob object...
-                orientation: '=?',  // Orientation of current view
-                uploadFile: '=?',   // File object of original image oriented as current view
-                options: '<?',
-                onLoadCallback: '&?'   // callback when image loaded
+                src: '@?ngSrc',         // Can specify image as source URL...
+                imgFile: '=?ngModel',   // ... or File / Blob object...
+                onLoadCallback: '&?'    // callback when image loaded
             },
             template: template,
             link: function(scope, element, attributes) {
                 scope.canvasLoaded = false;
 
                 // default values
-                _.defaults(scope.orientation, { rotate: 0, zoom: 1});
-                scope.options = $.extend({
-                    backgroundColor: 'transparent',
-                }, scope.options);
+                scope.orientation = { rotate: 0, zoom: 1 };
+                scope.options = { backgroundColor: 'transparent' };
 
                 // round to nearest 90
                 scope.orientation.rotate = Math.round(scope.orientation.rotate / 90.0) * 90;
@@ -46,7 +44,8 @@ module.directive('imageViewer', ['$window', '$q',
                 var ctx = canvas.getContext("2d");
                 var picPos = { x : 0, y : 0 };  // origin of the image
 
-                var uploadFileMimeType = scope.imgFile? scope.imgFile.type : 'image/png';
+                var imgFileMimeType = scope.imgFile? scope.imgFile.type : 'image/png';
+                var imgFileName = (scope.imgFile && scope.imgFile.name)? scope.imgFile.name : 'image.png'
                 var img = new Image();
                 img.onload = onLoadImage;
 
@@ -55,7 +54,9 @@ module.directive('imageViewer', ['$window', '$q',
                     img.src = scope.src;
                 } else if (scope.imgFile) {
                     var reader = new FileReader();
-                    reader.onload = onLoadFile;
+                    reader.onload = function(event) {
+                        img.src = event.target.result;
+                    };
                     reader.readAsDataURL(scope.imgFile);
                 }
 
@@ -64,10 +65,6 @@ module.directive('imageViewer', ['$window', '$q',
                     return {
                         height: canvas.parentNode.clientHeight,
                         width: canvas.parentNode.clientWidth };
-                }
-
-                function onLoadFile(event) {
-                    img.src = event.target.result;
                 }
 
                 function onLoadImage() {
@@ -81,7 +78,7 @@ module.directive('imageViewer', ['$window', '$q',
                         resizeCanvas();
                     }, true);
 
-                    refreshUploadFile().then(function() {
+                    refreshFileObj().then(function() {
                         if (scope.onLoadCallback) {
                             scope.onLoadCallback();
                         }
@@ -89,16 +86,14 @@ module.directive('imageViewer', ['$window', '$q',
                 }
 
                 // https://stackoverflow.com/questions/4998908/convert-data-uri-to-file-then-append-to-formdata
-                function dataUrlToBlob(dataUrl, mimeType) {
+                function dataUrlToBlob(dataUrl) {
                     // convert base64/URLEncoded data component to raw binary data held in a string
                     var byteString;
-                    if (dataUrl.split(',')[0].indexOf('base64') >= 0)
+                    if (dataUrl.split(',')[0].indexOf('base64') >= 0) {
                         byteString = atob(dataUrl.split(',')[1]);
-                    else
+                    } else {
                         byteString = unescape(dataUrl.split(',')[1]);
-
-                    // separate out the mime component
-                    var mimeString = dataUrl.split(',')[0].split(':')[1].split(';')[0];
+                    }
 
                     // write the bytes of the string to a typed array
                     var ia = new Uint8Array(byteString.length);
@@ -106,27 +101,30 @@ module.directive('imageViewer', ['$window', '$q',
                         ia[i] = byteString.charCodeAt(i);
                     }
 
-                    return new Blob([ia], {type: mimeType});
+                    return new Blob([ia], {type: imgFileMimeType});
                 }
 
                 // Return a Promise with File object based on given data url
-                function dataUrlToFile(dataUrl, fileName, mimeType) {
-                    try {
-                        // if browser has fetch function and can create new File object
-                        if (typeof fetch === "function" && new File([], '')) {
-                            return fetch(dataUrl)
-                                .then(function (resp) { return resp.arrayBuffer(); })
-                                .then(function (buffer) { return new File([buffer], fileName, { type: mimeType }); });
-                        }
-                    } catch (err) {
-                        // Ignore. Possible reason is IE / Edge don't have File constructor.
-                        // Fallthrough to use Blob instead
-                    }
+                function dataUrlToFile(dataUrl) {
+                    /* Commented out for now.  Since not all browsers support the fetch function and
+                       File constructor.  Will fake it with Blob object instead.
+                       This works with AngularJS File Uploader.
+                     */
+                    // try {
+                    //     // if browser has fetch function and can create new File object
+                    //     if (typeof fetch === "function" && new File([], '')) {
+                    //         return fetch(dataUrl)
+                    //             .then(function (resp) { return resp.arrayBuffer(); })
+                    //             .then(function (buffer) { return new File([buffer], imgFileName, { type: imgFileMimeType }); });
+                    //     }
+                    // } catch (err) {
+                    //     // Ignore. Possible reason is IE / Edge don't have File constructor.
+                    //     // Fallthrough to use Blob instead
+                    // }
 
-                    // When all things fail, fake it with a Blob object. It works with AngularJS file uploader.
-                    var tmpBlob = dataUrlToBlob(dataUrl, mimeType);
+                    var tmpBlob = dataUrlToBlob(dataUrl);
                     var nowTime = Date.now();
-                    tmpBlob.name = fileName;
+                    tmpBlob.name = imgFileName;
                     tmpBlob.lastModifiedDate = new Date(nowTime);
                     tmpBlob.lastModified = nowTime;
                     return Promise.resolve(tmpBlob);
@@ -170,27 +168,23 @@ module.directive('imageViewer', ['$window', '$q',
                 var centerImg = function() {
                     var centerX = canvas.width / 2;
                     var centerY = canvas.height / 2;
-                    var picPosX = 0;
-                    var picPosY = 0;
-                    picPosX =  centerX - (img.width * scope.orientation.zoom) / 2;
-                    picPosY = centerY - (img.height * scope.orientation.zoom) / 2;
-                    picPos = { x : picPosX, y : picPosY };
+                    picPos = {
+                        x : centerX - (img.width * scope.orientation.zoom) / 2,
+                        y : centerY - (img.height * scope.orientation.zoom) / 2
+                    };
                 };
 
                 var resizeCanvas = function() {
                     var ratio = img.width / img.height;
                     var displayWidth = img.width;
-                    var parent = canvas.parentNode;
+                    var parent = $(canvas.parentNode);
 
                     if (Math.abs(scope.orientation.rotate) == 90 ||
                         Math.abs(scope.orientation.rotate) == 270) {
                         ratio = 1 / ratio;
                         displayWidth = img.height;
                     }
-                    // scale the canvas to be slightly smaller than parent (by 10px).
-                    // if using same size as parent, Firefox will go into
-                    // infinite loop to expand parent -> resizeCanvas -> expand parent...
-                    displayWidth = Math.max(0, Math.min(displayWidth, parent.clientWidth) - 10);
+                    displayWidth = Math.min(displayWidth, parent.width());
 
                     // scale down the image to fit if necessary
                     scope.orientation.zoom = Math.min(getMaxZoom(img, displayWidth, scope.orientation.rotate), 1);
@@ -204,7 +198,7 @@ module.directive('imageViewer', ['$window', '$q',
                 };
 
                 // return a data URL of the original image with viewing rotation
-                var rotateOriginalImage = function(mimeType) {
+                var rotateOriginalImage = function() {
                     // use an invisible canvas to rotate the original image
                     var tempCanvas = document.createElement("canvas");
                     var tempCtx = tempCanvas.getContext("2d");
@@ -232,21 +226,23 @@ module.directive('imageViewer', ['$window', '$q',
                     tempCtx.drawImage(img, 0, 0, img.width, img.height)
                     tempCtx.restore();
 
-                    return tempCanvas.toDataURL(mimeType);
+                    return tempCanvas.toDataURL(imgFileMimeType);
                 };
 
                 angular.element($window).bind('resize', function() {
                     scope.$apply();
                 });
 
-                var refreshUploadFile = function() {
-                    // if uploadFile is given, replace it with a new File object in current orientation
-                    if (scope.uploadFile) {
-                        return dataUrlToFile(rotateOriginalImage(uploadFileMimeType),
-                            scope.uploadFile.name? scope.uploadFile.name : 'image.png',
-                            uploadFileMimeType
+                var refreshFileObj = function() {
+                    // if imgFile is given, replace it with a new File object in current orientation
+                    if (scope.imgFile) {
+                        return dataUrlToFile(
+                            rotateOriginalImage()
                         ).then(function (newFile) {
-                            scope.uploadFile = newFile;
+                            if (scope.imgFile.rotateDirty) {
+                                newFile.rotateDirty = scope.imgFile.rotateDirty;
+                            }
+                            scope.imgFile = newFile;
                             scope.$apply();
                         }, function() {
                             // do nothing if failed. use original image as-is
@@ -258,12 +254,15 @@ module.directive('imageViewer', ['$window', '$q',
 
                 scope.rotate = function(direction) {
                     scope.$applyAsync(function(scope) {
+                        if (scope.imgFile) {
+                            scope.imgFile.rotateDirty = true;
+                        }
                         scope.orientation.rotate += 90 * direction;
                         if ((scope.orientation.rotate <= -360) || (scope.orientation.rotate >= 360)) {
                             scope.orientation.rotate = 0;
                         }
                         resizeCanvas();
-                        refreshUploadFile();
+                        refreshFileObj();
                     });
                 };
             },  // link

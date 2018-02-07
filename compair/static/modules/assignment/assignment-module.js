@@ -1284,12 +1284,12 @@ module.controller("AssignmentWriteController",
              "CriterionResource", "required_rounds", "Toaster", "attachService", "UploadValidator",
              "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
              "AnswerResource", "xAPIStatementHelper", "resolvedData", "moment",
-             "embeddableRichContent", "$http",
+             "embeddableRichContent", "$http", "answerAttachService",
     function($scope, $q, $location, $routeParams, $route, AssignmentResource, $uibModal,
              CriterionResource, required_rounds, Toaster, attachService, UploadValidator,
              EditorOptions, PairingAlgorithm, ComparisonExampleResource,
              AnswerResource, xAPIStatementHelper, resolvedData, moment,
-             embeddableRichContent, $http)
+             embeddableRichContent, $http, answerAttachService)
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId || undefined;
@@ -1317,15 +1317,10 @@ module.controller("AssignmentWriteController",
         $scope.resetFileUploader = attachService.reset;
         $scope.recommended_comparisons = Math.floor(required_rounds / 2);
 
-        $scope.imageOrientation = { };
-        $scope.initImageOrientation = function(item) {
-            $scope.imageOrientation[item.$$hashKey] = { rotate: 0 };
-        }
-
         $scope.canSupportPreview = attachService.canSupportPreview;
 
         // download the file and inject it to uploader
-        $scope.reuploadFile = function(file) {
+        $scope.reuploadAssignmentFile = function(file) {
             var content = embeddableRichContent.generateAttachmentContent(file);
             var url = content.url? content.url : '';
             if (url && $scope.canSupportPreview(file)) {
@@ -1734,24 +1729,7 @@ module.controller("AssignmentWriteController",
             }
 
             // see if need to re-upload the attachment
-            var reUploadPromises = $scope.uploader.queue.map(function(item) {
-                var defer = $q.defer();
-                if ($scope.canSupportPreview(item) &&
-                    $scope.imageOrientation[item.$$hashKey] && $scope.imageOrientation[item.$$hashKey].rotate != 0) {
-                    item.onComplete = function(response, status, headers) {
-                        if (status === 200) {
-                            defer.resolve();
-                        } else {
-                            defer.reject();
-                        }
-                    }
-                    item.upload();
-                } else {
-                    defer.resolve();    // no need to reupload. resolve immediately
-                }
-                return defer.promise;
-            });
-            promises.push.apply(promises, reUploadPromises);
+            promises.push.apply(promises, answerAttachService.reUploadPromises($scope.uploader));
 
             $q.all(promises).then(function() {
                 // if option is not checked; make sure no compare dates are saved.

@@ -35,9 +35,9 @@
             <div ng-repeat="item in uploader.queue">
                 <div class="row">
                     <div class="col-md-1">
-                        <button type="button" class="btn btn-primary btn-xs" ng-click="item.cancel();item.remove();resetFileUploader();">
-                            <span class="glyphicon glyphicon-trash"></span> Remove
-                        </button>
+                        <a ng-click="item.cancel();item.remove();resetFileUploader();deleteFile(assignment.file);" href="">
+                            Remove
+                        </a>
                     </div>
                     <div class="col-md-8"><i class="fa fa-paperclip"></i> File: <strong>{{item.file.name}}</strong></div>
                     <div class="col-md-1">{{item.file.size/1024/1024|number:2}} MB</div>
@@ -49,9 +49,8 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div ng-if="canSupportPreview(item)">
-                            <div ng-init="initImageOrientation(item)"></div>
                             <!-- trigger upload once preview is loaded -->
-                            <div img-file="item._file" image-viewer orientation="imageOrientation[item.$$hashKey]" upload-file="item._file" on-load-callback="item.upload()"/>
+                            <image-viewer ng-model="item._file" on-load-callback="item.upload()"/>
                         </div>
                     </div>
                 </div>
@@ -60,17 +59,13 @@
 
         <div ng-show="assignment.file && assignment.uploadedFile && !uploader.queue.length">
             <div class="row">
-                <div class="col-md-1">
-                    <button type="button" class="btn btn-primary btn-xs" ng-click="deleteFile(assignment.file)">
-                        <span class="glyphicon glyphicon-trash"></span> Remove
-                    </button>
+                <div class="col-md-2">
+                    <a ng-click="deleteFile(assignment.file)" href="">
+                        Remove
+                    </a>
                 </div>
-                <div class="col-md-1">
-                    <button ng-if="canSupportPreview(assignment.file)" type="button" class="btn btn-primary btn-xs" ng-click="reuploadFile(assignment.file)">
-                        <span class="glyphicon glyphicon-edit"></span> Adjust
-                    </button>
-                </div>
-                <div class="col-md-11">
+                <div ng-if="canSupportPreview(assignment.file)" ng-init="reuploadAssignmentFile(assignment.file)"></div>
+                <div class="col-md-10">
                     <i class="fa fa-paperclip"></i> Attached File: <strong>{{assignment.file.alias}}</strong>
                 </div>
             </div>
