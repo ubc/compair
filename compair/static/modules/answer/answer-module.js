@@ -151,6 +151,10 @@ module.controller(
                 }
             )
 
+            if ($scope.canManageAssignment) {
+                // preset the user_id if instructors creating new answers
+                $scope.answer.user_id = $scope.loggedInUserId;
+            }
         }
         if ($scope.canManageAssignment) {
             // get list of users in the course
@@ -159,7 +163,6 @@ module.controller(
                     $scope.classlist = ret.objects;
                 }
             );
-            $scope.answer.user_id = $scope.loggedInUserId;
         }
 
         if ($scope.method == "create" || !$scope.answer.draft) {
