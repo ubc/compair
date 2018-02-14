@@ -58,11 +58,11 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @hybrid_property
     def saved(self):
-        return self.modified != self.created
+        return self.modified != self.created or not self.draft
 
     @saved.expression
     def saved(cls):
-        return cls.modified != cls.created
+        return or_(cls.modified != cls.created, cls.draft == False)
 
     @classmethod
     def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):

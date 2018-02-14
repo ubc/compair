@@ -236,7 +236,9 @@ def register_demo_api_blueprints(app):
 def log_events(log):
     # user events
     from .users import on_user_modified, on_user_get, on_user_list_get, on_user_create, on_user_course_get, \
-        on_user_password_update, on_user_edit_button_get, on_teaching_course_get, on_user_notifications_update
+        on_user_password_update, on_user_edit_button_get, on_teaching_course_get, on_user_notifications_update, \
+        on_user_course_status_get, on_user_lti_users_get, on_user_lti_user_unlink, on_user_third_party_users_get, \
+        on_user_third_party_user_delete
     on_user_modified.connect(log)
     on_user_get.connect(log)
     on_user_list_get.connect(log)
@@ -246,6 +248,11 @@ def log_events(log):
     on_user_edit_button_get.connect(log)
     on_user_notifications_update.connect(log)
     on_user_password_update.connect(log)
+    on_user_course_status_get.connect(log)
+    on_user_lti_users_get.connect(log)
+    on_user_lti_user_unlink.connect(log)
+    on_user_third_party_users_get.connect(log)
+    on_user_third_party_user_delete.connect(log)
 
     # course events
     from .course import on_course_modified, on_course_get, on_course_list_get, on_course_create, \

@@ -375,6 +375,101 @@ module.exports.httpbackendMock = function(storageFixtures) {
             }, {}]
         });
 
+        // get user lti users
+        $httpBackend.whenGET(/\/api\/users\/[A-Za-z0-9_-]{22}\/lti\/users$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/')[3];
+            var lti_users = [];
+
+            if (storageFixture.storage().user_lti_users[userId]) {
+
+                lti_users = angular.copy(storageFixture.storage().user_lti_users[userId]);
+            }
+
+            lti_users = _.sortBy(lti_users, ['lti_consumer_id', 'lti_user_id']);
+
+            return [200, {
+                "objects": lti_users
+            }, {}]
+        });
+
+        // unlink lti user
+        $httpBackend.whenDELETE(/\/api\/users\/[A-Za-z0-9_-]{22}\/lti\/users\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/')[3];
+            var ltiUserId = url.split('/').pop();
+
+            if (storageFixture.storage().user_lti_users[userId]) {
+                angular.forEach(storageFixture.storage().user_lti_users[userId], function(ltiUser, index) {
+                    if (ltiUser.id == ltiUserId) {
+                        storageFixture.storage().user_lti_users[userId].splice(index, 1);
+                    }
+                });
+            };
+
+            return [200, {
+                "success": true
+            }, {}]
+        });
+
+        // get user third party users
+        $httpBackend.whenGET(/\/api\/users\/[A-Za-z0-9_-]{22}\/third_party\/users$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/')[3];
+            var third_party_users = [];
+
+            if (storageFixture.storage().user_third_party_users[userId]) {
+
+                third_party_users = angular.copy(storageFixture.storage().user_third_party_users[userId]);
+            }
+
+            third_party_users = _.sortBy(third_party_users, ['third_party_type', 'unique_identifier']);
+
+            return [200, {
+                "objects": third_party_users
+            }, {}]
+        });
+
+        // delete third party user
+        $httpBackend.whenDELETE(/\/api\/users\/[A-Za-z0-9_-]{22}\/third_party\/users\/[A-Za-z0-9_-]{22}$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/')[3];
+            var thirdPartyUserId = url.split('/').pop();
+
+            if (storageFixture.storage().user_third_party_users[userId]) {
+                angular.forEach(storageFixture.storage().user_third_party_users[userId], function(thirdPartyUser, index) {
+                    if (thirdPartyUser.id == thirdPartyUserId) {
+                        storageFixture.storage().user_third_party_users[userId].splice(index, 1);
+                    }
+                });
+            };
+
+            return [200, {
+                "success": true
+            }, {}]
+        });
+
+        // get user third party users
+        $httpBackend.whenGET(/\/api\/users\/[A-Za-z0-9_-]{22}\/third_party\/users$/).respond(function(method, url, data, headers) {
+            var userId = url.split('/')[3];
+            var third_party_users = [];
+
+            if (storageFixture.storage().third_party_users[userId]) {
+                angular.forEach(storageFixture.storage().user_third_party_users[userId], function(userThirdPartyUser) {
+
+                    var third_party_user_copy = angular.copy(userThirdPartyUser);
+                    third_party_users.push(third_party_user_copy)
+                });
+            }
+
+            third_party_users = _.sortBy(third_party_users, function(third_party_user) {
+                return third_party_user.third_party_type;
+            });
+            third_party_users = _.sortBy(third_party_users, function(third_party_user) {
+                return third_party_user.unique_identifier;
+            });
+
+            return [200, {
+                "objects": third_party_users
+            }, {}]
+        });
+
         // get current user courses status
         $httpBackend.whenGET(/\/api\/users\/courses\/status\?.*$/).respond(function(method, url, data, headers) {
             var courses = _.values(storageFixture.storage().courses);

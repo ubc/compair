@@ -24,11 +24,18 @@ var viewUsersStepDefinitionsWrapper = function () {
             .column('user.displayname')).getText()).to.eventually.eql(list);
     });
 
-    this.When("I select the root's Manage Courses link", function () {
+    this.When("I select the root's Courses & Accounts link", function () {
         // ignore target="_blank" for link (slows down tests to much)
         browser.executeScript("$('a').attr('target','_self');");
         return element.all(by.exactRepeater("user in users")).get(2)
-            .element(by.cssContainingText('a', 'Manage Courses')).click();
+            .element(by.cssContainingText('a', 'Courses & Accounts')).click();
+    });
+
+    this.When("I select student1's Courses & Accounts link", function () {
+        // ignore target="_blank" for link (slows down tests to much)
+        browser.executeScript("$('a').attr('target','_self');");
+        return element.all(by.exactRepeater("user in users")).get(1)
+            .element(by.cssContainingText('a', 'Courses & Accounts')).click();
     });
 
     this.When("I filter users page by '$filter'", function (filter) {

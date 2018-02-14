@@ -1194,14 +1194,17 @@ module.controller("AssignmentViewController",
             );
         };
 
-        $scope.resetUsers = function(instructors, students) {
+        $scope.resetUsers = function(instructors, students, addTopPicks) {
+            addTopPicks = addTopPicks !== undefined ? addTopPicks : true;
             instructors = _.sortBy(instructors, 'name');
             students = _.sortBy(students, 'name');
             $scope.users = [].concat(instructors, students);
-            $scope.users.unshift({
-                id: "top-picks",
-                name: "Instructor's top picks"
-            });
+            if (addTopPicks) {
+                $scope.users.unshift({
+                    id: "top-picks",
+                    name: "Instructor's top picks"
+                });
+            }
         };
 
         $scope.updateAnswerList = function() {
@@ -1240,7 +1243,7 @@ module.controller("AssignmentViewController",
                 } else {
                     GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.answerFilters.group},
                         function (ret) {
-                            $scope.resetUsers([], ret.objects);
+                            $scope.resetUsers([], ret.objects, false);
                         }
                     );
                 }
@@ -1254,7 +1257,7 @@ module.controller("AssignmentViewController",
                 }
                 $scope.answerFilters.page = 1;
             }
-            if (oldValue.top != newValue.top) {
+            if (oldValue.top != newValue.top || oldValue.orderBy != newValue.orderBy) {
                 $scope.answerFilters.page = 1;
             }
 
@@ -1309,7 +1312,7 @@ module.controller("AssignmentWriteController",
         $scope.editorOptions = EditorOptions.basic;
         $scope.PairingAlgorithm = PairingAlgorithm;
         $scope.uploader = attachService.getUploader();
-        $scope.resetFileUploader = attachService.reset();
+        $scope.resetFileUploader = attachService.reset;
         $scope.recommended_comparisons = Math.floor(required_rounds / 2);
 
         $scope.rankLimitOptions = [

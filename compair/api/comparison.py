@@ -15,7 +15,8 @@ from . import dataformat
 from compair.core import db, event, abort
 from compair.authorization import require, allow
 from compair.models import Answer, Comparison, Course, WinningAnswer, \
-    Assignment, UserCourse, CourseRole, AssignmentCriterion
+    Assignment, UserCourse, CourseRole, AssignmentCriterion, \
+    AnswerComment, AnswerCommentType
 from .util import new_restful_api
 
 from compair.algorithms import InsufficientObjectsForPairException, \
@@ -103,8 +104,26 @@ class CompareRootAPI(Resource):
             except UnknownPairGeneratorException:
                 abort(500, title="Comparisons Unavailable", message="Generating scored pairs failed, this really shouldn't happen.")
 
+
+        # get evaluation comments for answers by current user
+        answer_comments = AnswerComment.query \
+            .join("answer") \
+            .filter(and_(
+                # both draft and completed comments are allowed
+                AnswerComment.active == True,
+                AnswerComment.comment_type == AnswerCommentType.evaluation,
+                Answer.id.in_([comparison.answer1_id, comparison.answer2_id]),
+                AnswerComment.user_id == current_user.id
+            )) \
+            .order_by(AnswerComment.draft, AnswerComment.created) \
+            .all()
+
+        comparison.answer1_feedback = [c for c in answer_comments if c.answer_id == comparison.answer1_id]
+        comparison.answer2_feedback = [c for c in answer_comments if c.answer_id == comparison.answer2_id]
+
         return {
-            'comparison': marshal(comparison, dataformat.get_comparison(restrict_user, include_answer_user=False, include_score=False)),
+            'comparison': marshal(comparison, dataformat.get_comparison(restrict_user,
+                include_answer_user=False, include_score=False, with_feedback=True)),
             'new_pair': new_pair,
             'current': comparison_count+1
         }

@@ -318,7 +318,9 @@ module.directive('richContent',
 
                     // needs to be compiled by dynamic
                     $scope.richContent = '<div mathjax hljs >'+content+'</div>';
+                };
 
+                var processAttachment = function() {
                     $scope.attachmentContent = [];
                     if ($scope.attachment) {
                         $scope.attachmentContent.push(
@@ -328,7 +330,9 @@ module.directive('richContent',
                 };
 
                 $scope.$watchCollection('content', processContent);
-                processContent()
+                $scope.$watchCollection('attachment', processAttachment);
+                processContent();
+                processAttachment();
             }
         };
     }

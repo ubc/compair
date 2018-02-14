@@ -328,7 +328,7 @@ module.controller(
         }
 
         $scope.uploader = answerAttachService.getUploader();
-        $scope.resetFileUploader = answerAttachService.reset();
+        $scope.resetFileUploader = answerAttachService.reset;
 
         $scope.deleteFile = function(file) {
             $scope.answer.file = null;

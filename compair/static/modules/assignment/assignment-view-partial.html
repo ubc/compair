@@ -54,7 +54,7 @@
             <a ng-click="setTab('answers')" href="">All Answers <span class="hidden-xs" ng-show="canManageAssignment || (!assignment.answer_period && see_answers)">({{answers.total}})</span></a>
         </li>
         <li ng-show="!canManageAssignment" id="your_feedback" ng-class="{active:showTab('your_feedback')}">
-            <a ng-click="setTab('your_feedback')" href="">Your Answer + Feedback <span class="hidden-xs">({{assignment.status.answers.feedback}})</span></a>
+            <a ng-click="setTab('your_feedback')" href="">Your Answer + Its Feedback <span class="hidden-xs">({{assignment.status.answers.feedback}})</span></a>
         </li>
         <li ng-show="!canManageAssignment" id="your_comparisons" ng-class="{active:showTab('your_comparisons')}">
             <a ng-click="setTab('your_comparisons')" href="">Your Comparisons <span class="hidden-xs">({{assignment.status.comparisons.count}})</span></a>
@@ -205,7 +205,7 @@
                     </div>
 
                     <!-- Instructor Answer -->
-                    <div class="content instructor-answer">
+                    <div class="instructor-answer">
                         <rich-content content="answer.content" attachment="answer.file"></rich-content>
                     </div>
 
@@ -271,7 +271,7 @@
                     </div>
 
                     <!-- Student Answer -->
-                    <div class="content {{answer.id}}" get-height>
+                    <div class="{{answer.id}}" get-height>
                         <rich-content content="answer.content" attachment="answer.file" ng-click="revealContent(answer)"></rich-content>
                     </div>
                     <!-- Student Answer Read More Button (not used for instructor answers) -->
@@ -357,7 +357,7 @@
             <!-- Your Work Tab Header -->
             <div class="tab-header">
                 <div>
-                    <h2>Your answer and feedback</h2>
+                    <h2>Your answer and its feedback</h2>
                     <br />
                     <p class="intro-text">The answer you submitted for this assignment appears below. Any peer, instructor, or self-evaluation feedback&mdash;<strong>{{assignment.status.answers.feedback}} feedback comments</strong> currently&mdash;for your answer can be found underneath the answer. Only feedback marked as public can be seen by other students.</p>
                 </div>
@@ -393,7 +393,7 @@
                 </div>
 
                 <!-- Student Answer -->
-                <div class="content {{answer.id}}" id="my-answer">
+                <div class="{{answer.id}}">
                     <rich-content content="answer.content" attachment="answer.file" ng-click="revealContent(answer)"></rich-content>
                 </div>
 

@@ -3,7 +3,7 @@ from flask import Blueprint
 from flask_login import login_required, current_user, current_app
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
-from sqlalchemy import func, or_, and_, desc
+from sqlalchemy import func, or_, and_, not_, desc
 from sqlalchemy.orm import joinedload, undefer_group
 from itertools import groupby
 from operator import attrgetter
@@ -90,6 +90,10 @@ class AnswerRootAPI(Resource):
 
         params = answer_list_parser.parse_args()
 
+        # if assingment has no rank display limit set, restricted users can't force to retreive by rank
+        if params['orderBy'] == 'score' and restrict_user and not assignment.rank_display_limit:
+            abort(400, title="Answers Unavailable", message="Sorry, you cannot cannot see answers by rank for this assignment.")
+
         if restrict_user and not assignment.after_comparing:
             # only the answer from student himself/herself should be returned
             params['author'] = current_user.uuid
@@ -136,8 +140,14 @@ class AnswerRootAPI(Resource):
             query = query.filter(Answer.top_answer == True)
 
         if params['orderBy'] == 'score':
-            query = query.join(AnswerScore) \
+            # use outer join to include comparable answers that are not yet compared (for non-restricted users)
+            query = query.outerjoin(AnswerScore) \
+                .filter(Answer.comparable == True) \
                 .order_by(AnswerScore.score.desc(), Answer.created.desc())
+
+            if restrict_user:
+                # when orderd by rank, students won't see answers that are not compared (i.e. no score/rank)
+                query = query.filter(AnswerScore.score.isnot(None))
 
             # limit answers up to rank if rank_display_limit is set and current_user is restricted (student)
             if assignment.rank_display_limit and restrict_user:
@@ -150,7 +160,8 @@ class AnswerRootAPI(Resource):
                     query = query.filter(AnswerScore.score >= score_for_rank - 0.00001)
 
         else:
-            query = query.order_by(Answer.created.desc())
+            # when ordered by date, non-comparable answers should be on top of the list
+            query = query.order_by(Answer.comparable, Answer.created.desc())
 
         page = query.paginate(params['page'], params['perPage'], error_out=False)
         # remove label entities from results
@@ -163,7 +174,13 @@ class AnswerRootAPI(Resource):
             course_id=course.id,
             data={'assignment_id': assignment.id})
 
-        return {"objects": marshal(page.items, dataformat.get_answer(restrict_user)),
+        # only include score/rank info if:
+        # - requesters are non-restricted users (i.e. instructors / TAs); or,
+        # - retrieving answers ordered by score/rank
+        include_score = (not restrict_user) or \
+            (params['orderBy'] == 'score' and assignment.rank_display_limit)
+
+        return {"objects": marshal(page.items, dataformat.get_answer(restrict_user, include_score=include_score)),
                 "page": page.page, "pages": page.pages,
                 "total": page.total, "per_page": page.per_page}
 
@@ -288,7 +305,10 @@ class AnswerIdAPI(Resource):
             course_id=course.id,
             data={'assignment_id': assignment.id, 'answer_id': answer.id})
 
-        return marshal(answer, dataformat.get_answer(restrict_user))
+        # don't include score/rank unless the user is non-restricted
+        include_score = not restrict_user
+
+        return marshal(answer, dataformat.get_answer(restrict_user, include_score=include_score))
 
     @login_required
     def post(self, course_uuid, assignment_uuid, answer_uuid):
@@ -461,7 +481,7 @@ class AnswerUserIdAPI(Resource):
             )
 
         if params.get('unsaved'):
-            query = query.filter(Answer.modified == Answer.created)
+            query = query.filter(not_(Answer.saved))
 
         answers = query.all()
 
