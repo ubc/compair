@@ -240,26 +240,32 @@ class AnswerRootAPI(Resource):
             ) \
             .one_or_none()
 
-        # we allow instructor and TA to submit multiple answers for their own,
-        # but not for student. Each student can only have one answer.
-        instructors_and_tas = [CourseRole.instructor.value, CourseRole.teaching_assistant.value]
         if user_course == None:
             # only system admin can add answers for themselves to a class without being enrolled in it
             # required for managing comparison examples as system admin
             if current_user.id != answer.user_id or current_user.system_role != SystemRole.sys_admin:
                 abort(400, title="Answer Not Submitted", message="Answers can be submitted only by those enrolled in the course. Please double-check your enrollment in this course.")
 
-        elif user_course.course_role.value not in instructors_and_tas:
-            # check if there is a previous answer submitted for the student
-            prev_answer = Answer.query. \
-                filter_by(
+        # we allow instructor and TA to submit multiple answers for their own,
+        # but not for student. Each student can only have one answer.
+        elif user_course.course_role.value not in [CourseRole.instructor.value, CourseRole.teaching_assistant.value]:
+            prev_answers = Answer.query \
+                .filter_by(
                     assignment_id=assignment.id,
                     user_id=answer.user_id,
                     active=True
-                ). \
-                first()
-            if prev_answer:
+                ) \
+                .all()
+
+            # check if there is a previous answer submitted for the student
+            non_draft_answers = [prev_answer for prev_answer in prev_answers if not prev_answer.draft]
+            if len(non_draft_answers) > 0:
                 abort(400, title="Answer Not Submitted", message="An answer has already been submitted for this assignment by you or on your behalf.")
+
+            # check if there is a previous draft answer submitted for the student (soft-delete if present)
+            draft_answers = [prev_answer for prev_answer in prev_answers if prev_answer.draft]
+            for draft_answer in draft_answers:
+                draft_answer.active = False
 
         db.session.add(answer)
         db.session.commit()
@@ -363,17 +369,24 @@ class AnswerIdAPI(Resource):
                 .one_or_none()
 
             if user_course.course_role.value not in [CourseRole.instructor.value, CourseRole.teaching_assistant.value]:
-                # check if there is a previous answer submitted for the student
-                prev_answer = Answer.query \
-                    .filter(Answer.id != answer.id) \
+                prev_answers = Answer.query \
                     .filter_by(
                         assignment_id=assignment.id,
                         user_id=answer.user_id,
                         active=True
                     ) \
-                    .first()
-                if prev_answer:
+                    .filter(Answer.id != answer.id) \
+                    .all()
+
+                # check if there is a previous answer submitted for the student
+                non_draft_answers = [prev_answer for prev_answer in prev_answers if not prev_answer.draft]
+                if len(non_draft_answers) > 0:
                     abort(400, title="Answer Not Saved", message="An answer has already been submitted for this assignment by you or on your behalf.")
+
+                # check if there is a previous draft answer submitted for the student (soft-delete if present)
+                draft_answers = [prev_answer for prev_answer in prev_answers if prev_answer.draft]
+                for draft_answer in draft_answers:
+                    draft_answer.active = False
 
         # can only change draft status while a draft
         if answer.draft:

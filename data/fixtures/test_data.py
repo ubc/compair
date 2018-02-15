@@ -732,10 +732,11 @@ class TestFixture:
 
         return self
 
-    def add_answer(self, assignment, user):
+    def add_answer(self, assignment, user, draft=False):
         answer = AnswerFactory(
             assignment=assignment,
-            user=user
+            user=user,
+            draft=draft
         )
         db.session.commit()
         self.answers.append(answer)
