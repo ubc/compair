@@ -1,0 +1,62 @@
+{
+    "strict": true,
+    "debug": true,
+    "sp": {
+        "entityId": "http://compair/api/saml/metadata",
+        "assertionConsumerService": {
+            "url": "http://localhost:8080/api/saml/auth",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+        },
+        "singleLogoutService": {
+            "url": "http://localhost:8080/api/saml/single_logout",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        },
+        "NameIDFormat": "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+        "x509cert": "MIICXDCCAcWgAwIBAgIBADANBgkqhkiG9w0BAQ0FADBKMQswCQYDVQQGEwJjYTEZMBcGA1UECAwQQnJpdGlzaCBDb2x1bWJpYTEMMAoGA1UECgwDVUJDMRIwEAYDVQQDDAlsb2NhbGhvc3QwIBcNMTcxMTMwMjIzMjMxWhgPMjExNzExMDYyMjMyMzFaMEoxCzAJBgNVBAYTAmNhMRkwFwYDVQQIDBBCcml0aXNoIENvbHVtYmlhMQwwCgYDVQQKDANVQkMxEjAQBgNVBAMMCWxvY2FsaG9zdDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAwsL3rmU4JjsAVIMshvbh1s9NKnxsD031TXLCCiqmUsIIbjZ1grQYYxT8UxCMlH8X3dtokSEuxHvj+O8adNV7NHwemJVduduJtHoRxjLeq0wQJvHVtHlqxN0iezctvY3WsopvnL8LSkK7m4acQIAfHpKcZONbJ4sDzlDILrhZRR0CAwEAAaNQME4wHQYDVR0OBBYEFFwKjTWJYCu5l5Xj6yXPClP1BzNYMB8GA1UdIwQYMBaAFFwKjTWJYCu5l5Xj6yXPClP1BzNYMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQENBQADgYEATshi0XVIq0aR6ayQUFMDPyWPauOyaR50ixbXiclLMZTdy8xKsf5lWiRbuE625EWkg0Zhc+pWdJ/8MNz6FcivestXqKopxh98avmIzIBIUQZDFxWy3TNuv37dMWyDM/yFYh+6Shi9wlWYeDSn3+Z4+Isgg2mgjL8BrADJTr/4LDM=",
+        "privateKey": "MIICdwIBADANBgkqhkiG9w0BAQEFAASCAmEwggJdAgEAAoGBAMLC965lOCY7AFSDLIb24dbPTSp8bA9N9U1ywgoqplLCCG42dYK0GGMU/FMQjJR/F93baJEhLsR74/jvGnTVezR8HpiVXbnbibR6EcYy3qtMECbx1bR5asTdIns3Lb2N1rKKb5y/C0pCu5uGnECAHx6SnGTjWyeLA85QyC64WUUdAgMBAAECgYA4wUwgHAsCyQrNlfQx2FvzlzFrghqTUyp6yUhWYhtZ3oVKaMBRuF2q8gCdzCLLW0X/NuL/9+WDCH9kmXjiNxvRq2o3c6xlEq7UyJJBCYe7Ko6x2KrInh+faNOcXwxprlkaFnXIhsbIYwbirDgPfmOwINYzVPkvaF39jolYSFz/gQJBAOcjgUTqWfWCVHrh+fU3KKeJbDVOK2CLkNrbXLhcuLiit2hXr9r/nNnMvAW1RNtwD/dt9h4SPcgXdisvxeTETM0CQQDXtc4FCeyonEeip5YJJt74JUy/TyOIO87aKGE9vYTWBg0Z5EBCcx45n/N9AVA4Tj4T+o4KhpiCUkYEUCzAUNmRAkEAiE4v1Ww+UMHi//Rza2Bz4Rjxbx4CBpVHf0kNjMthQ8DxV98eHY/P98D8wID9ckrLn6aBFYq8VFtBnIY3tYjtoQJBAI77mrkqT+2f0bgWX9RnKKrRhqLU4VefVUi0NWjIY/G+BxcffhzN074csTguE6+O5YU2ssp1V0gjIvge8Nr1fJECQHT1nhMWjay1ox0yrewwZ8mug0VY500FRkXCdQA/jMOPG6uVn2y34uZ+lwod6TUxRXx74wA5ba8Edz4dFB+z8pQ="
+    },
+    "idp": {
+        "entityId": "https://idp.testshib.org/idp/shibboleth",
+        "singleSignOnService": {
+            "url": "https://idp.testshib.org/idp/profile/SAML2/Redirect/SSO",
+            "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect"
+        },
+        "x509cert": "MIIDAzCCAeugAwIBAgIVAPX0G6LuoXnKS0Muei006mVSBXbvMA0GCSqGSIb3DQEBCwUAMBsxGTAXBgNVBAMMEGlkcC50ZXN0c2hpYi5vcmcwHhcNMTYwODIzMjEyMDU0WhcNMzYwODIzMjEyMDU0WjAbMRkwFwYDVQQDDBBpZHAudGVzdHNoaWIub3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAg9C4J2DiRTEhJAWzPt1S3ryhm3M2P3hPpwJwvt2q948vdTUxhhvNMuc3M3S4WNh6JYBs53R+YmjqJAII4ShMGNEmlGnSVfHorex7IxikpuDPKV3SNf28mCAZbQrX+hWA+ann/uifVzqXktOjs6DdzdBnxoVhniXgC8WCJwKcx6JO/hHsH1rG/0DSDeZFpTTcZHj4S9MlLNUtt5JxRzV/MmmB3ObaX0CMqsSWUOQeE4nylSlp5RWHCnx70cs9kwz5WrflnbnzCeHU2sdbNotBEeTHot6a2cj/pXlRJIgPsrL/4VSicPZcGYMJMPoLTJ8mdy6mpR6nbCmP7dVbCIm/DQIDAQABoz4wPDAdBgNVHQ4EFgQUUfaDa2mPi24x09yWp1OFXmZ2GPswGwYDVR0RBBQwEoIQaWRwLnRlc3RzaGliLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEASKKgqTxhqBzROZ1eVy++si+eTTUQZU4+8UywSKLia2RattaAPMAcXUjO+3cYOQXLVASdlJtt+8QPdRkfp8SiJemHPXC8BES83pogJPYEGJsKo19l4XFJHPnPy+Dsn3mlJyOfAa8RyWBS80u5lrvAcr2TJXt9fXgkYs7BOCigxtZoR8flceGRlAZ4p5FPPxQR6NDYb645jtOTMVr3zgfjP6Wh2dt+2p04LG7ENJn8/gEwtXVuXCsPoSCDx9Y0QmyXTJNdV1aB0AhORkWPlFYwp+zOyOIR+3m1+pqWFpn0eT/HrxpdKa74FA3R2kq4R7dXe4G0kUgXTdqXMLRKhDgdmA=="
+    },
+    "security": {
+        "nameIdEncrypted": true,
+        "authnRequestsSigned": true,
+        "logoutRequestSigned": true,
+        "logoutResponseSigned": true,
+        "signMetadata": true,
+        "wantMessagesSigned": false,
+        "wantAssertionsSigned": true,
+        "wantAssertionsEncrypted": true,
+        "wantNameId" : true,
+        "wantNameIdEncrypted": true,
+        "wantAttributeStatement": true,
+        "requestedAuthnContext": true,
+        "requestedAuthnContextComparison": "exact",
+        "metadataValidUntil": "2028-01-10T21:57:38Z",
+        "metadataCacheDuration": "PT315532800S",
+        "signatureAlgorithm": "http://www.w3.org/2000/09/xmldsig#rsa-sha1",
+        "digestAlgorithm": "http://www.w3.org/2000/09/xmldsig#sha1"
+    },
+    "contactPerson": {
+        "technical": {
+            "givenName": "technical_name",
+            "emailAddress": "technical@example.com"
+        },
+        "support": {
+            "givenName": "support_name",
+            "emailAddress": "support@example.com"
+        }
+    },
+    "organization": {
+        "en-US": {
+            "name": "sp_test",
+            "displayname": "SP test",
+            "url": "http://sp.example.com"
+        }
+    }
+}

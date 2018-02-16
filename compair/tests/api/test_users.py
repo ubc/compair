@@ -402,6 +402,64 @@ class UsersAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('oauth_create_user_link'))
 
 
+    def test_create_user_lti_and_SAML(self):
+        url = '/api/users'
+        lti_data = LTITestData()
+        auth_data = ThirdPartyAuthTestData()
+
+        with self.client.session_transaction() as sess:
+            sess['SAML_CREATE'] = True
+            sess['SAML_UNIQUE_IDENTIFIER'] = "some_unique_identifier"
+            self.assertIsNone(sess.get('LTI'))
+
+        # test login required when LTI and oauth_create_user_link are not present (even when SAML params are present)
+        expected = UserFactory.stub(
+            system_role=SystemRole.student.value,
+            email_notification_method=EmailNotificationMethod.enable.value
+        )
+        rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
+        self.assert401(rv)
+
+        # test create student via lti session
+        with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
+                user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
+                roles="Student") as lti_response:
+            self.assert200(lti_response)
+
+            with self.client.session_transaction() as sess:
+                sess['SAML_CREATE'] = True
+                sess['SAML_UNIQUE_IDENTIFIER'] = "some_unique_identifier"
+                self.assertTrue(sess.get('LTI'))
+
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            user = User.query.filter_by(uuid=rv.json['id']).one()
+            self.assertEqual(SystemRole.student, user.system_role)
+            self.assertIsNone(user.password)
+            self.assertIsNone(user.username)
+
+            third_party_user = ThirdPartyUser.query \
+                .filter_by(
+                    third_party_type=ThirdPartyType.saml,
+                    unique_identifier="some_unique_identifier",
+                    user_id=user.id
+                ) \
+                .one_or_none()
+
+            self.assertIsNotNone(third_party_user)
+
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('SAML_LOGIN'))
+                self.assertIsNone(sess.get('SAML_CREATE'))
+                self.assertIsNone(sess.get('SAML_UNIQUE_IDENTIFIER'))
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
     def test_edit_user(self):
         user = self.data.get_authorized_student()
         url = 'api/users/' + user.uuid
@@ -605,7 +663,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(instructor.email_notification_method.value, rv.json['email_notification_method'])
 
-        # test edit user with no compair login
+        # test edit user with no compair login (cas)
         auth_data = ThirdPartyAuthTestData()
         cas_user_auth = auth_data.create_cas_user_auth(SystemRole.student)
         user = cas_user_auth.user
@@ -626,6 +684,33 @@ class UsersAPITests(ComPAIRAPITestCase):
 
         # edit own profile as cas user
         with self.cas_login(cas_user_auth.unique_identifier):
+            # cannot change username (must be None)
+            valid = expected.copy()
+            valid['username'] = "wrongUsername"
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            user = User.query.filter_by(uuid=rv.json['id']).one()
+            self.assertIsNone(user.username)
+
+        # test edit user with no compair login (saml)
+        saml_user_auth = auth_data.create_saml_user_auth(SystemRole.student)
+        user = saml_user_auth.user
+        self.data.enrol_user(user, self.data.get_course(), CourseRole.student)
+        url = 'api/users/' + user.uuid
+        expected = {
+            'id': user.uuid,
+            'username': user.username,
+            'student_number': user.student_number,
+            'system_role': user.system_role.value,
+            'firstname': user.firstname,
+            'lastname': user.lastname,
+            'displayname': user.displayname,
+            'email_notification_method': EmailNotificationMethod.enable.value,
+            'email': user.email
+        }
+
+        # edit own profile as saml user
+        with self.saml_login(saml_user_auth.unique_identifier):
             # cannot change username (must be None)
             valid = expected.copy()
             valid['username'] = "wrongUsername"
@@ -1258,6 +1343,19 @@ class UsersAPITests(ComPAIRAPITestCase):
 
         # update own password as cas user
         with self.cas_login(cas_user_auth.unique_identifier):
+            # cannot change password
+            rv = self.client.post(url, data=json.dumps(data), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual("Password Not Saved", rv.json['title'])
+            self.assertEqual("Sorry, you cannot update the password since this user does not use the ComPAIR account login method.", rv.json['message'])
+
+        saml_user_auth = auth_data.create_saml_user_auth(SystemRole.student)
+        user = saml_user_auth.user
+        self.data.enrol_user(user, self.data.get_course(), CourseRole.student)
+        url = 'api/users/' + user.uuid + '/password'
+
+        # update own password as saml user
+        with self.saml_login(saml_user_auth.unique_identifier):
             # cannot change password
             rv = self.client.post(url, data=json.dumps(data), content_type='application/json')
             self.assert400(rv)

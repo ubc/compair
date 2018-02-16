@@ -44,6 +44,7 @@ module.factory('DemoResource', ['$resource', function($resource) {
 module.constant('AuthTypesEnabled', {
     app: true,
     cas: true,
+    saml: true,
     lti: true,
     demo: false
 });
@@ -116,9 +117,9 @@ module.run(
 
     // Hide the login form on login
     $rootScope.$on(AuthenticationService.LOGIN_EVENT, $rootScope.hideLogin);
-    // listen to 403 response for CAS user that do not exist in the system
+    // listen to 403 response for CAS/SAML user that do not exist in the system
     $rootScope.$on(AuthenticationService.LOGIN_FORBIDDEN_EVENT, function(event, rejection) {
-        if ('type' in rejection.data && rejection.data.type == 'CAS') {
+        if ('type' in rejection.data && (rejection.data.type == 'CAS' || rejection.data.type == 'SAML')) {
             Toaster.warning('Log In Failed', 'Please double-check your username and password and try again.');
             $rootScope.$broadcast(AuthenticationService.LOGIN_REQUIRED_EVENT);
         }
@@ -158,8 +159,9 @@ module.controller(
         });
 
         $scope.AuthTypesEnabled = AuthTypesEnabled;
-        // open account login automatically if cas is disabled
-        if (!$scope.AuthTypesEnabled.cas && !AuthTypesEnabled.demo && $scope.AuthTypesEnabled.app) {
+        // open account login automatically if cas and saml is disabled
+        if (!$scope.AuthTypesEnabled.cas && !$scope.AuthTypesEnabled.saml &&
+                !AuthTypesEnabled.demo && $scope.AuthTypesEnabled.app) {
             $scope.showAppLogin = true;
         }
 

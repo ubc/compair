@@ -63,9 +63,10 @@ LRS_PASSWORD = None
 # limit user generated content field text size limit
 LRS_USER_INPUT_FIELD_SIZE_LIMIT = 1048576 #1024 * 1024 -> max 1MB
 
-LRS_ACTOR_ACCOUNT_USE_CAS = False # set to True to use CAS account information if available
+LRS_ACTOR_ACCOUNT_USE_THIRD_PARTY = False # set to True to use CAS account information if available
 LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER = None # set to a param field value to use or None to use unique_identifier
-LRS_ACTOR_ACCOUNT_CAS_HOMEPAGE = None # set to the url for the CAS account homepage
+LRS_ACTOR_ACCOUNT_SAML_IDENTIFIER = None
+LRS_ACTOR_ACCOUNT_THIRD_PARTY_HOMEPAGE = None # set to the url for the CAS account homepage
 
 # where to retrieve assets, possible values 'cloud', 'local'
 ASSET_LOCATION = 'cloud'
@@ -86,7 +87,10 @@ DEMO_INSTALLATION = False
 APP_LOGIN_ENABLED = True
 # Login via CAS
 # if true requires additional CAS settings
-CAS_LOGIN_ENABLED = True
+CAS_LOGIN_ENABLED = False
+# Login via SAML idp
+# if true requires additional SAML settings
+SAML_LOGIN_ENABLED = False
 # Login via LTI consumer
 # if true requires record with oauth_consumer_key and oauth_consumer_secret in lti_consumer table
 LTI_LOGIN_ENABLED = True
@@ -94,6 +98,11 @@ LTI_LOGIN_ENABLED = True
 CAS_SERVER = 'http://localhost:8088'
 CAS_AUTH_PREFIX = '/cas'
 CAS_USE_SAML = False
+
+SAML_UNIQUE_IDENTIFIER = 'uid'
+SAML_METADATA_URL = None
+SAML_METADATA_ENTITY_ID = None
+SAML_EXPOSE_METADATA_ENDPOINT = False
 
 # kaltura integration defaults
 KALTURA_ENABLED = False
@@ -105,4 +114,4 @@ MAIL_NOTIFICATION_ENABLED = False
 
 # Privacy data settings
 EXPOSE_EMAIL_TO_INSTRUCTOR = False
-EXPOSE_CAS_USERNAME_TO_INSTRUCTOR = False
+EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR = False

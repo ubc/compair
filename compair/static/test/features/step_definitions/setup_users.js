@@ -19,8 +19,8 @@ var setupAdminStepDefinitionsWrapper = function () {
         return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm a CAS System Administrator", {timeout: 20 * 1000}, function () {
-        var fixtureName = 'admin/cas_fixture';
+    this.Given("I'm a SAML System Administrator", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'admin/saml_fixture';
         backEndMocks.setStorageFixture(browser, fixtureName);
         return loginDialog.skipLogin();
     });
@@ -31,8 +31,8 @@ var setupAdminStepDefinitionsWrapper = function () {
         return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm a CAS Instructor", {timeout: 20 * 1000}, function () {
-        var fixtureName = 'instructor/cas_fixture';
+    this.Given("I'm a SAML Instructor", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'instructor/saml_fixture';
         backEndMocks.setStorageFixture(browser, fixtureName);
         return loginDialog.skipLogin();
     });
@@ -43,8 +43,8 @@ var setupAdminStepDefinitionsWrapper = function () {
         return loginDialog.login(backEndMocks.getLoginDetails(fixtureName));
     });
 
-    this.Given("I'm a CAS Student", {timeout: 20 * 1000}, function () {
-        var fixtureName = 'student/cas_fixture';
+    this.Given("I'm a SAML Student", {timeout: 20 * 1000}, function () {
+        var fixtureName = 'student/saml_fixture';
         backEndMocks.setStorageFixture(browser, fixtureName);
         return loginDialog.skipLogin();
     });

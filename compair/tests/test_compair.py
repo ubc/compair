@@ -88,6 +88,7 @@ class ComPAIRTestCase(TestCase):
         # reset login settings in case tests fail
         self.app.config['APP_LOGIN_ENABLED'] = True
         self.app.config['CAS_LOGIN_ENABLED'] = True
+        self.app.config['SAML_LOGIN_ENABLED'] = True
         self.app.config['LTI_LOGIN_ENABLED'] = True
 
     def tearDown(self):
@@ -144,8 +145,12 @@ class ComPAIRXAPITestCase(ComPAIRTestCase):
         XAPILog.query.delete()
         return statements
 
-    def get_cas_actor(self, user):
-        pass
+    def get_third_party_actor(self, user, homepage, identifier):
+        return {
+            'account': {'homePage': homepage, 'name': identifier },
+            'name': user.fullname,
+            'objectType': 'Agent'
+        }
 
     def get_compair_actor(self, user):
         return {
@@ -178,6 +183,24 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
 
         with mock.patch('compair.api.login.validate_cas_ticket', return_value=response_mock):
             rv = self.client.get('/api/cas/auth?ticket=mock_ticket', follow_redirects=follow_redirects)
+            if follow_redirects:
+                self.assert200(rv)
+            yield rv
+            self.client.delete('/api/logout', follow_redirects=True)
+
+    @contextmanager
+    def saml_login(self, saml_unique_identifier, follow_redirects=True):
+        response_mock = mock.MagicMock()
+        response_mock.get_errors.return_value = []
+        response_mock.is_authenticated.return_value = True
+        response_mock.get_attributes.return_value = {
+            'urn:oid:0.9.2342.19200300.100.1.1': [saml_unique_identifier]
+        }
+        response_mock.get_nameid.return_value = "saml_mock_nameid"
+        response_mock.get_session_index.return_value = "saml_session_index"
+
+        with mock.patch('compair.api.login.get_saml_auth_response', return_value=response_mock):
+            rv = self.client.post('/api/saml/auth', follow_redirects=follow_redirects)
             if follow_redirects:
                 self.assert200(rv)
             yield rv

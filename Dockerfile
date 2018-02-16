@@ -3,7 +3,9 @@
 FROM python:2.7 as python-base
 
 ADD requirements.txt .
-RUN pip install -r requirements.txt \
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev  \
+    && pip install -r requirements.txt \
     && pip install uwsgi
 
 # NODE DEPS
@@ -36,9 +38,12 @@ COPY --from=python-base /root/.cache /root/.cache
 COPY --from=python-base /requirements.txt /code/requirements.txt
 
 RUN apt-get update -y \
-    && apt-get install -y libxml2-dev libxslt1-dev  \
+    && apt-get install -y libxml2-dev libxslt1-dev libxmlsec1-openssl \
+    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev  \
     && pip install -r /code/requirements.txt \
     && pip install uwsgi \
+    # see https://github.com/onelogin/python3-saml/issues/82
+    && STATIC_DEPS=true pip install lxml==4.1.1 --force-reinstall \
     && rm -rf /root/.cache \
     && rm -rf /var/lib/apt/lists/*
 

@@ -9,13 +9,13 @@ module.exports.build = function(browser) {
 
     storageFixtures = {
         'admin/default_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/default_fixture.js')),
-        'admin/cas_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/cas_fixture.js')),
+        'admin/saml_fixture': module.exports.buildStorageFixture(require('../fixtures/admin/saml_fixture.js')),
 
         'instructor/default_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/default_fixture.js')),
-        'instructor/cas_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/cas_fixture.js')),
+        'instructor/saml_fixture': module.exports.buildStorageFixture(require('../fixtures/instructor/saml_fixture.js')),
 
         'student/default_fixture': module.exports.buildStorageFixture(require('../fixtures/student/default_fixture.js')),
-        'student/cas_fixture': module.exports.buildStorageFixture(require('../fixtures/student/cas_fixture.js'))
+        'student/saml_fixture': module.exports.buildStorageFixture(require('../fixtures/student/saml_fixture.js'))
     };
 
     browser.addMockModule('httpBackEndMock', module.exports.httpbackendMock, storageFixtures);

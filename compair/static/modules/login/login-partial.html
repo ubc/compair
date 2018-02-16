@@ -4,19 +4,22 @@
         <div class="row">
             <form name="loginForm" class="form col-sm-6" ng-submit="submit()" novalidate>
                 <fieldset>
-                    <div ng-if="AuthTypesEnabled.cas">
+                    <div ng-if="AuthTypesEnabled.cas || AuthTypesEnabled.saml">
                         <h2>Log in with your CWL here:</h2>
-                        <a id="cwl_login" href="/api/cas/login">
+                        <a id="cwl_login" href="/api/saml/login" ng-if="AuthTypesEnabled.saml">
+                            <img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0">
+                        </a>
+                        <a id="cwl_login" href="/api/cas/login" ng-if="AuthTypesEnabled.cas && !AuthTypesEnabled.saml">
                             <img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0">
                         </a>
                     </div>
 
-                    <hr ng-if="AuthTypesEnabled.app && AuthTypesEnabled.cas" />
+                    <hr ng-if="AuthTypesEnabled.app && (AuthTypesEnabled.cas || AuthTypesEnabled.saml)" />
 
                     <div ng-show="AuthTypesEnabled.app">
-                        <h2 ng-if="AuthTypesEnabled.cas">Or use a ComPAIR account:</h2>
-                        <h2 ng-if="!AuthTypesEnabled.cas && !AuthTypesEnabled.demo">Log in with your ComPAIR account:</h2>
-                        <h2 ng-if="!AuthTypesEnabled.cas && AuthTypesEnabled.demo">Select the account type you want to demo:</h2>
+                        <h2 ng-if="AuthTypesEnabled.cas || AuthTypesEnabled.saml">Or use a ComPAIR account:</h2>
+                        <h2 ng-if="!AuthTypesEnabled.cas && !AuthTypesEnabled.saml && !AuthTypesEnabled.demo">Log in with your ComPAIR account:</h2>
+                        <h2 ng-if="!AuthTypesEnabled.cas && !AuthTypesEnabled.saml && AuthTypesEnabled.demo">Select the account type you want to demo:</h2>
                         <p class="text-center" ng-if="AuthTypesEnabled.demo">
                             <a href="" ng-click="createDemoAccount(SystemRole.sys_admin)">Admin</a>
                             &nbsp;&nbsp;|&nbsp;&nbsp;
@@ -64,7 +67,7 @@
                 <h3>Trouble logging in?</h3>
                 <p>Try the following:</p>
                 <ul>
-                    <li ng-if="AuthTypesEnabled.cas">If using CWL, make sure your CWL is working (log in somewhere else).</li>
+                    <li ng-if="AuthTypesEnabled.cas || AuthTypesEnabled.saml">If using CWL, make sure your CWL is working (log in somewhere else).</li>
                     <li>Confirm your registration in the course that is using this application.</li>
                     <li>Clear your browser cache or try a different one (supported browsers include <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, <a href="http://www.google.com/chrome/">Chrome</a>, <a href="https://www.apple.com/ca/safari/">Safari</a>, and <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie">IE9+</a>).</li>
                     <li>Enable Javascript and cookies in your browser settings.</li>

@@ -75,7 +75,9 @@ def display_name_generator(role="student"):
 def _parse_user_row(import_type, row):
     length = len(row)
 
-    columns = CAS_IMPORT if import_type == ThirdPartyType.cas.value else COMPAIR_IMPORT
+    columns = COMPAIR_IMPORT
+    if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
+        columns = CAS_IMPORT
 
     # get common columns
     user = {
@@ -96,18 +98,20 @@ def _parse_user_row(import_type, row):
 
 
 def _get_existing_users_by_identifier(import_type, users):
-    username_index = CAS_IMPORT['username'] if import_type == ThirdPartyType.cas.value else COMPAIR_IMPORT['username']
+    username_index = COMPAIR_IMPORT['username']
+    if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
+        username_index = CAS_IMPORT['username']
     usernames = [u[username_index] for u in users if len(u) > username_index]
     if len(usernames) == 0:
         return {}
 
-    if import_type == ThirdPartyType.cas.value:
-        # cas login
+    if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
+        # CAS/SAML login
         third_party_users = ThirdPartyUser.query \
             .options(joinedload('user')) \
             .filter(and_(
                 ThirdPartyUser.unique_identifier.in_(usernames),
-                ThirdPartyUser.third_party_type == ThirdPartyType.cas
+                ThirdPartyUser.third_party_type == ThirdPartyType(import_type)
             )) \
             .all()
         return {
@@ -123,7 +127,9 @@ def _get_existing_users_by_identifier(import_type, users):
         }
 
 def _get_existing_users_by_student_number(import_type, users):
-    student_number_index = CAS_IMPORT['student_number'] if import_type == ThirdPartyType.cas.value else COMPAIR_IMPORT['student_number']
+    student_number_index = COMPAIR_IMPORT['student_number']
+    if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
+        student_number_index = CAS_IMPORT['student_number']
     student_number = [u[student_number_index] for u in users if len(u) > student_number_index]
     if len(student_number) == 0:
         return {}
@@ -158,7 +164,7 @@ def import_users(import_type, course, users):
 
         # validate unique identifier
         username = user.get('username')
-        password = user.get('password') #always None for CAS import, can be None for existing users on ComPAIR import
+        password = user.get('password') #always None for CAS/SAML import, can be None for existing users on ComPAIR import
         student_number = user.get('student_number')
 
         u = existing_system_usernames.get(username, None)
@@ -183,11 +189,11 @@ def import_users(import_type, course, users):
                 lastname=user.get('lastname'),
                 email=user.get('email')
             )
-            if import_type == ThirdPartyType.cas.value:
-                # CAS login
+            if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
+                # CAS/SAML login
                 u.third_party_auths.append(ThirdPartyUser(
                     unique_identifier=username,
-                    third_party_type=ThirdPartyType.cas
+                    third_party_type=ThirdPartyType(import_type)
                 ))
             else:
                 # ComPAIR login
@@ -289,8 +295,11 @@ def output_csv(data, code, headers=None):
     if allow(MANAGE, User) or current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False):
         fieldnames.insert(4, 'email')
 
-    if allow(MANAGE, User) or current_app.config.get('EXPOSE_CAS_USERNAME_TO_INSTRUCTOR', False):
-        fieldnames.insert(1, 'cas_username')
+    if allow(MANAGE, User) or current_app.config.get('EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR', False):
+        if current_app.config.get('CAS_LOGIN_ENABLED'):
+            fieldnames.insert(1, 'cas_username')
+        if current_app.config.get('SAML_LOGIN_ENABLED'):
+            fieldnames.insert(1, 'saml_username')
 
     csv_buffer = BytesIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames, extrasaction='ignore')
@@ -337,7 +346,10 @@ class ClasslistRootAPI(Resource):
             third_party_auths = ThirdPartyUser.query \
                 .filter(and_(
                     ThirdPartyUser.user_id.in_(user_ids),
-                    ThirdPartyUser.third_party_type == ThirdPartyType.cas
+                    or_(
+                        ThirdPartyUser.third_party_type == ThirdPartyType.cas,
+                        ThirdPartyUser.third_party_type == ThirdPartyType.saml,
+                    )
                 )) \
                 .all()
 
@@ -347,11 +359,16 @@ class ClasslistRootAPI(Resource):
             _user.group_name = _group_name
 
             if not restrict_user:
-                third_party_auth = next(
-                    (third_party_auth for third_party_auth in third_party_auths if third_party_auth.user_id == _user.id),
+                cas_auth = next(
+                    (auth for auth in third_party_auths if auth.user_id == _user.id and auth.third_party_type == ThirdPartyType.cas),
                     None
                 )
-                _user.cas_username = third_party_auth.unique_identifier if third_party_auth else None
+                _user.cas_username = cas_auth.unique_identifier if cas_auth else None
+                saml_auth = next(
+                    (auth for auth in third_party_auths if auth.user_id == _user.id and auth.third_party_type == ThirdPartyType.saml),
+                    None
+                )
+                _user.saml_username = saml_auth.unique_identifier if saml_auth else None
 
             class_list.append(_user)
 
@@ -382,9 +399,11 @@ class ClasslistRootAPI(Resource):
         params = import_classlist_parser.parse_args()
         import_type = params.get('import_type')
 
-        if import_type not in [ThirdPartyType.cas.value, None]:
+        if import_type not in [ThirdPartyType.cas.value, ThirdPartyType.saml.value, None]:
             abort(400, title="Class List Not Imported", message="Please select a way for students to log in and try importing again.")
         elif import_type == ThirdPartyType.cas.value and not current_app.config.get('CAS_LOGIN_ENABLED'):
+            abort(400, title="Class List Not Imported", message="Please select another way for students to log in and try importing again. Students are not able to use CWL logins based on the current settings.")
+        elif import_type == ThirdPartyType.saml.value and not current_app.config.get('SAML_LOGIN_ENABLED'):
             abort(400, title="Class List Not Imported", message="Please select another way for students to log in and try importing again. Students are not able to use CWL logins based on the current settings.")
         elif import_type is None and not current_app.config.get('APP_LOGIN_ENABLED'):
             abort(400, title="Class List Not Imported", message="Please select another way for students to log in and try importing again. Students are not able to use the ComPAIR logins based on the current settings.")

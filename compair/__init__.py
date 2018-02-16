@@ -144,9 +144,10 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
 
         @login_manager.unauthorized_handler
         def unauthorized():
-            if sess.get('CAS_AUTH_MSG'):
-                msg = sess.pop('CAS_AUTH_MSG')
-                response = jsonify({'message': msg, 'status': 403, 'type': 'CAS'})
+            if sess.get('THIRD_PARTY_AUTH_ERROR_MSG'):
+                msg = sess.pop('THIRD_PARTY_AUTH_ERROR_MSG')
+                msg_type = sess.pop('THIRD_PARTY_AUTH_ERROR_TYPE')
+                response = jsonify({'message': msg, 'status': 403, 'type': msg_type})
                 response.status_code = 403
                 return response
             abort(401, title="User Logged Out", message="You must be logged in to see this page. Please log in to continue.")

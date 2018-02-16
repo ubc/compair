@@ -1,0 +1,53 @@
+<md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" validUntil="2028-01-10T21:57:38Z" cacheDuration="PT315532800S" entityID="http://compair/api/saml/metadata">
+    <md:SPSSODescriptor AuthnRequestsSigned="true" WantAssertionsSigned="true" protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol">
+        <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+<ds:SignedInfo>
+<ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+<ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+<ds:Reference>
+<ds:Transforms>
+<ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+<ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+</ds:Transforms>
+<ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+<ds:DigestValue>MlbZX3UaVC5z6LKcgPa43B9ZBCc=</ds:DigestValue>
+</ds:Reference>
+</ds:SignedInfo>
+<ds:SignatureValue>Dz06eRVJju+gSh97ynjO0H48pyePojLapNzXxL4Xhqxr0DbabEK8jhfgRJ3RQU8I
+EEdhKfQpvkHYUxazXgFuc7mOv+TOde+CGLHtoEUWn2HvvB55gDQf/7ut476XHVTd
+tEX2jOXpDBG7U8nru4x5+gWrOt5xp3U5bHHZ6G7FE8s=</ds:SignatureValue>
+<ds:KeyInfo>
+<ds:X509Data>
+<ds:X509Certificate>MIICXDCCAcWgAwIBAgIBADANBgkqhkiG9w0BAQ0FADBKMQswCQYDVQQGEwJjYTEZ
+MBcGA1UECAwQQnJpdGlzaCBDb2x1bWJpYTEMMAoGA1UECgwDVUJDMRIwEAYDVQQD
+DAlsb2NhbGhvc3QwIBcNMTcxMTMwMjIzMjMxWhgPMjExNzExMDYyMjMyMzFaMEox
+CzAJBgNVBAYTAmNhMRkwFwYDVQQIDBBCcml0aXNoIENvbHVtYmlhMQwwCgYDVQQK
+DANVQkMxEjAQBgNVBAMMCWxvY2FsaG9zdDCBnzANBgkqhkiG9w0BAQEFAAOBjQAw
+gYkCgYEAwsL3rmU4JjsAVIMshvbh1s9NKnxsD031TXLCCiqmUsIIbjZ1grQYYxT8
+UxCMlH8X3dtokSEuxHvj+O8adNV7NHwemJVduduJtHoRxjLeq0wQJvHVtHlqxN0i
+ezctvY3WsopvnL8LSkK7m4acQIAfHpKcZONbJ4sDzlDILrhZRR0CAwEAAaNQME4w
+HQYDVR0OBBYEFFwKjTWJYCu5l5Xj6yXPClP1BzNYMB8GA1UdIwQYMBaAFFwKjTWJ
+YCu5l5Xj6yXPClP1BzNYMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQENBQADgYEA
+Tshi0XVIq0aR6ayQUFMDPyWPauOyaR50ixbXiclLMZTdy8xKsf5lWiRbuE625EWk
+g0Zhc+pWdJ/8MNz6FcivestXqKopxh98avmIzIBIUQZDFxWy3TNuv37dMWyDM/yF
+Yh+6Shi9wlWYeDSn3+Z4+Isgg2mgjL8BrADJTr/4LDM=</ds:X509Certificate>
+</ds:X509Data>
+</ds:KeyInfo>
+</ds:Signature><md:KeyDescriptor use="signing"><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:X509Data><ds:X509Certificate>MIICXDCCAcWgAwIBAgIBADANBgkqhkiG9w0BAQ0FADBKMQswCQYDVQQGEwJjYTEZMBcGA1UECAwQQnJpdGlzaCBDb2x1bWJpYTEMMAoGA1UECgwDVUJDMRIwEAYDVQQDDAlsb2NhbGhvc3QwIBcNMTcxMTMwMjIzMjMxWhgPMjExNzExMDYyMjMyMzFaMEoxCzAJBgNVBAYTAmNhMRkwFwYDVQQIDBBCcml0aXNoIENvbHVtYmlhMQwwCgYDVQQKDANVQkMxEjAQBgNVBAMMCWxvY2FsaG9zdDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAwsL3rmU4JjsAVIMshvbh1s9NKnxsD031TXLCCiqmUsIIbjZ1grQYYxT8UxCMlH8X3dtokSEuxHvj+O8adNV7NHwemJVduduJtHoRxjLeq0wQJvHVtHlqxN0iezctvY3WsopvnL8LSkK7m4acQIAfHpKcZONbJ4sDzlDILrhZRR0CAwEAAaNQME4wHQYDVR0OBBYEFFwKjTWJYCu5l5Xj6yXPClP1BzNYMB8GA1UdIwQYMBaAFFwKjTWJYCu5l5Xj6yXPClP1BzNYMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQENBQADgYEATshi0XVIq0aR6ayQUFMDPyWPauOyaR50ixbXiclLMZTdy8xKsf5lWiRbuE625EWkg0Zhc+pWdJ/8MNz6FcivestXqKopxh98avmIzIBIUQZDFxWy3TNuv37dMWyDM/yFYh+6Shi9wlWYeDSn3+Z4+Isgg2mgjL8BrADJTr/4LDM=</ds:X509Certificate></ds:X509Data></ds:KeyInfo></md:KeyDescriptor><md:KeyDescriptor use="encryption"><ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:X509Data><ds:X509Certificate>MIICXDCCAcWgAwIBAgIBADANBgkqhkiG9w0BAQ0FADBKMQswCQYDVQQGEwJjYTEZMBcGA1UECAwQQnJpdGlzaCBDb2x1bWJpYTEMMAoGA1UECgwDVUJDMRIwEAYDVQQDDAlsb2NhbGhvc3QwIBcNMTcxMTMwMjIzMjMxWhgPMjExNzExMDYyMjMyMzFaMEoxCzAJBgNVBAYTAmNhMRkwFwYDVQQIDBBCcml0aXNoIENvbHVtYmlhMQwwCgYDVQQKDANVQkMxEjAQBgNVBAMMCWxvY2FsaG9zdDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAwsL3rmU4JjsAVIMshvbh1s9NKnxsD031TXLCCiqmUsIIbjZ1grQYYxT8UxCMlH8X3dtokSEuxHvj+O8adNV7NHwemJVduduJtHoRxjLeq0wQJvHVtHlqxN0iezctvY3WsopvnL8LSkK7m4acQIAfHpKcZONbJ4sDzlDILrhZRR0CAwEAAaNQME4wHQYDVR0OBBYEFFwKjTWJYCu5l5Xj6yXPClP1BzNYMB8GA1UdIwQYMBaAFFwKjTWJYCu5l5Xj6yXPClP1BzNYMAwGA1UdEwQFMAMBAf8wDQYJKoZIhvcNAQENBQADgYEATshi0XVIq0aR6ayQUFMDPyWPauOyaR50ixbXiclLMZTdy8xKsf5lWiRbuE625EWkg0Zhc+pWdJ/8MNz6FcivestXqKopxh98avmIzIBIUQZDFxWy3TNuv37dMWyDM/yFYh+6Shi9wlWYeDSn3+Z4+Isgg2mgjL8BrADJTr/4LDM=</ds:X509Certificate></ds:X509Data></ds:KeyInfo></md:KeyDescriptor><md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="http://localhost:8080/api/saml/single_logout"/>
+        <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified</md:NameIDFormat>
+        <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="http://localhost:8080/api/saml/auth" index="1"/>
+    </md:SPSSODescriptor>
+    <md:Organization>
+        <md:OrganizationName xml:lang="en-US">sp_test</md:OrganizationName>
+        <md:OrganizationDisplayName xml:lang="en-US">SP test</md:OrganizationDisplayName>
+        <md:OrganizationURL xml:lang="en-US">http://sp.example.com</md:OrganizationURL>
+    </md:Organization>
+    <md:ContactPerson contactType="technical">
+        <md:GivenName>technical_name</md:GivenName>
+        <md:EmailAddress>technical@example.com</md:EmailAddress>
+    </md:ContactPerson>
+    <md:ContactPerson contactType="support">
+        <md:GivenName>support_name</md:GivenName>
+        <md:EmailAddress>support@example.com</md:EmailAddress>
+    </md:ContactPerson>
+</md:EntityDescriptor>

@@ -62,6 +62,7 @@
                 .run( ['AuthTypesEnabled', function(AuthTypesEnabled) {
                     AuthTypesEnabled.app = {{ 'true' if app_login_enabled else 'false' }};
                     AuthTypesEnabled.cas = {{ 'true' if cas_login_enabled else 'false' }};
+                    AuthTypesEnabled.saml = {{ 'true' if saml_login_enabled else 'false' }};
                     AuthTypesEnabled.lti = {{ 'true' if lti_login_enabled else 'false' }};
                     AuthTypesEnabled.demo = {{ 'true' if demo else 'false' }};
                 }]);

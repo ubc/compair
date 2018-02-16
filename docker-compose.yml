@@ -37,6 +37,12 @@ services:
       - MAIL_USERNAME=compair
       - MAIL_PASSWORD=compair
       - MAIL_DEFAULT_SENDER=compair@example.com
+      - SAML_LOGIN_ENABLED=true
+      - SAML_UNIQUE_IDENTIFIER=urn:oid:0.9.2342.19200300.100.1.1
+      - SAML_SETTINGS_FILE=/code/deploy/development/dev_saml_settings.json
+      - SAML_METADATA_URL=https://www.testshib.org/metadata/testshib-providers.xml
+      - SAML_METADATA_ENTITY_ID=https://idp.testshib.org/idp/shibboleth
+      - SAML_EXPOSE_METADATA_ENDPOINT=true
     volumes:
       - .:/code
       - ./.data/persistent:/code/persistent

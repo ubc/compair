@@ -66,7 +66,10 @@ def get_full_users_in_course():
     users = get_user(False)
     users['group_name'] = fields.String
     users['course_role'] = UnwrapEnum(attribute='course_role')
-    users['cas_username'] = fields.String
+    if current_app.config.get('CAS_LOGIN_ENABLED'):
+        users['cas_username'] = fields.String
+    if current_app.config.get('SAML_LOGIN_ENABLED'):
+        users['saml_username'] = fields.String
 
     return users
 
@@ -76,8 +79,11 @@ def get_users_in_course(restrict_user=True):
 
     if not restrict_user:
         users['course_role'] = UnwrapEnum(attribute='course_role')
-        if current_app.config.get('EXPOSE_CAS_USERNAME_TO_INSTRUCTOR', False):
-            users['cas_username'] = fields.String
+        if current_app.config.get('EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR', False):
+            if current_app.config.get('CAS_LOGIN_ENABLED'):
+                users['cas_username'] = fields.String
+            if current_app.config.get('SAML_LOGIN_ENABLED'):
+                users['saml_username'] = fields.String
 
     return users
 

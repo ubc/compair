@@ -4,7 +4,7 @@ import io
 import unicodecsv as csv
 
 from compair.core import db
-from data.fixtures.test_data import BasicTestData, ThirdPartyUserFactory
+from data.fixtures.test_data import BasicTestData, ThirdPartyAuthTestData
 from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 from compair.models import CourseRole, UserCourse, ThirdPartyType, Course
 
@@ -13,6 +13,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
     def setUp(self):
         super(ClassListAPITest, self).setUp()
         self.data = BasicTestData()
+        self.auth_data = ThirdPartyAuthTestData()
         self.url = "/api/courses/" + self.data.get_course().uuid + "/users"
 
     def test_get_classlist(self):
@@ -95,35 +96,89 @@ class ClassListAPITest(ComPAIRAPITestCase):
                     next(reader)
                 )
 
-            # test export csv with cas usernames
-            self.app.config['EXPOSE_CAS_USERNAME_TO_INSTRUCTOR'] = True
-            third_party_student = ThirdPartyUserFactory(user=self.data.get_authorized_student())
-            third_party_instructor = ThirdPartyUserFactory(user=self.data.get_authorized_instructor())
-            third_party_ta = ThirdPartyUserFactory(user=self.data.get_authorized_ta())
+            # test export csv with cas and saml usernames
+            self.app.config['EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR'] = True
+            cas_student = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_student(),
+                third_party_type=ThirdPartyType.cas
+            )
+            saml_student = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_student(),
+                third_party_type=ThirdPartyType.saml
+            )
+            cas_instructor = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_instructor(),
+                third_party_type=ThirdPartyType.cas
+            )
+            saml_instructor = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_instructor(),
+                third_party_type=ThirdPartyType.saml
+            )
+            cas_ta = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_ta(),
+                third_party_type=ThirdPartyType.cas
+            )
+            saml_ta = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_ta(),
+                third_party_type=ThirdPartyType.saml
+            )
             db.session.commit()
 
             expected = [
-                (self.data.get_authorized_instructor(), third_party_instructor.unique_identifier, "instructor_group"),
-                (self.data.get_authorized_ta(), third_party_ta.unique_identifier, "ta_group"),
-                (self.data.get_authorized_student(), third_party_student.unique_identifier, "student_group")]
+                (self.data.get_authorized_instructor(), saml_instructor.unique_identifier, cas_instructor.unique_identifier, "instructor_group"),
+                (self.data.get_authorized_ta(), saml_ta.unique_identifier, cas_ta.unique_identifier, "ta_group"),
+                (self.data.get_authorized_student(), saml_student.unique_identifier, cas_student.unique_identifier, "student_group")]
             expected.sort(key=lambda x: x[0].lastname)
 
-            rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
-            self.assert200(rv)
-            self.assertEqual('text/csv', rv.content_type)
-            reader = csv.reader(rv.data.splitlines(), delimiter=',')
+            # test every combination of cas/saml enabled
+            for cas_enabled, saml_enabled in [(False, False), (True, False), (False, True), (True, True)]:
+                self.app.config['CAS_LOGIN_ENABLED'] = cas_enabled
+                self.app.config['SAML_LOGIN_ENABLED'] = saml_enabled
 
-            self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
-            for user, cas_username, group_name in expected:
-                self.assertEqual(
-                    [user.username, cas_username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
-                    next(reader)
-                )
+                rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
+                self.assert200(rv)
+                self.assertEqual('text/csv', rv.content_type)
+                reader = csv.reader(rv.data.splitlines(), delimiter=',')
+
+                expected_header = ['username', 'saml_username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name']
+                if not cas_enabled:
+                    expected_header.pop(2)
+                if not saml_enabled:
+                    expected_header.pop(1)
+                self.assertEqual(expected_header, next(reader))
+                for user, saml_username, cas_username, group_name in expected:
+                    expected_row = [user.username, saml_username, cas_username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name]
+                    if not cas_enabled:
+                        expected_row.pop(2)
+                    if not saml_enabled:
+                        expected_row.pop(1)
+                    self.assertEqual(expected_row, next(reader))
 
             # test export csv with cas usernames (student has multiple cas_usernames). should use first username
-            third_party_student2 = ThirdPartyUserFactory(user=self.data.get_authorized_student())
-            third_party_student3 = ThirdPartyUserFactory(user=self.data.get_authorized_student())
-            third_party_student4 = ThirdPartyUserFactory(user=self.data.get_authorized_student())
+            cas_student2 = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_student(),
+                third_party_type=ThirdPartyType.cas
+            )
+            cas_student3 = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_student(),
+                third_party_type=ThirdPartyType.cas
+            )
+            cas_student4 = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_student(),
+                third_party_type=ThirdPartyType.cas
+            )
+            cas_saml2 = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_student(),
+                third_party_type=ThirdPartyType.saml
+            )
+            cas_saml3 = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_student(),
+                third_party_type=ThirdPartyType.saml
+            )
+            cas_saml4 = self.auth_data.create_third_party_user(
+                user=self.data.get_authorized_student(),
+                third_party_type=ThirdPartyType.saml
+            )
             db.session.commit()
 
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
@@ -131,10 +186,10 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual('text/csv', rv.content_type)
             reader = csv.reader(rv.data.splitlines(), delimiter=',')
 
-            self.assertEqual(['username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
-            for user, cas_username, group_name in expected:
+            self.assertEqual(['username', 'saml_username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
+            for user, saml_username, cas_username, group_name in expected:
                 self.assertEqual(
-                    [user.username, cas_username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
+                    [user.username, saml_username, cas_username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
                     next(reader)
                 )
 
@@ -142,17 +197,15 @@ class ClassListAPITest(ComPAIRAPITestCase):
             rv = self.client.get(self.url)
             self.assert200(rv)
             self.assertEqual(len(expected), len(rv.json['objects']))
-            for key, (user, cas_username, group_name) in enumerate(expected):
+            for key, (user, saml_username, cas_username, group_name) in enumerate(expected):
                 self.assertEqual(user.uuid, rv.json['objects'][key]['id'])
 
         with self.login("root"):
             rv = self.client.get(self.url)
             self.assert200(rv)
             self.assertEqual(len(expected), len(rv.json['objects']))
-            for key, (user, cas_username, group_name) in enumerate(expected):
+            for key, (user, saml_username, cas_username, group_name) in enumerate(expected):
                 self.assertEqual(user.uuid, rv.json['objects'][key]['id'])
-
-        self.app.config['EXPOSE_CAS_USERNAME_TO_INSTRUCTOR'] = False
 
     def test_get_students_course(self):
         url = self.url + "/students"
@@ -669,36 +722,45 @@ class ClassListAPITest(ComPAIRAPITestCase):
     def test_import_cas_classlist(self):
         url = '/api/courses/' + self.data.get_course().uuid + '/users'
         student = self.data.get_authorized_student()
-        third_party_student = ThirdPartyUserFactory(user=student)
+        cas_student = self.auth_data.create_third_party_user(
+            user=student,
+            third_party_type=ThirdPartyType.cas
+        )
         instructor = self.data.get_authorized_instructor()
-        third_party_instructor = ThirdPartyUserFactory(user=instructor)
+        cas_instructor = self.auth_data.create_third_party_user(
+            user=instructor,
+            third_party_type=ThirdPartyType.cas
+        )
         ta = self.data.get_authorized_ta()
-        third_party_ta = ThirdPartyUserFactory(user=ta)
+        cas_ta = self.auth_data.create_third_party_user(
+            user=ta,
+            third_party_type=ThirdPartyType.cas
+        )
         db.session.commit()
 
         filename = "classlist.csv"
 
         # test login required
-        uploaded_file = io.BytesIO((third_party_student.unique_identifier).encode('utf-8'))
+        uploaded_file = io.BytesIO((cas_student.unique_identifier).encode('utf-8'))
         rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
         self.assert401(rv)
         uploaded_file.close()
 
         # test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(cas_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert403(rv)
             uploaded_file.close()
 
         with self.login(self.data.get_authorized_student().username):
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(cas_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert403(rv)
             uploaded_file.close()
 
         with self.login(self.data.get_authorized_ta().username):
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(cas_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert403(rv)
             uploaded_file.close()
@@ -706,20 +768,20 @@ class ClassListAPITest(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             # test invalid course id
             invalid_url = '/api/courses/999/users'
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(cas_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(invalid_url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             uploaded_file.close()
             self.assert404(rv)
 
             # test invalid file type
             invalid_filetype = "classlist.png"
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(cas_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, invalid_filetype), import_type=ThirdPartyType.cas.value))
             uploaded_file.close()
             self.assert400(rv)
 
             # test no username provided
-            content = "".join([",\n", third_party_student.unique_identifier, ",", student.student_number])
+            content = "".join([",\n", cas_student.unique_identifier, ",", student.student_number])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
@@ -731,19 +793,19 @@ class ClassListAPITest(ComPAIRAPITestCase):
             uploaded_file.close()
 
             # test duplicate usernames in file
-            content = "".join([third_party_student.unique_identifier, "\n", third_party_student.unique_identifier])
+            content = "".join([cas_student.unique_identifier, "\n", cas_student.unique_identifier])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
             self.assertEqual(1, result['success'])
             self.assertEqual(1, len(result['invalids']))
-            self.assertEqual(third_party_student.unique_identifier, result['invalids'][0]['user']['username'])
+            self.assertEqual(cas_student.unique_identifier, result['invalids'][0]['user']['username'])
             self.assertEqual('This username already exists in the file.', result['invalids'][0]['message'])
             uploaded_file.close()
 
             # test duplicate student number in system
-            content = "".join(['username1,', student.student_number, "\n", third_party_student.unique_identifier])
+            content = "".join(['username1,', student.student_number, "\n", cas_student.unique_identifier])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
@@ -756,7 +818,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test duplicate student number in file
             content = "".join([
-                third_party_student.unique_identifier, ",", student.student_number, "\n",
+                cas_student.unique_identifier, ",", student.student_number, "\n",
                 "username1,", student.student_number])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
@@ -788,7 +850,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             uploaded_file.close()
 
             # test authorized instructor - existing user
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(cas_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -798,14 +860,14 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test invalid import type cas login disabled
             self.app.config['CAS_LOGIN_ENABLED'] = False
-            uploaded_file = io.BytesIO(third_party_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(cas_student.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert400(rv)
             uploaded_file.close()
             self.app.config['CAS_LOGIN_ENABLED'] = True
 
             # test authorized instructor - existing instructor
-            uploaded_file = io.BytesIO(third_party_instructor.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(cas_instructor.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -823,7 +885,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertIsNotNone(instructor_enrollment)
 
             # test authorized instructor - existing teaching assistant
-            uploaded_file = io.BytesIO(third_party_ta.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(cas_ta.unique_identifier.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
             result = rv.json
@@ -842,9 +904,9 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test authorized instructor - group enrollment
             content = "".join([
-                third_party_student.unique_identifier, ",,,,,,group_student\n",
-                third_party_instructor.unique_identifier, ",,,,,,group_instructor\n",
-                third_party_ta.unique_identifier, ",,,,,,group_ta\n",
+                cas_student.unique_identifier, ",,,,,,group_student\n",
+                cas_instructor.unique_identifier, ",,,,,,group_instructor\n",
+                cas_ta.unique_identifier, ",,,,,,group_ta\n",
             ])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
@@ -873,12 +935,252 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test authorized instructor - group unenrollment
             content = "".join([
-                third_party_student.unique_identifier, ",,,,,,\n",
-                third_party_instructor.unique_identifier, ",,,,,,\n",
-                third_party_ta.unique_identifier, ",,,,,,\n",
+                cas_student.unique_identifier, ",,,,,,\n",
+                cas_instructor.unique_identifier, ",,,,,,\n",
+                cas_ta.unique_identifier, ",,,,,,\n",
             ])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            user_courses = UserCourse.query \
+                .filter(
+                    UserCourse.course_id == self.data.get_course().id,
+                    UserCourse.course_role != CourseRole.dropped
+                ) \
+                .all()
+
+            self.assertEqual(len(user_courses), 3)
+            for user_course in user_courses:
+                self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
+                self.assertEqual(user_course.group_name, None)
+
+    def test_import_saml_classlist(self):
+        url = '/api/courses/' + self.data.get_course().uuid + '/users'
+        student = self.data.get_authorized_student()
+        saml_student = self.auth_data.create_third_party_user(
+            user=student,
+            third_party_type=ThirdPartyType.saml
+        )
+        instructor = self.data.get_authorized_instructor()
+        saml_instructor = self.auth_data.create_third_party_user(
+            user=instructor,
+            third_party_type=ThirdPartyType.saml
+        )
+        ta = self.data.get_authorized_ta()
+        saml_ta = self.auth_data.create_third_party_user(
+            user=ta,
+            third_party_type=ThirdPartyType.saml
+        )
+        db.session.commit()
+
+        filename = "classlist.csv"
+
+        # test login required
+        uploaded_file = io.BytesIO((saml_student.unique_identifier).encode('utf-8'))
+        rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+        self.assert401(rv)
+        uploaded_file.close()
+
+        # test unauthorized user
+        with self.login(self.data.get_unauthorized_instructor().username):
+            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert403(rv)
+            uploaded_file.close()
+
+        with self.login(self.data.get_authorized_student().username):
+            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert403(rv)
+            uploaded_file.close()
+
+        with self.login(self.data.get_authorized_ta().username):
+            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert403(rv)
+            uploaded_file.close()
+
+        with self.login(self.data.get_authorized_instructor().username):
+            # test invalid course id
+            invalid_url = '/api/courses/999/users'
+            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            rv = self.client.post(invalid_url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            uploaded_file.close()
+            self.assert404(rv)
+
+            # test invalid file type
+            invalid_filetype = "classlist.png"
+            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, invalid_filetype), import_type=ThirdPartyType.saml.value))
+            uploaded_file.close()
+            self.assert400(rv)
+
+            # test no username provided
+            content = "".join([",\n", saml_student.unique_identifier, ",", student.student_number])
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual(None, result['invalids'][0]['user']['username'])
+            self.assertEqual('The username is required.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
+            # test duplicate usernames in file
+            content = "".join([saml_student.unique_identifier, "\n", saml_student.unique_identifier])
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual(saml_student.unique_identifier, result['invalids'][0]['user']['username'])
+            self.assertEqual('This username already exists in the file.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
+            # test duplicate student number in system
+            content = "".join(['username1,', student.student_number, "\n", saml_student.unique_identifier])
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual("username1", result['invalids'][0]['user']['username'])
+            self.assertEqual('This student number already exists in the system.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
+            # test duplicate student number in file
+            content = "".join([
+                saml_student.unique_identifier, ",", student.student_number, "\n",
+                "username1,", student.student_number])
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual("username1", result['invalids'][0]['user']['username'])
+            self.assertEqual('This student number already exists in the file.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
+            # test existing display
+            content = "username1,,,," + student.displayname
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            # test authorized instructor - new user
+            uploaded_file = io.BytesIO(b'username2')
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            # test authorized instructor - existing user
+            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            # test invalid import type saml login disabled
+            self.app.config['SAML_LOGIN_ENABLED'] = False
+            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert400(rv)
+            uploaded_file.close()
+            self.app.config['SAML_LOGIN_ENABLED'] = True
+
+            # test authorized instructor - existing instructor
+            uploaded_file = io.BytesIO(saml_instructor.unique_identifier.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            instructor_enrollment = UserCourse.query \
+                .filter_by(
+                    course_id=self.data.get_course().id,
+                    user_id=instructor.id,
+                    course_role=CourseRole.instructor
+                ) \
+                .one_or_none()
+            self.assertIsNotNone(instructor_enrollment)
+
+            # test authorized instructor - existing teaching assistant
+            uploaded_file = io.BytesIO(saml_ta.unique_identifier.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            ta_enrollment = UserCourse.query \
+                .filter_by(
+                    course_id=self.data.get_course().id,
+                    user_id=ta.id,
+                    course_role=CourseRole.teaching_assistant
+                ) \
+                .one_or_none()
+            self.assertIsNotNone(ta_enrollment)
+
+            # test authorized instructor - group enrollment
+            content = "".join([
+                saml_student.unique_identifier, ",,,,,,group_student\n",
+                saml_instructor.unique_identifier, ",,,,,,group_instructor\n",
+                saml_ta.unique_identifier, ",,,,,,group_ta\n",
+            ])
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            user_courses = UserCourse.query \
+                .filter(
+                    UserCourse.course_id == self.data.get_course().id,
+                    UserCourse.course_role != CourseRole.dropped
+                ) \
+                .all()
+
+            self.assertEqual(len(user_courses), 3)
+            for user_course in user_courses:
+                self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
+                if user_course.user_id == student.id:
+                    self.assertEqual(user_course.group_name, 'group_student')
+                elif user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.group_name, 'group_instructor')
+                elif user_course.user_id == ta.id:
+                    self.assertEqual(user_course.group_name, 'group_ta')
+
+            # test authorized instructor - group unenrollment
+            content = "".join([
+                saml_student.unique_identifier, ",,,,,,\n",
+                saml_instructor.unique_identifier, ",,,,,,\n",
+                saml_ta.unique_identifier, ",,,,,,\n",
+            ])
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
             self.assert200(rv)
             result = rv.json
             self.assertEqual(1, result['success'])
@@ -1031,7 +1333,6 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
     def _create_enrol_url(self, url, user_id):
         return url + '/' + user_id
-
 
 
 class ClassListDemoAPITest(ComPAIRAPIDemoTestCase):

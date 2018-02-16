@@ -8,6 +8,7 @@ from compair.authorization import get_logged_in_user_permissions
 from compair.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext, \
     ThirdPartyUser, ThirdPartyType
 from compair.cas import get_cas_login_url, validate_cas_ticket, get_cas_logout_url
+from compair.saml import get_saml_login_url, get_saml_auth_response, get_saml_logout_url, _get_auth
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
@@ -75,6 +76,8 @@ def logout():
 
     elif sess.get('CAS_LOGIN'):
         url = jsonify({'redirect': url_for('login_api.cas_logout')})
+    elif sess.get('SAML_LOGIN'):
+        url = jsonify({'redirect': url_for('login_api.saml_logout')})
 
     sess.clear()
     return url
@@ -102,8 +105,8 @@ def cas_login():
 @login_api.route('/cas/auth', methods=['GET'])
 def cas_auth():
     """
-    CAS Authentication Endpoint. Authenticate user through CAS. If user doesn't exists,
-    set message in session so that frontend can get the message through /session call
+    CAS Authentication Endpoint. Authenticate user through CAS.
+    If error, set message in session so that frontend can get the message through /session call
     """
     if not current_app.config.get('CAS_LOGIN_ENABLED'):
         abort(403, title="Log In Failed",
@@ -169,7 +172,8 @@ def cas_auth():
                 sess['CAS_LOGIN'] = True
 
     if error_message is not None:
-        sess['CAS_AUTH_MSG'] = error_message
+        sess['THIRD_PARTY_AUTH_ERROR_TYPE'] = 'CAS'
+        sess['THIRD_PARTY_AUTH_ERROR_MSG'] = error_message
 
     return redirect(url)
 
@@ -180,6 +184,148 @@ def cas_logout():
             message="Please try an alternate way of logging out. The CWL logout has been disabled by your system administrator.")
 
     return redirect(get_cas_logout_url())
+
+
+@login_api.route('/saml/login', methods=['GET'])
+def saml_login():
+    if not current_app.config.get('SAML_LOGIN_ENABLED'):
+        abort(403, title="Not Logged In",
+            message="Please use a valid way to log in. You are not able to use CWL login based on the current settings.")
+
+    return redirect(get_saml_login_url(request))
+
+@login_api.route('/saml/auth', methods=['POST'])
+def saml_auth():
+    """
+    SAML Authentication Endpoint. Authenticate user through SAML.
+    If error, set message in session so that frontend can get the message through /session call
+    """
+    if not current_app.config.get('SAML_LOGIN_ENABLED'):
+        abort(403, title="Not Logged In",
+            message="Please use a valid way to log in. You are not able to use CWL login based on the current settings.")
+
+    url = "/app/#/lti" if sess.get('LTI') else "/"
+    error_message = None
+    auth = get_saml_auth_response(request)
+    errors = auth.get_errors()
+
+    if len(errors) > 0:
+        current_app.logger.debug(
+            "SAML IdP returned errors: %s" % (errors)
+        )
+        error_message = "Login Failed."
+    elif not auth.is_authenticated():
+        current_app.logger.debug(
+            "SAML IdP not logged in"
+        )
+        error_message = "Login Failed."
+    else:
+        attributes = auth.get_attributes()
+        unique_identifier = attributes.get(current_app.config.get('SAML_UNIQUE_IDENTIFIER'))
+        current_app.logger.debug(
+            "SAML IdP responded with attributes:%s" % (attributes)
+        )
+
+        if not unique_identifier or (isinstance(unique_identifier, list) and len(unique_identifier) == 0):
+            current_app.logger.error(
+                "SAML idP did not return the unique_identifier " + current_app.config.get('SAML_UNIQUE_IDENTIFIER') + " within its attributes"
+            )
+            error_message = "Login Failed. Expecting " + current_app.config.get('SAML_UNIQUE_IDENTIFIER') + " to be set."
+        else:
+            # set unique_identifier to first item in list if unique_identifier is an array
+            if isinstance(unique_identifier, list):
+                unique_identifier = unique_identifier[0]
+
+            thirdpartyuser = ThirdPartyUser.query. \
+                filter_by(
+                    unique_identifier=unique_identifier,
+                    third_party_type=ThirdPartyType.saml
+                ) \
+                .one_or_none()
+
+            sess['SAML_NAME_ID'] = auth.get_nameid()
+            sess['SAML_SESSION_INDEX'] = auth.get_session_index()
+
+            # store additional CAS attributes if needed
+            if not thirdpartyuser or not thirdpartyuser.user:
+                if sess.get('LTI') and sess.get('oauth_create_user_link'):
+                    sess['SAML_CREATE'] = True
+                    sess['SAML_UNIQUE_IDENTIFIER'] = unique_identifier
+                    sess['SAML_PARAMS'] = attributes
+                    url = '/app/#/oauth/create'
+                else:
+                    current_app.logger.debug("Login failed, invalid unique_identifier for: " + unique_identifier)
+                    error_message = "You don't have access to this application."
+            else:
+                authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
+                thirdpartyuser.params = attributes
+
+                if sess.get('LTI') and sess.get('oauth_create_user_link'):
+                    lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+                    lti_user.compair_user_id = thirdpartyuser.user_id
+                    sess.pop('oauth_create_user_link')
+
+                if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
+                    lti_context = LTIContext.query.get_or_404(sess['lti_context'])
+                    lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+                    lti_context.update_enrolment(thirdpartyuser.user_id, lti_user_resource_link.course_role)
+
+                db.session.commit()
+                sess['SAML_LOGIN'] = True
+
+    if error_message is not None:
+        sess['THIRD_PARTY_AUTH_ERROR_TYPE'] = 'SAML'
+        sess['THIRD_PARTY_AUTH_ERROR_MSG'] = error_message
+
+    return redirect(url)
+
+@login_api.route('/saml/metadata', methods=['GET'])
+def metadata():
+    if not current_app.config.get('SAML_LOGIN_ENABLED') or not current_app.config.get('SAML_EXPOSE_METADATA_ENDPOINT'):
+        abort(404)
+
+    auth = _get_auth(request)
+    settings = auth.get_settings()
+    metadata = settings.get_sp_metadata()
+    errors = settings.validate_metadata(metadata)
+
+    if len(errors) > 0:
+        abort(500, title="Metadata Error",
+            message=', \n'.join(errors))
+
+    return metadata, 200, {'Content-Type': 'text/xml; charset=utf-8'}
+
+@login_api.route('/saml/logout', methods=['GET'])
+def saml_logout():
+    if not current_app.config.get('SAML_LOGIN_ENABLED'):
+        abort(403, title="Not Logged Out",
+            message="Please use a valid way to log out. You are not able to use CWL logout based on the current settings.")
+
+    return redirect(get_saml_logout_url(request))
+
+
+@login_api.route('/saml/single_logout', methods=['GET'])
+def saml_single_logout():
+    # TODO: TEST THIS
+    if not current_app.config.get('SAML_LOGIN_ENABLED'):
+        abort(403, title="Not Logged Out",
+            message="Please use a valid way to log out. You are not able to use CWL logout based on the current settings.")
+
+    auth = _get_auth(request)
+    url = auth.process_slo(delete_session_cb=_saml_single_signout_callback)
+    errors = auth.get_errors()
+    if len(errors) > 0:
+        current_app.logger.debug("Error when processing Single Loggout: %s" % (', '.join(errors)))
+    else:
+        current_app.logger.debug("SAML Single Loggout Sucessfull")
+        if url != None:
+            return redirect(url)
+
+def _saml_single_signout_callback():
+    if current_user:
+        current_user.update_last_online()
+    logout_user()
+    sess.clear()
 
 def authenticate(user, login_method=None):
     # username valid, password valid, login successful

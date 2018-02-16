@@ -1,6 +1,12 @@
 """
     Test package, also includes default settings for test environment
 """
+import json
+import os
+
+saml_settings = None
+with open(os.getcwd() +'/deploy/development/dev_saml_settings.json', 'r') as json_data_file:
+    saml_settings = json.load(json_data_file)
 
 test_app_settings = {
     'DEBUG': False,
@@ -17,7 +23,10 @@ test_app_settings = {
     'LRS_STATEMENT_ENDPOINT': 'local',
     'DEMO_INSTALLATION': False,
     'EXPOSE_EMAIL_TO_INSTRUCTOR': False,
-    'EXPOSE_CAS_USERNAME_TO_INSTRUCTOR': False,
+    'EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR': False,
+    'SAML_UNIQUE_IDENTIFIER': 'urn:oid:0.9.2342.19200300.100.1.1',
+    'SAML_SETTINGS': saml_settings,
+    'SAML_EXPOSE_METADATA_ENDPOINT': True,
     'MAIL_NOTIFICATION_ENABLED': True,
     'MAIL_DEFAULT_SENDER': 'compair@example.com'
 }

@@ -18,7 +18,7 @@
                 <li>To skip non-required information, simply leave a blank space between commas, e.g., to leave out first and last name:<br />
                 "studentuser1, pass1234, 005678, , ,jane.doe@student.ca, display0001, Group 2</li>
             </ul>
-            <ul class="li-spacing" ng-if="importType == ThirdPartyAuthType.cas">
+            <ul class="li-spacing" ng-if="importType == ThirdPartyAuthType.cas || importType == ThirdPartyAuthType.saml">
                 <li>Students will log in using their CWL. The usernames in your file must match the students' CWLs.</li>
                 <li>User information is expected in this order: <strong><span class="required-star">Username</span>, Student Number, First Name, Last Name, Email, Display Name, Group</strong></li>
                 <li>Usernames are required. All other information is optional. Usernames and student numbers must also be unique in the application.</li>

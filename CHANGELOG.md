@@ -1,3 +1,16 @@
+# v1.2
+
+## Breaking changes
+
+* `CAS_LOGIN_ENABLED` is now disabled by default.
+* Renamed `LRS_ACTOR_ACCOUNT_USE_CAS` to `LRS_ACTOR_ACCOUNT_USE_THIRD_PARTY`
+* Renamed `LRS_ACTOR_ACCOUNT_CAS_HOMEPAGE` to `LRS_ACTOR_ACCOUNT_THIRD_PARTY_HOMEPAGE`
+* Renamed `EXPOSE_CAS_USERNAME_TO_INSTRUCTOR` to `EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR`
+
+## Notable changes
+
+...
+
 # v1.1
 
 ## Notable changes
