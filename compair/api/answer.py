@@ -404,6 +404,7 @@ class AnswerIdAPI(Resource):
         if not answer.draft and not answer.content and not file_uuid:
             abort(400, title="Answer Not Submitted", message="Please provide content in the text editor or upload a file and try submitting again.")
 
+        model_changes = get_model_changes(answer)
         db.session.add(answer)
         db.session.commit()
 
@@ -414,7 +415,7 @@ class AnswerIdAPI(Resource):
             course_id=course.id,
             answer=answer,
             assignment=assignment,
-            data=get_model_changes(answer))
+            data=model_changes)
 
         # update course & assignment grade for user if answer is fully submitted
         if not answer.draft:
