@@ -131,6 +131,7 @@ class AssignmentCommentIdAPI(Resource):
             abort(400, title="Help Comment Not Saved", message="Please provide content in the text editor and try saving again.")
 
         assignment_comment.content = params.get("content")
+        model_changes = get_model_changes(assignment_comment)
         db.session.add(assignment_comment)
 
         on_assignment_comment_modified.send(
@@ -139,7 +140,7 @@ class AssignmentCommentIdAPI(Resource):
             user=current_user,
             course_id=course.id,
             assignment_comment=assignment_comment,
-            data=get_model_changes(assignment_comment))
+            data=model_changes)
 
         db.session.commit()
         return marshal(assignment_comment, dataformat.get_assignment_comment())

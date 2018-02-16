@@ -332,6 +332,7 @@ class AnswerCommentAPI(Resource):
         if not answer_comment.content and not answer_comment.draft:
             abort(400, title="Reply Not Saved", message="Please provide content in the text editor to reply and try saving again.")
 
+        model_changes = get_model_changes(answer_comment)
         db.session.add(answer_comment)
         db.session.commit()
 
@@ -342,7 +343,7 @@ class AnswerCommentAPI(Resource):
             course_id=course.id,
             answer_comment=answer_comment,
             was_draft=was_draft,
-            data=get_model_changes(answer_comment))
+            data=model_changes)
 
         # update course & assignment grade for user if self-evaluation is completed
         if not answer_comment.draft and answer_comment.comment_type == AnswerCommentType.self_evaluation:

@@ -60,15 +60,16 @@ class ComparisonExampleIdAPI(Resource):
             abort(400, title="Comparison Example Not Saved",
                 message="Please add two answers with content to the practice answers and try again.")
 
+        model_changes = get_model_changes(comparison_example)
+        db.session.add(comparison_example)
+        db.session.commit()
+
         on_comparison_example_modified.send(
             self,
             event_name=on_comparison_example_modified.name,
             user=current_user,
             course_id=course.id,
-            data=get_model_changes(comparison_example))
-
-        db.session.add(comparison_example)
-        db.session.commit()
+            data=model_changes)
 
         return marshal(comparison_example, dataformat.get_comparison_example())
 

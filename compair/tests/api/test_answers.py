@@ -388,7 +388,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertIsNone(new_course_grade)
             self.assertIsNone(new_assignment_grade)
 
-            # test instructor could submit on behave of a student
+            # test instructor could submit on behalf of a student
             self.fixtures.add_students(1)
             expected_answer.update({'user_id': self.fixtures.students[-1].uuid})
             rv = self.client.post(
@@ -414,6 +414,21 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
             self.assertEqual(rv.json['title'], "Answer Not Submitted")
             self.assertEqual(rv.json['message'], "An answer has already been submitted for this assignment by you or on your behalf.")
+
+            # test instructor could submit on behalf of a student who has a draft answer
+            self.fixtures.add_students(1)
+            self.fixtures.add_answer(self.fixtures.assignment, self.fixtures.students[-1], draft=True)
+            draft_answer = self.fixtures.answers[-1]
+
+            expected_answer.update({'user_id': self.fixtures.students[-1].uuid})
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(expected_answer),
+                content_type='application/json')
+            self.assert200(rv)
+            actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
+            self.assertEqual(expected_answer['content'], actual_answer.content)
+            self.assertFalse(draft_answer.active)
 
         self.fixtures.add_students(1)
         self.fixtures.course.calculate_grade(self.fixtures.students[-1])
@@ -754,11 +769,11 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual('This is an edit', rv.json['content'])
 
         # test edit by user that can manage posts
-        manage_expected = {
-            'id': answer.uuid,
-            'content': 'This is another edit'
-        }
         with self.login(self.fixtures.instructor.username):
+            manage_expected = {
+                'id': answer.uuid,
+                'content': 'This is another edit'
+            }
             rv = self.client.post(
                 self.base_url + '/' + answer.uuid,
                 data=json.dumps(manage_expected),
@@ -766,6 +781,48 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(answer.uuid, rv.json['id'])
             self.assertEqual('This is another edit', rv.json['content'])
+
+            # test instructor could submit on behalf of a student
+            self.fixtures.add_answer(self.fixtures.assignment, self.fixtures.instructor, draft=True)
+            instructor_answer = self.fixtures.answers[-1]
+            self.fixtures.add_students(1)
+            manage_expected = {
+                'id': instructor_answer.uuid,
+                'user_id': self.fixtures.students[-1].uuid,
+                'content': 'This is another edit'
+            }
+            rv = self.client.post(
+                self.base_url + '/' + instructor_answer.uuid,
+                data=json.dumps(manage_expected),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(instructor_answer.uuid, rv.json['id'])
+            self.assertEqual(instructor_answer.user_uuid, rv.json['user_id'])
+            self.assertEqual(instructor_answer.user_id, self.fixtures.students[-1].id)
+            self.assertEqual('This is another edit', rv.json['content'])
+
+            # test instructor could submit on behalf of a student who has a draft answer
+            self.fixtures.add_answer(self.fixtures.assignment, self.fixtures.instructor, draft=True)
+            instructor_answer = self.fixtures.answers[-1]
+            self.fixtures.add_students(1)
+            self.fixtures.add_answer(self.fixtures.assignment, self.fixtures.students[-1], draft=True)
+            draft_answer = self.fixtures.answers[-1]
+
+            manage_expected = {
+                'id': instructor_answer.uuid,
+                'user_id': self.fixtures.students[-1].uuid,
+                'content': 'This is another edit'
+            }
+            rv = self.client.post(
+                self.base_url + '/' + instructor_answer.uuid,
+                data=json.dumps(manage_expected),
+                content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(instructor_answer.uuid, rv.json['id'])
+            self.assertEqual(instructor_answer.user_uuid, rv.json['user_id'])
+            self.assertEqual(instructor_answer.user_id, self.fixtures.students[-1].id)
+            self.assertEqual('This is another edit', rv.json['content'])
+            self.assertFalse(draft_answer.active)
 
         # test edit by author
         with self.login(self.fixtures.students[0].username):

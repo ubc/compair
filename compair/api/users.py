@@ -199,7 +199,7 @@ class UserAPI(Resource):
         user.lastname = params.get("lastname", user.lastname)
         user.displayname = params.get("displayname", user.displayname)
 
-        changes = get_model_changes(user)
+        model_changes = get_model_changes(user)
 
         restrict_user = not allow(EDIT, user)
 
@@ -209,7 +209,7 @@ class UserAPI(Resource):
                 self,
                 event_name=on_user_modified.name,
                 user=current_user,
-                data={'id': user.id, 'changes': changes})
+                data={'id': user.id, 'changes': model_changes})
         except exc.IntegrityError:
             db.session.rollback()
             abort(409, title="User Not Saved", message="Sorry, this ID already exists and IDs must be unique in ComPAIR. Please try addding another user.")
