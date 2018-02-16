@@ -168,6 +168,7 @@ class CourseAPI(Resource):
         if course.start_date and course.end_date and course.start_date > course.end_date:
             abort(400, title="Course Not Saved", message="Course end time must be after course start time.")
 
+        model_changes = get_model_changes(course)
         db.session.commit()
 
         on_course_modified.send(
@@ -175,7 +176,7 @@ class CourseAPI(Resource):
             event_name=on_course_modified.name,
             user=current_user,
             course=course,
-            data=get_model_changes(course))
+            data=model_changes)
 
         return marshal(course, dataformat.get_course())
 
