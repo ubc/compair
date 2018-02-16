@@ -74,29 +74,42 @@ module.constant('PairingAlgorithm', {
 /***** Directives *****/
 module.directive(
     'confirmationNeeded',
-    function () {
+    [ "$mdDialog",
+    function ($mdDialog) {
         return {
             priority: -100, //need negative priority to override ng-click
             restrict: 'A',
             link: function(scope, element, attrs){
-                var msg = attrs.keyword ? " "+attrs.keyword : "";
-                msg = "Do you want to permanently remove this"+msg+"?";
+
+                var msg = attrs.keyword ? " " + attrs.keyword : "";
+                var yesLabel = "Yes, permanently remove this" + msg;
+                var noLabel = "No, cancel";
+                var msgBody = "";
+                msg = "Do you want to permanently remove this" + msg + "?";
                 if (attrs.confirmationWarning) {
-                    msg += "\n"+attrs.confirmationWarning;
+                    msgBody = attrs.confirmationWarning;
                 }
                 element.bind('click', function(e) {
-                    if ( window.confirm(msg) ) {
-                        scope.$eval(attrs.confirmationNeeded);
-                        scope.$apply();
-                    } else {
+                    var confirm = $mdDialog.confirm()
+                            .title(msg)
+                            .textContent(msgBody)
+                            .ariaLabel('Confirmation required')
+                            .targetEvent('confirmationNeededDelete')
+                            .ok(noLabel)
+                            .cancel(yesLabel);
+
+                    $mdDialog.show(confirm).then(function() {
                         e.preventDefault();
                         e.stopImmediatePropagation();
-                    }
+                    }, function() {
+                        scope.$eval(attrs.confirmationNeeded);
+                    });
                 });
+
             }
         }
     }
-);
+]);
 
 module.directive(
     'getHeight',
