@@ -33,10 +33,7 @@
              *     });
              * ```
              */
-            getUser: function (options) {
-                // options include:
-                // - bypassErrorsInterceptor to bypass user fetch errors in navbar and lti+oauth flows
-                options = options || {};
+            getUser: function () {
                 if (this._user.hasOwnProperty('id')) {
                     return $q.when(this._user);
                 }
@@ -53,7 +50,8 @@
                 var deferred = $q.defer();
                 return $http.get('/api/session', {
                     cache:true,
-                    bypassErrorsInterceptor: options.bypassErrorsInterceptor
+                    // bypass for fetching user sessions (login modal will appear automatically instead)
+                    bypassErrorsInterceptor: true
                 }).then(function (result) {
                     // retrieve logged in user's information
                     // return a promise for chaining

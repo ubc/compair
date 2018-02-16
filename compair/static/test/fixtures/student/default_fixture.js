@@ -251,7 +251,7 @@ storage.assignment_status[assignment_being_answered.id] = assignmentStatusFactor
 // Note: the server never shows students upcoming assignments
 
 storage.loginDetails = { id: student.id, username: student.username, password: "password" };
-var session = sessionFactory.generateSession(student.id, student.system_role, {
+var session = sessionFactory.generateSession(student, {
     "Course": {
         "1abcABC123-abcABC123_Z": [
             "read"

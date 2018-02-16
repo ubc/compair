@@ -36,7 +36,7 @@ module.controller(
         // determine if we're in a course so we know whether to show
         // the course settings
          $scope.getPermissions = function() {
-            Session.getUser({bypassErrorsInterceptor: true}).then(function(user) {
+            Session.getUser().then(function(user) {
                 $scope.loggedInUser = user;
                 $log.debug("Logged in as " + $scope.loggedInUser.username);
 
