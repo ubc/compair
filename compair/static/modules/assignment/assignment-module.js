@@ -730,10 +730,10 @@ module.filter("notScoredEnd", function () {
 /***** Controllers *****/
 module.controller("AssignmentViewController",
     ["$scope", "$routeParams", "$location", "AnswerResource", "AssignmentResource", "AssignmentCommentResource", "$anchorScroll",
-             "ComparisonResource", "CourseResource", "Toaster", "AnswerCommentResource", "resolvedData", "$timeout", "$route",
+             "ComparisonResource", "CourseResource", "Toaster", "AnswerCommentResource", "resolvedData", "$route",
              "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$uibModal", "xAPIStatementHelper", "WinningAnswer",
     function($scope, $routeParams, $location, AnswerResource, AssignmentResource, AssignmentCommentResource, $anchorScroll,
-             ComparisonResource, CourseResource, Toaster, AnswerCommentResource, resolvedData, $timeout, $route,
+             ComparisonResource, CourseResource, Toaster, AnswerCommentResource, resolvedData, $route,
              GroupResource, AnswerCommentType, PairingAlgorithm, $uibModal, xAPIStatementHelper, WinningAnswer)
     {
         $scope.courseId = $routeParams.courseId;
@@ -891,6 +891,7 @@ module.controller("AssignmentViewController",
         };
 
         $scope.setTab = function(name) {
+            $scope.highlightAnswer = undefined; // no need to highlight again when switching tabs
             $location.search('tab', name);
             xAPIStatementHelper.closed_page_section(tab + " tab");
         };
@@ -909,13 +910,8 @@ module.controller("AssignmentViewController",
         // Highlight the answer if it's in the URL
         $scope.highlightAnswer = $location.search().highlightAnswer;
         if ($scope.highlightAnswer) {
-
-            $location.hash('my-answer');
+            $location.hash('answers');
             $anchorScroll();
-
-            $timeout(function() {
-                $('#my-answer').addClass('highlight-off');
-            }, 5000);
         }
 
         $scope.loadTabData = function() {
