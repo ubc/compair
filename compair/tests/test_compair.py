@@ -123,6 +123,9 @@ class ComPAIRXAPITestCase(ComPAIRTestCase):
         self.assertIn(self.compair_source_category, categories)
         categories.remove(self.compair_source_category)
 
+        self.assertEqual(statement['context']['platform'], 'https://localhost:8888/')
+        del statement['context']['platform']
+
         if len(categories) == 0:
             del statement['context']['contextActivities']['category']
         if len(statement['context']['contextActivities']) == 0:
