@@ -126,6 +126,7 @@ describe('Service: Session', function() {
             var permissions = null;
 
             beforeEach(function() {
+                sessionService.destroy();
                 $httpBackend.expectGET('/api/session/permission').respond(expectedSession.permissions);
 
                 sessionService.getPermissions().then(function(result) {

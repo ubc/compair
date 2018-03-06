@@ -903,7 +903,7 @@ describe('assignment-module', function () {
             });
 
             it('should be able to delete answers', function () {
-                answer = mockAnswers.objects[0];
+                answer = angular.copy(mockAnswers.objects[0]);
 
                 expect($rootScope.assignment.answer_count).toEqual(12);
                 expect($rootScope.assignment.status.answers.answered).toBe(true);
@@ -918,7 +918,7 @@ describe('assignment-module', function () {
             });
 
             it('should be able to toggle top answer state', function () {
-                answer = mockAnswers.objects[0];
+                answer = angular.copy(mockAnswers.objects[0]);
 
                 expect(answer.top_answer).toBe(false);
 
@@ -937,7 +937,7 @@ describe('assignment-module', function () {
 
 
             it('should be able to load answer comments', function () {
-                answer = mockAnswers.objects[2];
+                answer = angular.copy(mockAnswers.objects[2]);
 
                 expect(answer.comments).toEqual(undefined);
 
@@ -952,7 +952,7 @@ describe('assignment-module', function () {
                 var answer;
 
                 beforeEach(function(){
-                    answer = mockAnswers.objects[2];
+                    answer = angular.copy(mockAnswers.objects[2]);
                     $rootScope.loadComments(answer);
                     $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/answer_comments?answer_ids='+answer.id).respond(mockAnswerComments);
                     $httpBackend.flush();
