@@ -342,15 +342,51 @@ dt {
 
 /* for highlighting items for a few seconds */
 .highlight-momentarily {
-  background: #fff3cd !important;
-  -webkit-transition-property: background; /* Safari */
-  -webkit-transition-duration: 4s; /* Safari */
-  transition-property: background;
-  transition-duration: 4s;
+    -webkit-animation: highlightframes 4s;
+    -moz-animation: highlightframes 4s;
+    -ms-animation: highlightframes 4s;
+    -o-animation: highlightframes 4s;
+    animation: highlightframes 4s;
 
-  &.highlight-off {
-    background: #f9f9f9 !important;
-  }
+    /* Safari */
+    @-webkit-keyframes highlightframes {
+      0%   {}
+      30%  {background: #fff3cd;}
+      50%  {background: #fff3cd;}
+      100% {}
+    }
+
+    /* Mozilla */
+    @-moz-keyframes highlightframes {
+      0%   {}
+      30%  {background: #fff3cd;}
+      50%  {background: #fff3cd;}
+      100% {}
+    }
+
+    /* IE */
+    @-ms-keyframes highlightframes {
+      0%   {}
+      30%  {background: #fff3cd;}
+      50%  {background: #fff3cd;}
+      100% {}
+    }
+
+    /* Opera */
+    @-o-keyframes highlightframes {
+      0%   {}
+      30%  {background: #fff3cd;}
+      50%  {background: #fff3cd;}
+      100% {}
+    }
+
+    /* Standard syntax */
+    @keyframes highlightframes {
+      0%   {}
+      30%  {background: #fff3cd;}
+      50%  {background: #fff3cd;}
+      100% {}
+    }
 }
 
 /* for ie9 */
