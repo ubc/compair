@@ -85,6 +85,12 @@ module.controller('LTIContextListController',
             if (oldValue.orderBy != newValue.orderBy) {
                 $scope.contextFilters.page = 1;
             }
+            if (oldValue.search != newValue.search) {
+                $scope.contextFilters.page = 1;
+            }
+            if(newValue.search === "") {
+                $scope.contextFilters.search = null;
+            }
             xAPIStatementHelper.filtered_page($scope.contextFilters);
             $scope.updateContextList();
         };
