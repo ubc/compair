@@ -56,7 +56,11 @@ module.factory('UserThirdPartyUsersResource', ['$resource', function($resource) 
 
 module.constant('UserSettings', {
     notifications: false,
-    expose_email_to_instructor: false
+    expose_email_to_instructor: false,
+    allow_student_change_name: true,
+    allow_student_change_display_name: true,
+    allow_student_change_student_number: true,
+    allow_student_change_email: true
 });
 
 module.constant('SystemRole', {
@@ -93,7 +97,7 @@ module.controller("UserWriteController",
         $scope.canManageUsers = resolvedData.canManageUsers;
         $scope.loggedInUser = resolvedData.loggedInUser;
         $scope.ownProfile = $scope.loggedInUser.id == $scope.userId;
-        $scope.loggedInUserIsInstructor = $scope.loggedInUser.system_role == SystemRole.instructor;
+        $scope.loggedInUserIsStudent = $scope.loggedInUser.system_role == SystemRole.student;
 
         $scope.method = $scope.user.id ? 'edit' : 'create';
         $scope.password = {};

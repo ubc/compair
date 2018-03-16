@@ -84,6 +84,10 @@
                 .run( ['UserSettings', function(UserSettings) {
                     UserSettings.notifications = {{ 'true' if notifications_enabled else 'false' }};
                     UserSettings.expose_email_to_instructor = {{ 'true' if expose_email_to_instructor else 'false' }};
+                    UserSettings.allow_student_change_name = {{ 'true' if allow_student_change_name else 'false' }};
+                    UserSettings.allow_student_change_display_name = {{ 'true' if allow_student_change_display_name else 'false' }};
+                    UserSettings.allow_student_change_student_number = {{ 'true' if allow_student_change_student_number else 'false' }};
+                    UserSettings.allow_student_change_email = {{ 'true' if allow_student_change_email else 'false' }};
                 }]);
                 angular.module('ubc.ctlt.compair.common')
                 {% if static_img_path %}

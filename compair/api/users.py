@@ -174,7 +174,8 @@ class UserAPI(Resource):
             user.system_role = SystemRole(system_role)
 
         if allow(MANAGE, user) or user.id == current_user.id or current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False):
-            user.email = params.get("email", user.email)
+            if current_user.system_role != SystemRole.student or current_app.config.get('ALLOW_STUDENT_CHANGE_EMAIL'):
+                user.email = params.get("email", user.email)
 
             email_notification_method = params.get("email_notification_method")
             check_valid_email_notification_method(email_notification_method)
@@ -183,25 +184,26 @@ class UserAPI(Resource):
         elif params.get("email") or params.get("email_notification_method"):
             abort(400, title="User Not Saved", message="your role does not allow you to change email settings for this user.")
 
-
-        # only students should have student numbers
-        if user.system_role == SystemRole.student:
-            student_number = params.get("student_number", user.student_number)
-            student_number_exists = User.query.filter_by(student_number=student_number).first()
-            if student_number is not None and student_number_exists and student_number_exists.id != user.id:
-                abort(409, title="User Not Saved", message="Sorry, this student number already exists and student numbers must be unique in ComPAIR. Please enter another number and try saving again.")
+        if current_user.system_role != SystemRole.student or current_app.config.get('ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'):
+            # only students should have student numbers
+            if user.system_role == SystemRole.student:
+                student_number = params.get("student_number", user.student_number)
+                student_number_exists = User.query.filter_by(student_number=student_number).first()
+                if student_number is not None and student_number_exists and student_number_exists.id != user.id:
+                    abort(409, title="User Not Saved", message="Sorry, this student number already exists and student numbers must be unique in ComPAIR. Please enter another number and try saving again.")
+                else:
+                    user.student_number = student_number
             else:
-                user.student_number = student_number
-        else:
-            user.student_number = None
+                user.student_number = None
 
-        user.firstname = params.get("firstname", user.firstname)
-        user.lastname = params.get("lastname", user.lastname)
-        user.displayname = params.get("displayname", user.displayname)
+        if current_user.system_role != SystemRole.student or current_app.config.get('ALLOW_STUDENT_CHANGE_NAME'):
+            user.firstname = params.get("firstname", user.firstname)
+            user.lastname = params.get("lastname", user.lastname)
+
+        if current_user.system_role != SystemRole.student or current_app.config.get('ALLOW_STUDENT_CHANGE_DISPLAY_NAME'):
+            user.displayname = params.get("displayname", user.displayname)
 
         model_changes = get_model_changes(user)
-
-        restrict_user = not allow(EDIT, user)
 
         try:
             db.session.commit()
@@ -262,6 +264,13 @@ class UserListAPI(Resource):
 
         user = User()
         params = new_user_parser.parse_args()
+
+        # TODO: add block student from changing code when creating new accounts
+        # ALLOW_STUDENT_CHANGE_NAME, ALLOW_STUDENT_CHANGE_DISPLAY_NAME,
+        # ALLOW_STUDENT_CHANGE_STUDENT_NUMBER, ALLOW_STUDENT_CHANGE_EMAIL
+        # This would be best to change after #606 simplify LTI/CAS/SAML login
+        # for now we can use the front end params that are disabled for the student to edit
+        # (they can technically get around this but will be overwritten when next login via CAS/LTI)
         user.student_number = params.get("student_number", None)
         user.email = params.get("email")
         user.firstname = params.get("firstname")

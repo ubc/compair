@@ -260,6 +260,16 @@ You can control data accessibility for certain sensitive fields with the followi
 
 `EXPOSE_CAS_USERNAME_TO_INSTRUCTOR`: Set to 1 to allow instructors to see CAS username for students in any of their classes (off by default). Instructors can see cas username info by exporting their class lists
 
+In addition you can control if students are able to edit their first name, last name, display name, and student number. System admins and instructors can still modify these profile fields. Disallowing students to edit these fields is best used in combination with LTI or CAS/SAML logins which can automatically fill and update them.
+
+`ALLOW_STUDENT_CHANGE_NAME`: Allows students to edit their first & last names (default: enabled).
+
+`ALLOW_STUDENT_CHANGE_DISPLAY_NAME`: Allows students to edit their display name (default: enabled).
+
+`ALLOW_STUDENT_CHANGE_STUDENT_NUMBER`: Allows students to edit their student number (default: enabled).
+
+`ALLOW_STUDENT_CHANGE_EMAIL`: Allows students to edit their email address (default: enabled).
+
 Google Analytics Web Tracking
 -----------------------------
 1. Register for a Google Analytics web property ID at http://www.google.ca/analytics/.
