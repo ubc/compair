@@ -58,7 +58,7 @@
                     <div class="" ng-if="comparison_set.self_evaluations.length > 0">
                         <div ng-repeat="self_evaluation in comparison_set.self_evaluations">
                             <div class="each-header">
-                                <compair-avatar user-id="self_evaluation.user_id" avatar="self_evaluation.user.avatar" display-name="self_evaluation.user.fullname"></compair-avatar>
+                                <compair-avatar user-id="self_evaluation.user_id" avatar="self_evaluation.user.avatar" main-identifier="self_evaluation.user.fullname" secondary-identifier="self_evaluation.user.student_number"></compair-avatar>
                                 <strong>self-evaluated</strong> on {{ self_evaluation.created | amDateFormat: 'MMM D @ h:mm a'}}:
                             </div>
                             <div class="content" mathjax hljs ng-bind-html="self_evaluation.content"></div>
@@ -68,7 +68,7 @@
 
                 <!-- Comparison Header -->
                 <div class="each-header">
-                    <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" display-name="comparison.user.fullname"></compair-avatar>
+                    <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" main-identifier="comparison.user.fullname" secondary-identifier="comparison.user.student_number"></compair-avatar>
                     <strong>compared</strong> on {{ comparison.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
 

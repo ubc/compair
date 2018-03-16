@@ -17,6 +17,7 @@ def get_partial_user(restrict_user=True):
         'avatar': fields.String(attribute="user_avatar"),
     }
     if not restrict_user:
+        ret['student_number'] = fields.String(attribute="user_student_number")
         ret['fullname'] = fields.String(attribute="user_fullname")
         ret['fullname_sortable'] = fields.String(attribute="user_fullname_sortable")
 
@@ -303,7 +304,7 @@ def get_comparison(restrict_user=True, with_answers=True, with_feedback=False, i
 
 def get_comparison_set(restrict_user=True, with_user=True):
     ret = {
-        'comparisons': fields.List(fields.Nested(get_comparison(restrict_user, True, True))),
+        'comparisons': fields.List(fields.Nested(get_comparison(restrict_user, with_answers=True, with_feedback=True))),
         'self_evaluations': fields.List(fields.Nested(get_answer_comment(restrict_user)))
     }
 
