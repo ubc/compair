@@ -78,7 +78,7 @@
                 </td>
                 <td class="text-center" ng-if="showAttachments">
                     <span ng-if="!entry.file"> n/a </span>
-                    <a href="" ng-if="entry.file" ng-click="openAttachment(entry.file, entry.download_file_name)">View &raquo;</a>
+                    <a ng-if="entry.file" target="_blank" ng-href="/app/attachment/{{entry.file.name}}?name={{ entry.download_file_name+'.'+entry.file.extension | encodeURIComponent}}">View &raquo;</a>
                 </td>
                 <!--
                 <td class="text-center" ng-class="{
