@@ -34,7 +34,9 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             "urn:lti:role:ims/lis/TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
         }
 
+        index = 0
         for lti_role, (system_role, course_role) in roles.items():
+            index += 1
             lti_resource_link_id = self.lti_data.generate_resource_link_id()
             lti_user_id = self.lti_data.generate_user_id()
             lti_context_id = self.lti_data.generate_context_id()
@@ -267,6 +269,63 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     nonce=nonce, timestamp=timestamp) as rv:
                 self.assert400(rv)
 
+            # student_number_param ------
+            lti_consumer.student_number_param = "custom_student_number"
+            db.session.commit()
+
+            # student_number_param parameter is missing
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_uuid=assignment.uuid, follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+                self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
+                self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
+                self.assertEqual(lti_user.id, sess.get('lti_user'))
+                self.assertEqual(lti_context.id, sess.get('lti_context'))
+                self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
+
+                # user already exists, oauth_create_user_link should be None
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+            self.assertIsNone(lti_user.student_number)
+            self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
+
+            # student_number_param parameter is present
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_uuid=assignment.uuid, custom_student_number="1234567"+str(index),
+                    follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+                self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
+                self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
+                self.assertEqual(lti_user.id, sess.get('lti_user'))
+                self.assertEqual(lti_context.id, sess.get('lti_context'))
+                self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
+
+                # user already exists, oauth_create_user_link should be None
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+            self.assertEqual(lti_user.student_number, "1234567"+str(index))
+            self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
+
+            lti_consumer.student_number_param = None
+            db.session.commit()
+            # done student_number_param ------
+
             # user_id_override ------
             lti_consumer.user_id_override = "custom_puid"
             db.session.commit()
@@ -394,6 +453,98 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 elif compair_system_role == SystemRole.sys_admin:
                     self.assertEqual(user.system_role, SystemRole.sys_admin)
 
+
+        # test automatic overwrite of user profile for students
+        for lti_role, (system_role, course_role) in roles.items():
+            lti_consumer.student_number_param = None
+            lti_context = self.lti_data.create_context(lti_consumer)
+            lti_user = self.lti_data.create_user(lti_consumer, system_role)
+            lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
+            lti_user_resource_link = self.lti_data.create_user_resource_link(
+                lti_user, lti_resource_link, CourseRole.instructor)
+
+            user = self.data.create_user(system_role)
+            lti_user.compair_user = user
+            course = self.data.create_course()
+            lti_context.compair_course = course
+
+            original_firstname = user.firstname
+            original_lastname = user.lastname
+            original_email = user.email
+            original_student_number = user.student_number
+            new_student_number = original_student_number+"123" if user.student_number else None
+            db.session.commit()
+
+            # check that values are not overwritten
+            self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = True
+            self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = True
+            self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = True
+            self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = True
+
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    lis_person_name_given="f_student", lis_person_name_family="l_student",
+                    lis_person_contact_email_primary="student@email.com",
+                    custom_student_number=new_student_number,
+                    follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid)
+
+            self.assertEqual(user.firstname, original_firstname)
+            self.assertEqual(user.lastname, original_lastname)
+            self.assertEqual(user.email, original_email)
+            if system_role == SystemRole.student:
+                self.assertEqual(user.student_number, original_student_number)
+            else:
+                self.assertIsNone(user.student_number)
+
+            # check that values are overwritten for students (except for student number as student_number_param is not set)
+            self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = False
+            self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = False
+            self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = False
+            self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = False
+
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    lis_person_name_given="f_student", lis_person_name_family="l_student",
+                    lis_person_contact_email_primary="student@email.com",
+                    custom_student_number=new_student_number,
+                    follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid)
+
+            if system_role == SystemRole.student:
+                self.assertEqual(user.firstname, "f_student")
+                self.assertEqual(user.lastname, "l_student")
+                self.assertEqual(user.email, "student@email.com")
+                self.assertEqual(user.student_number, original_student_number)
+            else:
+                self.assertEqual(user.firstname, original_firstname)
+                self.assertEqual(user.lastname, original_lastname)
+                self.assertEqual(user.email, original_email)
+                self.assertIsNone(user.student_number)
+
+            # check that values are overwritten for students
+            lti_consumer.student_number_param = "custom_student_number"
+            db.session.commit()
+
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    lis_person_name_given="f_student", lis_person_name_family="l_student",
+                    lis_person_contact_email_primary="student@email.com",
+                    custom_student_number=new_student_number,
+                    follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid)
+
+            if system_role == SystemRole.student:
+                self.assertEqual(user.firstname, "f_student")
+                self.assertEqual(user.lastname, "l_student")
+                self.assertEqual(user.email, "student@email.com")
+                self.assertEqual(user.student_number, new_student_number)
+            else:
+                self.assertEqual(user.firstname, original_firstname)
+                self.assertEqual(user.lastname, original_lastname)
+                self.assertEqual(user.email, original_email)
+                self.assertIsNone(user.student_number)
+
     def test_lti_status(self):
         url = '/api/lti/status'
 
@@ -417,13 +568,18 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             "urn:lti:role:ims/lis/TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
         }
 
+        index = 0
         for lti_role, (system_role, course_role) in roles.items():
+            lti_consumer.student_number_param = "custom_student_number"
             # test new user (no compair user yet)
             lti_context = self.lti_data.create_context(lti_consumer)
             lti_user = self.lti_data.create_user(lti_consumer, system_role)
             lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
             lti_user_resource_link = self.lti_data.create_user_resource_link(
                 lti_user, lti_resource_link, CourseRole.instructor)
+
+            index += 1
+            custom_student_number = "1234567"+str(index) if system_role == SystemRole.student else None
 
             # setup lti session with no context id
             with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
@@ -440,6 +596,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(status['user']['firstname'], lti_user.lis_person_name_given)
             self.assertEqual(status['user']['lastname'], lti_user.lis_person_name_family)
             self.assertIsNotNone(status['user']['displayname'])
+            self.assertIsNone(status['user']['student_number'])
             self.assertEqual(status['user']['email'], lti_user.lis_person_contact_email_primary)
             self.assertEqual(status['user']['system_role'], system_role.value)
 
@@ -483,6 +640,27 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(status['course']['name'], "lti_context_title")
             self.assertEqual(status['course']['course_role'], course_role.value)
 
+            # setup lti session with non existing user
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
+                    lis_person_name_given="lti_given", lis_person_name_family="lti_family",
+                    custom_student_number=custom_student_number,
+                    lis_person_contact_email_primary="lti_email") as rv:
+                self.assert200(rv)
+
+            rv = self.client.get(url, data={}, content_type='application/json')
+            self.assert200(rv)
+            status = rv.json['status']
+            self.assertTrue(status['valid'])
+
+            self.assertFalse(status['user']['exists'])
+            self.assertEqual(status['user']['firstname'], "lti_given")
+            self.assertEqual(status['user']['lastname'], "lti_family")
+            self.assertIsNotNone(status['user']['displayname'])
+            self.assertEqual(status['user']['student_number'], custom_student_number)
+            self.assertEqual(status['user']['email'], "lti_email")
+            self.assertEqual(status['user']['system_role'], system_role.value)
+
             # setup with existing user
             user = self.data.create_user(system_role)
             lti_user.compair_user = user
@@ -492,6 +670,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
                     user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role,
                     lis_person_name_given="lti_given", lis_person_name_family="lti_family",
+                    custom_student_number=custom_student_number,
                     lis_person_contact_email_primary="lti_email") as rv:
                 self.assert200(rv)
 
@@ -504,6 +683,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(status['user']['firstname'], "lti_given")
             self.assertEqual(status['user']['lastname'], "lti_family")
             self.assertIsNotNone(status['user']['displayname'])
+            self.assertEqual(status['user']['student_number'], custom_student_number)
             self.assertEqual(status['user']['email'], "lti_email")
             self.assertEqual(status['user']['system_role'], system_role.value)
 

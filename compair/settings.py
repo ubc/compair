@@ -95,6 +95,11 @@ CAS_SERVER = 'http://localhost:8088'
 CAS_AUTH_PREFIX = '/cas'
 CAS_USE_SAML = False
 
+CAS_ATTRIBUTE_FIRST_NAME = None
+CAS_ATTRIBUTE_LAST_NAME = None
+CAS_ATTRIBUTE_STUDENT_NUMBER = None
+CAS_ATTRIBUTE_EMAIL = None
+
 # kaltura integration defaults
 KALTURA_ENABLED = False
 KALTURA_VIDEO_EXTENSIONS = {'mp4', 'webm', 'mov'}

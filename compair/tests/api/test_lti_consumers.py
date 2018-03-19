@@ -20,6 +20,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             'oauth_consumer_key': 'new_consumer_key',
             'oauth_consumer_secret': 'new_consumer_secret',
             'user_id_override': 'new_consumer_user_id_override',
+            'student_number_param': 'new_student_number_param'
         }
 
         # Test login required
@@ -44,6 +45,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             self.assertEqual(consumer_expected['oauth_consumer_key'], rv.json['oauth_consumer_key'])
             self.assertEqual(consumer_expected['oauth_consumer_secret'], rv.json['oauth_consumer_secret'])
             self.assertEqual(consumer_expected['user_id_override'], rv.json['user_id_override'])
+            self.assertEqual(consumer_expected['student_number_param'], rv.json['student_number_param'])
             self.assertTrue(rv.json['active'])
 
             # test unique oauth_consumer_key by submitting again
@@ -82,6 +84,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             for index, lti_consumer in enumerate(lti_consumers):
                 self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['objects'][index]['oauth_consumer_key'])
                 self.assertEqual(lti_consumer.user_id_override, rv.json['objects'][index]['user_id_override'])
+                self.assertEqual(lti_consumer.student_number_param, rv.json['objects'][index]['student_number_param'])
                 self.assertEqual(lti_consumer.active, rv.json['objects'][index]['active'])
                 self.assertNotIn('oauth_consumer_secret',  rv.json['objects'][index])
 
@@ -101,6 +104,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             for index, lti_consumer in enumerate(lti_consumers[:20]):
                 self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['objects'][index]['oauth_consumer_key'])
                 self.assertEqual(lti_consumer.user_id_override, rv.json['objects'][index]['user_id_override'])
+                self.assertEqual(lti_consumer.student_number_param, rv.json['objects'][index]['student_number_param'])
                 self.assertEqual(lti_consumer.active, rv.json['objects'][index]['active'])
                 self.assertNotIn('oauth_consumer_secret',  rv.json['objects'][index])
 
@@ -112,6 +116,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             for index, lti_consumer in enumerate(lti_consumers[20:]):
                 self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['objects'][index]['oauth_consumer_key'])
                 self.assertEqual(lti_consumer.user_id_override, rv.json['objects'][index]['user_id_override'])
+                self.assertEqual(lti_consumer.student_number_param, rv.json['objects'][index]['student_number_param'])
                 self.assertEqual(lti_consumer.active, rv.json['objects'][index]['active'])
                 self.assertNotIn('oauth_consumer_secret',  rv.json['objects'][index])
 
@@ -128,6 +133,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             for index, lti_consumer in enumerate(sorted_lti_consumers):
                 self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['objects'][index]['oauth_consumer_key'])
                 self.assertEqual(lti_consumer.user_id_override, rv.json['objects'][index]['user_id_override'])
+                self.assertEqual(lti_consumer.student_number_param, rv.json['objects'][index]['student_number_param'])
                 self.assertEqual(lti_consumer.active, rv.json['objects'][index]['active'])
                 self.assertNotIn('oauth_consumer_secret',  rv.json['objects'][index])
 
@@ -144,6 +150,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             for index, lti_consumer in enumerate(sorted_lti_consumers):
                 self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['objects'][index]['oauth_consumer_key'])
                 self.assertEqual(lti_consumer.user_id_override, rv.json['objects'][index]['user_id_override'])
+                self.assertEqual(lti_consumer.student_number_param, rv.json['objects'][index]['student_number_param'])
                 self.assertEqual(lti_consumer.active, rv.json['objects'][index]['active'])
                 self.assertNotIn('oauth_consumer_secret',  rv.json['objects'][index])
 
@@ -178,6 +185,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             self.assertEqual(lti_consumer.oauth_consumer_key, rv.json['oauth_consumer_key'])
             self.assertEqual(lti_consumer.oauth_consumer_secret, rv.json['oauth_consumer_secret'])
             self.assertEqual(lti_consumer.user_id_override, rv.json['user_id_override'])
+            self.assertEqual(lti_consumer.student_number_param, rv.json['student_number_param'])
             self.assertTrue(lti_consumer.active, rv.json['active'])
 
     def test_edit_lti_consumer(self):
@@ -189,6 +197,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             'oauth_consumer_key': 'edit_consumer_key',
             'oauth_consumer_secret': 'edit_consumer_secret',
             'user_id_override': 'edit_consumer_user_id_override',
+            'student_number_param': 'edit_student_number_param',
             'active': False
         }
 
@@ -225,6 +234,7 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             self.assertEqual(consumer_expected['oauth_consumer_key'], rv.json['oauth_consumer_key'])
             self.assertEqual(consumer_expected['oauth_consumer_secret'], rv.json['oauth_consumer_secret'])
             self.assertEqual(consumer_expected['user_id_override'], rv.json['user_id_override'])
+            self.assertEqual(consumer_expected['student_number_param'], rv.json['student_number_param'])
             self.assertEqual(consumer_expected['active'], rv.json['active'])
 
             # valid url (empty user_id_override)
@@ -235,6 +245,19 @@ class LTIConsumersAPITests(ComPAIRAPITestCase):
             self.assertEqual(consumer_expected['oauth_consumer_key'], rv.json['oauth_consumer_key'])
             self.assertEqual(consumer_expected['oauth_consumer_secret'], rv.json['oauth_consumer_secret'])
             self.assertIsNone(rv.json['user_id_override'])
+            self.assertEqual(consumer_expected['student_number_param'], rv.json['student_number_param'])
+            self.assertEqual(consumer_expected['active'], rv.json['active'])
+
+
+            # valid url (empty student_number_param)
+            consumer_expected_no_override = consumer_expected.copy()
+            consumer_expected_no_override['student_number_param'] = ""
+            rv = self.client.post(url, data=json.dumps(consumer_expected_no_override), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(consumer_expected['oauth_consumer_key'], rv.json['oauth_consumer_key'])
+            self.assertEqual(consumer_expected['oauth_consumer_secret'], rv.json['oauth_consumer_secret'])
+            self.assertEqual(consumer_expected['user_id_override'], rv.json['user_id_override'])
+            self.assertIsNone(rv.json['student_number_param'])
             self.assertEqual(consumer_expected['active'], rv.json['active'])
 
             # test edit duplicate consumer key

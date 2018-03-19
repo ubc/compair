@@ -316,6 +316,7 @@ class UserListAPI(Resource):
                 lti_user = LTIUser.query.get_or_404(sess['lti_user'])
                 lti_user.compair_user = user
                 user.system_role = lti_user.system_role
+                lti_user.update_user_profile()
                 login_method = 'LTI'
 
                 if sess.get('lti_context') and sess.get('lti_user_resource_link'):

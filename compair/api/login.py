@@ -41,6 +41,7 @@ def login():
             lti_user = LTIUser.query.get_or_404(sess['lti_user'])
             lti_user.compair_user = user
             lti_user.upgrade_system_role()
+            lti_user.update_user_profile()
             sess.pop('oauth_create_user_link')
 
         if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
@@ -158,7 +159,10 @@ def cas_auth():
                     lti_user = LTIUser.query.get_or_404(sess['lti_user'])
                     lti_user.compair_user = thirdpartyuser.user
                     lti_user.upgrade_system_role()
+                    lti_user.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
                     sess.pop('oauth_create_user_link')
+                else:
+                    thirdpartyuser.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
 
                 if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
                     lti_context = LTIContext.query.get_or_404(sess['lti_context'])

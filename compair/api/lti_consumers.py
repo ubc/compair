@@ -24,6 +24,7 @@ new_consumer_parser = reqparse.RequestParser()
 new_consumer_parser.add_argument('oauth_consumer_key', type=str, required=True)
 new_consumer_parser.add_argument('oauth_consumer_secret', type=str)
 new_consumer_parser.add_argument('user_id_override', type=non_blank_text)
+new_consumer_parser.add_argument('student_number_param', type=non_blank_text)
 
 existing_consumer_parser = new_consumer_parser.copy()
 existing_consumer_parser.add_argument('id', type=str, required=True)
@@ -80,6 +81,7 @@ class ConsumerAPI(Resource):
         consumer.oauth_consumer_key = params.get("oauth_consumer_key")
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
         consumer.user_id_override = params.get("user_id_override")
+        consumer.student_number_param = params.get("student_number_param")
 
         try:
             db.session.add(consumer)
@@ -134,6 +136,7 @@ class ConsumerIdAPI(Resource):
         consumer.oauth_consumer_key = params.get("oauth_consumer_key")
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
         consumer.user_id_override = params.get("user_id_override")
+        consumer.student_number_param = params.get("student_number_param")
         consumer.active = params.get("active")
 
         try:

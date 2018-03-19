@@ -58,3 +58,31 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         if not message:
             message = "Sorry, this third party user was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
+
+
+    def update_user_profile(self):
+        # TODO: Handle SAML in master
+        if self.user and self.user.system_role == SystemRole.student and self.params:
+            # overwrite first/last name if student not allowed to change it
+            if not current_app.config.get('ALLOW_STUDENT_CHANGE_NAME'):
+                firstname_attribute = current_app.config.get('CAS_ATTRIBUTE_FIRST_NAME')
+                if self.third_party_type == ThirdPartyType.cas and firstname_attribute and firstname_attribute in self.params:
+                    self.user.firstname = self.params.get(firstname_attribute)
+
+                lastname_attribute = current_app.config.get('CAS_ATTRIBUTE_LAST_NAME')
+                if self.third_party_type == ThirdPartyType.cas and lastname_attribute and lastname_attribute in self.params:
+                    self.user.lastname = self.params.get(lastname_attribute)
+
+            # overwrite email if student not allowed to change it
+            if not current_app.config.get('ALLOW_STUDENT_CHANGE_EMAIL'):
+
+                email_attribute = current_app.config.get('CAS_ATTRIBUTE_EMAIL')
+                if self.third_party_type == ThirdPartyType.cas and email_attribute and email_attribute in self.params:
+                    self.user.email = self.params.get(email_attribute)
+
+            # overwrite student number if student not allowed to change it
+            if not current_app.config.get('ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'):
+
+                student_number_attribute = current_app.config.get('CAS_ATTRIBUTE_STUDENT_NUMBER')
+                if self.third_party_type == ThirdPartyType.cas and student_number_attribute and student_number_attribute in self.params:
+                    self.user.student_number = self.params.get(student_number_attribute)
