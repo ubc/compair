@@ -482,11 +482,66 @@ class UsersAPITests(ComPAIRAPITestCase):
 
         # test successful update by user (as student)
         with self.login(self.data.get_authorized_student().username):
+            original_displayname = user.displayname
+            original_firstname = user.firstname
+            original_lastname = user.lastname
+            original_student_number = user.student_number
+            original_email = user.email
+
             valid = expected.copy()
             valid['displayname'] = "thebest"
+            valid['firstname'] = "thebest"
+            valid['lastname'] = "thebest"
+            valid['student_number'] = "thebest"
+            valid['email'] = "thebest@thebest"
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(original_displayname, rv.json['displayname'])
+            self.assertEqual(original_firstname, rv.json['firstname'])
+            self.assertEqual(original_lastname, rv.json['lastname'])
+            self.assertEqual(original_student_number, rv.json['student_number'])
+            self.assertEqual(original_email, rv.json['email'])
+
+            self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = True
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual("thebest", rv.json['displayname'])
+            self.assertEqual(original_firstname, rv.json['firstname'])
+            self.assertEqual(original_lastname, rv.json['lastname'])
+            self.assertEqual(original_student_number, rv.json['student_number'])
+            self.assertEqual(original_email, rv.json['email'])
+
+            self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = True
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual("thebest", rv.json['displayname'])
+            self.assertEqual("thebest", rv.json['firstname'])
+            self.assertEqual("thebest", rv.json['lastname'])
+            self.assertEqual(original_student_number, rv.json['student_number'])
+            self.assertEqual(original_email, rv.json['email'])
+
+            self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = True
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual("thebest", rv.json['displayname'])
+            self.assertEqual("thebest", rv.json['firstname'])
+            self.assertEqual("thebest", rv.json['lastname'])
+            self.assertEqual("thebest", rv.json['student_number'])
+            self.assertEqual(original_email, rv.json['email'])
+
+            self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = True
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual("thebest", rv.json['displayname'])
+            self.assertEqual("thebest", rv.json['firstname'])
+            self.assertEqual("thebest", rv.json['lastname'])
+            self.assertEqual("thebest", rv.json['student_number'])
+            self.assertEqual("thebest@thebest", rv.json['email'])
+
+            self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = False
+            self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = False
+            self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = False
+            self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = False
 
         # test updating username, student number, usertype for system - instructor
         with self.login(instructor.username):
@@ -531,6 +586,16 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(user.system_role.value, rv.json['system_role'])
+
+            valid = expected_without_email.copy()
+            valid['firstname'] = 'thebest'
+            valid['lastname'] = 'thebest'
+            valid['displayname'] = 'thebest'
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual('thebest', rv.json['firstname'])
+            self.assertEqual('thebest', rv.json['lastname'])
+            self.assertEqual('thebest', rv.json['displayname'])
 
             # for instructor
             valid = expected_instructor.copy()
@@ -578,6 +643,16 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(user.email_notification_method.value, rv.json['email_notification_method'])
+
+            valid = expected.copy()
+            valid['firstname'] = 'thebest'
+            valid['lastname'] = 'thebest'
+            valid['displayname'] = 'thebest'
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual('thebest', rv.json['firstname'])
+            self.assertEqual('thebest', rv.json['lastname'])
+            self.assertEqual('thebest', rv.json['displayname'])
 
             # for instructor
             valid = expected_instructor.copy()

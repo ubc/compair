@@ -25,6 +25,10 @@ def generate_index():
         app_login_enabled=current_app.config['APP_LOGIN_ENABLED'],
         cas_login_enabled=current_app.config['CAS_LOGIN_ENABLED'],
         lti_login_enabled=current_app.config['LTI_LOGIN_ENABLED'],
+        allow_student_change_name=True,
+        allow_student_change_display_name=True,
+        allow_student_change_student_number=True,
+        allow_student_change_email=True,
         kaltura_enabled=current_app.config['KALTURA_ENABLED'],
         kaltura_extensions=list(current_app.config['KALTURA_ATTACHMENT_EXTENSIONS'])
     )
