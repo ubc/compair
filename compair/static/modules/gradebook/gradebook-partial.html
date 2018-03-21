@@ -49,11 +49,6 @@
                 <th class="text-center" ng-if="showAttachments">
                     <a href="" ng-click="updateTableOrderBy('attachments')">Attachments</a>
                 </th>
-                <!--
-                <th class="text-center">
-                    <a href="" ng-click="updateTableOrderBy('flagged')">Flagged</a>
-                </th>
-                -->
                 <th class="text-center">
                     <a href="" ng-click="updateTableOrderBy('num_comparisons')">Evaluations</a>
                 </th>
@@ -82,15 +77,6 @@
                     <span ng-if="!entry.file"> n/a </span>
                     <a ng-if="entry.file" target="_blank" ng-href="/app/attachment/{{entry.file.name}}?name={{ entry.download_file_name+'.'+entry.file.extension | encodeURIComponent}}">View &raquo;</a>
                 </td>
-                <!--
-                <td class="text-center" ng-class="{
-                    'text-success': entry.flagged == 'No',
-                    'text-danger': entry.flagged == 'Yes'
-                    }">
-                    <strong ng-if="entry.flagged != 'No Answer'">{{ entry.flagged }}</strong>
-                    <strong ng-if="entry.flagged == 'No Answer'">n/a</strong>
-                </td>
-                -->
                 <td class="text-center" ng-class="{
                     'text-danger': entry.num_comparisons == 0,
                     'text-warning': entry.num_comparisons > 0 &&

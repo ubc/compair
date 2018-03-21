@@ -7,7 +7,7 @@ from compair.core import db
 from flask_login import current_app
 
 from compair.xapi.capture_events import on_answer_modified, \
-    on_answer_delete, on_answer_flag
+    on_answer_delete
 
 class AnswerXAPITests(ComPAIRXAPITestCase):
     def setUp(self):
@@ -220,55 +220,3 @@ class AnswerXAPITests(ComPAIRXAPITestCase):
                     }]
                 }
             })
-
-    def test_on_answer_flag(self):
-        for draft in [True, False]:
-            for flagged in [True, False]:
-                self.answer.draft = draft
-                self.answer.flagged = flagged
-                db.session.commit()
-
-                on_answer_flag.send(
-                    current_app._get_current_object(),
-                    event_name=on_answer_flag.name,
-                    user=self.user,
-                    answer=self.answer
-                )
-
-                statements = self.get_and_clear_statement_log()
-                self.assertEqual(len(statements), 1)
-
-                self.assertEqual(statements[0]['actor'], self.get_compair_actor(self.user))
-
-                if flagged:
-                    self.assertEqual(statements[0]['verb'], {
-                        'id': 'http://xapi.learninganalytics.ubc.ca/verb/flag',
-                        'display': {'en-US': 'flagged'}
-                    })
-                else:
-                    self.assertEqual(statements[0]['verb'], {
-                        'id': 'http://xapi.learninganalytics.ubc.ca/verb/unflag',
-                        'display': {'en-US': 'unflagged'}
-                    })
-
-                self.assertEqual(statements[0]['object'], {
-                    'id': 'https://localhost:8888/app/xapi/answer/'+self.answer.uuid,
-                    'definition': {'type': 'http://id.tincanapi.com/activitytype/solution', 'name': {'en-US': 'Assignment answer'}},
-                    'objectType': 'Activity'
-                })
-                self.assertNotIn('result', statements[0])
-                self.assertEqual(statements[0]['context'], {
-                    'contextActivities': {
-                        'grouping': [{
-                            'id': 'https://localhost:8888/app/xapi/course/'+self.course.uuid,
-                            'objectType': 'Activity'
-                        },{
-                            'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid,
-                            'objectType': 'Activity'
-                        },],
-                        'parent': [{
-                            'id': 'https://localhost:8888/app/xapi/assignment/'+self.assignment.uuid+'/question',
-                            'objectType': 'Activity'
-                        }]
-                    }
-                })

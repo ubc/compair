@@ -209,7 +209,6 @@ def get_answer(restrict_user=True, include_answer_user=True, include_score=True)
 
         'content': fields.String,
         'file': fields.Nested(get_file(), allow_null=True),
-        'flagged': fields.Boolean,
         'draft': fields.Boolean,
         'top_answer': fields.Boolean,
 
@@ -356,7 +355,6 @@ def get_gradebook(include_scores=False, include_self_evaluation=False):
         'num_answers': fields.Integer,
         'num_comparisons': fields.Integer,
         'grade': fields.Float,
-        'flagged': fields.String,
         'file': fields.Nested(get_file(), allow_null=True),
     }
 

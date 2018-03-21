@@ -240,16 +240,6 @@
                                 <em>(not ranked)</em>
                             </span>
 
-                            <!--
-                            <span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
-                                <i class="fa fa-warning"></i>
-                                Flagged
-                                <a href="" title="Unflag this answer" ng-click="unflagAnswer(answer)">
-                                    Unflag?
-                                </a>
-                            </span>
-                            -->
-
                             <span ng-if="(canManageAssignment && !answerFilters.anonymous) || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
                                 <a href="" ng-if="canManageAssignment && !answerFilters.anonymous && !answer.top_answer" title="Add to instructor's top answers" ng-click="setTopAnswer(answer, true)">
                                     <i class="fa fa-star-o"></i>
@@ -372,15 +362,6 @@
                         <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
                         <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
-                            <!--
-                            <span ng-show="answer.flagged" class="text-warning" title="Answer was flagged by a student as incomplete or inappropriate">
-                                <i class="fa fa-warning"></i>
-                                Flagged
-                                <a href="" title="Unflag this answer" ng-click="unflagAnswer(answer)">
-                                    Unflag?
-                                </a>
-                            </span>
-                            -->
                             <a href="" title="Delete this answer" confirmation-needed="deleteAnswer(answer)" keyword="answer">
                                 <i class="fa fa-trash-o"></i>
                             </a>

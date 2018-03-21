@@ -68,7 +68,7 @@ class GradebookAPI(Resource):
 
         # find out the scores that students get
         answer_scores = Answer.query \
-            .with_entities(Answer.user_id, Answer.flagged, File, AnswerScore.normalized_score) \
+            .with_entities(Answer.user_id, File, AnswerScore.normalized_score) \
             .outerjoin(File, and_(
                  Answer.file_id == File.id
             )) \
@@ -86,12 +86,10 @@ class GradebookAPI(Resource):
         # process the results into dicts
         include_scores = assignment.pairing_algorithm != PairingAlgorithm.random
         scores_by_user_id = {student_id: 'No Answer' for student_id in student_ids}
-        flagged_by_user_id = {}
         num_answers_per_student = {}
         file_by_user_id = {}
 
-        for (user_id, flagged, file_attachment, score) in answer_scores:
-            flagged_by_user_id[user_id] = 'Yes' if flagged else 'No'
+        for (user_id, file_attachment, score) in answer_scores:
             num_answers_per_student[user_id] = 1
             if include_scores:
                 scores_by_user_id[user_id] = round(score, 3) if score != None else 'Not Evaluated'
@@ -130,7 +128,6 @@ class GradebookAPI(Resource):
                 'num_answers': num_answers_per_student.get(student.id, 0),
                 'num_comparisons': num_comparisons_per_student.get(student.id, 0),
                 'grade': grade * 100 if grade else 0,
-                'flagged': flagged_by_user_id.get(student.id, 'No Answer'),
                 'file': file_by_user_id.get(student.id, None),
             }
             if include_scores:

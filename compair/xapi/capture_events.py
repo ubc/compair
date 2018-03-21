@@ -16,7 +16,7 @@ from compair.models import AnswerCommentType, File
 from compair.api import on_get_file
 from compair.api.users import on_user_modified
 from compair.api.answer_comment import on_answer_comment_create, on_answer_comment_modified, on_answer_comment_delete
-from compair.api.answer import on_answer_modified, on_answer_delete, on_answer_flag
+from compair.api.answer import on_answer_modified, on_answer_delete
 from compair.api.assignment import on_assignment_create, on_assignment_modified, on_assignment_delete
 from compair.api.comparison import on_comparison_update
 from compair.api.course import on_course_create, on_course_duplicate, on_course_modified, on_course_delete
@@ -46,7 +46,6 @@ def capture_xapi_events():
     # answer events
     on_answer_modified.connect(xapi_on_answer_modified)
     on_answer_delete.connect(xapi_on_answer_delete)
-    on_answer_flag.connect(xapi_on_answer_flag)
 
     # assignment events
     on_assignment_create.connect(xapi_on_assignment_create)
@@ -308,23 +307,6 @@ def xapi_on_answer_delete(sender, user, **extra):
         verb=XAPIVerb.generate('deleted'),
         object=XAPIObject.answer(answer),
         context=XAPIContext.answer(answer)
-    )
-    XAPI.send_statement(statement)
-
-# on_answer_flag
-# flagged answer_solution
-def xapi_on_answer_flag(sender, user, **extra):
-    answer = extra.get('answer')
-
-    tracking = _get_tracking_params()
-    registration = tracking.get('registration')
-
-    verb = XAPIVerb.generate('flagged' if answer.flagged else 'unflagged')
-    statement = XAPIStatement.generate(
-        user=user,
-        verb=verb,
-        object=XAPIObject.answer(answer),
-        context=XAPIContext.answer(answer, registration=registration)
     )
     XAPI.send_statement(statement)
 

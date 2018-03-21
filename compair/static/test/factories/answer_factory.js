@@ -16,7 +16,6 @@ var answerTemplate = {
         "avatar": "8ddf878039b70767c4a5bcf4f0c4f65e",
         "displayname": null
     },
-    "flagged": false,
     "top_answer": false,
     "created": "Fri, 22 Apr 2016 18:33:34 -0000",
 }

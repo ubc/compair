@@ -36,7 +36,7 @@ def upgrade():
         batch_op.drop_constraint("uq_comparison_uuid", type_='unique')
 
     try:
-        # expected foreign key to follow naming convensions
+        # expected foreign key to follow naming conventions
         with op.batch_alter_table('comparison', naming_convention=convention) as batch_op:
             # drop the fk before altering the column
             batch_op.drop_constraint('fk_comparison_assignment_id_assignment', 'foreignkey')
@@ -220,7 +220,7 @@ def upgrade():
 
 
 def downgrade():
-    # expected foreign key to follow naming convensions
+    # expected foreign key to follow naming conventions
     with op.batch_alter_table('comparison', naming_convention=convention) as batch_op:
         # drop the fk before altering the column
         batch_op.drop_constraint('fk_comparison_assignment_id_assignment', 'foreignkey')

@@ -286,13 +286,12 @@ def log_events(log):
     on_assignment_users_comparisons_get.connect(log)
 
     # answer events
-    from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag, \
+    from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, \
         on_set_top_answer, on_answer_delete, on_user_answer_get
     on_answer_modified.connect(log)
     on_answer_get.connect(log)
     on_answer_list_get.connect(log)
     on_answer_create.connect(log)
-    on_answer_flag.connect(log)
     on_set_top_answer.connect(log)
     on_answer_delete.connect(log)
     on_user_answer_get.connect(log)
