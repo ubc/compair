@@ -61,7 +61,6 @@ describe('xapi-module', function () {
             "top_answer_count": 0,
             "available": true,
             "students_can_reply": false,
-            "comment_count": 1,
             "criteria": [
                 {
                     "compared": true,

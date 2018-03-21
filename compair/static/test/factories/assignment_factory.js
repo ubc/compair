@@ -14,7 +14,6 @@ var assignmentTemplate = {
     "pairing_algorithm": "random",
     "educators_can_compare": false,
     "rank_display_limit": 10,
-    "comment_count": 0,
     "evaluation_count": 0,
     "answer_count": 0,
     "top_answer_count": 0,

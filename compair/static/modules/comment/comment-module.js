@@ -21,15 +21,6 @@ var module = angular.module('ubc.ctlt.compair.comment',
 );
 
 /***** Providers *****/
-module.factory("AssignmentCommentResource", ['$resource', function ($resource) {
-    var ret = $resource(
-        '/api/courses/:courseId/assignments/:assignmentId/comments/:commentId',
-        {commentId: '@id'}
-    );
-    ret.MODEL = "AssignmentComment";
-    return ret;
-}]);
-
 module.factory("AnswerCommentResource", ['$resource', 'Interceptors', function ($resource, Interceptors) {
     var url = '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/comments/:commentId';
     var ret = $resource(
@@ -86,47 +77,6 @@ module.directive('compairAnswerContent', function() {
 });
 
 /***** Controllers *****/
-module.controller(
-    "AssignmentCommentModalController",
-    ['$scope', 'AssignmentCommentResource', 'AssignmentResource', 'Toaster',
-     'EditorOptions', "$uibModalInstance",
-    function ($scope, AssignmentCommentResource, AssignmentResource, Toaster,
-              EditorOptions, $uibModalInstance)
-    {
-        //$scope.courseId
-        //$scope.assignmentId
-        $scope.comment = typeof($scope.comment) != 'undefined' ? $scope.comment : {};
-        $scope.method = $scope.comment.id ? 'edit' : 'create';
-        $scope.modalInstance = $uibModalInstance;
-        $scope.editorOptions = EditorOptions.basic;
-
-        $scope.parent = AssignmentResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId});
-
-        if ($scope.method == 'edit') {
-            AssignmentCommentResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId, 'commentId': $scope.comment.id}).$promise.then(
-                function(ret) {
-                    $scope.comment = ret;
-                }
-            );
-        }
-        $scope.commentSubmit = function () {
-            $scope.submitted = true;
-
-            AssignmentCommentResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.comment)
-            .$promise.then(
-                function (ret) {
-                    $scope.comment = ret;
-                    Toaster.success("Comment Saved");
-
-                    $uibModalInstance.close($scope.comment);
-                }
-            ).finally(function() {
-                $scope.submitted = false;
-            });
-        };
-    }]
-);
-
 module.controller(
     "AnswerCommentModalController",
     ['$scope', 'AnswerCommentResource', 'AnswerResource', 'Toaster', 'Authorize',

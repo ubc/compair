@@ -426,10 +426,6 @@ module.directive('assignmentMetadata', function() {
                                     'instructor' : true,
                                 }
                             },
-                            // 'commentCount' : {
-                            //     'label': assignment.comment_count + " comment" + (assignment.comment_count != 1 ? "s" : "") + " &raquo;",
-                            //     'href' : "#/course/" + courseId + "/assignment/" + assignment.id +"/?tab=help#comments"
-                            // },
                             'feedbackCount' : {
                                 'label': assignment.status.answers.feedback + " feedback comment" + (assignment.status.answers.feedback != 1 ? "s" : "") + " &raquo;",
                                 'href' : "#/course/" + courseId + "/assignment/" + assignment.id +"/?tab=your_feedback",
@@ -729,10 +725,10 @@ module.filter("notScoredEnd", function () {
 
 /***** Controllers *****/
 module.controller("AssignmentViewController",
-    ["$scope", "$routeParams", "$location", "AnswerResource", "AssignmentResource", "AssignmentCommentResource", "$anchorScroll",
+    ["$scope", "$routeParams", "$location", "AnswerResource", "AssignmentResource", "$anchorScroll",
              "ComparisonResource", "CourseResource", "Toaster", "AnswerCommentResource", "resolvedData", "$route",
              "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$uibModal", "xAPIStatementHelper", "WinningAnswer",
-    function($scope, $routeParams, $location, AnswerResource, AssignmentResource, AssignmentCommentResource, $anchorScroll,
+    function($scope, $routeParams, $location, AnswerResource, AssignmentResource, $anchorScroll,
              ComparisonResource, CourseResource, Toaster, AnswerCommentResource, resolvedData, $route,
              GroupResource, AnswerCommentType, PairingAlgorithm, $uibModal, xAPIStatementHelper, WinningAnswer)
     {
@@ -927,12 +923,6 @@ module.controller("AssignmentViewController",
                 );
             } else if (tab == "your_comparisons") {
                 $scope.comparison_set = AssignmentResource.getCurrentUserComparisons(params);
-            } else if (tab == "help") {
-                AssignmentCommentResource.get({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
-                    function(ret) {
-                        $scope.comments = ret;
-                    }
-                )
             }
             xAPIStatementHelper.opened_page_section(tab + " tab");
         };
@@ -1095,59 +1085,6 @@ module.controller("AssignmentViewController",
             });
         };
 
-        $scope.createAssignmentComment = function() {
-            var modalScope = $scope.$new();
-            modalScope.courseId = $scope.courseId;
-            modalScope.assignmentId = $scope.assignmentId;
-
-            $scope.modalInstance = $uibModal.open({
-                animation: true,
-                backdrop: 'static',
-                controller: "AssignmentCommentModalController",
-                templateUrl: 'modules/comment/comment-assignment-modal-partial.html',
-                scope: modalScope
-            });
-            $scope.modalInstance.opened.then(function() {
-                xAPIStatementHelper.opened_modal("Create Assignment Comment");
-            });
-            $scope.modalInstance.result.then(function (newComment) {
-                $scope.comments.objects.push(newComment);
-                $scope.assignment.comment_count++;
-                xAPIStatementHelper.closed_modal("Create Assignment Comment");
-            }, function() {
-                xAPIStatementHelper.closed_modal("Create Assignment Comment");
-            });
-        };
-
-        $scope.editAssignmentComment = function(comment) {
-            var modalScope = $scope.$new();
-            modalScope.courseId = $scope.courseId;
-            modalScope.assignmentId = $scope.assignmentId;
-            modalScope.comment = angular.copy(comment);
-
-            $scope.modalInstance = $uibModal.open({
-                animation: true,
-                backdrop: 'static',
-                controller: "AssignmentCommentModalController",
-                templateUrl: 'modules/comment/comment-assignment-modal-partial.html',
-                scope: modalScope
-            });
-            $scope.modalInstance.opened.then(function() {
-                xAPIStatementHelper.opened_modal("Edit Assignment Comment");
-            });
-            $scope.modalInstance.result.then(function (updatedComment) {
-                // update comment
-                _.each($scope.comments.objects, function(comment, index) {
-                    if (comment.id == updatedComment.id) {
-                        $scope.comments.objects[index] = updatedComment;
-                    }
-                });
-                xAPIStatementHelper.closed_modal("Edit Assignment Comment");
-            }, function() {
-                xAPIStatementHelper.closed_modal("Edit Assignment Comment");
-            });
-        };
-
         $scope.toggleReplies = function(showReplies, answer) {
             if (showReplies) {
                 $scope.loadComments(answer);
@@ -1163,16 +1100,6 @@ module.controller("AssignmentViewController",
                 assignmentId: $scope.assignmentId,
                 answer_ids: answer.id
             });
-        };
-
-        $scope.deleteComment = function(key, course_id, assignment_id, comment_id) {
-            AssignmentCommentResource.delete({'courseId': course_id, 'assignmentId': assignment_id, 'commentId': comment_id},
-                function (ret) {
-                    Toaster.success("Comment Deleted");
-                    $scope.comments.objects.splice(key, 1);
-                    $scope.assignment.comment_count--;
-                }
-            );
         };
 
         $scope.deleteReply = function(answer, commentKey, course_id, assignment_id, answer_id, comment_id) {

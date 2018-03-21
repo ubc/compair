@@ -141,16 +141,6 @@ class XAPIObject(object):
         )
 
     @classmethod
-    def assignment_comment(cls, assignment_comment):
-        return Activity(
-            id=XAPIResourceIRI.assignment_comment(assignment_comment.uuid),
-            definition=ActivityDefinition(
-                type=XAPIActivity.activity_types.get('comment'),
-                name=LanguageMap({ 'en-US': "Assignment comment" })
-            )
-        )
-
-    @classmethod
     def answer_evaluation_comment(cls, answer_comment):
         activity = cls.answer_comment(answer_comment)
         activity.definition.name = LanguageMap({ 'en-US': "Assignment answer evaluation comment" })

@@ -11,7 +11,6 @@ from .activity_log import ActivityLog
 from .answer_comment import AnswerComment
 from .answer import Answer
 from .assignment_criterion import AssignmentCriterion
-from .assignment_comment import AssignmentComment
 from .comparison import Comparison
 from .comparison_criterion import ComparisonCriterion
 from .comparison_example import ComparisonExample

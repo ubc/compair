@@ -102,7 +102,6 @@ describe('assignment-module', function () {
         "answer_period": true,
         "answer_start": "Thu, 02 Jun 2016 07:00:00 -0000",
         "available": true,
-        "comment_count": 3,
         "compare_end": "Wed, 22 Jun 2016 06:59:00 -0000",
         "compare_period": true,
         "compare_start": "Mon, 06 Jun 2016 06:59:00 -0000",
@@ -222,55 +221,6 @@ describe('assignment-module', function () {
             "name": "UeNV, thkx",
             "id": "1abcABC123-abcABC123_Z"
         }
-    };
-    var mockAssignmentComments = {
-        "objects": [
-            {
-                "assignment_id": "1abcABC123-abcABC123_Z",
-                "content": "<p>Hi Everyone!</p>\n",
-                "course_id": "1abcABC123-abcABC123_Z",
-                "created": "Tue, 07 Jun 2016 19:43:29 -0000",
-                "id": "1abcABC123-abcABC123_Z",
-                "user": {
-                    "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
-                    "displayname": "root",
-                    "fullname": "thkx UeNV",
-                    "fullname_sortable": "UeNV, thkx",
-                    "id": "1abcABC123-abcABC123_Z"
-                },
-                "user_id": "1abcABC123-abcABC123_Z",
-            },
-            {
-                "assignment_id": "1abcABC123-abcABC123_Z",
-                "content": "<p>Help me please</p>\n",
-                "course_id": "1abcABC123-abcABC123_Z",
-                "created": "Tue, 07 Jun 2016 19:43:45 -0000",
-                "id": "2abcABC123-abcABC123_Z",
-                "user": {
-                    "avatar": "27e062bf3df59edebb5db9f89952c8b3",
-                    "displayname": "student6",
-                    "fullname": "Student Sx",
-                    "fullname_sortable": "Sx, Student",
-                    "id": "8abcABC123-abcABC123_Z",
-                },
-                "user_id": "8abcABC123-abcABC123_Z",
-            },
-            {
-                "assignment_id": "1abcABC123-abcABC123_Z",
-                "content": "<p>Ok does this help?</p>\n",
-                "course_id": "1abcABC123-abcABC123_Z",
-                "created": "Tue, 07 Jun 2016 19:44:23 -0000",
-                "id": "3abcABC123-abcABC123_Z",
-                "user": {
-                    "avatar": "9445e064ca06f7de8c2f0689ef6b9e8b",
-                    "displayname": "root",
-                    "fullname": "thkx UeNV",
-                    "fullname_sortable": "UeNV, thkx",
-                    "id": "1abcABC123-abcABC123_Z"
-                },
-                "user_id": "1abcABC123-abcABC123_Z"
-            }
-        ]
     };
     var mockAnswers = {
         "objects": [
@@ -847,14 +797,6 @@ describe('assignment-module', function () {
                 expect($rootScope.showTab('answers')).toBe(true);
             });
 
-            it('should be able to change to help tab', function () {
-                $rootScope.setTab('help');
-                $rootScope.$emit('$routeUpdate');
-                $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comments').respond(mockAssignmentComments);
-                $httpBackend.flush();
-                expect($rootScope.showTab('help')).toBe(true);
-            });
-
             it('should be able to change to participation tab', function () {
                 $rootScope.setTab('participation');
                 $rootScope.$emit('$routeUpdate');
@@ -962,40 +904,6 @@ describe('assignment-module', function () {
                 });
 
             });
-
-            describe("assignment comments", function() {
-
-                beforeEach(function(){
-                    $rootScope.setTab('help');
-                    $rootScope.$emit('$routeUpdate');
-                    $httpBackend.expectGET('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comments').respond(mockAssignmentComments);
-                    $httpBackend.flush();
-                });
-
-                it('should be properly initialized', function() {
-                    expect($rootScope.comments.objects).toEqual(mockAssignmentComments.objects);
-                });
-
-                it('should be able to delete assignment comments', function () {
-                    comments = angular.copy(mockAssignmentComments.objects);
-                    comment = comments[0];
-
-                    expect($rootScope.comments.objects).toEqual(comments);
-                    expect($rootScope.assignment.comment_count).toEqual(comments.length);
-
-                    $rootScope.deleteComment(0, mockAssignment.course_id, mockAssignment.id, comment.id);
-                    $httpBackend.expectDELETE('/api/courses/1abcABC123-abcABC123_Z/assignments/1abcABC123-abcABC123_Z/comments/'+comment.id).respond({
-                        id: comment.id
-                    });
-                    $httpBackend.flush();
-
-                    comments.shift();
-
-                    expect($rootScope.comments.objects).toEqual(comments);
-                    expect($rootScope.assignment.comment_count).toEqual(comments.length);
-                });
-            });
-
         });
     });
 

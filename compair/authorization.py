@@ -8,7 +8,7 @@ from .core import abort
 
 from .models import Course, User, UserCourse, CourseRole, SystemRole, \
     Assignment, Answer, AnswerComment, Comparison, Criterion, \
-    AssignmentComment, AssignmentCriterion, ComparisonExample, File
+    AssignmentCriterion, ComparisonExample, File
 
 USER_IDENTITY = 'permission_user_identity'
 
@@ -84,8 +84,6 @@ def define_authorization(user, they):
         they.can(READ, Answer, course_id=entry.course_id, draft=False)
         they.can(CREATE, Answer, course_id=entry.course_id)
         they.can((EDIT, DELETE, READ), Answer, user_id=user.id)
-        they.can((READ, CREATE), AssignmentComment, course_id=entry.course_id)
-        they.can((EDIT, DELETE), AssignmentComment, user_id=user.id)
         they.can(DELETE, File, if_can_delete_attachment_reference)
         # only owner/Instructors/TAs can read answer comment drafts
         they.can(READ, AnswerComment, course_id=entry.course_id, draft=False)
@@ -103,7 +101,6 @@ def define_authorization(user, they):
                 entry.course_role == CourseRole.teaching_assistant:
             they.can(MANAGE, Assignment, course_id=entry.course_id)
             they.can(MANAGE, Answer, course_id=entry.course_id)
-            they.can(MANAGE, AssignmentComment, course_id=entry.course_id)
             they.can(MANAGE, AnswerComment, course_id=entry.course_id)
             they.can(MANAGE, ComparisonExample, course_id=entry.course_id)
             they.can(READ, Comparison, course_id=entry.course_id)
