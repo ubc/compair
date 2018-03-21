@@ -52,7 +52,7 @@ var editAssignmentStepDefinitionsWrapper = function () {
     });
 
     this.Then("I should see the assignment with the new name", function() {
-        var item = element.all(by.exactRepeater("assignment in assignments")).get(2)
+        var item = element.all(by.exactRepeater("assignment in assignments")).get(0)
 
         return expect(item.element(by.css(".media-heading")).getText()).to.eventually.equal("New Name »");
     });

@@ -15,7 +15,7 @@ Feature: Edit Assignment
 
   Scenario: Editing an assignment as instructor
     Given I'm an Instructor
-    And I'm on 'edit assignment' page for assignment with id '3abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
+    And I'm on 'edit assignment' page for assignment with id '6abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
     When I fill form item 'assignment.name' in with 'New Name'
     And I fill in the assignment description with 'This is the new description'
     And I drop the first criterion
@@ -26,7 +26,7 @@ Feature: Edit Assignment
 
   Scenario: Editing a assignment's criterion as instructor before comparisons
     Given I'm an Instructor
-    And I'm on 'edit assignment' page for assignment with id '3abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
+    And I'm on 'edit assignment' page for assignment with id '6abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
     When I edit the second criterion
     And I fill form item 'criterion.name' in with 'Choose the best one'
     And I fill in the criterion description with 'Choose the best one.'

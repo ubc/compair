@@ -147,5 +147,11 @@ var commonStepDefinitionsWrapper = function() {
     this.Then("pause", function () {
         return browser.pause();
     });
+
+    // sleep (helpful for debugging when pause doesn't work)
+    // will sleep for 1 hour
+    this.Then("sleep", {timeout: 61 * 60 * 1000}, function () {
+        return browser.sleep(60 * 60 * 1000); //1 hour
+    });
 };
 module.exports = commonStepDefinitionsWrapper;
