@@ -784,7 +784,6 @@ describe('assignment-module', function () {
 
                 expect($rootScope.comparisons_left).toEqual(mockAssignment.total_comparisons_required);
                 expect($rootScope.see_answers).toBe(false);
-                expect($rootScope.warning).toBe(false);
 
                 expect($rootScope.assignment.status.answers.answered).toBe(true);
 

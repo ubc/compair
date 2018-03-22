@@ -407,7 +407,8 @@ class TestPairMinDelta(unittest.TestCase):
             )
         ]
         comparisons = [
-            ComparisonPair(1,2,None)
+            ComparisonPair(1,2,None),
+            ComparisonPair(3,4,None)
         ]
         criterion_scores = {
             1: { 'c1': 10.1, 'c2': 20.2 },
@@ -486,7 +487,8 @@ class TestPairMinDelta(unittest.TestCase):
             )
         ]
         comparisons = [
-            ComparisonPair(1,2,None)
+            ComparisonPair(1,2,None),
+            ComparisonPair(3,4,None)
         ]
         criterion_scores = {
             1: { 'c1': 10.1, 'c2': 20.2 },
@@ -542,3 +544,104 @@ class TestPairMinDelta(unittest.TestCase):
         self.assertEqual(results.key1, 1)
         # object 500 should be select as it as the lowest criterion score delta
         self.assertEqual(results.key2, 500)
+
+        # ensure that all scored objects are seen only once until they have almost all been seen
+        # (even number of scored objects)
+        scored_objects = [ScoredObject(
+            key=index, score=None, variable1=None, variable2=None,
+            rounds=0, wins=None, loses=None, opponents=None
+        ) for index in range(30)]
+        comparisons = []
+        criterion_scores = {}
+        for key in range(30):
+            criterion_scores[key] = { 'c1': None, 'c2': None }
+        criterion_weights = {
+            'c1': 0.4, 'c2': 0.6
+        }
+
+        used_keys = set()
+        all_keys = set(range(30))
+
+        # n/2 comparisons = 15
+        for _ in range(15):
+            results = self.pair_algorithm.generate_pair(scored_objects, comparisons,
+                criterion_scores, criterion_weights)
+            # neither key should have been seen before
+            self.assertNotIn(results.key1, used_keys)
+            self.assertNotIn(results.key2, used_keys)
+
+            comparisons.append(results)
+            used_keys.add(results.key1)
+            used_keys.add(results.key2)
+
+        self.assertEqual(used_keys, all_keys)
+
+        # remaining comparisons for n(n-1)/2 = 435
+        for _ in range(435 - 15):
+            results = self.pair_algorithm.generate_pair(scored_objects, comparisons,
+                criterion_scores, criterion_weights)
+            # both keys should have been seen before
+            self.assertIn(results.key1, used_keys)
+            self.assertIn(results.key2, used_keys)
+            comparisons.append(results)
+
+        # next comparison should be an UserComparedAllObjectsException error
+        with self.assertRaises(UserComparedAllObjectsException):
+            results = self.pair_algorithm.generate_pair(scored_objects, comparisons,
+                criterion_scores, criterion_weights)
+
+        # make sure all pairs are distinct
+        self.assertEqual(
+            len(comparisons),
+            len(set([tuple(sorted([c.key1, c.key2])) for c in comparisons])))
+
+        # ensure that all scored objects are seen only once until they have almost all been seen
+        # (odd number of scored objects)
+        scored_objects = [ScoredObject(
+            key=index, score=None, variable1=None, variable2=None,
+            rounds=0, wins=None, loses=None, opponents=None
+        ) for index in range(31)]
+        comparisons = []
+        criterion_scores = {}
+        for key in range(30):
+            criterion_scores[key] = { 'c1': None, 'c2': None }
+        criterion_weights = {
+            'c1': 0.4, 'c2': 0.6
+        }
+
+        used_keys = set()
+        all_keys = set(range(31))
+
+        # floor(n/2) comparisons = 15
+        for _ in range(15):
+            results = self.pair_algorithm.generate_pair(scored_objects, comparisons,
+                criterion_scores, criterion_weights)
+            # neither key should have been seen before
+            self.assertNotIn(results.key1, used_keys)
+            self.assertNotIn(results.key2, used_keys)
+
+            comparisons.append(results)
+            used_keys.add(results.key1)
+            used_keys.add(results.key2)
+
+        # there should be only one key missing
+        self.assertEqual(len(all_keys - used_keys), 1)
+
+        # remaining comparisons for n(n-1)/2 = 435
+        for _ in range(465 - 15):
+            results = self.pair_algorithm.generate_pair(scored_objects, comparisons,
+                criterion_scores, criterion_weights)
+            # both keys should have been seen before
+            self.assertIn(results.key1, all_keys)
+            self.assertIn(results.key2, all_keys)
+            comparisons.append(results)
+
+        # next comparison should be an UserComparedAllObjectsException error
+        with self.assertRaises(UserComparedAllObjectsException):
+            results = self.pair_algorithm.generate_pair(scored_objects, comparisons,
+                criterion_scores, criterion_weights)
+
+        # make sure all pairs are distinct
+        self.assertEqual(
+            len(comparisons),
+            len(set([tuple(sorted([c.key1, c.key2])) for c in comparisons])))

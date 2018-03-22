@@ -452,7 +452,7 @@ module.directive('assignmentMetadata', function() {
                                 'label': "You " +
                                         (!permissions.needsAnswer ? "<strong>answered</strong>" +
                                         (permissions.hasCompared ? " and " : "") : "") +
-                                        (permissions.hasCompared ? "<strong>compared " + assignment.status.comparisons.count + " pair" + (assignment.status.comparisons.count != 0 ? "s" : "") + "</strong>" : ""),
+                                        (permissions.hasCompared ? "<strong>compared " + assignment.status.comparisons.count + " pair" + (assignment.status.comparisons.count != 1 ? "s" : "") + "</strong>" : ""),
                                 'show' : {
                                     'user' : permissions.hasCompared || !permissions.needsAnswer,
                                     'instructor'  : false,
@@ -462,16 +462,16 @@ module.directive('assignmentMetadata', function() {
                                 'label': "You missed " +
                                         (permissions.hasMissedAnswer ? "answering " +
                                         (permissions.hasMissedCompare ? " and " : "") : "") +
-                                        (permissions.hasMissedCompare ? "comparing " + (permissions.needsCompare ? assignment.steps_left + " pair" + (assignment.steps_left != 0 ? "s" : "") : "") : ""),
+                                        (permissions.hasMissedCompare ? "comparing " + (permissions.needsCompare ? assignment.steps_left + " pair" + (assignment.steps_left != 1 ? "s" : "") : "") : ""),
                                 'show' : {
                                     'user' : permissions.hasMissedAnswer || permissions.hasMissedCompare,
                                     'instructor'  : false,
                                 }
                             },
                             'missingFeedback' : {
-                                'label': (permissions.canAnswer && permissions.needsAnswer ? "1 answer " +
+                                'label': (permissions.canAnswer && permissions.needsAnswer ? "1 answer" +
                                          (permissions.isComparePeriod && permissions.needsCompareOrSelfEval > 0 ? ", " : "") : "") +
-                                         (permissions.isComparePeriod && permissions.needsCompareOrSelfEval > 0 ? assignment.steps_left + " comparison" + (assignment.steps_left != 0 ? "s" : "") : "") + " needed",
+                                         (permissions.isComparePeriod && permissions.needsCompareOrSelfEval > 0 ? assignment.steps_left + " comparison" + (assignment.steps_left != 1 ? "s" : "") : "") + " needed",
                                 'class': 'label label-warning',
                                 'show' : {
                                             // suggested: (canAnswer && needsAnswer) || (>>>> canCompare <<<< && needsCompareOrSelfEval)
@@ -848,9 +848,6 @@ module.controller("AssignmentViewController",
                     // if an comparison period is NOT set - answers can be seen after req met
                     $scope.see_answers = $scope.assignment.after_comparing && $scope.comparisons_left == 0;
                 }
-                var diff = $scope.assignment.answer_count - $scope.assignment.status.answers.count;
-                var possible_comparisons_left = ((diff * (diff - 1)) / 2);
-                $scope.warning = $scope.assignment.status.comparisons.left > possible_comparisons_left;
             }
         )
 

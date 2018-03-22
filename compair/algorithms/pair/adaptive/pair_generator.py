@@ -12,15 +12,6 @@ class AdaptivePairGenerator(PairGenerator):
     def __init__(self):
         PairGenerator.__init__(self)
 
-        # holds comparison pairs the user has already completed
-        self.comparison_pairs = []
-        self.scored_objects = []
-
-        self.rounds = []
-        # round_objects[round_number] = [ScoredObject]
-        self.round_objects = {}
-
-
     def generate_pair(self, scored_objects, comparison_pairs):
         """
         Returns a pair to be compared by the current user.
@@ -29,27 +20,7 @@ class AdaptivePairGenerator(PairGenerator):
         param comparison_pairs: list of all comparisons compelted by the current user.
         """
 
-        self.comparison_pairs = comparison_pairs
-        self.scored_objects = scored_objects
-        self.rounds = []
-        self.round_objects = {}
-
-        # change None value scores to zero
-        for (index, scored_object) in enumerate(self.scored_objects):
-            if scored_object.score == None:
-                self.scored_objects[index] = scored_object._replace(score=0)
-
-        self.rounds = list(set([a.rounds for a in self.scored_objects]))
-        self.rounds.sort()
-
-        for scored_object in self.scored_objects:
-            round = self.round_objects.setdefault(scored_object.rounds, [])
-            round.append(scored_object)
-
-        # check valid
-        if len(self.scored_objects) < 2:
-            raise InsufficientObjectsForPairException
-
+        self._setup_rounds(comparison_pairs, scored_objects)
         comparison_pair = self._find_pair()
 
         if comparison_pair == None:
@@ -59,7 +30,7 @@ class AdaptivePairGenerator(PairGenerator):
 
     def _find_pair(self):
         """
-        Returns an comparison pair by matching them up by score.
+        Returns a comparison pair by matching them up by score.
         - First key is selected by random within the lowest round possible
         - First key must have a valid opponent with the current user or else its skipped
         - Second key candidates are filters by previous opponents to first key
@@ -95,7 +66,7 @@ class AdaptivePairGenerator(PairGenerator):
         select second element in pair
         second object must be in same round unless:
             - there are no other objects in that round
-            - or there are no objects that haven't been comapred
+            - or there are no objects that haven't been compared
               to it by current user already
         """
         score = score_object_1.score
@@ -125,46 +96,9 @@ class AdaptivePairGenerator(PairGenerator):
             winner=None
         )
 
-
-    def _has_valid_opponent(self, key):
-        """
-        Returns True if scored object has at least one other scored object it
-        hasn't been compared to by the current user, False otherwise.
-        """
-        compared_keys = set()
-        compared_keys.add(key)
-        for comparison_pair in self.comparison_pairs:
-            # add opponents of key to compared_keys set
-            if comparison_pair.key1 == key:
-                compared_keys.add(comparison_pair.key2)
-            elif comparison_pair.key2 == key:
-                compared_keys.add(comparison_pair.key1)
-
-        all_keys = set([scored_object.key for scored_object in self.scored_objects])
-
-        # some comparison keys may have been soft deleted hence we need to use
-        # the set subtraction operation instead of comparing sizes
-        all_keys -= compared_keys
-
-        return all_keys
-
-    def _remove_invalid_opponents(self, key):
-        """
-        removes key and all opponents of key from score objects lists
-        """
-        filter_keys = set()
-        filter_keys.add(key)
-        for comparison_pair in self.comparison_pairs:
-            # add opponents of key to compared_keys set
-            if comparison_pair.key1 == key:
-                filter_keys.add(comparison_pair.key2)
-            elif comparison_pair.key2 == key:
-                filter_keys.add(comparison_pair.key1)
-
-        self.scored_objects = [so for so in self.scored_objects if so.key not in filter_keys]
-
-        # reinit round_objects
-        self.round_objects = {}
-        for scored_object in self.scored_objects:
-            round = self.round_objects.setdefault(scored_object.rounds, [])
-            round.append(scored_object)
+    def _setup_rounds(self, comparison_pairs, scored_objects):
+        # change None value scores to zero
+        for (index, scored_object) in enumerate(scored_objects):
+            if scored_object.score == None:
+                scored_objects[index] = scored_object._replace(score=0)
+        PairGenerator._setup_rounds(self, comparison_pairs, scored_objects)

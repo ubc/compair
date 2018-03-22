@@ -1,4 +1,5 @@
 import json
+import math
 import copy
 import operator
 import datetime
@@ -229,6 +230,7 @@ class ComparisonAPITests(ComPAIRAPITestCase):
         for user in users:
             max_comparisons = self.assignment.number_of_comparisons
             other_people_answers = 0
+            seen_answer_uuids = set()
             valid_answer_uuids = set()
             for answer in self.data.get_comparable_answers():
                 if answer.assignment.id == self.assignment.id and answer.user_id != user.id:
@@ -277,6 +279,15 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                     self.assertIn(answer1_uuid, valid_answer_uuids)
                     self.assertIn(answer2_uuid, valid_answer_uuids)
                     self.assertNotEqual(answer1_uuid, answer2_uuid)
+
+                    # ensure that answers are not seen more than once
+                    # until almost all answers have already been seen
+                    if current <= math.floor(other_people_answers / 2):
+                        self.assertNotIn(answer1_uuid, seen_answer_uuids)
+                        self.assertNotIn(answer2_uuid, seen_answer_uuids)
+                        seen_answer_uuids.add(answer1_uuid)
+                        seen_answer_uuids.add(answer2_uuid)
+
                     self.assertTrue(rv.json['new_pair'])
                     self.assertEqual(rv.json['current'], current)
                     # no user info should be included in the answer
