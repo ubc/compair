@@ -58,8 +58,6 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
 
         db.session.commit()
 
-        self.maxDiff = None
-
     def test_on_comparison_update(self):
         completed_count = 0
 

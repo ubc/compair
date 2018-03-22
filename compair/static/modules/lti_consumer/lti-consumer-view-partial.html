@@ -22,22 +22,21 @@
             </div>
         </div>
         <div class="row">
-            <strong class="col-md-2">LTI User ID Override:</strong>
-            <div id="consumer_user_id_override" class="col-md-10">
-                {{consumer.user_id_override}}
+            <strong class="col-md-2">Global Unique Identifier Param:</strong>
+            <div id="consumer_global_unique_identifier_param" class="col-md-10">
+                {{consumer.global_unique_identifier_param}}
             </div>
         </div>
         <div class="row">
             <strong class="col-md-2">Student Number Param:</strong>
-            <div id="student_number_param" class="col-md-10">
+            <div id="consumer_student_number_param" class="col-md-10">
                 {{consumer.student_number_param}}
             </div>
         </div>
         <div class="row">
             <strong class="col-md-2">Active:</strong>
             <div class="col-md-10">
-                <input id="consumer_active" type="checkbox" ng-model="consumer.active"
-                    ng-change="updateConsumerActive()">
+                <input id="consumer_active" type="checkbox" ng-model="consumer.active" ng-change="updateConsumerActive()">
             </div>
         </div>
         <div class="row">

@@ -45,7 +45,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         with self.lti_launch(lti_consumer, None,
                 user_id=lti_user_id, context_id=lti_context_id,
                 invalid_launch=True) as rv:
-            self.assert400(rv)
+            self.assert400(rv, "ComPAIR requires the LTI tool consumer to provide a resource link id.")
 
         # invalid request - no resource_link_id (with return url)
         with self.lti_launch(lti_consumer, None,
@@ -469,11 +469,11 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             db.session.commit()
             # done student_number_param ------
 
-            # user_id_override ------
-            lti_consumer.user_id_override = "custom_puid"
+            # global_unique_identifier_param ------
+            lti_consumer.global_unique_identifier_param = "custom_puid"
             db.session.commit()
 
-            # user_id_override parameter is missing
+            # global_unique_identifier_param parameter is missing
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     assignment_uuid=assignment.uuid, follow_redirects=False) as rv:
@@ -496,17 +496,20 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
-            # user_id_override parameter is present (new user)
+            # global_unique_identifier_param parameter is present (new user)
             custom_puid = "puid123456789_"+str(lti_role)
+            lti_user_id = self.lti_data.generate_user_id()
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     assignment_uuid=assignment.uuid, follow_redirects=False,
                     custom_puid=custom_puid) as rv:
-                self.assertRedirects(rv, '/app/#/lti')
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
 
             lti_user = LTIUser.query.all()[-1]
-            self.assertEqual(lti_user.user_id, custom_puid)
+            self.assertEqual(lti_user.global_unique_identifier, custom_puid)
             lti_user_resource_link = LTIUserResourceLink.query.all()[-1]
+            user = User.query.all()[-1]
+            self.assertEqual(user.global_unique_identifier, custom_puid)
 
             # check session
             with self.client.session_transaction() as sess:
@@ -517,20 +520,15 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # user doesn't exist
-                self.assertTrue(sess.get('lti_create_user_link'))
+                # user exists
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertIsNone(sess.get('user_id'))
+                self.assertEqual(sess.get('user_id'), str(lti_user.compair_user_id))
 
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
-            # link user account
-            user = self.data.create_user(system_role)
-            lti_user.compair_user = user
-            db.session.commit()
-
-            # user_id_override parameter is present (existing user)
+            # global_unique_identifier_param parameter is present (existing user linked)
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     assignment_uuid=assignment.uuid, follow_redirects=False,
@@ -554,9 +552,42 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
-            lti_consumer.user_id_override = None
+            # global_unique_identifier_param parameter is present (existing user unlinked)
+            custom_puid = "puid123456789_"+str(lti_role)+"_2"
+            user = self.data.create_user(system_role)
+            user.global_unique_identifier = custom_puid
+            lti_user_id = self.lti_data.generate_user_id()
+
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_uuid=assignment.uuid, follow_redirects=False,
+                    custom_puid=custom_puid) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
+
+            lti_user = LTIUser.query.all()[-1]
+            self.assertEqual(lti_user.user_id, lti_user_id)
+            lti_user_resource_link = LTIUserResourceLink.query.all()[-1]
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+                self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
+                self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
+                self.assertEqual(lti_user.id, sess.get('lti_user'))
+                self.assertEqual(lti_context.id, sess.get('lti_context'))
+                self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
+
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+            self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
+
+            lti_consumer.global_unique_identifier_param = None
             db.session.commit()
-            # done user_id_override ------
+            # done global_unique_identifier_param ------
 
         # test automatic upgrading of system role for existing accounts
         for lti_role, (system_role, course_role) in roles.items():

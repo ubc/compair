@@ -64,10 +64,8 @@ LRS_PASSWORD = None
 # limit user generated content field text size limit
 LRS_USER_INPUT_FIELD_SIZE_LIMIT = 1048576 #1024 * 1024 -> max 1MB
 
-LRS_ACTOR_ACCOUNT_USE_THIRD_PARTY = False # set to True to use CAS account information if available
-LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER = None # set to a param field value to use or None to use unique_identifier
-LRS_ACTOR_ACCOUNT_SAML_IDENTIFIER = None
-LRS_ACTOR_ACCOUNT_THIRD_PARTY_HOMEPAGE = None # set to the url for the CAS account homepage
+LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER = False # set to True to use user's global_unique_identifier if available
+LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE = None # set to the url for the global unique identifer homepage
 
 # where to retrieve assets, possible values 'cloud', 'local'
 ASSET_LOCATION = 'cloud'

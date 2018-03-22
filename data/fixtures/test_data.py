@@ -161,7 +161,7 @@ class LTITestData:
         return lti_context.context_id
 
     def generate_user_id(self):
-        lti_user= LTIUserFactory.stub()
+        lti_user = LTIUserFactory.stub()
 
         return lti_user.user_id
 

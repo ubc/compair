@@ -25,7 +25,7 @@
                         <a href="" ng-click="updateTableOrderBy('oauth_consumer_key')">Consumer Key</a>
                     </th>
                     <th>
-                        <a href="" ng-click="updateTableOrderBy('oauth_consumer_secret')">LTI User ID Override</a>
+                        <a href="" ng-click="updateTableOrderBy('global_unique_identifier_param')">Global Unique Identifier Param</a>
                     </th>
                     <th>
                         <a href="" ng-click="updateTableOrderBy('student_number_param')">Student Number Param</a>
@@ -44,10 +44,10 @@
                         <a href="#/lti/consumer/{{consumer.id}}">{{consumer.oauth_consumer_key}}</a>
                     </td>
                     <td>
-                        <a href="#/lti/consumer/{{consumer.id}}">{{consumer.user_id_override}}</a>
+                        {{consumer.global_unique_identifier_param}}
                     </td>
                     <td>
-                        <a href="#/lti/consumer/{{consumer.id}}">{{consumer.student_number_param}}</a>
+                        {{consumer.student_number_param}}
                     </td>
                     <td>
                         <select ng-model="consumer.active" ng-options="key for (key , value) in {'Active': true, 'Inactive': false}"

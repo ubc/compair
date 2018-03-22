@@ -256,7 +256,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
         url = '/api/lti/course/'+course.uuid+'/context'
 
         lti_consumer = self.lti_data.lti_consumer
-        lti_consumer.user_id_override = "custom_puid"
+        lti_consumer.global_unique_identifier_param = "custom_puid"
         lti_consumer.student_number_param = "custom_student_number"
         db.session.commit()
 
@@ -385,7 +385,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     "compair_student_3è", "compair_instructor_2"])
                 self.assertIsNone(lti_membership.lti_user.student_number)
 
-        # test successful membership response (with user_id_override)
+        # test successful membership response (with global_unique_identifier_param)
         with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
                 user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
                 ext_ims_lis_memberships_id="123", ext_ims_lis_memberships_url="https://mockmembershipurl.com") as rv:
@@ -402,49 +402,53 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                 </statusinfo>
                 <memberships>
                     <member>
-                    <user_id>ignore_1</user_id>
+                    <user_id>some_user_id_1</user_id>
                     <roles>Instructor</roles>
-                    <custom_puid>{instructor_user_id}</custom_puid>
+                    <custom_puid>guid1</custom_puid>
                     <custom_student_number></custom_student_number>
                     </member>
                     <member>
-                    <user_id>ignore_2</user_id>
+                    <user_id>some_user_id_2</user_id>
                     <roles>Learner</roles>
-                    <custom_puid>compair_student_1</custom_puid>
+                    <custom_puid>guid2</custom_puid>
                     <custom_student_number>12345678901</custom_student_number>
                     </member>
                     <member>
-                    <user_id>ignore_3</user_id>
+                    <user_id>some_user_id_3</user_id>
                     <roles>Learner</roles>
-                    <custom_puid>compair_student_2</custom_puid>
+                    <custom_puid>guid3</custom_puid>
                     <custom_student_number>12345678902</custom_student_number>
                     </member>
                     <member>
-                    <user_id>ignore_4è</user_id>
+                    <user_id>some_user_id_4</user_id>
                     <roles>TeachingAssistant</roles>
-                    <custom_puid>compair_student_3è</custom_puid>
+                    <custom_puid>guid4è</custom_puid>
                     <custom_student_number>12345678903</custom_student_number>
                     </member>
                     <member>
-                    <user_id>ignore_5</user_id>
+                    <user_id>some_user_id_5</user_id>
                     <roles>TeachingAssistant</roles>
-                    <custom_puid>compair_instructor_2</custom_puid>
+                    <custom_puid>guid5</custom_puid>
                     <custom_student_number>12345678904</custom_student_number>
                     </member>
                 </memberships>
                 </message_response>
-            """.format(instructor_user_id=lti_user.user_id)
+            """
 
             # link course
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert200(rv)
 
-            # 5 members in minimal_membership (all old users besides instructor should be dropped)
+            # 5 members in minimal_membership (old users expect instructor should be dropped)
 
             # verify user course roles
             for user_course in course.user_courses:
-                if user_course.user_id == instructor.id:
+                if user_course.user.global_unique_identifier == 'guid1' or user_course.user_id == instructor.id:
                     self.assertEqual(user_course.course_role, CourseRole.instructor)
+                elif user_course.user.global_unique_identifier in ['guid4è', 'guid5']:
+                    self.assertEqual(user_course.course_role, CourseRole.teaching_assistant)
+                elif user_course.user.global_unique_identifier in ['guid2', 'guid3']:
+                    self.assertEqual(user_course.course_role, CourseRole.student)
                 else:
                     #everyone else should be dropped
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
@@ -456,8 +460,11 @@ class LTICourseAPITests(ComPAIRAPITestCase):
 
             self.assertEqual(len(lti_memberships), 5)
             for lti_membership in lti_memberships:
-                self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
-                    "compair_student_3è", "compair_instructor_2"])
+                self.assertIn(lti_membership.lti_user.user_id, [
+                    lti_user.user_id, "some_user_id_1", "some_user_id_2",
+                    "some_user_id_3", "some_user_id_4", "some_user_id_5"])
+                self.assertIn(lti_membership.lti_user.global_unique_identifier, [
+                    "guid1", "guid2", "guid3", "guid4è", "guid5"])
 
                 if lti_membership.lti_user.system_role == SystemRole.student:
                     self.assertIn(lti_membership.lti_user.student_number, ["12345678901", "12345678902", "12345678903", "12345678904"])
@@ -707,10 +714,10 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(lti_user_resource_links[0].lis_result_sourcedid,
                         "lis_result_sourcedid_"+lti_membership.lti_user.user_id)
 
-        for user_id_override in [None, "custom_puid", "ext_user_username"]:
+        for global_unique_identifier_param in [None, "custom_puid", "ext_user_username"]:
             for student_number_param in [None, "custom_student_number"]:
 
-                def user_id_override_membership_requests(memberships_url, headers=None):
+                def global_unique_identifier_membership_requests(memberships_url, headers=None):
                     if memberships_url == "https://mockmembershipurl.com":
                         return {
                             "@id":None,
@@ -753,7 +760,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                 "urn:lti:role:ims/lis/Learner"
                                             ],
                                             "member":{
-                                                "userId": "userId_2"
+                                                "userId": "userId_2"+str(global_unique_identifier_param)
                                             },
                                             "message" : [
                                                 {
@@ -761,7 +768,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                     "lis_result_sourcedid": "1234567890-1",
                                                     "custom" : {
                                                         "puid": "compair_student_1_puid",
-                                                        "student_number": "12345678901"
+                                                        "student_number": "12345678901"+str(global_unique_identifier_param)
                                                     },
                                                     "ext" : {
                                                         "user_username": "compair_student_1_username",
@@ -775,7 +782,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                 "urn:lti:role:ims/lis/Learner"
                                             ],
                                             "member":{
-                                                "userId": "userId_3"
+                                                "userId": "userId_3"+str(global_unique_identifier_param)
                                             },
                                             "message" : [
                                                 {
@@ -783,7 +790,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                     "lis_result_sourcedid": "1234567890-2",
                                                     "custom" : {
                                                         "puid": "compair_student_2_puid",
-                                                        "student_number": "12345678902"
+                                                        "student_number": "12345678902"+str(global_unique_identifier_param)
                                                     },
                                                     "ext" : {
                                                         "user_username": "compair_student_2_username",
@@ -797,7 +804,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                 "urn:lti:role:ims/lis/TeachingAssistant"
                                             ],
                                             "member":{
-                                                "userId":"userId_4"
+                                                "userId":"userId_4"+str(global_unique_identifier_param)
                                             },
                                             "message" : [
                                                 {
@@ -805,7 +812,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                     "lis_result_sourcedid": "1234567890-3",
                                                     "custom" : {
                                                         "puid": "compair_student_3è_puid",
-                                                        "student_number": "12345678903"
+                                                        "student_number": "12345678903"+str(global_unique_identifier_param)
                                                     },
                                                     "ext" : {
                                                         "user_username": "compair_student_3è_username",
@@ -819,7 +826,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                 "urn:lti:role:ims/lis/TeachingAssistant"
                                             ],
                                             "member":{
-                                                "userId":"userId_5"
+                                                "userId":"userId_5"+str(global_unique_identifier_param)
                                             },
                                             "message" : [
                                                 {
@@ -827,7 +834,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                     "lis_result_sourcedid": "1234567890-4",
                                                     "custom" : {
                                                         "puid": "compair_instructor_2_puid",
-                                                        "student_number": "12345678904"
+                                                        "student_number": "12345678904"+str(global_unique_identifier_param)
                                                     },
                                                     "ext" : {
                                                         "user_username": "compair_instructor_2_username",
@@ -841,7 +848,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                 "urn:lti:role:ims/lis/Learner"
                                             ],
                                             "member":{
-                                                "userId": "userId_6"
+                                                "userId": "userId_6"+str(global_unique_identifier_param)
                                             },
                                             "message" : [
                                                 {
@@ -849,7 +856,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                     "lis_result_sourcedid": "1234567890-5",
                                                     "custom" : {
                                                         "puid": "compair_student_100_puid",
-                                                        "student_number": "12345678905"
+                                                        "student_number": "12345678905"+str(global_unique_identifier_param)
                                                     },
                                                     "ext" : {
                                                         "user_username": "compair_student_100_username",
@@ -883,7 +890,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                 "urn:lti:role:ims/lis/Learner"
                                             ],
                                             "member":{
-                                                "userId": "userId_2"
+                                                "userId": "userId_2"+str(global_unique_identifier_param)
                                             },
                                             "message" : [
                                                 {
@@ -891,7 +898,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                     "lis_result_sourcedid": "lis_result_sourcedid_compair_student_1",
                                                     "custom" : {
                                                         "puid": "compair_student_1_puid",
-                                                        "student_number": "12345678901"
+                                                        "student_number": "12345678901"+str(global_unique_identifier_param)
                                                     },
                                                     "ext" : {
                                                         "user_username": "compair_student_1_username",
@@ -905,7 +912,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                 "urn:lti:role:ims/lis/Learner"
                                             ],
                                             "member":{
-                                                "userId": "userId_3"
+                                                "userId": "userId_3"+str(global_unique_identifier_param)
                                             },
                                             "message" : [
                                                 {
@@ -913,7 +920,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                     "lis_result_sourcedid": "lis_result_sourcedid_compair_student_2",
                                                     "custom" : {
                                                         "puid": "compair_student_2_puid",
-                                                        "student_number": "12345678902"
+                                                        "student_number": "12345678902"+str(global_unique_identifier_param)
                                                     },
                                                     "ext" : {
                                                         "user_username": "compair_student_2_username",
@@ -927,7 +934,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                 "urn:lti:role:ims/lis/Learner"
                                             ],
                                             "member":{
-                                                "userId": "userId_6"
+                                                "userId": "userId_6"+str(global_unique_identifier_param)
                                             },
                                             "message" : [
                                                 {
@@ -935,7 +942,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                                     "lis_result_sourcedid": "lis_result_sourcedid_compair_student_100",
                                                     "custom" : {
                                                         "puid": "compair_student_100_puid",
-                                                        "student_number": "12345678905"
+                                                        "student_number": "12345678905"+str(global_unique_identifier_param)
                                                     },
                                                     "ext" : {
                                                         "user_username": "compair_student_100_username",
@@ -950,18 +957,18 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                             }
                         }
 
-                lti_consumer.user_id_override = user_id_override
+                lti_consumer.global_unique_identifier_param = global_unique_identifier_param
                 lti_consumer.student_number_param = student_number_param
                 db.session.commit()
 
-                # test successful membership response (user_id_override)
+                # test successful membership response (global_unique_identifier_param)
                 with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
                         user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
                         custom_context_memberships_url="https://mockmembershipurl.com") as rv:
                     self.assert200(rv)
 
                     mocked_get_membership_request.reset_mock()
-                    mocked_get_membership_request.side_effect = user_id_override_membership_requests
+                    mocked_get_membership_request.side_effect = global_unique_identifier_membership_requests
 
                     # link course
                     rv = self.client.post(url, data={}, content_type='application/json')
@@ -971,11 +978,32 @@ class LTICourseAPITests(ComPAIRAPITestCase):
 
                     # verify user course roles
                     for user_course in course.user_courses:
-                        if user_course.user_id == instructor.id:
-                            self.assertEqual(user_course.course_role, CourseRole.instructor)
-                        else:
-                            #everyone else should be dropped
-                            self.assertEqual(user_course.course_role, CourseRole.dropped)
+                        if global_unique_identifier_param == None:
+                            if user_course.user_id == instructor.id:
+                                self.assertEqual(user_course.course_role, CourseRole.instructor)
+                            else:
+                                #everyone else should be dropped
+                                self.assertEqual(user_course.course_role, CourseRole.dropped)
+                        elif global_unique_identifier_param == "custom_puid":
+                            if user_course.user_id == instructor.id:
+                                self.assertEqual(user_course.course_role, CourseRole.instructor)
+                            elif user_course.user.global_unique_identifier in ["compair_student_1_puid", "compair_student_2_puid"]:
+                                self.assertEqual(user_course.course_role, CourseRole.student)
+                            elif user_course.user.global_unique_identifier in ["compair_student_3è_puid", "compair_instructor_2_puid"]:
+                                self.assertEqual(user_course.course_role, CourseRole.teaching_assistant)
+                            else:
+                                #everyone else should be dropped
+                                self.assertEqual(user_course.course_role, CourseRole.dropped)
+                        elif global_unique_identifier_param == "ext_user_username":
+                            if user_course.user_id == instructor.id:
+                                self.assertEqual(user_course.course_role, CourseRole.instructor)
+                            elif user_course.user.global_unique_identifier in ["compair_student_1_username", "compair_student_2_username"]:
+                                self.assertEqual(user_course.course_role, CourseRole.student)
+                            elif user_course.user.global_unique_identifier in ["compair_student_3è_username", "compair_instructor_2_username"]:
+                                self.assertEqual(user_course.course_role, CourseRole.teaching_assistant)
+                            else:
+                                #everyone else should be dropped
+                                self.assertEqual(user_course.course_role, CourseRole.dropped)
 
                     # verify membership table
                     lti_memberships = LTIMembership.query \
@@ -984,24 +1012,35 @@ class LTICourseAPITests(ComPAIRAPITestCase):
 
                     self.assertEqual(len(lti_memberships), 5)
                     for lti_membership in lti_memberships:
-                        if user_id_override == None:
-                            self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "userId_2", "userId_3", "userId_4", "userId_5"])
-                        elif user_id_override == "custom_puid":
-                            self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1_puid", "compair_student_2_puid",
+                        id_app = str(global_unique_identifier_param)
+                        self.assertIn(lti_membership.lti_user.user_id, [
+                            lti_user.user_id, "userId_2"+id_app, "userId_3"+id_app,
+                            "userId_4"+id_app, "userId_5"+id_app])
+
+                        if global_unique_identifier_param == None:
+                            self.assertIsNone(lti_membership.lti_user.global_unique_identifier)
+                        elif global_unique_identifier_param == "custom_puid":
+                            self.assertIn(lti_membership.lti_user.global_unique_identifier, [
+                                lti_user.user_id, "compair_student_1_puid", "compair_student_2_puid",
                                 "compair_student_3è_puid", "compair_instructor_2_puid"])
-                        elif user_id_override == "ext_user_username":
-                            self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1_username", "compair_student_2_username",
+                        elif global_unique_identifier_param == "ext_user_username":
+                            self.assertIn(lti_membership.lti_user.global_unique_identifier, [
+                                lti_user.user_id, "compair_student_1_username", "compair_student_2_username",
                                 "compair_student_3è_username", "compair_instructor_2_username"])
-                        elif user_id_override == "lis_result_sourcedid":
-                            self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "1234567890-1", "1234567890-2",
+                        elif global_unique_identifier_param == "lis_result_sourcedid":
+                            self.assertIn(lti_membership.lti_user.global_unique_identifier, [
+                                lti_user.user_id, "1234567890-1", "1234567890-2",
                                 "1234567890-3", "1234567890-4"])
 
                         if student_number_param == "custom_student_number" and lti_membership.lti_user.system_role == SystemRole.student:
-                            self.assertIn(lti_membership.lti_user.student_number, ["12345678901", "12345678902", "12345678903", "12345678904"])
+                            sn_app = str(global_unique_identifier_param)
+                            self.assertIn(lti_membership.lti_user.student_number,
+                                ["12345678901"+sn_app, "12345678902"+sn_app,
+                                "12345678903"+sn_app, "12345678904"+sn_app])
                         else:
                             self.assertIsNone(lti_membership.lti_user.student_number)
 
-        lti_consumer.user_id_override = None
+        lti_consumer.global_unique_identifier_param = None
         lti_consumer.student_number_param = None
         db.session.commit()
 

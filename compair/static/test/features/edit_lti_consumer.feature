@@ -12,7 +12,8 @@ Feature: Edit LTI Consumers
     And I'm on 'edit lti consumer' page for consumer with id '1abcABC123-abcABC123_Z'
     When I fill form item 'consumer.oauth_consumer_key' in with 'new_consumer_key_1'
     And I fill form item 'consumer.oauth_consumer_secret' in with 'new_consumer_secret_1'
-    And I fill form item 'consumer.user_id_override' in with 'new_user_id_override'
+    And I fill form item 'consumer.global_unique_identifier_param' in with 'new_global_unique_identifier_param'
+    And I fill form item 'consumer.student_number_param' in with 'new_student_number_param'
     And I toggle the 'Active' checkbox
     And I submit form with the 'Save' button
     Then I should be on the 'manage lti' page

@@ -103,7 +103,7 @@ def get_third_party_user():
         'id': fields.String(attribute="uuid"),
         'third_party_type': UnwrapEnum(attribute="third_party_type"),
         'unique_identifier': fields.String(attribute="unique_identifier"),
-        'compair_user_id': fields.String(attribute="compair_user_uuid")
+        'user_id': fields.String(attribute="user_uuid")
     }
 
 def get_course():
@@ -370,7 +370,7 @@ def get_lti_consumer(include_sensitive=False):
     ret = {
         'id': fields.String(attribute="uuid"),
         'oauth_consumer_key': fields.String,
-        'user_id_override': fields.String,
+        'global_unique_identifier_param': fields.String,
         'student_number_param': fields.String,
         'active': fields.Boolean,
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),

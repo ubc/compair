@@ -47,9 +47,8 @@ class LoginAPITests(ComPAIRAPITestCase):
             self.app.config['CAS_ATTRIBUTE_STUDENT_NUMBER'] = None
             self.app.config['CAS_ATTRIBUTE_EMAIL'] = None
             self.app.config['CAS_USER_ROLE_FIELD'] = None
-
-            #clear old logins if present
-
+            self.app.config['CAS_INSTRUCTOR_ROLE_VALUES'] = {}
+            self.app.config['CAS_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = None
 
             with mock.patch('compair.api.login.validate_cas_ticket', return_value=response_mock):
                 # test cas login disabled
@@ -98,6 +97,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
                 self.assertIsNone(third_party_user.user.email)
                 self.assertIsNone(third_party_user.user.student_number)
+                self.assertIsNone(third_party_user.user.global_unique_identifier)
 
                 with self.client.session_transaction() as sess:
                     self.assertEqual(sess.get('user_id'), str(third_party_user.user.id))
@@ -110,7 +110,8 @@ class LoginAPITests(ComPAIRAPITestCase):
                     'lastName': 'l_name',
                     'studentNumber': "student1" if system_role == SystemRole.student else None,
                     'email': 'email@email.com',
-                    'system_role_field': system_role.value
+                    'system_role_field': system_role.value,
+                    'puid': system_role.value+"_puid",
                 }
 
                 rv = self.client.get('/api/cas/auth?ticket=mock_ticket', follow_redirects=True)
@@ -127,6 +128,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
                 self.assertIsNone(third_party_user.user.email)
                 self.assertIsNone(third_party_user.user.student_number)
+                self.assertIsNone(third_party_user.user.global_unique_identifier)
 
                 # used attributes and no valid instructor values
                 self.app.config['CAS_ATTRIBUTE_FIRST_NAME'] = 'firstName'
@@ -135,13 +137,14 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.app.config['CAS_ATTRIBUTE_EMAIL'] = 'email'
                 self.app.config['CAS_USER_ROLE_FIELD'] = 'system_role_field'
                 self.app.config['CAS_INSTRUCTOR_ROLE_VALUES'] = {}
+                self.app.config['CAS_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = 'puid'
                 unique_identifier = system_role.value + "_with_used_attributes"
                 response_mock.user = unique_identifier
 
                 rv = self.client.get('/api/cas/auth?ticket=mock_ticket', follow_redirects=True)
                 self.assert200(rv)
                 third_party_user = ThirdPartyUser.query \
-                    .filter_by(unique_identifier=unique_identifier, third_party_type=ThirdPartyType.cas)\
+                    .filter_by(unique_identifier=unique_identifier, third_party_type=ThirdPartyType.cas) \
                     .one()
 
                 self.assertIsNotNone(third_party_user)
@@ -150,6 +153,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(third_party_user.user.firstname, 'f_name')
                 self.assertEqual(third_party_user.user.lastname, 'l_name')
                 self.assertEqual(third_party_user.user.email, 'email@email.com')
+                self.assertEqual(third_party_user.user.global_unique_identifier, system_role.value+"_puid")
                 if system_role == SystemRole.student:
                     self.assertEqual(third_party_user.user.student_number, 'student1')
                 else:
@@ -161,6 +165,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 response_mock.user = unique_identifier
                 if system_role == SystemRole.student:
                     response_mock.attributes['studentNumber'] = "student2"
+                response_mock.attributes['puid'] = system_role.value+"_puid2"
                 self.app.config['CAS_INSTRUCTOR_ROLE_VALUES'] = {SystemRole.sys_admin.value, SystemRole.instructor.value}
 
                 rv = self.client.get('/api/cas/auth?ticket=mock_ticket', follow_redirects=True)
@@ -174,6 +179,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(third_party_user.user.firstname, 'f_name')
                 self.assertEqual(third_party_user.user.lastname, 'l_name')
                 self.assertEqual(third_party_user.user.email, 'email@email.com')
+                self.assertEqual(third_party_user.user.global_unique_identifier, system_role.value+"_puid2")
                 if system_role == SystemRole.student:
                     self.assertEqual(third_party_user.user.system_role, SystemRole.student)
                     six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
@@ -183,14 +189,16 @@ class LoginAPITests(ComPAIRAPITestCase):
                     self.assertEqual(third_party_user.user.displayname, "f_name l_name")
                     self.assertIsNone(third_party_user.user.student_number)
 
-        self.app.config['CAS_ATTRIBUTE_FIRST_NAME'] = None
-        self.app.config['CAS_ATTRIBUTE_LAST_NAME'] = None
-        self.app.config['CAS_ATTRIBUTE_STUDENT_NUMBER'] = None
-        self.app.config['CAS_ATTRIBUTE_EMAIL'] = None
-        self.app.config['CAS_USER_ROLE_FIELD'] = None
-
         # test login existing user
         for system_role in [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]:
+            self.app.config['CAS_ATTRIBUTE_FIRST_NAME'] = None
+            self.app.config['CAS_ATTRIBUTE_LAST_NAME'] = None
+            self.app.config['CAS_ATTRIBUTE_STUDENT_NUMBER'] = None
+            self.app.config['CAS_ATTRIBUTE_EMAIL'] = None
+            self.app.config['CAS_USER_ROLE_FIELD'] = None
+            self.app.config['CAS_INSTRUCTOR_ROLE_VALUES'] = {}
+            self.app.config['CAS_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = None
+
             user = self.data.create_user(system_role)
             third_party_user = auth_data.create_third_party_user(user=user, third_party_type=ThirdPartyType.cas)
 
@@ -227,6 +235,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(user.lastname, original_lastname)
                 self.assertEqual(user.email, original_email)
                 self.assertEqual(user.student_number, original_student_number)
+                self.assertIsNone(user.global_unique_identifier)
 
                 # test overwrite enabled with no attributes
                 self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = False
@@ -239,24 +248,28 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(user.lastname, original_lastname)
                 self.assertEqual(user.email, original_email)
                 self.assertEqual(user.student_number, original_student_number)
+                self.assertIsNone(user.global_unique_identifier)
 
                 # test overwrite enabled with no attributes
                 self.app.config['CAS_ATTRIBUTE_FIRST_NAME'] = 'firstName'
                 self.app.config['CAS_ATTRIBUTE_LAST_NAME'] = 'lastName'
                 self.app.config['CAS_ATTRIBUTE_STUDENT_NUMBER'] = 'studentNumber'
                 self.app.config['CAS_ATTRIBUTE_EMAIL'] = 'email'
+                self.app.config['CAS_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = 'puid'
                 rv = self.client.get('/api/cas/auth?ticket=mock_ticket', follow_redirects=True)
                 self.assert200(rv)
                 self.assertEqual(user.firstname, original_firstname)
                 self.assertEqual(user.lastname, original_lastname)
                 self.assertEqual(user.email, original_email)
                 self.assertEqual(user.student_number, original_student_number)
+                self.assertIsNone(user.global_unique_identifier)
 
                 response_mock.attributes = {
                     'firstName': 'f_name',
                     'lastName': 'l_name',
                     'studentNumber': new_student_number,
-                    'email': 'email@email.com'
+                    'email': 'email@email.com',
+                    'puid': 'should_be_ignored_since_already_linked'
                 }
 
                 # test overwrite disabled with attributes
@@ -270,6 +283,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(user.lastname, original_lastname)
                 self.assertEqual(user.email, original_email)
                 self.assertEqual(user.student_number, original_student_number)
+                self.assertIsNone(user.global_unique_identifier)
 
                 # test overwrite enabled with attributes
                 self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = False
@@ -289,6 +303,38 @@ class LoginAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user.lastname, original_lastname)
                     self.assertEqual(user.email, original_email)
                     self.assertEqual(user.student_number, original_student_number)
+                self.assertIsNone(user.global_unique_identifier)
+
+            self.app.config['CAS_USER_ROLE_FIELD'] = 'system_role_field'
+            self.app.config['CAS_INSTRUCTOR_ROLE_VALUES'] = {SystemRole.instructor.value}
+            # test automatic upgrading of system role for existing accounts
+            for third_party_system_role in [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]:
+                user = self.data.create_user(system_role)
+                third_party_user = auth_data.create_third_party_user(user=user, third_party_type=ThirdPartyType.cas)
+                db.session.commit()
+
+                response_mock.user = third_party_user.unique_identifier
+                response_mock.attributes = {
+                    'system_role_field': third_party_system_role.value
+                }
+
+                with mock.patch('compair.api.login.validate_cas_ticket', return_value=response_mock):
+                    rv = self.client.get('/api/cas/auth?ticket=mock_ticket', follow_redirects=True)
+                    self.assert200(rv)
+
+                    # compair user system role will upgrade
+                    if system_role == SystemRole.student:
+                        # cannot upgrade to admin
+                        if third_party_system_role == SystemRole.instructor:
+                            self.assertEqual(user.system_role, SystemRole.instructor)
+                        else:
+                            self.assertEqual(user.system_role, SystemRole.student)
+                    elif system_role == SystemRole.instructor:
+                        # cannot upgrade to admin and shouldn't downgrade to student
+                        self.assertEqual(user.system_role, SystemRole.instructor)
+                    elif system_role == SystemRole.sys_admin:
+                        # shouldn't downgrade
+                        self.assertEqual(user.system_role, SystemRole.sys_admin)
 
     def test_saml_login(self):
         auth_data = ThirdPartyAuthTestData()
@@ -310,6 +356,8 @@ class LoginAPITests(ComPAIRAPITestCase):
             self.app.config['SAML_ATTRIBUTE_STUDENT_NUMBER'] = None
             self.app.config['SAML_ATTRIBUTE_EMAIL'] = None
             self.app.config['SAML_USER_ROLE_FIELD'] = None
+            self.app.config['SAML_INSTRUCTOR_ROLE_VALUES'] = {}
+            self.app.config['SAML_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = None
 
             with mock.patch('compair.api.login.get_saml_auth_response', return_value=response_mock):
                 # test saml login disabled
@@ -358,6 +406,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
                 self.assertIsNone(third_party_user.user.email)
                 self.assertIsNone(third_party_user.user.student_number)
+                self.assertIsNone(third_party_user.user.global_unique_identifier)
 
                 with self.client.session_transaction() as sess:
                     self.assertEqual(sess.get('user_id'), str(third_party_user.user.id))
@@ -392,6 +441,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
                 self.assertIsNone(third_party_user.user.email)
                 self.assertIsNone(third_party_user.user.student_number)
+                self.assertIsNone(third_party_user.user.global_unique_identifier)
 
                 # used attributes and no valid instructor values
                 self.app.config['SAML_ATTRIBUTE_FIRST_NAME'] = 'urn:oid:2.5.4.42'
@@ -399,12 +449,14 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.app.config['SAML_ATTRIBUTE_STUDENT_NUMBER'] = 'urn:oid:2.16.840.1.113730.3.1.3'
                 self.app.config['SAML_ATTRIBUTE_EMAIL'] = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.6'
                 self.app.config['SAML_USER_ROLE_FIELD'] = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.7'
+                self.app.config['SAML_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = 'puid'
                 self.app.config['SAML_INSTRUCTOR_ROLE_VALUES'] = {}
                 unique_identifier = system_role.value + "_with_used_attributes"
                 response_mock.get_attributes.return_value = {
                     'urn:oid:1.3.6.1.4.1.5923.1.1.1.9': ['Member@testshib.org', 'Staff@testshib.org'],
                     'urn:oid:2.5.4.42': ['f_name'],
                     'urn:oid:0.9.2342.19200300.100.1.1': [unique_identifier],
+                    'puid': [system_role.value+"_puid"],
                     'urn:oid:1.3.6.1.4.1.5923.1.1.1.1': ['Member'],
                     'urn:oid:1.3.6.1.4.1.5923.1.1.1.10': [None],
                     'urn:oid:1.3.6.1.4.1.5923.1.1.1.7': [system_role.value],
@@ -412,7 +464,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                     'urn:oid:2.5.4.3': ['Me Myself And I'],
                     'urn:oid:2.5.4.20': ['555-5555'],
                     'urn:oid:2.16.840.1.113730.3.1.3': ["student1"] if system_role == SystemRole.student else [],
-                    'urn:oid:1.3.6.1.4.1.5923.1.1.1.6': ['email@email.com']
+                    'urn:oid:1.3.6.1.4.1.5923.1.1.1.6': ['email@email.com'],
                 }
 
                 rv = self.client.post('/api/saml/auth', follow_redirects=True)
@@ -427,6 +479,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(third_party_user.user.firstname, 'f_name')
                 self.assertEqual(third_party_user.user.lastname, 'l_name')
                 self.assertEqual(third_party_user.user.email, 'email@email.com')
+                self.assertEqual(third_party_user.user.global_unique_identifier, system_role.value+"_puid")
                 if system_role == SystemRole.student:
                     self.assertEqual(third_party_user.user.student_number, 'student1')
                 else:
@@ -439,6 +492,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                     'urn:oid:1.3.6.1.4.1.5923.1.1.1.9': ['Member@testshib.org', 'Staff@testshib.org'],
                     'urn:oid:2.5.4.42': ['f_name'],
                     'urn:oid:0.9.2342.19200300.100.1.1': [unique_identifier],
+                    'puid': [system_role.value+"_puid2"],
                     'urn:oid:1.3.6.1.4.1.5923.1.1.1.1': ['Member'],
                     'urn:oid:1.3.6.1.4.1.5923.1.1.1.10': [None],
                     'urn:oid:1.3.6.1.4.1.5923.1.1.1.7': [system_role.value],
@@ -461,6 +515,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(third_party_user.user.firstname, 'f_name')
                 self.assertEqual(third_party_user.user.lastname, 'l_name')
                 self.assertEqual(third_party_user.user.email, 'email@email.com')
+                self.assertEqual(third_party_user.user.global_unique_identifier, system_role.value+"_puid2")
                 if system_role == SystemRole.student:
                     self.assertEqual(third_party_user.user.system_role, SystemRole.student)
                     six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
@@ -470,14 +525,16 @@ class LoginAPITests(ComPAIRAPITestCase):
                     self.assertEqual(third_party_user.user.displayname, "f_name l_name")
                     self.assertIsNone(third_party_user.user.student_number)
 
-        self.app.config['SAML_ATTRIBUTE_FIRST_NAME'] = None
-        self.app.config['SAML_ATTRIBUTE_LAST_NAME'] = None
-        self.app.config['SAML_ATTRIBUTE_STUDENT_NUMBER'] = None
-        self.app.config['SAML_ATTRIBUTE_EMAIL'] = None
-        self.app.config['SAML_USER_ROLE_FIELD'] = None
-
         # test login existing user
         for system_role in [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]:
+            self.app.config['SAML_ATTRIBUTE_FIRST_NAME'] = None
+            self.app.config['SAML_ATTRIBUTE_LAST_NAME'] = None
+            self.app.config['SAML_ATTRIBUTE_STUDENT_NUMBER'] = None
+            self.app.config['SAML_ATTRIBUTE_EMAIL'] = None
+            self.app.config['SAML_USER_ROLE_FIELD'] = None
+            self.app.config['SAML_INSTRUCTOR_ROLE_VALUES'] = {}
+            self.app.config['SAML_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = None
+
             user = self.data.create_user(system_role)
             third_party_user = auth_data.create_third_party_user(user=user, third_party_type=ThirdPartyType.saml)
 
@@ -518,6 +575,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(user.lastname, original_lastname)
                 self.assertEqual(user.email, original_email)
                 self.assertEqual(user.student_number, original_student_number)
+                self.assertIsNone(user.global_unique_identifier)
 
                 # test overwrite enabled with no attributes
                 self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = False
@@ -530,34 +588,37 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(user.lastname, original_lastname)
                 self.assertEqual(user.email, original_email)
                 self.assertEqual(user.student_number, original_student_number)
+                self.assertIsNone(user.global_unique_identifier)
 
                 # test overwrite enabled with no attributes
                 self.app.config['SAML_ATTRIBUTE_FIRST_NAME'] = 'urn:oid:2.5.4.42'
                 self.app.config['SAML_ATTRIBUTE_LAST_NAME'] = 'urn:oid:2.5.4.4'
                 self.app.config['SAML_ATTRIBUTE_STUDENT_NUMBER'] = 'urn:oid:2.16.840.1.113730.3.1.3'
                 self.app.config['SAML_ATTRIBUTE_EMAIL'] = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.6'
+                self.app.config['SAML_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = 'puid'
                 rv = self.client.post('/api/saml/auth', follow_redirects=True)
                 self.assert200(rv)
                 self.assertEqual(user.firstname, original_firstname)
                 self.assertEqual(user.lastname, original_lastname)
                 self.assertEqual(user.email, original_email)
                 self.assertEqual(user.student_number, original_student_number)
+                self.assertIsNone(user.global_unique_identifier)
 
-            response_mock.get_attributes.return_value = {
-                'urn:oid:1.3.6.1.4.1.5923.1.1.1.9': ['Member@testshib.org', 'Staff@testshib.org'],
-                'urn:oid:2.5.4.42': ['f_name'],
-                'urn:oid:0.9.2342.19200300.100.1.1': [third_party_user.unique_identifier],
-                'urn:oid:1.3.6.1.4.1.5923.1.1.1.1': ['Member', 'Staff'],
-                'urn:oid:1.3.6.1.4.1.5923.1.1.1.10': [None],
-                'urn:oid:1.3.6.1.4.1.5923.1.1.1.7': ['urn:mace:dir:entitlement:common-lib-terms'],
-                'urn:oid:2.5.4.4': ['l_name'],
-                'urn:oid:2.5.4.3': ['Me Myself And I'],
-                'urn:oid:2.5.4.20': ['555-5555'],
-                'urn:oid:2.16.840.1.113730.3.1.3': [new_student_number],
-                'urn:oid:1.3.6.1.4.1.5923.1.1.1.6': ['email@email.com']
-            }
+                response_mock.get_attributes.return_value = {
+                    'urn:oid:1.3.6.1.4.1.5923.1.1.1.9': ['Member@testshib.org', 'Staff@testshib.org'],
+                    'urn:oid:2.5.4.42': ['f_name'],
+                    'urn:oid:0.9.2342.19200300.100.1.1': [third_party_user.unique_identifier],
+                    'puid': ["should_be_ignored_since_already_linked"],
+                    'urn:oid:1.3.6.1.4.1.5923.1.1.1.1': ['Member', 'Staff'],
+                    'urn:oid:1.3.6.1.4.1.5923.1.1.1.10': [None],
+                    'urn:oid:1.3.6.1.4.1.5923.1.1.1.7': ['urn:mace:dir:entitlement:common-lib-terms'],
+                    'urn:oid:2.5.4.4': ['l_name'],
+                    'urn:oid:2.5.4.3': ['Me Myself And I'],
+                    'urn:oid:2.5.4.20': ['555-5555'],
+                    'urn:oid:2.16.840.1.113730.3.1.3': [new_student_number],
+                    'urn:oid:1.3.6.1.4.1.5923.1.1.1.6': ['email@email.com']
+                }
 
-            with mock.patch('compair.api.login.get_saml_auth_response', return_value=response_mock):
                 # test overwrite disabled with attributes
                 self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = True
                 self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = True
@@ -569,6 +630,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(user.lastname, original_lastname)
                 self.assertEqual(user.email, original_email)
                 self.assertEqual(user.student_number, original_student_number)
+                self.assertIsNone(user.global_unique_identifier)
 
                 # test overwrite enabled with attributes
                 self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = False
@@ -588,7 +650,38 @@ class LoginAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user.lastname, original_lastname)
                     self.assertEqual(user.email, original_email)
                     self.assertEqual(user.student_number, original_student_number)
+                self.assertIsNone(user.global_unique_identifier)
 
+            self.app.config['SAML_USER_ROLE_FIELD'] = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.7'
+            self.app.config['SAML_INSTRUCTOR_ROLE_VALUES'] = {SystemRole.instructor.value}
+            # test automatic upgrading of system role for existing accounts
+            for third_party_system_role in [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]:
+                user = self.data.create_user(system_role)
+                third_party_user = auth_data.create_third_party_user(user=user, third_party_type=ThirdPartyType.saml)
+                db.session.commit()
+
+                response_mock.get_attributes.return_value = {
+                    'urn:oid:0.9.2342.19200300.100.1.1': [third_party_user.unique_identifier],
+                    'urn:oid:1.3.6.1.4.1.5923.1.1.1.7': [third_party_system_role.value]
+                }
+
+                with mock.patch('compair.api.login.get_saml_auth_response', return_value=response_mock):
+                    rv = self.client.post('/api/saml/auth', follow_redirects=True)
+                    self.assert200(rv)
+
+                    # compair user system role will upgrade
+                    if system_role == SystemRole.student:
+                        # cannot upgrade to admin
+                        if third_party_system_role == SystemRole.instructor:
+                            self.assertEqual(user.system_role, SystemRole.instructor)
+                        else:
+                            self.assertEqual(user.system_role, SystemRole.student)
+                    elif system_role == SystemRole.instructor:
+                        # cannot upgrade to admin and shouldn't downgrade to student
+                        self.assertEqual(user.system_role, SystemRole.instructor)
+                    elif system_role == SystemRole.sys_admin:
+                        # shouldn't downgrade
+                        self.assertEqual(user.system_role, SystemRole.sys_admin)
 
     def test_saml_metadata(self):
         # test saml login enabled
