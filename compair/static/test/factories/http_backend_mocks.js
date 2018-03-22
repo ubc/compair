@@ -835,7 +835,6 @@ module.exports.httpbackendMock = function(storageFixtures) {
                 "answer_count": 0,
                 "top_answer_count": 0,
                 "available": false,
-                "comment_count": 0,
                 "criteria": [],
                 "evaluation_count": 0,
                 "compared": false,

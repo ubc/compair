@@ -65,10 +65,6 @@ class XAPIResourceIRI(object):
         return cls._get_app_url()+'answer/comment/'+answer_comment_uuid
 
     @classmethod
-    def assignment_comment(cls, assignment_comment_uuid):
-        return cls._get_app_url()+'assignment/comment/'+assignment_comment_uuid
-
-    @classmethod
     def comparison(cls, comparison_uuid):
         return cls._get_app_url()+'comparison/'+comparison_uuid
 

@@ -186,7 +186,6 @@ def get_assignment(restrict_user=True):
         'compare_period': fields.Boolean,
         'after_comparing': fields.Boolean,
         'evaluation_count': fields.Integer,
-        'comment_count': fields.Integer,
         'answer_count': fields.Integer,
         'top_answer_count': fields.Integer,
         'self_evaluation_count': fields.Integer,
@@ -229,19 +228,6 @@ def get_answer(restrict_user=True, include_answer_user=True, include_score=True)
         ret['user'] = get_partial_user(restrict_user)
 
     return ret
-
-
-def get_assignment_comment(restrict_user=True):
-    return {
-        'id': fields.String(attribute="uuid"),
-        'course_id': fields.String(attribute="course_uuid"),
-        'assignment_id': fields.String(attribute="assignment_uuid"),
-        'user_id': fields.String(attribute="user_uuid"),
-        'content': fields.String,
-
-        'user': get_partial_user(restrict_user),
-        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
-    }
 
 
 def get_answer_comment(restrict_user=True):

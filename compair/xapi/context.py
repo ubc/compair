@@ -172,23 +172,6 @@ class XAPIContext(object):
         return context
 
     @classmethod
-    def assignment_comment(cls, assignment_comment, **kwargs):
-        context = cls.basic(**kwargs)
-
-        context.context_activities = ContextActivities(
-            # parent is assignment
-            parent=ActivityList([
-                Activity(id=XAPIResourceIRI.assignment(assignment_comment.assignment_uuid)),
-            ]),
-            # grouping is course
-            grouping=ActivityList([
-                Activity(id=XAPIResourceIRI.course(assignment_comment.course_uuid))
-            ])
-        )
-
-        return context
-
-    @classmethod
     def answer_attachment(cls, answer, **kwargs):
         context = cls.basic(**kwargs)
 

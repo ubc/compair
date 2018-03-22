@@ -10,7 +10,7 @@ from compair.models import SystemRole, CourseRole, Course, \
     Comparison, ThirdPartyType, AnswerCommentType, WinningAnswer
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, ComparisonCriterionFactory, \
-    AssignmentCommentFactory, AnswerCommentFactory, AnswerScoreFactory, AnswerCriterionScoreFactory, \
+    AnswerCommentFactory, AnswerScoreFactory, AnswerCriterionScoreFactory, \
     ComparisonExampleFactory, AssignmentCriterionFactory, FileFactory, \
     LTIConsumerFactory, LTIContextFactory, LTIResourceLinkFactory, \
     LTIUserFactory, LTIUserResourceLinkFactory, ThirdPartyUserFactory
@@ -308,28 +308,6 @@ class SimpleAssignmentTestData(BasicTestData):
 
     def get_assignments(self):
         return self.assignments
-
-
-class AssignmentCommentsTestData(SimpleAssignmentTestData):
-    def __init__(self):
-        SimpleAssignmentTestData.__init__(self)
-        self.student_ques_comment = self.create_assignment_comment(self.get_authorized_student(), self.get_assignments()[0])
-        self.instructor_ques_comment = self.create_assignment_comment(self.get_authorized_instructor(), self.get_assignments()[1])
-
-    def get_instructor_assignment_comment(self):
-        return self.instructor_ques_comment
-
-    def get_student_assignment_comment(self):
-        return self.student_ques_comment
-
-    def create_assignment_comment(self, user, assignment):
-        assignment_comment = AssignmentCommentFactory(
-            assignment=assignment,
-            user=user
-        )
-        db.session.commit()
-        return assignment_comment
-
 
 class SimpleAnswersTestData(SimpleAssignmentTestData):
     def __init__(self, num_answer=2, num_draft_answers=1):

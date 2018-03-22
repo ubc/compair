@@ -57,9 +57,6 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     assignment_grades = db.relationship("AssignmentGrade",
         foreign_keys='AssignmentGrade.user_id',
         backref="user", lazy='dynamic')
-    assignment_comments = db.relationship("AssignmentComment",
-        foreign_keys='AssignmentComment.user_id',
-        backref="user", lazy='dynamic')
     answers = db.relationship("Answer",
         foreign_keys='Answer.user_id',
         backref="user", lazy='dynamic')

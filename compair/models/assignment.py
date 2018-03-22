@@ -56,7 +56,6 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     answers = db.relationship("Answer", backref="assignment", lazy="dynamic",
         order_by=Answer.created.desc())
-    comments = db.relationship("AssignmentComment", backref="assignment", lazy="dynamic")
     comparisons = db.relationship("Comparison", backref="assignment", lazy="dynamic")
     comparison_examples = db.relationship("ComparisonExample", backref="assignment", lazy="dynamic")
     scores = db.relationship("AnswerScore", backref="assignment", lazy="dynamic")
@@ -311,16 +310,6 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                 Answer.top_answer == True,
                 UserCourse.course_id == cls.course_id,
                 UserCourse.course_role != CourseRole.dropped
-            )),
-            deferred=True,
-            group="counts"
-        )
-
-        cls.comment_count = column_property(
-            select([func.count(AssignmentComment.id)]).
-            where(and_(
-                AssignmentComment.assignment_id == cls.id,
-                AssignmentComment.active == True
             )),
             deferred=True,
             group="counts"

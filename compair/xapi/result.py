@@ -160,12 +160,6 @@ class XAPIResult(object):
         return result
 
     @classmethod
-    def assignment_comment(cls, assignment_comment, **kwargs):
-        result = cls.basic_content(assignment_comment.content, **kwargs)
-
-        return result
-
-    @classmethod
     def comparison(cls, comparison, **kwargs):
         result = cls.basic(**kwargs)
 

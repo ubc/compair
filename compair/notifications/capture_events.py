@@ -1,17 +1,11 @@
-from compair.models import AssignmentComment, AnswerCommentType, \
-    UserCourse, CourseRole
+from compair.models import AnswerCommentType, UserCourse, CourseRole
 from compair.api.answer_comment import on_answer_comment_create, on_answer_comment_modified
-from compair.api.assignment_comment import on_assignment_comment_create
 from .notification import Notification
 
 def capture_notification_events():
     # answer comment events
     on_answer_comment_create.connect(notification_on_answer_comment_create)
     on_answer_comment_modified.connect(notification_on_answer_comment_modified)
-
-    # assignment comment events
-    on_assignment_comment_create.connect(notification_on_assignment_comment_create)
-
 
 # on_answer_comment_create
 def notification_on_answer_comment_create(sender, user, **extra):
@@ -49,21 +43,3 @@ def notification_on_answer_comment_modified(sender, user, **extra):
         return
 
     Notification.send_new_answer_comment(answer_comment)
-
-
-# on_assignment_comment_create
-def notification_on_assignment_comment_create(sender, user, **extra):
-    assignment_comment = extra.get('assignment_comment')
-
-    valid_result = UserCourse.query \
-        .filter_by(
-            user_id=assignment_comment.user_id,
-            course_id=assignment_comment.course_id,
-            course_role=CourseRole.student
-        ) \
-        .first()
-
-    if not valid_result:
-        return
-
-    Notification.send_new_help_comment(assignment_comment)

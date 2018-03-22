@@ -9,7 +9,7 @@ import factory.fuzzy
 from compair.core import db
 from compair.models import Course, User, CourseRole, SystemRole, Criterion, File, \
     UserCourse, AssignmentCriterion, Assignment, AnswerScore, AnswerCriterionScore, \
-    Answer, AssignmentComment, AnswerComment, Comparison, ComparisonCriterion, \
+    Answer, AnswerComment, Comparison, ComparisonCriterion, \
     AnswerCommentType, ComparisonExample, EmailNotificationMethod, \
     LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \
     ThirdPartyUser, ThirdPartyType
@@ -127,19 +127,6 @@ class AnswerCriterionScoreFactory(factory.alchemy.SQLAlchemyModelFactory):
     assignment = factory.SubFactory(AssignmentFactory)
     answer = factory.SubFactory(AnswerFactory)
     criterion = factory.SubFactory(CriterionFactory)
-
-
-class AssignmentCommentFactory(factory.alchemy.SQLAlchemyModelFactory):
-    class Meta:
-        model = AssignmentComment
-        sqlalchemy_session = db.session
-
-    assignment = factory.SubFactory(AssignmentFactory)
-    user = factory.SubFactory(UserFactory)
-    content = factory.Sequence(lambda n: 'this is some content for post ü %d' % n)
-    # Make sure created dates are unique.
-    created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
-
 
 class AnswerCommentFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:

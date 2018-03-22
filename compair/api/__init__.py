@@ -73,11 +73,6 @@ def register_api_blueprints(app):
         file_api,
         url_prefix='/api/attachment')
 
-    from .assignment_comment import assignment_comment_api
-    app.register_blueprint(
-        assignment_comment_api,
-        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>/comments')
-
     from .answer_comment import answer_comment_api
     app.register_blueprint(
         answer_comment_api,
@@ -279,15 +274,6 @@ def log_events(log):
     on_assignment_get_status.connect(log)
     on_assignment_user_comparisons_get.connect(log)
     on_assignment_users_comparisons_get.connect(log)
-
-    # assignment comment events
-    from .assignment_comment import on_assignment_comment_modified, on_assignment_comment_get, \
-        on_assignment_comment_list_get, on_assignment_comment_create, on_assignment_comment_delete
-    on_assignment_comment_modified.connect(log)
-    on_assignment_comment_get.connect(log)
-    on_assignment_comment_list_get.connect(log)
-    on_assignment_comment_create.connect(log)
-    on_assignment_comment_delete.connect(log)
 
     # answer events
     from .answer import on_answer_modified, on_answer_get, on_answer_list_get, on_answer_create, on_answer_flag, \

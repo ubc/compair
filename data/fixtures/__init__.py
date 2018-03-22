@@ -7,7 +7,7 @@ import string
 from compair import db
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, FileFactory, \
-    AssignmentCommentFactory, AnswerCommentFactory, AnswerScoreFactory, ComparisonExampleFactory, \
+    AnswerCommentFactory, AnswerScoreFactory, ComparisonExampleFactory, \
     LTIConsumerFactory, LTIContextFactory, LTIResourceLinkFactory, \
     LTIUserFactory, LTIUserResourceLinkFactory, ThirdPartyUserFactory
 
@@ -239,24 +239,6 @@ class DemoDataFixture(object):
         db.session.commit()
 
         complex_assignment.assignment_criteria.reorder()
-
-        # help comments
-        db.session.add(AssignmentCommentFactory(
-            user=students[0],
-            assignment=complex_assignment,
-            content="<p>How should we format our answers?</p>",
-            created=(now - datetime.timedelta(days=29))
-        ))
-        db.session.add(AssignmentCommentFactory(
-            user=instructor,
-            assignment=complex_assignment,
-            content="""
-            <p>You should format them like this:</p>
-            <p>Title (Year). Summary.</p>
-            <p>Link</p>
-            """,
-            created=(now - datetime.timedelta(days=29) + datetime.timedelta(minutes=30))
-        ))
         db.session.commit()
 
         answer_index = 0
