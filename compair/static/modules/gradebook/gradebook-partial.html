@@ -30,13 +30,13 @@
         <thead>
             <tr>
                 <th>
-                    <a href="" ng-click="updateTableOrderBy('user.displayname')">Display Name</a>
-                </th>
-                <th>
                     <a href="" ng-click="updateTableOrderBy('user.firstname')">First Name</a>
                 </th>
                 <th>
                     <a href="" ng-click="updateTableOrderBy('user.lastname')">Last Name</a>
+                </th>
+                <th>
+                    <a href="" ng-click="updateTableOrderBy('user.student_number')">Student Number</a>
                 </th>
                 <th class="text-center" ng-if="!includeScores">
                     <a href="" ng-click="updateTableOrderBy('num_answers')">Answered</a>
@@ -65,9 +65,9 @@
         </thead>
         <tbody>
             <tr ng-repeat="entry in gradebook | filter:groupFilter() | orderBy:predicate:reverse">
-                <td><i class="fa fa-user"></i> {{entry.user.displayname}}</td>
                 <td>{{entry.user.firstname}}</td>
                 <td>{{entry.user.lastname}}</td>
+                <td>{{entry.user.student_number}}</td>
                 <td class="text-center text-success" ng-if="!includeScores && entry.num_answers > 0"><strong>Yes</strong></td>
                 <td class="text-center text-danger" ng-if="!includeScores && entry.num_answers == 0"><strong>No</strong></td>
                 <td class="text-center" ng-if="includeScores">

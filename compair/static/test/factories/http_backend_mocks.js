@@ -175,6 +175,9 @@ module.exports.httpbackendMock = function(storageFixtures) {
             newUser = angular.merge({}, newUser, data);
             newUser.fullname = newUser.firstname + " " + newUser.lastname;
             newUser.fullname_sortable = newUser.lastname + ", " + newUser.firstname;
+            if (newUser.student_number) {
+                newUser.fullname_sortable += " ("+newUser.student_number+")";
+            }
 
             storageFixture.storage().users[newUser.id] = newUser;
 

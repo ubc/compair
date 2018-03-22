@@ -111,7 +111,9 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
 
     @hybrid_property
     def fullname_sortable(self):
-        if self.firstname and self.lastname:
+        if self.firstname and self.lastname and self.system_role == SystemRole.student and self.student_number:
+            return '%s, %s (%s)' % (self.lastname, self.firstname, self.student_number)
+        elif self.firstname and self.lastname:
             return '%s, %s' % (self.lastname, self.firstname)
         elif self.firstname:  # only first name provided
             return self.firstname

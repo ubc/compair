@@ -15,7 +15,7 @@ describe('avatar-directive', function () {
             $rootScope.displayName = 'Optimus Prime';
         });
         element = angular.element(
-            '<compair-avatar user-id="userId" avatar="avatar" display-name="displayName"></compair-avatar>'
+            '<compair-avatar user-id="userId" avatar="avatar" main-identifier="displayName"></compair-avatar>'
         );
         $compile(element)($rootScope);
         $rootScope.$digest();
@@ -35,7 +35,7 @@ describe('avatar-directive', function () {
             $rootScope.displayName = 'Optimus Prime';
         });
         element = angular.element(
-            '<compair-avatar user-id="userId" avatar="avatar" display-name="displayName" me="true"></compair-avatar>'
+            '<compair-avatar user-id="userId" avatar="avatar" main-identifier="displayName" me="true"></compair-avatar>'
         );
         $compile(element)($rootScope);
         $rootScope.$digest();
@@ -68,7 +68,7 @@ describe('avatar-directive', function () {
             $rootScope.fullName = 'John Smith';
         });
         element = angular.element(
-            '<compair-avatar user-id="userId" avatar="avatar" display-name="displayName" full-name="fullName"></compair-avatar>'
+            '<compair-avatar user-id="userId" avatar="avatar" main-identifier="displayName" secondary-identifier="fullName"></compair-avatar>'
         );
         $compile(element)($rootScope);
         $rootScope.$digest();
@@ -84,7 +84,7 @@ describe('avatar-directive', function () {
             $rootScope.displayName = 'Optimus Prime';
         });
         element = angular.element(
-            '<compair-avatar user-id="userId" avatar="avatar" display-name="displayName" full-name="fullName"></compair-avatar>'
+            '<compair-avatar user-id="userId" avatar="avatar" main-identifier="displayName" secondary-identifier="fullName"></compair-avatar>'
         );
         $compile(element)($rootScope);
         $rootScope.$digest();
