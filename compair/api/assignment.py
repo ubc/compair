@@ -451,6 +451,7 @@ class AssignmentIdStatusAPI(Resource):
             .filter_by(
                 user_id=current_user.id,
                 assignment_id=assignment.id,
+                comparable=True,
                 active=True,
                 practice=False,
                 draft=False
@@ -485,7 +486,13 @@ class AssignmentIdStatusAPI(Resource):
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
         comparison_draft_count = assignment.draft_comparison_count_for_user(current_user.id)
         other_comparable_answers = assignment.comparable_answer_count - answer_count
-        comparison_available = comparison_count < other_comparable_answers * (other_comparable_answers - 1) / 2
+
+        # students can only begin comparing there there are enough answers submitted that they can do
+        # comparisons without seeing the same answer more than once
+        comparison_available = other_comparable_answers >= assignment.number_of_comparisons * 2
+        # instructors and tas can compare as long as there are new possible comparisons
+        if allow(EDIT, assignment):
+            comparison_available = comparison_count < other_comparable_answers * (other_comparable_answers - 1) / 2
 
         status = {
             'answers': {
@@ -568,6 +575,7 @@ class AssignmentRootStatusAPI(Resource):
             ) \
             .filter_by(
                 user_id=current_user.id,
+                comparable=True,
                 active=True,
                 practice=False,
                 draft=False
@@ -660,7 +668,13 @@ class AssignmentRootStatusAPI(Resource):
             comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
             comparison_draft_count = assignment.draft_comparison_count_for_user(current_user.id)
             other_comparable_answers = assignment.comparable_answer_count - answer_count
-            comparison_available = comparison_count < other_comparable_answers * (other_comparable_answers - 1) / 2
+
+            # students can only begin comparing there there are enough answers submitted that they can do
+            # comparisons without seeing the same answer more than once
+            comparison_available = other_comparable_answers >= assignment.number_of_comparisons * 2
+            # instructors and tas can compare as long as there are new possible comparisons
+            if allow(EDIT, assignment):
+                comparison_available = comparison_count < other_comparable_answers * (other_comparable_answers - 1) / 2
 
             statuses[assignment.uuid] = {
                 'answers': {
