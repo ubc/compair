@@ -1,3 +1,9 @@
+# v1.1.4
+
+## Notable changes
+
+* Added system level control over which profile fields students can change and automatic updating for these fields on login.
+
 # v1.1
 
 ## Notable changes
