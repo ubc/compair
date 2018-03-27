@@ -28,6 +28,9 @@
                         <a href="" ng-click="updateTableOrderBy('oauth_consumer_secret')">LTI User ID Override</a>
                     </th>
                     <th>
+                        <a href="" ng-click="updateTableOrderBy('student_number_param')">Student Number Param</a>
+                    </th>
+                    <th>
                         <a href="" ng-click="updateTableOrderBy('active')">Status</a>
                     </th>
                 </tr>
@@ -42,6 +45,9 @@
                     </td>
                     <td>
                         <a href="#/lti/consumer/{{consumer.id}}">{{consumer.user_id_override}}</a>
+                    </td>
+                    <td>
+                        <a href="#/lti/consumer/{{consumer.id}}">{{consumer.student_number_param}}</a>
                     </td>
                     <td>
                         <select ng-model="consumer.active" ng-options="key for (key , value) in {'Active': true, 'Inactive': false}"

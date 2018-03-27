@@ -3,6 +3,7 @@ from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_enum34 import EnumType
+from flask import current_app
 
 from . import *
 
@@ -22,6 +23,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     compair_user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"),
         nullable=True)
     system_role = db.Column(EnumType(SystemRole, name="system_role"), nullable=False)
+    student_number = db.Column(db.String(255), nullable=True)
 
     # relationships
     # user via User Model
@@ -76,6 +78,11 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         lti_user.lis_person_name_full = tool_provider.lis_person_name_full
         lti_user.lis_person_contact_email_primary = tool_provider.lis_person_contact_email_primary
 
+        if lti_consumer.student_number_param and lti_consumer.student_number_param in tool_provider.launch_params:
+            lti_user.student_number = tool_provider.launch_params[lti_consumer.student_number_param]
+        else:
+            lti_user.student_number = None
+
         db.session.commit()
 
         return lti_user
@@ -88,9 +95,26 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
             message = "Sorry, this LTI user was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
+    # relationships
+
+    def update_user_profile(self):
+        if self.compair_user and self.compair_user.system_role == SystemRole.student:
+            # overwrite first/last name if student not allowed to change it
+            if not current_app.config.get('ALLOW_STUDENT_CHANGE_NAME'):
+                self.compair_user.firstname = self.lis_person_name_given
+                self.compair_user.lastname = self.lis_person_name_family
+
+            # overwrite email if student not allowed to change it
+            if not current_app.config.get('ALLOW_STUDENT_CHANGE_EMAIL'):
+                self.compair_user.email = self.lis_person_contact_email_primary
+
+            # overwrite student number if student not allowed to change it and lti_consumer has a student_number_param
+            if not current_app.config.get('ALLOW_STUDENT_CHANGE_STUDENT_NUMBER') and self.lti_consumer.student_number_param:
+                self.compair_user.student_number = self.student_number
+
     def upgrade_system_role(self):
         # upgrade system role is needed
-        if self.is_linked_to_user():
+        if self.compair_user:
             if self.compair_user.system_role == SystemRole.student and self.system_role in [SystemRole.instructor, SystemRole.sys_admin]:
                 self.compair_user.system_role = self.system_role
             elif self.compair_user.system_role == SystemRole.instructor and self.system_role == SystemRole.sys_admin:

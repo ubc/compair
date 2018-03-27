@@ -83,6 +83,7 @@ class LTIAuthAPI(Resource):
 
                     # upgrade user system role if needed
                     lti_user.upgrade_system_role()
+                    lti_user.update_user_profile()
 
                     # create/update enrollment if context exists
                     if lti_context and lti_context.is_linked_to_course():
@@ -158,6 +159,7 @@ class LTIStatusAPI(Resource):
                 'exists': lti_user.compair_user_id != None,
                 'firstname': lti_user.lis_person_name_given,
                 'lastname': lti_user.lis_person_name_family,
+                'student_number': lti_user.student_number,
                 'displayname': display_name_generator(lti_user.system_role.value),
                 'email': lti_user.lis_person_contact_email_primary,
                 'system_role': lti_user.system_role.value

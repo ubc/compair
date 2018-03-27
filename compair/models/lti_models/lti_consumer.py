@@ -18,6 +18,7 @@ class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin)
     tool_consumer_instance_url = db.Column(db.Text, nullable=True)
     lis_outcome_service_url = db.Column(db.Text, nullable=True)
     user_id_override = db.Column(db.String(255), nullable=True)
+    student_number_param = db.Column(db.String(255), nullable=True)
 
     # relationships
     lti_nonces = db.relationship("LTINonce", backref="lti_consumer", lazy="dynamic")

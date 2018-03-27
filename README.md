@@ -162,6 +162,14 @@ Restart server after making any changes to settings
 
 `CAS_USE_SAML`: Determines which authorization endpoint to use. '/serviceValidate' if false (default). '/samlValidate' if true.
 
+`CAS_ATTRIBUTE_FIRST_NAME`: Optionally automatically sync user's first name with the supplied CAS attribute (Will only override if attribute is present a contains content).
+
+`CAS_ATTRIBUTE_LAST_NAME`: Optionally automatically sync user's last name with the supplied CAS attribute (Will only override if attribute is present a contains content).
+
+`CAS_ATTRIBUTE_STUDENT_NUMBER`: Optionally automatically sync user's student number with the supplied CAS attribute (Will only override if attribute is present a contains content).
+
+`CAS_ATTRIBUTE_EMAIL`: Optionally automatically sync user's email with the supplied CAS attribute (Will only override if attribute is present a contains content).
+
 Restart server after making any changes to settings
 
 ### LTI Settings
@@ -260,7 +268,7 @@ You can control data accessibility for certain sensitive fields with the followi
 
 `EXPOSE_CAS_USERNAME_TO_INSTRUCTOR`: Set to 1 to allow instructors to see CAS username for students in any of their classes (off by default). Instructors can see cas username info by exporting their class lists
 
-In addition you can control if students are able to edit their first name, last name, display name, and student number. System admins and instructors can still modify these profile fields. Disallowing students to edit these fields is best used in combination with LTI or CAS/SAML logins which can automatically fill and update them.
+In addition you can control if students are able to edit their first name, last name, display name, and student number. System admins and instructors can still modify these profile fields. Any student disabled field for editing will be automatically updated with values from LTI or CAS/SAML on login. Please check the LTI, CAS, or SAML sections for additional environment variables that may need to be included (for example if student number is disabled, then `CAS_ATTRIBUTE_STUDENT_NUMBER` need to be set for automatic updated on student login)
 
 `ALLOW_STUDENT_CHANGE_NAME`: Allows students to edit their first & last names (default: enabled).
 
