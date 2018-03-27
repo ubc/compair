@@ -10,6 +10,7 @@ from tincan import RemoteLRS, Statement, Agent, AgentAccount, Verb, \
 from .actor import XAPIActor
 from .extension import XAPIExtension
 from .activity import XAPIActivity
+from .resource_iri import XAPIResourceIRI
 
 class XAPIStatement(object):
     @classmethod
@@ -32,6 +33,8 @@ class XAPIStatement(object):
         statement.context.context_activities.category.append(
             XAPIActivity.compair_source()
         )
+
+        statement.context.platform = XAPIResourceIRI.compair()
 
         if request and request.environ.get('HTTP_USER_AGENT'):
             if not statement.context.extensions:

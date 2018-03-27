@@ -102,11 +102,6 @@ module.controller("GradebookController",
             }
         };
 
-        $scope.openAttachment = function (file, downloadName) {
-            var filepath = '/app/attachment/' + file.name + "?name="+encodeURIComponent(downloadName+'.'+file.extension);
-            $window.open(filepath);
-        };
-
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
 

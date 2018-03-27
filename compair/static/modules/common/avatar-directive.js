@@ -6,17 +6,17 @@
             scope: {
                 userId: '=',
                 avatar: '=',
-                displayName: '=?',
-                fullName: '=?',
+                mainIdentifier: '=?',
+                secondaryIdentifier: '=?',
                 me: '=?'
             },
             template: '<a ng-href="#/user/{{ userId }}">' +
                         '<img src="//www.gravatar.com/avatar/{{ avatar }}?s=32&d=retro" alt="" /> ' +
                       '</a>' +
                       '<a ng-href="#/user/{{ userId }}">' +
-                        '{{ displayName }}' +
-                        '<span ng-if="me">{{ displayName ? " (You)" : "You" }}</span>' +
-                        '<span ng-if="fullName"> ({{ fullName }})</span>' +
+                        '{{ mainIdentifier }}' +
+                        '<span ng-if="me">{{ mainIdentifier ? " (You)" : "You" }}</span>' +
+                        '<span ng-if="secondaryIdentifier"> ({{ secondaryIdentifier }})</span>' +
                       '</a>'
         };
     });

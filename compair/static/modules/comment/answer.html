@@ -1,5 +1,5 @@
 <div ng-if="answer">
-    <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" display-name="answer.user.fullname"></compair-avatar>
+    <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" main-identifier="answer.user.fullname" secondary-identifier="answer.user.student_number"></compair-avatar>
     <strong>answered</strong> on {{ answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
     <rich-content content="answer.content" attachment="answer.file"></rich-content>
 </div>

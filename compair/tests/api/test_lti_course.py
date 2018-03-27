@@ -257,6 +257,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
 
         lti_consumer = self.lti_data.lti_consumer
         lti_consumer.user_id_override = "custom_puid"
+        lti_consumer.student_number_param = "custom_student_number"
         db.session.commit()
 
         lti_context = self.lti_data.create_context(lti_consumer)
@@ -382,6 +383,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
                     "compair_student_3è", "compair_instructor_2"])
+                self.assertIsNone(lti_membership.lti_user.student_number)
 
         # test successful membership response (with user_id_override)
         with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
@@ -403,26 +405,31 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     <user_id>ignore_1</user_id>
                     <roles>Instructor</roles>
                     <custom_puid>{instructor_user_id}</custom_puid>
+                    <custom_student_number></custom_student_number>
                     </member>
                     <member>
                     <user_id>ignore_2</user_id>
                     <roles>Learner</roles>
                     <custom_puid>compair_student_1</custom_puid>
+                    <custom_student_number>12345678901</custom_student_number>
                     </member>
                     <member>
                     <user_id>ignore_3</user_id>
                     <roles>Learner</roles>
                     <custom_puid>compair_student_2</custom_puid>
+                    <custom_student_number>12345678902</custom_student_number>
                     </member>
                     <member>
                     <user_id>ignore_4è</user_id>
                     <roles>TeachingAssistant</roles>
                     <custom_puid>compair_student_3è</custom_puid>
+                    <custom_student_number>12345678903</custom_student_number>
                     </member>
                     <member>
                     <user_id>ignore_5</user_id>
                     <roles>TeachingAssistant</roles>
                     <custom_puid>compair_instructor_2</custom_puid>
+                    <custom_student_number>12345678904</custom_student_number>
                     </member>
                 </memberships>
                 </message_response>
@@ -452,6 +459,10 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1", "compair_student_2",
                     "compair_student_3è", "compair_instructor_2"])
 
+                if lti_membership.lti_user.system_role == SystemRole.student:
+                    self.assertIn(lti_membership.lti_user.student_number, ["12345678901", "12345678902", "12345678903", "12345678904"])
+                else:
+                    self.assertIsNone(lti_membership.lti_user.student_number)
 
     @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._get_membership_request')
     def test_lti_course_link_with_membership_service(self, mocked_get_membership_request):
@@ -738,347 +749,367 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     "lis_result_sourcedid_"+lti_membership.lti_user.user_id)
 
         for user_id_override in [None, "custom_puid", "ext_user_username"]:
+            for student_number_param in [None, "custom_student_number"]:
 
-            def user_id_override_membership_requests(memberships_url, headers=None):
-                if memberships_url == "https://mockmembershipurl.com":
-                    return {
-                        "@id":None,
-                        "@type":"Page",
-                        "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
-                        "differences":None,
-                        "nextPage":None,
-                        "pageOf":{
-                            "membershipPredicate":"http://www.w3.org/ns/org#membership",
-                            "membershipSubject":{
-                                "name":"Test Course",
-                                "@type":"Context",
-                                "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
-                                "membership":[
-                                    {
-                                        "status":"Active",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/Instructor"
-                                        ],
-                                        "member":{
-                                            "userId": lti_user.user_id
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": lti_user.user_id,
-                                                "custom" : {
-                                                    "puid": lti_user.user_id
-                                                },
-                                                "ext" : {
-                                                    "user_username": lti_user.user_id
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "status":"liss:Active",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/Learner"
-                                        ],
-                                        "member":{
-                                            "userId": "userId_2"
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "1234567890-1",
-                                                "custom" : {
-                                                    "puid": "compair_student_1_puid"
-                                                },
-                                                "ext" : {
-                                                    "user_username": "compair_student_1_username",
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "status":"Active",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/Learner"
-                                        ],
-                                        "member":{
-                                            "userId": "userId_3"
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "1234567890-2",
-                                                "custom" : {
-                                                    "puid": "compair_student_2_puid"
-                                                },
-                                                "ext" : {
-                                                    "user_username": "compair_student_2_username",
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "status":"Active",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/TeachingAssistant"
-                                        ],
-                                        "member":{
-                                            "userId":"userId_4"
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "1234567890-3",
-                                                "custom" : {
-                                                    "puid": "compair_student_3è_puid"
-                                                },
-                                                "ext" : {
-                                                    "user_username": "compair_student_3è_username",
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "status":"Active",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/TeachingAssistant"
-                                        ],
-                                        "member":{
-                                            "userId":"userId_5"
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "1234567890-4",
-                                                "custom" : {
-                                                    "puid": "compair_instructor_2_puid"
-                                                },
-                                                "ext" : {
-                                                    "user_username": "compair_instructor_2_username",
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "status":"Inactive",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/Learner"
-                                        ],
-                                        "member":{
-                                            "userId": "userId_6"
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "1234567890-5",
-                                                "custom" : {
-                                                    "puid": "compair_student_100_puid"
-                                                },
-                                                "ext" : {
-                                                    "user_username": "compair_student_100_username",
-                                                }
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
+                def user_id_override_membership_requests(memberships_url, headers=None):
+                    if memberships_url == "https://mockmembershipurl.com":
+                        return {
+                            "@id":None,
+                            "@type":"Page",
                             "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
-                            "@type":"LISMembershipContainer"
+                            "differences":None,
+                            "nextPage":None,
+                            "pageOf":{
+                                "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                                "membershipSubject":{
+                                    "name":"Test Course",
+                                    "@type":"Context",
+                                    "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                                    "membership":[
+                                        {
+                                            "status":"Active",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/Instructor"
+                                            ],
+                                            "member":{
+                                                "userId": lti_user.user_id
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": lti_user.user_id,
+                                                    "custom" : {
+                                                        "puid": lti_user.user_id,
+                                                        "student_number": None
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": lti_user.user_id
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "status":"liss:Active",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/Learner"
+                                            ],
+                                            "member":{
+                                                "userId": "userId_2"
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "1234567890-1",
+                                                    "custom" : {
+                                                        "puid": "compair_student_1_puid",
+                                                        "student_number": "12345678901"
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": "compair_student_1_username",
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "status":"Active",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/Learner"
+                                            ],
+                                            "member":{
+                                                "userId": "userId_3"
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "1234567890-2",
+                                                    "custom" : {
+                                                        "puid": "compair_student_2_puid",
+                                                        "student_number": "12345678902"
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": "compair_student_2_username",
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "status":"Active",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/TeachingAssistant"
+                                            ],
+                                            "member":{
+                                                "userId":"userId_4"
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "1234567890-3",
+                                                    "custom" : {
+                                                        "puid": "compair_student_3è_puid",
+                                                        "student_number": "12345678903"
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": "compair_student_3è_username",
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "status":"Active",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/TeachingAssistant"
+                                            ],
+                                            "member":{
+                                                "userId":"userId_5"
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "1234567890-4",
+                                                    "custom" : {
+                                                        "puid": "compair_instructor_2_puid",
+                                                        "student_number": "12345678904"
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": "compair_instructor_2_username",
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "status":"Inactive",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/Learner"
+                                            ],
+                                            "member":{
+                                                "userId": "userId_6"
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "1234567890-5",
+                                                    "custom" : {
+                                                        "puid": "compair_student_100_puid",
+                                                        "student_number": "12345678905"
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": "compair_student_100_username",
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                                "@type":"LISMembershipContainer"
+                            }
                         }
-                    }
-                elif memberships_url == "https://mockmembershipurl.com?rlid="+lti_resource_link.resource_link_id:
-                    return {
-                        "@id":None,
-                        "@type":"Page",
-                        "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
-                        "differences":None,
-                        "nextPage":None,
-                        "pageOf":{
-                            "membershipPredicate":"http://www.w3.org/ns/org#membership",
-                            "membershipSubject":{
-                                "name":"Test Course",
-                                "@type":"Context",
-                                "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
-                                "membership":[
-                                    {
-                                        "status":"Active",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/Instructor"
-                                        ],
-                                        "member":{
-                                            "userId": lti_user.user_id
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "lis_result_sourcedid_"+lti_user.user_id,
-                                                "custom" : {
-                                                    "puid": lti_user.user_id
-                                                },
-                                                "ext" : {
-                                                    "user_username": lti_user.user_id
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "status":"liss:Active",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/Learner"
-                                        ],
-                                        "member":{
-                                            "userId": "userId_2"
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "lis_result_sourcedid_compair_student_1",
-                                                "custom" : {
-                                                    "puid": "compair_student_1_puid"
-                                                },
-                                                "ext" : {
-                                                    "user_username": "compair_student_1_username",
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "status":"Active",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/Learner"
-                                        ],
-                                        "member":{
-                                            "userId": "userId_3"
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "lis_result_sourcedid_compair_student_2",
-                                                "custom" : {
-                                                    "puid": "compair_student_2_puid"
-                                                },
-                                                "ext" : {
-                                                    "user_username": "compair_student_2_username",
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "status":"Active",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/TeachingAssistant"
-                                        ],
-                                        "member":{
-                                            "userId":"userId_4"
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "lis_result_sourcedid_compair_student_3è",
-                                                "custom" : {
-                                                    "puid": "compair_student_3è_puid"
-                                                },
-                                                "ext" : {
-                                                    "user_username": "compair_student_3è_username",
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "status":"Active",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/TeachingAssistant"
-                                        ],
-                                        "member":{
-                                            "userId":"userId_5"
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "lis_result_sourcedid_compair_instructor_2",
-                                                "custom" : {
-                                                    "puid": "compair_instructor_2_puid"
-                                                },
-                                                "ext" : {
-                                                    "user_username": "compair_instructor_2_username",
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "status":"Inactive",
-                                        "role":[
-                                            "urn:lti:role:ims/lis/Learner"
-                                        ],
-                                        "member":{
-                                            "userId": "userId_6"
-                                        },
-                                        "message" : [
-                                            {
-                                                "message_type": "basic-lti-launch-request",
-                                                "lis_result_sourcedid": "lis_result_sourcedid_compair_student_100",
-                                                "custom" : {
-                                                    "puid": "compair_student_100_puid"
-                                                },
-                                                "ext" : {
-                                                    "user_username": "compair_student_100_username",
-                                                }
-                                            }
-                                        ]
-                                    }
-                                ]
-                            },
+                    elif memberships_url == "https://mockmembershipurl.com?rlid="+lti_resource_link.resource_link_id:
+                        return {
+                            "@id":None,
+                            "@type":"Page",
                             "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
-                            "@type":"LISMembershipContainer"
+                            "differences":None,
+                            "nextPage":None,
+                            "pageOf":{
+                                "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                                "membershipSubject":{
+                                    "name":"Test Course",
+                                    "@type":"Context",
+                                    "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                                    "membership":[
+                                        {
+                                            "status":"Active",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/Instructor"
+                                            ],
+                                            "member":{
+                                                "userId": lti_user.user_id
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "lis_result_sourcedid_"+lti_user.user_id,
+                                                    "custom" : {
+                                                        "puid": lti_user.user_id,
+                                                        "student_number": None
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": lti_user.user_id
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "status":"liss:Active",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/Learner"
+                                            ],
+                                            "member":{
+                                                "userId": "userId_2"
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "lis_result_sourcedid_compair_student_1",
+                                                    "custom" : {
+                                                        "puid": "compair_student_1_puid",
+                                                        "student_number": "12345678901"
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": "compair_student_1_username",
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "status":"Active",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/Learner"
+                                            ],
+                                            "member":{
+                                                "userId": "userId_3"
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "lis_result_sourcedid_compair_student_2",
+                                                    "custom" : {
+                                                        "puid": "compair_student_2_puid",
+                                                        "student_number": "12345678902"
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": "compair_student_2_username",
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "status":"Active",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/TeachingAssistant"
+                                            ],
+                                            "member":{
+                                                "userId":"userId_4"
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "lis_result_sourcedid_compair_student_3è",
+                                                    "custom" : {
+                                                        "puid": "compair_student_3è_puid",
+                                                        "student_number": "12345678903"
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": "compair_student_3è_username",
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "status":"Active",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/TeachingAssistant"
+                                            ],
+                                            "member":{
+                                                "userId":"userId_5"
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "lis_result_sourcedid_compair_instructor_2",
+                                                    "custom" : {
+                                                        "puid": "compair_instructor_2_puid",
+                                                        "student_number": "12345678904"
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": "compair_instructor_2_username",
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "status":"Inactive",
+                                            "role":[
+                                                "urn:lti:role:ims/lis/Learner"
+                                            ],
+                                            "member":{
+                                                "userId": "userId_6"
+                                            },
+                                            "message" : [
+                                                {
+                                                    "message_type": "basic-lti-launch-request",
+                                                    "lis_result_sourcedid": "lis_result_sourcedid_compair_student_100",
+                                                    "custom" : {
+                                                        "puid": "compair_student_100_puid",
+                                                        "student_number": "12345678905"
+                                                    },
+                                                    "ext" : {
+                                                        "user_username": "compair_student_100_username",
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                                "@type":"LISMembershipContainer"
+                            }
                         }
-                    }
 
-            lti_consumer.user_id_override = user_id_override
-            db.session.commit()
+                lti_consumer.user_id_override = user_id_override
+                lti_consumer.student_number_param = student_number_param
+                db.session.commit()
 
-            # test successful membership response (user_id_override)
-            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
-                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
-                    custom_context_memberships_url="https://mockmembershipurl.com") as rv:
-                self.assert200(rv)
+                # test successful membership response (user_id_override)
+                with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                        user_id=lti_user.user_id, context_id=lti_context.context_id, roles="Instructor",
+                        custom_context_memberships_url="https://mockmembershipurl.com") as rv:
+                    self.assert200(rv)
 
-                mocked_get_membership_request.reset_mock()
-                mocked_get_membership_request.side_effect = user_id_override_membership_requests
+                    mocked_get_membership_request.reset_mock()
+                    mocked_get_membership_request.side_effect = user_id_override_membership_requests
 
-                # link course
-                rv = self.client.post(url, data={}, content_type='application/json')
-                self.assert200(rv)
+                    # link course
+                    rv = self.client.post(url, data={}, content_type='application/json')
+                    self.assert200(rv)
 
-                # 5 members in minimal_membership (all old users besides instructor should be dropped)
+                    # 5 members in minimal_membership (all old users besides instructor should be dropped)
 
-                # verify user course roles
-                for user_course in course.user_courses:
-                    if user_course.user_id == instructor.id:
-                        self.assertEqual(user_course.course_role, CourseRole.instructor)
-                    else:
-                        #everyone else should be dropped
-                        self.assertEqual(user_course.course_role, CourseRole.dropped)
+                    # verify user course roles
+                    for user_course in course.user_courses:
+                        if user_course.user_id == instructor.id:
+                            self.assertEqual(user_course.course_role, CourseRole.instructor)
+                        else:
+                            #everyone else should be dropped
+                            self.assertEqual(user_course.course_role, CourseRole.dropped)
 
-                # verify membership table
-                lti_memberships = LTIMembership.query \
-                    .filter_by(compair_course_id=course.id) \
-                    .all()
+                    # verify membership table
+                    lti_memberships = LTIMembership.query \
+                        .filter_by(compair_course_id=course.id) \
+                        .all()
 
-                self.assertEqual(len(lti_memberships), 5)
-                for lti_membership in lti_memberships:
-                    if user_id_override == None:
-                        self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "userId_2", "userId_3", "userId_4", "userId_5"])
-                    elif user_id_override == "custom_puid":
-                        self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1_puid", "compair_student_2_puid",
-                            "compair_student_3è_puid", "compair_instructor_2_puid"])
-                    elif user_id_override == "ext_user_username":
-                        self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1_username", "compair_student_2_username",
-                            "compair_student_3è_username", "compair_instructor_2_username"])
-                    elif user_id_override == "lis_result_sourcedid":
-                        self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "1234567890-1", "1234567890-2",
-                            "1234567890-3", "1234567890-4"])
+                    self.assertEqual(len(lti_memberships), 5)
+                    for lti_membership in lti_memberships:
+                        if user_id_override == None:
+                            self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "userId_2", "userId_3", "userId_4", "userId_5"])
+                        elif user_id_override == "custom_puid":
+                            self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1_puid", "compair_student_2_puid",
+                                "compair_student_3è_puid", "compair_instructor_2_puid"])
+                        elif user_id_override == "ext_user_username":
+                            self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "compair_student_1_username", "compair_student_2_username",
+                                "compair_student_3è_username", "compair_instructor_2_username"])
+                        elif user_id_override == "lis_result_sourcedid":
+                            self.assertIn(lti_membership.lti_user.user_id, [lti_user.user_id, "1234567890-1", "1234567890-2",
+                                "1234567890-3", "1234567890-4"])
+
+                        if student_number_param == "custom_student_number" and lti_membership.lti_user.system_role == SystemRole.student:
+                            self.assertIn(lti_membership.lti_user.student_number, ["12345678901", "12345678902", "12345678903", "12345678904"])
+                        else:
+                            self.assertIsNone(lti_membership.lti_user.student_number)
 
         lti_consumer.user_id_override = None
+        lti_consumer.student_number_param = None
         db.session.commit()
 
         def paginated_membership_requests(memberships_url, headers=None):
@@ -1492,6 +1523,13 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
                     "compair_student_2", "compair_student_3è", "compair_instructor_2"])
+                self.assertIn(lti_membership.lti_user.lis_person_contact_email_primary, [
+                    'compair_instructor_2@test.com', 'compair_student_1@test.com',
+                    'compair_student_2@test.com', 'compair_student_3è@test.com',
+                    'compair_instructor_2@email.com'
+                ])
+                self.assertIn(lti_membership.lti_user.lis_person_name_given, ['Instructor', 'Student'])
+                self.assertIn(lti_membership.lti_user.lis_person_name_family, ['Two', 'One', 'Six'])
 
             # test minimual membership response
             mocked_post_membership_request.return_value = """
@@ -1551,7 +1589,9 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
                     "compair_student_2", "compair_student_3è", "compair_instructor_2"])
-
+                self.assertIsNone(lti_membership.lti_user.lis_person_name_given)
+                self.assertIsNone(lti_membership.lti_user.lis_person_name_family)
+                self.assertIsNone(lti_membership.lti_user.lis_person_contact_email_primary)
 
             # test ensure current user is not unenrolled from course on membership fetch
             mocked_post_membership_request.return_value = """
@@ -1594,6 +1634,9 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(lti_memberships), 1)
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, lti_user_student_1.user_id)
+                self.assertIsNone(lti_membership.lti_user.lis_person_name_given)
+                self.assertIsNone(lti_membership.lti_user.lis_person_name_family)
+                self.assertIsNone(lti_membership.lti_user.lis_person_contact_email_primary)
 
         with self.login(self.data.get_unauthorized_instructor().username):
             course_2 = self.data.secondary_course
@@ -1821,6 +1864,14 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
                     "compair_student_2", "compair_student_3è", "compair_instructor_2", "compair_student_100"])
 
+                self.assertIn(lti_membership.lti_user.lis_person_contact_email_primary, [
+                    'compair_instructor_2@test.com', 'compair_student_1@test.com',
+                    'compair_student_2@test.com', 'compair_student_3è@test.com',
+                    'compair_instructor_2@email.com'
+                ])
+                self.assertIn(lti_membership.lti_user.lis_person_name_given, ['Instructor', 'Student'])
+                self.assertIn(lti_membership.lti_user.lis_person_name_family, ['Two', 'One', 'Six'])
+
             # test minimual membership response
             mocked_get_membership_request.return_value = {
                 "@id":None,
@@ -1919,6 +1970,9 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
                     "compair_student_2", "compair_student_3è", "compair_instructor_2"])
+                self.assertIsNone(lti_membership.lti_user.lis_person_name_given)
+                self.assertIsNone(lti_membership.lti_user.lis_person_name_family)
+                self.assertIsNone(lti_membership.lti_user.lis_person_contact_email_primary)
 
 
             # test ensure current user is not unenrolled from course on membership fetch
@@ -1973,3 +2027,6 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(lti_memberships), 1)
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, lti_user_student_1.user_id)
+                self.assertIsNone(lti_membership.lti_user.lis_person_name_given)
+                self.assertIsNone(lti_membership.lti_user.lis_person_name_family)
+                self.assertIsNone(lti_membership.lti_user.lis_person_contact_email_primary)

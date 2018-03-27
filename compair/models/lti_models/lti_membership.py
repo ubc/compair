@@ -132,14 +132,19 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             if not lti_user:
                 lti_user = LTIUser(
                     lti_consumer_id=lti_context.lti_consumer_id,
-                    user_id=member.get('user_id'),
-                    system_role=SystemRole.instructor if has_instructor_role else SystemRole.student,
-                    lis_person_name_given=member.get('person_name_given'),
-                    lis_person_name_family=member.get('person_name_family'),
-                    lis_person_name_full=member.get('person_name_full'),
-                    lis_person_contact_email_primary=member.get('person_contact_email_primary')
+                    user_id=member.get('user_id')
                 )
                 new_lti_users.append(lti_user)
+
+            # update/set fields if needed
+            lti_user.system_role = SystemRole.instructor if has_instructor_role else SystemRole.student
+            lti_user.lis_person_name_given = member.get('person_name_given')
+            lti_user.lis_person_name_family = member.get('person_name_family')
+            lti_user.lis_person_name_full = member.get('lis_person_name_full')
+            lti_user.lis_person_contact_email_primary = member.get('person_contact_email_primary')
+
+            if member.get('student_number'):
+                lti_user.student_number = member.get('student_number')
 
             course_role = CourseRole.student
             if has_instructor_role:
@@ -158,7 +163,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             )
             lti_memberships.append(lti_membership)
 
-            # if membership includes lis_result_sourcedids, create/update lti user resoruce links
+            # if membership includes lis_result_sourcedids, create/update lti user resource links
             if member.get('lis_result_sourcedids'):
                 for lis_result_sourcedid_set in member.get('lis_result_sourcedids'):
                     lti_resource_link = next(
@@ -192,8 +197,10 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                     lti_user_resource_link.lis_result_sourcedid = lis_result_sourcedid_set['lis_result_sourcedid']
 
         db.session.add_all(new_lti_users)
+        db.session.add_all(existing_lti_users)
         db.session.add_all(lti_memberships)
         db.session.add_all(new_lti_user_resource_links)
+        db.session.add_all(existing_lti_user_resource_links)
 
         # save new lti users
         db.session.commit()
@@ -227,6 +234,9 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 # update user_course role
                 else:
                     user_course.course_role=lti_member.course_role
+
+                # update user profile if needed
+                lti_member.lti_user.update_user_profile()
 
         db.session.add_all(new_user_courses)
         db.session.commit()
@@ -288,6 +298,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             member = {
                 'user_id': record.findtext('user_id'),
                 'roles': roles_text.split(",") if roles_text != None else [],
+                'student_number': None,
                 'lis_result_sourcedid': record.findtext('lis_result_sourcedid'),
                 'person_contact_email_primary': record.findtext('person_contact_email_primary'),
                 'person_name_given': record.findtext('person_name_given'),
@@ -296,8 +307,12 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             }
 
             # override user_id with user_id_override if present in membership result
-            if lti_consumer.user_id_override and record.findtext(lti_consumer.user_id_override) is not None:
+            if lti_consumer.user_id_override and record.findtext(lti_consumer.user_id_override):
                 member['user_id'] = record.findtext(lti_consumer.user_id_override)
+
+            # find student number if available
+            if lti_consumer.student_number_param and record.findtext(lti_consumer.student_number_param):
+                member['student_number'] = record.findtext(lti_consumer.student_number_param)
 
             members.append(member)
         return members
@@ -316,9 +331,11 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             request = requests.Request('GET', memberships_url, headers=headers).prepare()
             # Note: need to use LTIMemerbshipServiceOauthClient since normal client will
             #       not include oauth_body_hash if there is not content type or the body is None
+            # sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
+            #     signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC,
+            #     client_class=LTIMemerbshipServiceOauthClient)
             sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
-                signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC,
-                client_class=LTIMemerbshipServiceOauthClient)
+                signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC)
             signed_request = sign(request)
             headers = signed_request.headers
             data = LTIMembership._get_membership_request(memberships_url, headers)
@@ -334,31 +351,49 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 member = {
                     'user_id': record['member'].get('userId'),
                     'roles': record.get('role'),
+                    'student_number': None,
                     'person_contact_email_primary': record['member'].get('email'),
                     'person_name_given': record['member'].get('givenName'),
                     'person_name_family': record['member'].get('familyName'),
                     'person_name_full': record['member'].get('name')
                 }
 
-                # override user_id with user_id_override if present in membership result
-                if lti_consumer.user_id_override and 'message' in record:
+                if (lti_consumer.user_id_override or lti_consumer.student_number_param) and 'message' in record:
                     for message in record['message']:
                         if not message['message_type'] == 'basic-lti-launch-request':
                             continue
 
-                        # check if user_id_override is a basic lti parameter
-                        if lti_consumer.user_id_override in message:
-                            member['user_id'] = message[lti_consumer.user_id_override]
-                        # check if user_id_override is an extension and present
-                        elif lti_consumer.user_id_override.startswith('ext_'):
-                            ext_override = lti_consumer.user_id_override[len('ext_'):]
-                            if ext_override in message['ext']:
-                                member['user_id'] = message['ext'][ext_override]
-                        # check if user_id_override is an custom attribute and present
-                        elif lti_consumer.user_id_override.startswith('custom_'):
-                            custom_override = lti_consumer.user_id_override[len('custom_'):]
-                            if custom_override in message['custom']:
-                                member['user_id'] = message['custom'][custom_override]
+                        # override user_id with user_id_override if present in membership result
+                        if lti_consumer.user_id_override:
+                            # check if user_id_override is a basic lti parameter
+                            if lti_consumer.user_id_override in message:
+                                member['user_id'] = message[lti_consumer.user_id_override]
+                            # check if user_id_override is an extension and present
+                            elif lti_consumer.user_id_override.startswith('ext_'):
+                                ext_override = lti_consumer.user_id_override[len('ext_'):]
+                                if ext_override in message['ext']:
+                                    member['user_id'] = message['ext'][ext_override]
+                            # check if user_id_override is an custom attribute and present
+                            elif lti_consumer.user_id_override.startswith('custom_'):
+                                custom_override = lti_consumer.user_id_override[len('custom_'):]
+                                if custom_override in message['custom']:
+                                    member['user_id'] = message['custom'][custom_override]
+
+                        # get student number if present in membership result
+                        if lti_consumer.student_number_param:
+                            # check if student_number_param is a basic lti parameter
+                            if lti_consumer.student_number_param in message:
+                                member['student_number'] = message[lti_consumer.student_number_param]
+                            # check if student_number_param is an extension and present
+                            elif lti_consumer.student_number_param.startswith('ext_'):
+                                ext_student_number = lti_consumer.student_number_param[len('ext_'):]
+                                if ext_student_number in message['ext']:
+                                    member['student_number'] = message['ext'][ext_student_number]
+                            # check if student_number_param is an custom attribute and present
+                            elif lti_consumer.student_number_param.startswith('custom_'):
+                                custom_student_number = lti_consumer.student_number_param[len('custom_'):]
+                                if custom_student_number in message['custom']:
+                                    member['student_number'] = message['custom'][custom_student_number]
 
                 members.append(member)
             # check if another page or else finish
@@ -386,9 +421,11 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 request = requests.Request('GET', memberships_url, headers=headers).prepare()
                 # Note: need to use LTIMemerbshipServiceOauthClient since normal client will
                 #       not include oauth_body_hash if there is not content type or the body is None
+                # sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
+                #     signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC,
+                #     client_class=LTIMemerbshipServiceOauthClient)
                 sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
-                    signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC,
-                    client_class=LTIMemerbshipServiceOauthClient)
+                    signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC)
                 signed_request = sign(request)
                 headers = signed_request.headers
                 data = LTIMembership._get_membership_request(memberships_url, headers)

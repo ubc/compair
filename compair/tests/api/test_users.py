@@ -220,6 +220,8 @@ class UsersAPITests(ComPAIRAPITestCase):
     def test_create_user_lti(self):
         url = '/api/users'
         lti_data = LTITestData()
+        lti_data.get_consumer().student_number_param = 'custom_student_number'
+        db.session.commit()
 
         # test login required when LTI and oauth_create_user_link are not present
         expected = UserFactory.stub(
@@ -304,10 +306,16 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(user.user_courses), 1)
             self.assertEqual(user.user_courses[0].course_id, course.id)
 
-        # test create student via lti session
+        self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = True
+        self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = True
+        self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = True
+        self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = True
+
+        # test create student via lti session (unblocked edit fields)
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
                 user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
-                roles="Student") as lti_response:
+                roles="Student", lis_person_name_given="f_student", lis_person_name_family="l_student",
+                lis_person_contact_email_primary="student@email.com", custom_student_number="1234567") as lti_response:
             self.assert200(lti_response)
 
             expected = UserFactory.stub(
@@ -322,8 +330,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertEqual(SystemRole.student, user.system_role)
             self.assertIsNotNone(user.password)
             self.assertEqual(expected.username, user.username)
+            self.assertEqual(expected.firstname, user.firstname)
+            self.assertEqual(expected.lastname, user.lastname)
+            self.assertEqual(expected.email, user.email)
+            self.assertEqual(expected.student_number, user.student_number)
 
-        # test create teaching assistant (student role) via lti session
+        # test create teaching assistant (student role) via lti session (unblocked edit fields)
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
                 user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
                 roles="TeachingAssistant") as lti_response:
@@ -340,13 +352,67 @@ class UsersAPITests(ComPAIRAPITestCase):
             user = User.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(SystemRole.student, user.system_role)
             self.assertIsNotNone(user.password)
+
+        self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = False
+        self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = False
+        self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = False
+        self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = False
+
+        # test create student via lti session (blocked edit fields)
+        with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
+                user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
+                roles="Student", lis_person_name_given="f_student", lis_person_name_family="l_student",
+                lis_person_contact_email_primary="student@email.com", custom_student_number="1234567") as lti_response:
+            self.assert200(lti_response)
+
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            user = User.query.filter_by(uuid=rv.json['id']).one()
+            self.assertEqual(SystemRole.student, user.system_role)
+            self.assertIsNotNone(user.password)
             self.assertEqual(expected.username, user.username)
+            self.assertEqual("f_student", user.firstname)
+            self.assertEqual("l_student", user.lastname)
+            self.assertEqual("student@email.com", user.email)
+            self.assertEqual("1234567", user.student_number)
+
+        # test create teaching assistant (student role) via lti session (blocked edit fields)
+        with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
+                user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
+                roles="TeachingAssistant", lis_person_name_given="f_ta", lis_person_name_family="l_ta",
+                lis_person_contact_email_primary="ta@email.com", custom_student_number="12345678") as lti_response:
+            self.assert200(lti_response)
+
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+
+            user = User.query.filter_by(uuid=rv.json['id']).one()
+            self.assertEqual(SystemRole.student, user.system_role)
+            self.assertIsNotNone(user.password)
+            self.assertEqual("f_ta", user.firstname)
+            self.assertEqual("l_ta", user.lastname)
+            self.assertEqual("ta@email.com", user.email)
+            self.assertEqual("12345678", user.student_number)
 
 
     def test_create_user_lti_and_CAS(self):
         url = '/api/users'
         lti_data = LTITestData()
         auth_data = ThirdPartyAuthTestData()
+
+        lti_data.get_consumer().student_number_param = 'custom_student_number'
+        db.session.commit()
 
         with self.client.session_transaction() as sess:
             sess['CAS_CREATE'] = True
@@ -361,10 +427,16 @@ class UsersAPITests(ComPAIRAPITestCase):
         rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
         self.assert401(rv)
 
-        # test create student via lti session
+        self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = True
+        self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = True
+        self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = True
+        self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = True
+
+        # test create student via lti session (unblocked edit fields)
         with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
                 user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
-                roles="Student") as lti_response:
+                roles="Student", lis_person_name_given="f_student", lis_person_name_family="l_student",
+                lis_person_contact_email_primary="student@email.com", custom_student_number="1234567") as lti_response:
             self.assert200(lti_response)
 
             with self.client.session_transaction() as sess:
@@ -379,6 +451,10 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
+            self.assertEqual(expected.firstname, rv.json['firstname'])
+            self.assertEqual(expected.lastname, rv.json['lastname'])
+            self.assertEqual(expected.email, rv.json['email'])
+            self.assertEqual(expected.student_number, rv.json['student_number'])
 
             user = User.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(SystemRole.student, user.system_role)
@@ -389,6 +465,56 @@ class UsersAPITests(ComPAIRAPITestCase):
                 .filter_by(
                     third_party_type=ThirdPartyType.cas,
                     unique_identifier="some_unique_identifier",
+                    user_id=user.id
+                ) \
+                .one_or_none()
+
+            self.assertIsNotNone(third_party_user)
+
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('CAS_LOGIN'))
+                self.assertIsNone(sess.get('CAS_CREATE'))
+                self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
+                self.assertIsNone(sess.get('oauth_create_user_link'))
+
+        self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = False
+        self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = False
+        self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = False
+        self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = False
+
+        # test create student via lti session (blocked edit fields)
+        with self.lti_launch(lti_data.get_consumer(), lti_data.generate_resource_link_id(),
+                user_id=lti_data.generate_user_id(), context_id=lti_data.generate_context_id(),
+                roles="Student", lis_person_name_given="f_student", lis_person_name_family="l_student",
+                lis_person_contact_email_primary="student@email.com", custom_student_number="1234567") as lti_response:
+            self.assert200(lti_response)
+
+            with self.client.session_transaction() as sess:
+                sess['CAS_CREATE'] = True
+                sess['CAS_UNIQUE_IDENTIFIER'] = "some_unique_identifier2"
+                self.assertTrue(sess.get('LTI'))
+
+            expected = UserFactory.stub(
+                system_role=None,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+            self.assert200(rv)
+            self.assertEqual(expected.displayname, rv.json['displayname'])
+            self.assertEqual("f_student", rv.json['firstname'])
+            self.assertEqual("l_student", rv.json['lastname'])
+            self.assertEqual("student@email.com", rv.json['email'])
+            self.assertEqual("1234567", rv.json['student_number'])
+
+            user = User.query.filter_by(uuid=rv.json['id']).one()
+            self.assertEqual(SystemRole.student, user.system_role)
+            self.assertIsNone(user.password)
+            self.assertIsNone(user.username)
+
+            third_party_user = ThirdPartyUser.query \
+                .filter_by(
+                    third_party_type=ThirdPartyType.cas,
+                    unique_identifier="some_unique_identifier2",
                     user_id=user.id
                 ) \
                 .one_or_none()
@@ -540,11 +666,66 @@ class UsersAPITests(ComPAIRAPITestCase):
 
         # test successful update by user (as student)
         with self.login(self.data.get_authorized_student().username):
+            original_displayname = user.displayname
+            original_firstname = user.firstname
+            original_lastname = user.lastname
+            original_student_number = user.student_number
+            original_email = user.email
+
             valid = expected.copy()
             valid['displayname'] = "thebest"
+            valid['firstname'] = "thebest"
+            valid['lastname'] = "thebest"
+            valid['student_number'] = "thebest"
+            valid['email'] = "thebest@thebest"
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(original_displayname, rv.json['displayname'])
+            self.assertEqual(original_firstname, rv.json['firstname'])
+            self.assertEqual(original_lastname, rv.json['lastname'])
+            self.assertEqual(original_student_number, rv.json['student_number'])
+            self.assertEqual(original_email, rv.json['email'])
+
+            self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = True
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual("thebest", rv.json['displayname'])
+            self.assertEqual(original_firstname, rv.json['firstname'])
+            self.assertEqual(original_lastname, rv.json['lastname'])
+            self.assertEqual(original_student_number, rv.json['student_number'])
+            self.assertEqual(original_email, rv.json['email'])
+
+            self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = True
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual("thebest", rv.json['displayname'])
+            self.assertEqual("thebest", rv.json['firstname'])
+            self.assertEqual("thebest", rv.json['lastname'])
+            self.assertEqual(original_student_number, rv.json['student_number'])
+            self.assertEqual(original_email, rv.json['email'])
+
+            self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = True
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual("thebest", rv.json['displayname'])
+            self.assertEqual("thebest", rv.json['firstname'])
+            self.assertEqual("thebest", rv.json['lastname'])
+            self.assertEqual("thebest", rv.json['student_number'])
+            self.assertEqual(original_email, rv.json['email'])
+
+            self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = True
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual("thebest", rv.json['displayname'])
+            self.assertEqual("thebest", rv.json['firstname'])
+            self.assertEqual("thebest", rv.json['lastname'])
+            self.assertEqual("thebest", rv.json['student_number'])
+            self.assertEqual("thebest@thebest", rv.json['email'])
+
+            self.app.config['ALLOW_STUDENT_CHANGE_DISPLAY_NAME'] = False
+            self.app.config['ALLOW_STUDENT_CHANGE_NAME'] = False
+            self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = False
+            self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = False
 
         # test updating username, student number, usertype for system - instructor
         with self.login(instructor.username):
@@ -589,6 +770,16 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(user.system_role.value, rv.json['system_role'])
+
+            valid = expected_without_email.copy()
+            valid['firstname'] = 'thebest'
+            valid['lastname'] = 'thebest'
+            valid['displayname'] = 'thebest'
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual('thebest', rv.json['firstname'])
+            self.assertEqual('thebest', rv.json['lastname'])
+            self.assertEqual('thebest', rv.json['displayname'])
 
             # for instructor
             valid = expected_instructor.copy()
@@ -636,6 +827,16 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(user.email_notification_method.value, rv.json['email_notification_method'])
+
+            valid = expected.copy()
+            valid['firstname'] = 'thebest'
+            valid['lastname'] = 'thebest'
+            valid['displayname'] = 'thebest'
+            rv = self.client.post(url, data=json.dumps(valid), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual('thebest', rv.json['firstname'])
+            self.assertEqual('thebest', rv.json['lastname'])
+            self.assertEqual('thebest', rv.json['displayname'])
 
             # for instructor
             valid = expected_instructor.copy()

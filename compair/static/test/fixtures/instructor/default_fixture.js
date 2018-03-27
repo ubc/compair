@@ -56,7 +56,8 @@ var student1 = userFactory.generateUser("3abcABC123-abcABC123_Z", "Student", {
     firstname: "First",
     lastname: "Student",
     fullname: "First Student",
-    fullname_sortable: "Student, First",
+    fullname_sortable: "Student, First (12345678)",
+    student_number: "12345678",
     email: "first.student@exmple.com"
 });
 storage.users[student1.id] = student1;
@@ -67,7 +68,8 @@ var student2 = userFactory.generateUser("4abcABC123-abcABC123_Z", "Student", {
     firstname: "Second",
     lastname: "Student",
     fullname: "Second Student",
-    fullname_sortable: "Student, Second",
+    fullname_sortable: "Student, Second (123456789)",
+    student_number: "123456789",
     email: "second.student@exmple.com"
 });
 storage.users[student2.id] = student2;

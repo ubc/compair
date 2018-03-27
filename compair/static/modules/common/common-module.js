@@ -43,4 +43,8 @@ module.filter('filesize', function () {
     };
 });
 
+module.filter('encodeURIComponent', function () {
+    return window.encodeURIComponent;
+});
+
 })();

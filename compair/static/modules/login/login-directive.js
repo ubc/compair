@@ -33,6 +33,7 @@
                         uses_compair_login: scope.uses_compair_login,
                         email_notification_method: EmailNotificationMethod.enable
                     }
+                    scope.loggedInUserIsStudent = true;
 
                     LTI.getStatus().then(function(status) {
                         // check if LTI session
@@ -41,6 +42,7 @@
                             scope.user = LTI.getLTIUser();
                             scope.user.uses_compair_login = scope.uses_compair_login;
                             scope.user.email_notification_method = EmailNotificationMethod.enable;
+                            scope.loggedInUserIsStudent = scope.user.system_role == SystemRole.student;
                         }
                     });
 

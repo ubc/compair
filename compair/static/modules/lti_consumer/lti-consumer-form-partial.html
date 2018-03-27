@@ -24,6 +24,12 @@
                 name="user_id_override" ng-model="consumer.user_id_override"
                 ng-maxlength="255" />
         </compair-field-with-feedback>
+        <compair-field-with-feedback form-control="consumerForm.student_number_param">
+            <label for="student_number_param">Student Number Param</label>
+            <input class="form-control" id="student_number_param" type="text"
+                name="student_number_param" ng-model="consumer.student_number_param"
+                ng-maxlength="255" />
+        </compair-field-with-feedback>
         <compair-field-with-feedback form-control="consumerForm.active" ng-if="method == 'edit'">
             <input id="active" type="checkbox" ng-model="consumer.active">
             <label class="not-bold" for="active">Active</label>

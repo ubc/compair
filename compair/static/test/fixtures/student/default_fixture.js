@@ -61,7 +61,8 @@ var student = userFactory.generateUser("3abcABC123-abcABC123_Z", "Student", {
     firstname: "First",
     lastname: "Student",
     fullname: "First Student",
-    fullname_sortable: "Student, First",
+    fullname_sortable: "Student, First (12345678)",
+    student_number: "12345678",
     email: "first.student@exmple.com"
 });
 storage.users[student.id] = student;

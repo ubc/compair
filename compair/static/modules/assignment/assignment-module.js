@@ -652,6 +652,7 @@ module.factory( "AssignmentPermissions", function (){
                     // compare
                     'isComparePeriod'   : assignment.compare_period,
                     'canCompare'        : assignment.compare_period &&
+                                          (
                                             // regular users
                                             (!canManageAssignment &&
                                                 (
@@ -662,7 +663,8 @@ module.factory( "AssignmentPermissions", function (){
                                                 )
                                             ) ||
                                             // instructors
-                                            (canManageAssignment && assignment.educators_can_compare),
+                                            (canManageAssignment && assignment.educators_can_compare)
+                                          ),
                     'needsCompare'      : assignment.status.comparisons.left > 0,
                     'hasDraftComparison': assignment.status.comparisons.has_draft,
                     'hasComparisonsAvailable': assignment.status.comparisons.available,

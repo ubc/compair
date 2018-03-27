@@ -198,6 +198,14 @@ Restart server after making any changes to settings
 
 `CAS_USE_SAML`: Determines which authorization endpoint to use. '/serviceValidate' if false (default). '/samlValidate' if true.
 
+`CAS_ATTRIBUTE_FIRST_NAME`: Optionally automatically sync user's first name with the supplied CAS attribute (Will only override if attribute is present a contains content).
+
+`CAS_ATTRIBUTE_LAST_NAME`: Optionally automatically sync user's last name with the supplied CAS attribute (Will only override if attribute is present a contains content).
+
+`CAS_ATTRIBUTE_STUDENT_NUMBER`: Optionally automatically sync user's student number with the supplied CAS attribute (Will only override if attribute is present a contains content).
+
+`CAS_ATTRIBUTE_EMAIL`: Optionally automatically sync user's email with the supplied CAS attribute (Will only override if attribute is present a contains content).
+
 Restart server after making any changes to settings
 
 ### SAML 2.0 Login Settings
@@ -215,6 +223,14 @@ Restart server after making any changes to settings
 `SAML_METADATA_ENTITY_ID` Use when loading ipd metadata with multiple public entity ids.
 
 `SAML_EXPOSE_METADATA_ENDPOINT` Optionally expose the `/api/saml/metadata` endpoint for the idp's usage (disabled by default).
+
+`SAML_ATTRIBUTE_FIRST_NAME`: Optionally automatically sync user's first name with the supplied SAML attribute (Will only override if attribute is present a contains content).
+
+`SAML_ATTRIBUTE_LAST_NAME`: Optionally automatically sync user's last name with the supplied SAML attribute (Will only override if attribute is present a contains content).
+
+`SAML_ATTRIBUTE_STUDENT_NUMBER`: Optionally automatically sync user's student number with the supplied SAML attribute (Will only override if attribute is present a contains content).
+
+`SAML_ATTRIBUTE_EMAIL`: Optionally automatically sync user's email with the supplied SAML attribute (Will only override if attribute is present a contains content).
 
 You must provide `SAML_SETTINGS` or `SAML_SETTINGS_FILE` to use SAML Login. See [python3-saml](https://github.com/onelogin/python3-saml) for details on setting up the JSON settings.
 You can use `SAML_METADATA_URL` and `SAML_METADATA_ENTITY_ID` to fetch the idp's public metadata for very request.
@@ -327,6 +343,16 @@ You can control data accessibility for certain sensitive fields with the followi
 `EXPOSE_EMAIL_TO_INSTRUCTOR`: Set to 1 to allow instructors to see and modify email address for students in any of their classes (disabled by default). Instructors can see email info by exporting their class lists or view one of their student's profiles.
 
 `EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR`: Set to 1 to allow instructors to see CAS/SAML usernames for students in any of their classes (disabled by default). Instructors can see CAS?SAML username info by exporting their class lists
+
+In addition you can control if students are able to edit their first name, last name, display name, and student number. System admins and instructors can still modify these profile fields. Any student disabled field for editing will be automatically updated with values from LTI or CAS/SAML on login. Please check the LTI, CAS, or SAML sections for additional environment variables that may need to be included (for example if student number is disabled, then `CAS_ATTRIBUTE_STUDENT_NUMBER` need to be set for automatic updated on student login)
+
+`ALLOW_STUDENT_CHANGE_NAME`: Allows students to edit their first & last names (default: enabled).
+
+`ALLOW_STUDENT_CHANGE_DISPLAY_NAME`: Allows students to edit their display name (default: enabled).
+
+`ALLOW_STUDENT_CHANGE_STUDENT_NUMBER`: Allows students to edit their student number (default: enabled).
+
+`ALLOW_STUDENT_CHANGE_EMAIL`: Allows students to edit their email address (default: enabled).
 
 Google Analytics Web Tracking
 -----------------------------
