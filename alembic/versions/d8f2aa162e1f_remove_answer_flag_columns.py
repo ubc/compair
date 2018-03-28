@@ -33,7 +33,7 @@ def upgrade():
 
 def downgrade():
     with op.batch_alter_table('answer', naming_convention=convention) as batch_op:
-        batch_op.add_column(sa.Column('flagged', sa.Boolean(name='flagged'), nullable=False))
+        batch_op.add_column(sa.Column('flagged', sa.Boolean(), nullable=False))
         batch_op.add_column(sa.Column('flagger_user_id', sa.Integer(), nullable=True))
         batch_op.create_foreign_key('fk_answer_flagger_user_id_user',
             'user', ['flagger_user_id'], ['id'], ondelete="SET NULL")

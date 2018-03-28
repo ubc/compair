@@ -21,7 +21,7 @@ class ThirdPartyType(Enum):
 def upgrade():
     op.create_table('third_party_user',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('third_party_type', EnumType(ThirdPartyType, name="third_party_type"), nullable=False),
+        sa.Column('third_party_type', EnumType(ThirdPartyType), nullable=False),
         sa.Column('unique_identifier', sa.String(length=255), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('modified_user_id', sa.Integer(), nullable=True),

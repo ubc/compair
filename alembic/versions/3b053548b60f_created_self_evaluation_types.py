@@ -36,7 +36,8 @@ def upgrade():
     )
     op.get_bind().execute(insert)
 
-    op.add_column('Questions', sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
+    with op.batch_alter_table('Questions', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
 
     with op.batch_alter_table('Questions', naming_convention=convention) as batch_op:
         batch_op.create_foreign_key(

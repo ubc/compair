@@ -16,8 +16,9 @@ import sqlalchemy as sa
 from compair.models import convention
 
 def upgrade():
-    op.add_column('answer', sa.Column('practice', sa.Boolean(name='practice'),
-        default='0', server_default='0', nullable=False, index=True))
+    with op.batch_alter_table('answer', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('practice', sa.Boolean(), default='0', server_default='0', nullable=False))
+    op.create_index(op.f('ix_answer_practice'), 'answer', ['practice'], unique=False)
 
     connection = op.get_bind()
 

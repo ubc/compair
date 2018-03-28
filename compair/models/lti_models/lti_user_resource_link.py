@@ -20,7 +20,7 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     roles = db.Column(db.String(255), nullable=True)
     lis_result_sourcedid = db.Column(db.String(255), nullable=True)
-    course_role = db.Column(EnumType(CourseRole, name="course_role"),
+    course_role = db.Column(EnumType(CourseRole),
         nullable=False)
 
     # relationships

@@ -23,7 +23,7 @@ def downgrade():
         sa.Column('assignment_id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('content', sa.Text(),nullable=True),
-        sa.Column('active', sa.Boolean(name='active'), nullable=False),
+        sa.Column('active', sa.Boolean(), nullable=False),
         sa.Column('modified_user_id', sa.Integer(), nullable=True),
         sa.Column('modified', sa.DateTime(), nullable=False),
         sa.Column('created_user_id', sa.Integer(), nullable=True),

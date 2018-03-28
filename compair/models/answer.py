@@ -21,10 +21,10 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         nullable=True)
     content = db.Column(db.Text)
     round = db.Column(db.Integer, default=0, nullable=False)
-    practice = db.Column(db.Boolean(name='practice'), default=False, nullable=False, index=True)
-    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False, index=True)
-    top_answer = db.Column(db.Boolean(name='top_answer'), default=False, nullable=False, index=True)
-    comparable = db.Column(db.Boolean(name='comparable'), default=True, nullable=False)
+    practice = db.Column(db.Boolean(), default=False, nullable=False, index=True)
+    draft = db.Column(db.Boolean(), default=False, nullable=False, index=True)
+    top_answer = db.Column(db.Boolean(), default=False, nullable=False, index=True)
+    comparable = db.Column(db.Boolean(), default=True, nullable=False) # TODO: add , index=True
 
     # relationships
     # assignment via Assignment Model

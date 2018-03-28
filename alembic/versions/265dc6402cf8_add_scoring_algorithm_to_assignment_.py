@@ -24,10 +24,8 @@ class ScoringAlgorithm(Enum):
     true_skill = "true_skill_rating"
 
 def upgrade():
-    # TODO: change to following when on master branch
-    # with op.batch_alter_table('assignment', naming_convention=convention) as batch_op:
-    #     batch_op.add_column(sa.Column('scoring_algorithm', EnumType(ScoringAlgorithm), nullable=True))
-    op.add_column('assignment', sa.Column('scoring_algorithm', EnumType(ScoringAlgorithm), nullable=True))
+    with op.batch_alter_table('assignment', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('scoring_algorithm', EnumType(ScoringAlgorithm), nullable=True))
 
     # set scoring algorithm to first answer score found for assignment (default elo if no scoring has occurred yet)
     connection = op.get_bind()

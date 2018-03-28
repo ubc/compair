@@ -23,11 +23,11 @@ class ScoringAlgorithm(Enum):
     true_skill = "true_skill_rating"
 
 def upgrade():
-    op.add_column('score', sa.Column('scoring_algorithm', EnumType(ScoringAlgorithm, name='scoring_algorithm'), nullable=True))
-    op.add_column('score', sa.Column('variable1', sa.Float(), nullable=True))
-    op.add_column('score', sa.Column('variable2', sa.Float(), nullable=True))
-    op.add_column('score', sa.Column('loses', sa.Integer(), nullable=False, default='0', server_default='0'))
-
+    with op.batch_alter_table('score', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('scoring_algorithm', EnumType(ScoringAlgorithm), nullable=True))
+        batch_op.add_column(sa.Column('variable1', sa.Float(), nullable=True))
+        batch_op.add_column(sa.Column('variable2', sa.Float(), nullable=True))
+        batch_op.add_column(sa.Column('loses', sa.Integer(), nullable=False, default='0', server_default='0'))
 
 def downgrade():
     with op.batch_alter_table('score', naming_convention=convention) as batch_op:

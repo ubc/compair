@@ -18,9 +18,8 @@ from compair.models import convention
 
 
 def upgrade():
-    op.add_column(
-        'Criteria',
-        sa.Column('default', sa.Boolean(name='default'), default=True, server_default='1', nullable=False))
+    with op.batch_alter_table('Criteria', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('default', sa.Boolean(), default=True, server_default='1', nullable=False))
 
 
 def downgrade():

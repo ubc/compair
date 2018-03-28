@@ -9,11 +9,7 @@ class CreateTrackingMixin(db.Model):
 
     @declared_attr
     def created(cls):
-        return db.Column(
-            db.DateTime,
-            default=datetime.utcnow,
-            nullable=False
-        )
+        return db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     @declared_attr
     def created_user_id(cls):

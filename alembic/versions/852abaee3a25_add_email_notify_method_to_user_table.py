@@ -22,10 +22,13 @@ class EmailNotificationMethod(Enum):
     disable = "disable"
 
 def upgrade():
-    op.add_column('user', sa.Column('email_notification_method',
-        EnumType(EmailNotificationMethod, name='email_notification_method'),
-        default=EmailNotificationMethod.enable, server_default=EmailNotificationMethod.enable.value,
-        nullable=False, index=True))
+    with op.batch_alter_table('user', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('email_notification_method',
+            EnumType(EmailNotificationMethod),
+            default=EmailNotificationMethod.enable,
+            server_default=EmailNotificationMethod.enable.value,
+            nullable=False))
+    op.create_index(op.f('ix_user_email_notification_method'), 'user', ['email_notification_method'], unique=False)
 
 
 def downgrade():

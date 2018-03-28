@@ -27,14 +27,12 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         nullable=False)
     answer2_id = db.Column(db.Integer, db.ForeignKey('answer.id', ondelete="CASCADE"),
         nullable=False)
-    winner = db.Column(EnumType(WinningAnswer, name="winner"), nullable=True)
+    winner = db.Column(EnumType(WinningAnswer), nullable=True)
     comparison_example_id = db.Column(db.Integer, db.ForeignKey('comparison_example.id', ondelete="SET NULL"),
         nullable=True)
     round_compared = db.Column(db.Integer, default=0, nullable=False)
-    completed = db.Column(db.Boolean(name='completed'), default=False,
-        nullable=False, index=True)
-    pairing_algorithm = db.Column(EnumType(PairingAlgorithm, name="pairing_algorithm"),
-        nullable=True, default=PairingAlgorithm.random)
+    completed = db.Column(db.Boolean(), default=False, nullable=False, index=True)
+    pairing_algorithm = db.Column(EnumType(PairingAlgorithm), nullable=True, default=PairingAlgorithm.random)
 
     # relationships
     # assignment via Assignment Model

@@ -18,7 +18,7 @@ class UserCourse(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     course_id = db.Column(db.Integer,  db.ForeignKey("course.id", ondelete="CASCADE"),
         nullable=False)
-    course_role = db.Column(EnumType(CourseRole, name="course_role"),
+    course_role = db.Column(EnumType(CourseRole),
         nullable=False, index=True)
     group_name = db.Column(db.String(255), nullable=True, index=True)
 

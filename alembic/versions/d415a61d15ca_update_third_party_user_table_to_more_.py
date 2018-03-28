@@ -35,8 +35,8 @@ def upgrade():
     with op.batch_alter_table('third_party_user', naming_convention=convention) as batch_op:
         batch_op.add_column(sa.Column('_params', sa.Text, nullable=True))
         batch_op.alter_column('third_party_type',
-            type_=EnumType(IntermediateThirdPartyType, name="third_party_type"),
-            existing_type=EnumType(OldThirdPartyType, name="third_party_type"))
+            type_=EnumType(IntermediateThirdPartyType),
+            existing_type=EnumType(OldThirdPartyType))
 
     connection = op.get_bind()
     connection.execute(
@@ -47,14 +47,14 @@ def upgrade():
 
     with op.batch_alter_table('third_party_user', naming_convention=convention) as batch_op:
         batch_op.alter_column('third_party_type',
-            type_=EnumType(NewThirdPartyType, name="third_party_type"),
-            existing_type=EnumType(IntermediateThirdPartyType, name="third_party_type"))
+            type_=EnumType(NewThirdPartyType),
+            existing_type=EnumType(IntermediateThirdPartyType))
 
 def downgrade():
     with op.batch_alter_table('third_party_user', naming_convention=convention) as batch_op:
         batch_op.alter_column('third_party_type',
-            type_=EnumType(IntermediateThirdPartyType, name="third_party_type"),
-            existing_type=EnumType(NewThirdPartyType, name="third_party_type"))
+            type_=EnumType(IntermediateThirdPartyType),
+            existing_type=EnumType(NewThirdPartyType))
 
     connection = op.get_bind()
     connection.execute(
@@ -65,6 +65,6 @@ def downgrade():
 
     with op.batch_alter_table('third_party_user', naming_convention=convention) as batch_op:
         batch_op.alter_column('third_party_type',
-            type_=EnumType(OldThirdPartyType, name="third_party_type"),
-            existing_type=EnumType(IntermediateThirdPartyType, name="third_party_type"))
+            type_=EnumType(OldThirdPartyType),
+            existing_type=EnumType(IntermediateThirdPartyType))
         batch_op.drop_column('_params')

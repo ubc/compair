@@ -23,7 +23,7 @@ def upgrade():
         sa.Column('partner_id', sa.Integer(), nullable=False),
         sa.Column('player_id', sa.Integer(), nullable=False),
         sa.Column('upload_ks', sa.String(length=255), nullable=False),
-        sa.Column('upload_token_id', sa.String(length=255), nullable=False, index=True),
+        sa.Column('upload_token_id', sa.String(length=255), nullable=False),
         sa.Column('file_name', sa.String(length=255), nullable=True),
         sa.Column('entry_id', sa.String(length=255), nullable=True),
         sa.Column('download_url', sa.String(length=255), nullable=True),
@@ -39,6 +39,7 @@ def upgrade():
         mysql_collate='utf8_unicode_ci',
         mysql_engine='InnoDB'
     )
+    op.create_index(op.f('ix_kaltura_media_upload_token_id'), 'kaltura_media', ['upload_token_id'], unique=False)
 
     with op.batch_alter_table('file', naming_convention=convention) as batch_op:
         batch_op.add_column(sa.Column('kaltura_media_id', sa.Integer(), nullable=True))

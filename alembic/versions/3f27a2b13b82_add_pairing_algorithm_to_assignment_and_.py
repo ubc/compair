@@ -22,10 +22,10 @@ class PairingAlgorithm(Enum):
     random = "random"
 
 def upgrade():
-    op.add_column('comparison', sa.Column('pairing_algorithm',
-        EnumType(PairingAlgorithm, name='pairing_algorithm'), nullable=True))
-    op.add_column('assignment', sa.Column('pairing_algorithm',
-        EnumType(PairingAlgorithm, name='pairing_algorithm'), nullable=True))
+    with op.batch_alter_table('comparison', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('pairing_algorithm', EnumType(PairingAlgorithm), nullable=True))
+    with op.batch_alter_table('assignment', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('pairing_algorithm', EnumType(PairingAlgorithm), nullable=True))
 
 
 def downgrade():

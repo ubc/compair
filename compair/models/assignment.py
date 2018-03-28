@@ -31,16 +31,15 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     compare_start = db.Column(db.DateTime(timezone=True), nullable=True)
     compare_end = db.Column(db.DateTime(timezone=True), nullable=True)
     number_of_comparisons = db.Column(db.Integer, nullable=False)
-    students_can_reply = db.Column(db.Boolean(name='students_can_reply'),
+    students_can_reply = db.Column(db.Boolean(),
         default=False, nullable=False)
-    enable_self_evaluation = db.Column(db.Boolean(name='enable_self_evaluation'),
+    enable_self_evaluation = db.Column(db.Boolean(),
         default=False, nullable=False)
-    scoring_algorithm = db.Column(EnumType(ScoringAlgorithm, name="scoring_algorithm"),
-        nullable=True, default=ScoringAlgorithm.elo)
-    pairing_algorithm = db.Column(EnumType(PairingAlgorithm, name="pairing_algorithm"),
+    scoring_algorithm = db.Column(EnumType(ScoringAlgorithm), nullable=True, default=ScoringAlgorithm.elo)
+    pairing_algorithm = db.Column(EnumType(PairingAlgorithm),
         nullable=True, default=PairingAlgorithm.random)
     rank_display_limit = db.Column(db.Integer, nullable=True)
-    educators_can_compare = db.Column(db.Boolean(name='educators_can_compare'),
+    educators_can_compare = db.Column(db.Boolean(),
         default=False, nullable=False)
     answer_grade_weight = db.Column(db.Integer, default=1, nullable=False)
     comparison_grade_weight = db.Column(db.Integer, default=1, nullable=False)
