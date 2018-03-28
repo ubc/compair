@@ -12,7 +12,7 @@ from compair.models import Course, User, CourseRole, SystemRole, Criterion, File
     Answer, AssignmentComment, AnswerComment, Comparison, ComparisonCriterion, \
     AnswerCommentType, ComparisonExample, EmailNotificationMethod, \
     LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \
-    ThirdPartyUser, ThirdPartyType
+    ThirdPartyUser, ThirdPartyType, PairingAlgorithm
 
 # suppress factory_boy debug logging (spits out a lot of text)
 # comment out/set log level to debug to see the messages
@@ -82,6 +82,7 @@ class AssignmentFactory(factory.alchemy.SQLAlchemyModelFactory):
     compare_end = None
     number_of_comparisons = 3
     rank_display_limit = 10
+    pairing_algorithm = PairingAlgorithm.adaptive_min_delta
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 

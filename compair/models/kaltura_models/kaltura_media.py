@@ -33,7 +33,7 @@ class KalturaMedia(DefaultTableMixin, WriteTrackingMixin):
     # user via User Model
     files = db.relationship("File", backref="kaltura_media", lazy='dynamic')
 
-    # hyprid and other functions
+    # hybrid and other functions
     @hybrid_property
     def extension(self):
         return self.file_name.lower().rsplit('.', 1)[1] if '.' in self.file_name else None
@@ -56,7 +56,6 @@ class KalturaMedia(DefaultTableMixin, WriteTrackingMixin):
 
         return now < warning_period
 
-    # hyprid and other functions
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()

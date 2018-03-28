@@ -66,7 +66,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # lti
     lti_resource_links = db.relationship("LTIResourceLink", backref="compair_assignment", lazy='dynamic')
 
-    # hyprid and other functions
+    # hybrid and other functions
     course_uuid = association_proxy('course', 'uuid')
 
     user_avatar = association_proxy('user', 'avatar')

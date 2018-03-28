@@ -51,7 +51,7 @@ class AnswerScore(DefaultTableMixin, WriteTrackingMixin):
     # assignment via Assignment Model
     # answer via Answer Model
 
-    # hyprid and other functions
+    # hybrid and other functions
     def convert_to_scored_object(self):
         return ScoredObject(
             key=self.answer_id,

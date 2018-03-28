@@ -23,7 +23,7 @@ class AssignmentCriterion(DefaultTableMixin, ActiveMixin, WriteTrackingMixin):
     assignment = db.relationship("Assignment", back_populates="assignment_criteria")
     criterion = db.relationship("Criterion", back_populates="assignment_criteria", lazy='immediate')
 
-    # hyprid and other functions
+    # hybrid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
         import_module('compair.models.assignment').Assignment(course_id=course_id))
     course_uuid = association_proxy('assignment', 'course_uuid')

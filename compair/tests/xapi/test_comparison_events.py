@@ -217,7 +217,7 @@ class ComparisonXAPITests(ComPAIRXAPITestCase):
                         'name': {'en-US': 'Assignment comparison #'+str(completed_count+1) },
                         'extensions': {
                             'http://xapi.learninganalytics.ubc.ca/extension/comparison': completed_count+1,
-                            'http://xapi.learninganalytics.ubc.ca/extension/score-algorithm': PairingAlgorithm.random.value
+                            'http://xapi.learninganalytics.ubc.ca/extension/score-algorithm': PairingAlgorithm.adaptive_min_delta.value
                         }
                     },
                     'objectType': 'Activity'

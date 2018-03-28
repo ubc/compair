@@ -31,7 +31,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     lti_memberships = db.relationship("LTIMembership", backref="lti_user", lazy="dynamic")
     lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_user", lazy="dynamic")
 
-    # hyprid and other functions
+    # hybrid and other functions
     lti_consumer_uuid = association_proxy('lti_consumer', 'uuid')
     oauth_consumer_key = association_proxy('lti_consumer', 'oauth_consumer_key')
     compair_user_uuid = association_proxy('compair_user', 'uuid')

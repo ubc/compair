@@ -26,7 +26,7 @@ class AdaptivePairGenerator(PairGenerator):
         Returns a pair to be compared by the current user.
         If no valid pair can be found, an error is raised
         param scored_objects: list of all scored objects that can be compared
-        param comparison_pairs: list of all comparisons compelted by the current user.
+        param comparison_pairs: list of all comparisons completed by the current user.
         """
 
         self.comparison_pairs = comparison_pairs

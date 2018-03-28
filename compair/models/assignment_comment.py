@@ -22,7 +22,7 @@ class AssignmentComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTracking
     # assignment via Assignment Model
     # user via User Model
 
-    # hyprid and other functions
+    # hybrid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
         import_module('compair.models.assignment').Assignment(course_id=course_id))
     course_uuid = association_proxy('assignment', 'course_uuid')

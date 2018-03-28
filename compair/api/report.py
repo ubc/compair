@@ -1,4 +1,3 @@
-import csv
 import os
 import time
 import unicodecsv as csv

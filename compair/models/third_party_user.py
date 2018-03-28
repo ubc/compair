@@ -31,7 +31,7 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     # user via User Model
     compair_user_uuid = association_proxy('user', 'uuid')
 
-    # hyprid and other functions
+    # hybrid and other functions
 
     @property
     def params(self):

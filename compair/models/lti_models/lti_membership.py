@@ -48,7 +48,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     # lti_conext via LTIContext Model
     # lti_user via LTIUser Model
 
-    # hyprid and other functions
+    # hybrid and other functions
     context_id = association_proxy('lti_context', 'context_id')
     user_id = association_proxy('lti_user', 'user_id')
 
@@ -403,7 +403,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
         # get lis_result_sourcedid for all resource links known to the system
         for lti_resource_link in lti_resource_links:
-            # add rlid ot membership url query string
+            # add rlid to membership url query string
             parts = urlparse.urlsplit(lti_context.custom_context_memberships_url)
             query = urlparse.parse_qs(parts.query)
             query['rlid'] = lti_resource_link.resource_link_id

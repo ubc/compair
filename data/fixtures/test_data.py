@@ -266,22 +266,23 @@ class SimpleAssignmentTestData(BasicTestData):
                                                                     self.get_authorized_instructor()))
         db.session.commit()
 
-    def create_assignment_in_comparison_period(self, course, author):
+    def create_assignment_in_comparison_period(self, course, author, **kwargs):
         answer_start = datetime.datetime.now() - datetime.timedelta(days=2)
         answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
-        return self.create_assignment(course, author, answer_start, answer_end)
+        return self.create_assignment(course, author, answer_start, answer_end, **kwargs)
 
-    def create_assignment_in_answer_period(self, course, author):
+    def create_assignment_in_answer_period(self, course, author, **kwargs):
         answer_start = datetime.datetime.now() - datetime.timedelta(days=1)
         answer_end = datetime.datetime.now() + datetime.timedelta(days=1)
-        return self.create_assignment(course, author, answer_start, answer_end)
+        return self.create_assignment(course, author, answer_start, answer_end, **kwargs)
 
-    def create_assignment(self, course, author, answer_start, answer_end):
+    def create_assignment(self, course, author, answer_start, answer_end, **kwargs):
         assignment = AssignmentFactory(
             course=course,
             user=author,
             answer_start=answer_start,
-            answer_end=answer_end
+            answer_end=answer_end,
+            **kwargs
         )
         disabled_criterion = CriterionFactory(user=author, default=False, active=False)
         AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment)
@@ -348,22 +349,23 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
             assignment.calculate_grades()
         self.get_course().calculate_grades()
 
-    def create_answer(self, assignment, author, draft=False):
+    def create_answer(self, assignment, author, draft=False, with_score=True):
         answer = AnswerFactory(
             assignment=assignment,
             user=author,
             draft=draft
         )
-        AnswerScoreFactory(
-            assignment=assignment,
-            answer=answer
-        )
-        for criterion in assignment.criteria:
-            AnswerCriterionScoreFactory(
+        if with_score:
+            AnswerScoreFactory(
                 assignment=assignment,
-                answer=answer,
-                criterion=criterion
+                answer=answer
             )
+            for criterion in assignment.criteria:
+                AnswerCriterionScoreFactory(
+                    assignment=assignment,
+                    answer=answer,
+                    criterion=criterion
+                )
         db.session.commit()
         return answer
 
@@ -589,7 +591,7 @@ class TestFixture:
 
         return self
 
-    def add_answers(self, num_answers, with_comments=False):
+    def add_answers(self, num_answers, with_scores=True, with_comments=False):
         if num_answers == '#':
             num_answers = len(self.students) * len(self.assignments)
         if len(self.students) * len(self.assignments) < num_answers:
@@ -626,8 +628,8 @@ class TestFixture:
                     assignment=assignment,
                     user=student
                 )
-                # half of the answers have scores
-                if i < num_answers/2:
+                # half of the answers have scores if with_scores is enabled
+                if with_scores and i < num_answers/2:
 
                     AnswerScoreFactory(
                         assignment=assignment,

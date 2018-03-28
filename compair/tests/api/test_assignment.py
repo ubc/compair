@@ -596,9 +596,9 @@ class AssignmentEditComparedAPITests(ComPAIRAPITestCase):
         # test edit compared assignment
         with self.login(self.data.get_authorized_instructor().username):
             # test cannot change pairing_algorithm
-            chaged_pairing = expected.copy()
-            chaged_pairing['pairing_algorithm'] = PairingAlgorithm.adaptive_min_delta.value
-            rv = self.client.post(url, data=json.dumps(chaged_pairing), content_type='application/json')
+            changed_pairing = expected.copy()
+            changed_pairing['pairing_algorithm'] = PairingAlgorithm.random.value
+            rv = self.client.post(url, data=json.dumps(changed_pairing), content_type='application/json')
             self.assert403(rv)
             self.assertEqual(rv.json['title'], "Assignment Not Saved")
             self.assertEqual(rv.json['message'],

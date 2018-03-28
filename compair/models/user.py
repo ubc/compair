@@ -87,7 +87,7 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         foreign_keys='LTIUser.compair_user_id',
         backref="compair_user", lazy='dynamic')
 
-    # hyprid and other functions
+    # hybrid and other functions
 
     def _get_password(self):
         return self._password

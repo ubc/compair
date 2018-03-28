@@ -10,7 +10,7 @@
  - output file rows are structured "id, score, rounds, wins, normalized score"
 
 """
-import csv
+import unicodecsv as csv
 import os
 
 from compair.algorithms import ComparisonPair, ScoredObject, ComparisonWinner

@@ -31,7 +31,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # lti
     lti_contexts = db.relationship("LTIContext", backref="compair_course", lazy='dynamic')
 
-    # hyprid and other functions
+    # hybrid and other functions
     @hybrid_property
     def lti_linked(self):
         return self.lti_context_count > 0

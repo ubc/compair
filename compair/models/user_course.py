@@ -27,7 +27,7 @@ class UserCourse(DefaultTableMixin, WriteTrackingMixin):
     user = db.relationship("User", foreign_keys=[user_id], back_populates="user_courses")
     course = db.relationship("Course", back_populates="user_courses")
 
-    # hyprid and other functions
+    # hybrid and other functions
     user_uuid = association_proxy('user', 'uuid')
     course_uuid = association_proxy('course', 'uuid')
 

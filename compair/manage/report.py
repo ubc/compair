@@ -1,7 +1,7 @@
 """
     Report Generator
 """
-import csv
+import unicodecsv as csv
 import elo
 from compair.algorithms import ScoredObject
 from compair.algorithms.score import calculate_score_1vs1
@@ -320,8 +320,5 @@ def write_csv(filename, headers, data):
         for d in data:
             output = []
             for o in d:
-                if isinstance(o, numbers.Integral) and o > 100000:
-                    output.append(o - 100000)
-                else:
-                    output.append(o)
+                output.append(o)
             report_writer.writerow(output)

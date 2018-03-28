@@ -30,7 +30,7 @@ class ComparisonCriterion(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     # comparison via Comparison Model
     # criterion via Criterion Model
 
-    # hyprid and other functions
+    # hybrid and other functions
     criterion_uuid = association_proxy('criterion', 'uuid')
     comparison_uuid = association_proxy('comparison', 'uuid')
 

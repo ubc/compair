@@ -28,7 +28,7 @@ class CourseGrade(DefaultTableMixin, WriteTrackingMixin):
     # course via Course Model
 
 
-    # hyprid and other functions
+    # hybrid and other functions
     @classmethod
     def get_course_grades(cls, course):
         return CourseGrade.query \

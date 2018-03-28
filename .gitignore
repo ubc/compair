@@ -45,6 +45,8 @@ tmpUpload/*
 .idea
 .ropeproject/
 *.db
+*.db-journal
+*.csv
 config.py
 
 # compiled and generated files

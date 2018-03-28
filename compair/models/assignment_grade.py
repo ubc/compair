@@ -28,7 +28,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
     # assignment via Course Model
 
 
-    # hyprid and other functions
+    # hybrid and other functions
     @classmethod
     def get_assignment_grades(cls, assignment):
         return AssignmentGrade.query \
