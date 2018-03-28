@@ -15,8 +15,7 @@ before_cache:
 
 python:
   - "2.7"
-  - "3.3"
-  - "3.4"
+  - "3.6"
 
 env:
   global:
@@ -35,15 +34,15 @@ env:
     - DB=mysql DATABASE_URI="mysql+pymysql://root@localhost/compair"
 matrix:
   include:
-    - python: "3.4"
+    - python: "3.6"
       env: INTEGRATION_TEST=true TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=52 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
       addons:
         sauce_connect: true
-    - python: "3.4"
+    - python: "3.6"
       env: INTEGRATION_TEST=true TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=44 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
       addons:
         sauce_connect: true
-    - python: "3.4"
+    - python: "3.6"
       env: DOCKER=true
   fast_finish: true
   allow_failures:
