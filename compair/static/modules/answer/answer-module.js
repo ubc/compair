@@ -317,10 +317,17 @@ module.controller(
 
         $scope.editorOptions = EditorOptions.basic;
 
+        $scope.uploader = answerAttachService.getUploader();
+        $scope.resetFileUploader = answerAttachService.reset;
+        $scope.canSupportPreview = answerAttachService.canSupportPreview;
+
         if ($scope.method == 'create') {
             // if answer is new, pre-populate the file upload area if needed
             if ($scope.answer.file) {
                 $scope.answer.uploadedFile = true;
+                if (answerAttachService.canSupportPreview($scope.answer.file)) {
+                    answerAttachService.reuploadFile($scope.answer.file, $scope.uploader);
+                }
             }
         } else if($scope.method == 'edit') {
             // refresh the answer if already exists
@@ -337,11 +344,6 @@ module.controller(
                 }
             );
         }
-
-        $scope.uploader = answerAttachService.getUploader();
-        $scope.resetFileUploader = answerAttachService.reset;
-
-        $scope.canSupportPreview = answerAttachService.canSupportPreview;
 
         $scope.deleteFile = function(file) {
             $scope.answer.file = null;
