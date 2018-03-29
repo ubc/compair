@@ -221,13 +221,13 @@ class LTIOutcome(object):
         """
 
         if not lti_consumer.lis_outcome_service_url:
-            current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " ... no lis_outcome_service_url")
+            current_app.logger.error("Failed grade update for lis_result_sourcedid: {} ... no lis_outcome_service_url".format(lis_result_sourcedid))
             return False
         elif not lis_result_sourcedid:
             current_app.logger.error("Failed grade update ... no lis_result_sourcedid")
             return False
         elif grade < 0.0 or grade > 1.0:
-            current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " grade not in [0.0, 1.0]: "+str(grade))
+            current_app.logger.error("Failed grade update for lis_result_sourcedid: {} grade not in [0.0, 1.0]: {}".format(lis_result_sourcedid, grade))
             return False
 
         # build outcome request
@@ -240,8 +240,8 @@ class LTIOutcome(object):
         request.post_replace_result(grade)
 
         if request.was_outcome_post_successful():
-            current_app.logger.debug("Successfully grade update for lis_result_sourcedid: " + lis_result_sourcedid + " with grade: "+str(grade))
+            current_app.logger.debug("Successfully grade update for lis_result_sourcedid: {} with grade: {}".format(lis_result_sourcedid, grade))
         else:
-            current_app.logger.error("Failed grade update for lis_result_sourcedid: " + lis_result_sourcedid + " with grade: "+str(grade))
+            current_app.logger.error("Failed grade update for lis_result_sourcedid: {} with grade: {}".format(lis_result_sourcedid, grade))
 
         return request.was_outcome_post_successful()
