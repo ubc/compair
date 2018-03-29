@@ -54,10 +54,6 @@ class LTIAuthAPI(Resource):
         if tool_provider.user_id == None:
             return _return_validation_error(tool_provider, "ComPAIR requires the LTI tool consumer to provide a user's user_id.")
 
-        if (tool_provider.lis_person_name_given == None or tool_provider.lis_person_name_family == None) \
-                and tool_provider.lis_person_name_full == None:
-            return _return_validation_error(tool_provider, "ComPAIR requires the LTI tool consumer to provide a user's given and family name.")
-
         if tool_provider.lti_version not in ["LTI-1p0"]:
             return _return_validation_error(tool_provider, "ComPAIR requires the LTI tool consumer to use the LTI 1.0 or 1.1 specification.")
 

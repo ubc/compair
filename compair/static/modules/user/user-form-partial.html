@@ -20,15 +20,15 @@
                 ng-disabled="loggedInUserIsStudent && !UserSettings.allow_student_change_display_name" />
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="userForm.firstName">
-            <label for="firstName" class="required-star">First Name </label>
+            <label for="firstName">First Name </label>
             <input class="form-control" id="firstName" type="text"
-                name="firstName" ng-model="user.firstname" required
+                name="firstName" ng-model="user.firstname"
                 ng-disabled="loggedInUserIsStudent && !UserSettings.allow_student_change_name" />
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="userForm.lastName">
-            <label for="lastName" class="required-star">Last Name </label>
+            <label for="lastName">Last Name </label>
             <input class="form-control" id="lastName" type="text"
-                name="lastName" ng-model="user.lastname" required
+                name="lastName" ng-model="user.lastname"
                 ng-disabled="loggedInUserIsStudent && !UserSettings.allow_student_change_name" />
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="userForm.student_number" ng-if="user.system_role == SystemRole.student">
