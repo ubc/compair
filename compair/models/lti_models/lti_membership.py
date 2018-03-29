@@ -141,6 +141,8 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             lti_user.lis_person_name_given = member.get('person_name_given')
             lti_user.lis_person_name_family = member.get('person_name_family')
             lti_user.lis_person_name_full = member.get('lis_person_name_full')
+            lti_user.fix_name()
+
             lti_user.lis_person_contact_email_primary = member.get('person_contact_email_primary')
 
             if member.get('student_number'):
@@ -331,14 +333,17 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             request = requests.Request('GET', memberships_url, headers=headers).prepare()
             # Note: need to use LTIMemerbshipServiceOauthClient since normal client will
             #       not include oauth_body_hash if there is not content type or the body is None
-            # sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
-            #     signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC,
-            #     client_class=LTIMemerbshipServiceOauthClient)
             sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
-                signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC)
+                signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC,
+                client_class=LTIMemerbshipServiceOauthClient)
+            # sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
+            #     signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC)
             signed_request = sign(request)
             headers = signed_request.headers
             data = LTIMembership._get_membership_request(memberships_url, headers)
+
+            if data == None:
+                break
 
             membership = data['pageOf']['membershipSubject']['membership']
 
@@ -403,32 +408,29 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
         # get lis_result_sourcedid for all resource links known to the system
         for lti_resource_link in lti_resource_links:
+            memberships_url = lti_context.custom_context_memberships_url
+            # add role t0 membership url query string
+            memberships_url += "?" if memberships_url.find("?") == -1 else "&"
+            memberships_url += "role=Learner"
             # add rlid to membership url query string
-            parts = urlparse.urlsplit(lti_context.custom_context_memberships_url)
-            query = urlparse.parse_qs(parts.query)
-            query['rlid'] = lti_resource_link.resource_link_id
-
-            memberships_url = urlparse.urlunsplit((
-                parts.scheme,
-                parts.netloc,
-                parts.path,
-                urlencode(query),
-                parts.fragment
-            ))
+            memberships_url += "&rlid={}".format(lti_resource_link.resource_link_id)
 
             while True:
                 headers = { 'Accept': 'application/vnd.ims.lis.v2.membershipcontainer+json' }
                 request = requests.Request('GET', memberships_url, headers=headers).prepare()
                 # Note: need to use LTIMemerbshipServiceOauthClient since normal client will
                 #       not include oauth_body_hash if there is not content type or the body is None
-                # sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
-                #     signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC,
-                #     client_class=LTIMemerbshipServiceOauthClient)
                 sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
-                    signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC)
+                    signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC,
+                    client_class=LTIMemerbshipServiceOauthClient)
+                # sign = OAuth1(lti_consumer.oauth_consumer_key, lti_consumer.oauth_consumer_secret,
+                #     signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC)
                 signed_request = sign(request)
                 headers = signed_request.headers
                 data = LTIMembership._get_membership_request(memberships_url, headers)
+
+                if data == None:
+                    break
 
                 membership = data['pageOf']['membershipSubject']['membership']
 
@@ -472,7 +474,10 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     @classmethod
     def _get_membership_request(cls, memberships_url, headers=None):
         verify = current_app.config.get('ENFORCE_SSL', True)
-        return requests.get(memberships_url, headers=headers, verify=verify).json()
+        rv = requests.get(memberships_url, headers=headers, verify=verify)
+        if rv.content:
+            return rv.json()
+        return None
 
     @classmethod
     def __declare_last__(cls):
