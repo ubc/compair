@@ -22,6 +22,7 @@ def generate_index():
         'index-dev.html',
         attachment_extensions=list(current_app.config['ATTACHMENT_ALLOWED_EXTENSIONS']),
         attachment_upload_limit=current_app.config['ATTACHMENT_UPLOAD_LIMIT'],
+        can_preview_extensions=list(current_app.config['CAN_PREVIEW_EXTENSIONS']),
         app_login_enabled=True,
         cas_login_enabled=True,
         saml_login_enabled=True,

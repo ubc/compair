@@ -1206,10 +1206,12 @@ module.controller("AssignmentWriteController",
              "CriterionResource", "required_rounds", "Toaster", "attachService", "UploadValidator",
              "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
              "AnswerResource", "xAPIStatementHelper", "resolvedData", "moment",
+             "embeddableRichContent", "$http", "answerAttachService",
     function($scope, $q, $location, $routeParams, $route, AssignmentResource, $uibModal,
              CriterionResource, required_rounds, Toaster, attachService, UploadValidator,
              EditorOptions, PairingAlgorithm, ComparisonExampleResource,
-             AnswerResource, xAPIStatementHelper, resolvedData, moment)
+             AnswerResource, xAPIStatementHelper, resolvedData, moment,
+             embeddableRichContent, $http, answerAttachService)
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId || undefined;
@@ -1236,6 +1238,27 @@ module.controller("AssignmentWriteController",
         $scope.uploader = attachService.getUploader();
         $scope.resetFileUploader = attachService.reset;
         $scope.recommended_comparisons = Math.floor(required_rounds / 2);
+
+        $scope.canSupportPreview = attachService.canSupportPreview;
+
+        // download the file and inject it to uploader
+        $scope.reuploadAssignmentFile = function(file) {
+            var content = embeddableRichContent.generateAttachmentContent(file);
+            var url = content.url? content.url : '';
+            if (url && $scope.canSupportPreview(file)) {
+                $http.get(url, { responseType: "blob" }).success(function(image) {
+                    // IE / Edge can't create new File objects. need alternate approach
+                    // var imageFile = new File([image], file.alias, { type: file.mimetype });
+                    // $scope.uploader.addToQueue(imageFile);
+                    image.name = file.alias;
+                    $scope.uploader.addToQueue(image);
+                    // uploader is using a FileLikeObject for the _file. replace it with our blob.
+                    $scope.uploader.queue[$scope.uploader.queue.length-1]._file = image;
+                });
+            } else {
+                Toaster.error("Cannot adjust attachment", "Please remove the attachment and upload again.");
+            }
+        };
 
         $scope.rankLimitOptions = [
             {value: 10, label: 'Answers ranked 10th and higher'},
@@ -1626,6 +1649,9 @@ module.controller("AssignmentWriteController",
                     }
                 });
             }
+
+            // see if need to re-upload the attachment
+            promises.push.apply(promises, answerAttachService.reUploadPromises($scope.uploader));
 
             $q.all(promises).then(function() {
                 // if option is not checked; make sure no compare dates are saved.

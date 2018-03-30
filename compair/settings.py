@@ -33,6 +33,7 @@ ATTACHMENT_UPLOAD_LIMIT = 262144000 #1024 * 1024 * 250 -> max 250MB
 # file upload options
 ATTACHMENT_ALLOWED_EXTENSIONS = {'pdf','mp3','mp4','webm','jpg','jpeg','png'}
 UPLOAD_ALLOWED_EXTENSIONS = {'csv'}
+CAN_PREVIEW_EXTENSIONS = {'jpg','jpeg','png'}
 
 PASSLIB_CONTEXT = 'default'
 

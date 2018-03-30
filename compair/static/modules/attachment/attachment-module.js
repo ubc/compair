@@ -14,12 +14,13 @@ module.constant('UploadSettings', {
     attachmentExtensions: [],
     attachmentUploadLimit: 26214400, //1024 * 1024 * 25 -> max 25 MB
     kalturaExtensions: null, //only set when kaltura is enabled
+    canPreviewExtensions: [],
 });
 
 /***** Providers *****/
 module.factory('UploadValidator',
-    ['UploadSettings',
-    function(UploadSettings)
+    ['UploadSettings', '$window',
+    function(UploadSettings, $window)
     {
         return {
             kalturaEnabled: function() {
@@ -72,7 +73,21 @@ module.factory('UploadValidator',
             },
             getImportExtensionsForDisplay: function() {
                 return this.displayExtensions(UploadSettings.importExtensions);
-            }
+            },
+
+            isPreviewExtension: function(extension) {
+                return this.isAttachmentExtension(extension) &&
+                    ('|'+UploadSettings.canPreviewExtensions.join('|')+'|').indexOf('|'+extension+'|') !== -1;
+            },
+            canSupportPreview: function(item) {
+                // check browswer capability
+                var supportPreview = !!($window.FileReader && $window.CanvasRenderingContext2D);
+                var filename =
+                    item && item._file && item._file.name? item._file.name :     // FileItem
+                    (item && item.name ? item.name : '');                        // answer.file
+                var extension = filename.slice(filename.lastIndexOf('.') + 1).toLowerCase();
+                return supportPreview && this.isPreviewExtension(extension);
+            },
         }
     }
 ]);
@@ -223,7 +238,7 @@ module.service('attachService',
                 var limit_size = upload_limit / 1048576; // convert to MB
                 Toaster.error("File Not Uploaded", "The file is larger than the "+limit_size.toFixed(0)+"MB maximum. Please upload a smaller file instead.");
             } else if (response.title && response.message) {
-                Toast.error(response.title, response.message);
+                Toaster.error(response.title, response.message);
             } else {
                 // e.g. network disconnected
                 Toaster.error("File Not Uploaded", "Please try again.");
@@ -240,7 +255,10 @@ module.service('attachService',
                     uploader.uploadItem(fileItem);
                 });
             } else {
-                uploader.uploadItem(fileItem);
+                // if not showing preview, begin upload immediately
+                if (!UploadValidator.canSupportPreview(fileItem)) {
+                    uploader.uploadItem(fileItem);
+                }
             }
         };
 
@@ -283,16 +301,23 @@ module.service('attachService',
         return file;
     };
 
+    var canSupportPreview = function(item) {
+        return UploadValidator.canSupportPreview(item);
+    }
+
     return {
         getUploader: getUploader,
         getFile: getFile,
-        reset: reset
+        reset: reset,
+        canSupportPreview: canSupportPreview,
     };
 }]);
 
 module.service('answerAttachService',
         ["FileUploader", "Toaster", "UploadValidator", "KalturaResource",
-        function(FileUploader, Toaster, UploadValidator, KalturaResource) {
+        "embeddableRichContent", "$http", "$q",
+        function(FileUploader, Toaster, UploadValidator, KalturaResource,
+            embeddableRichContent, $http, $q) {
     var file = null;
 
     var getUploader = function(initParams) {
@@ -356,7 +381,10 @@ module.service('answerAttachService',
                     uploader.uploadItem(fileItem);
                 });
             } else {
-                uploader.uploadItem(fileItem);
+                // if not showing preview, begin upload immediately
+                if (!UploadValidator.canSupportPreview(fileItem)) {
+                    uploader.uploadItem(fileItem);
+                }
             }
         };
 
@@ -402,13 +430,59 @@ module.service('answerAttachService',
         return file;
     };
 
+    var canSupportPreview = function(item) {
+        return UploadValidator.canSupportPreview(item);
+    };
+
+    // download the file and inject it to uploader
+    var reuploadFile = function(file, uploader) {
+        var content = embeddableRichContent.generateAttachmentContent(file);
+        var url = content.url? content.url : '';
+        if (url && canSupportPreview(file)) {
+            $http.get(url, { responseType: "blob" }).success(function(image) {
+                // IE / Edge can't create new File objects. need alternate approach
+                // var imageFile = new File([image], file.alias, { type: file.mimetype });
+                // $scope.uploader.addToQueue(imageFile);
+                image.name = file.alias;
+                uploader.addToQueue(image);
+                // uploader is using a FileLikeObject for the _file. replace it with our blob.
+                uploader.queue[uploader.queue.length-1]._file = image;
+            });
+        } else {
+            Toaster.error("Cannot adjust attachment", "Please remove the attachment and upload again.");
+        }
+    };
+
+    // returns an array of Promises for uploading modified items in the uploader
+    var reUploadPromises = function(uploader) {
+        return uploader.queue.map(function(item) {
+            var defer = $q.defer();
+            if (canSupportPreview(item) && item._file && item._file.rotateDirty) {
+                item.onComplete = function(response, status, headers) {
+                    if (status === 200) {
+                        defer.resolve();
+                    } else {
+                        defer.reject();
+                    }
+                }
+                item.upload();
+            } else {
+                defer.resolve();    // no need to reupload. resolve immediately
+            }
+            return defer.promise;
+        });
+    };
+
     return {
         getUploader: getUploader,
         getFile: getFile,
         reset: reset,
         setUploadedCallback: function(callback) {
             uploadedCallback = callback;
-        }
+        },
+        canSupportPreview: canSupportPreview,
+        reuploadFile: reuploadFile,
+        reUploadPromises: reUploadPromises
     };
 }]);
 

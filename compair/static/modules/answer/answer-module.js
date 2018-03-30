@@ -103,10 +103,10 @@ module.controller(
     "AnswerWriteModalController",
     ["$scope", "$location", "AnswerResource", "ClassListResource", "$route", "TimerResource",
         "AssignmentResource", "Toaster", "$timeout", "UploadValidator", "CourseRole", "$uibModalInstance",
-        "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper",
+        "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper", "$q",
     function ($scope, $location, AnswerResource, ClassListResource, $route, TimerResource,
         AssignmentResource, Toaster, $timeout, UploadValidator, CourseRole, $uibModalInstance,
-        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper)
+        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, $q)
     {
         if ($scope.answer.file) {
             $scope.answer.uploadedFile = true;
@@ -203,14 +203,20 @@ module.controller(
                 file, $scope.answer, $scope.tracking.getRegistration()
             );
         });
+        $scope.canSupportPreview = answerAttachService.canSupportPreview;
+        if ($scope.answer.file && $scope.canSupportPreview($scope.answer.file)) {
+            answerAttachService.reuploadFile($scope.answer.file, $scope.uploader);
+        }
 
         $scope.deleteFile = function(file) {
             $scope.answer.file = null;
             $scope.answer.uploadedFile = false;
 
-            xAPIStatementHelper.deleted_answer_attachment(
-                file, $scope.answer, $scope.tracking.getRegistration()
-            );
+            if (file) {
+                xAPIStatementHelper.deleted_answer_attachment(
+                    file, $scope.answer, $scope.tracking.getRegistration()
+                );
+            }
         };
 
         $scope.modalInstance.result.then(function (answerUpdated) {
@@ -247,45 +253,47 @@ module.controller(
             $scope.saveDraft = saveDraft;
             var wasDraft = $scope.answer.draft;
 
-            var file = answerAttachService.getFile();
-            if (file) {
-                $scope.answer.file = file;
-                $scope.answer.file_id = file.id
-            } else if ($scope.answer.file) {
-                $scope.answer.file_id = $scope.answer.file.id;
-            } else {
-                $scope.answer.file_id = null;
-            }
+            $q.all(answerAttachService.reUploadPromises($scope.uploader)).then(function() {
+                var file = answerAttachService.getFile();
+                if (file) {
+                    $scope.answer.file = file;
+                    $scope.answer.file_id = file.id;
+                } else if ($scope.answer.file) {
+                    $scope.answer.file_id = $scope.answer.file.id;
+                } else {
+                    $scope.answer.file_id = null;
+                }
 
-            // copy answer so we don't lose draft state on failed submit
-            var answer = angular.copy($scope.answer);
-            answer.draft = !!saveDraft;
-            answer.tracking = $scope.tracking.toParams();
+                // copy answer so we don't lose draft state on failed submit
+                var answer = angular.copy($scope.answer);
+                answer.draft = !!saveDraft;
+                answer.tracking = $scope.tracking.toParams();
 
-            AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, answer).$promise.then(
-                function (ret) {
-                    $scope.answer = ret;
-                    $scope.preventExit = false; // user has saved answer, does not need warning when leaving page
-                    $scope.refreshOnExit = ret.draft; // if draft was saved, we need to refresh to show updated data when modal is closed
+                AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, answer).$promise.then(
+                    function (ret) {
+                        $scope.answer = ret;
+                        $scope.preventExit = false; // user has saved answer, does not need warning when leaving page
+                        $scope.refreshOnExit = ret.draft; // if draft was saved, we need to refresh to show updated data when modal is closed
 
-                    if (ret.draft) {
-                        Toaster.success("Answer Draft Saved", "Remember to submit your answer before the deadline.");
-                    } else {
-                        if (wasDraft) {
-                            Toaster.success("Answer Submitted");
-                        }
-                        else {
-                            Toaster.success("Answer Updated");
-                        }
-                        $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId);
-                        $route.reload();
+                        if (ret.draft) {
+                            Toaster.success("Answer Draft Saved", "Remember to submit your answer before the deadline.");
+                        } else {
+                            if (wasDraft) {
+                                Toaster.success("Answer Submitted");
+                            }
+                            else {
+                                Toaster.success("Answer Updated");
+                            }
+                            $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId);
+                            $route.reload();
 
-                        if (!$scope.canManageAssignment) {
-                            $location.search({'tab':'your_feedback', 'highlightAnswer':'1'});
+                            if (!$scope.canManageAssignment) {
+                                $location.search({'tab':'your_feedback', 'highlightAnswer':'1'});
+                            }
                         }
                     }
-                }
-            ).finally(function() {
+                );
+            }).finally(function() {
                 $scope.submitted = false;
             });
         };
@@ -295,9 +303,9 @@ module.controller(
 module.controller(
     "ComparisonExampleModalController",
     ["$scope", "AnswerResource", "Toaster", "UploadValidator",
-        "answerAttachService", "EditorOptions", "$uibModalInstance",
+        "answerAttachService", "EditorOptions", "$uibModalInstance", "$q",
     function ($scope, AnswerResource, Toaster, UploadValidator,
-        answerAttachService, EditorOptions, $uibModalInstance)
+        answerAttachService, EditorOptions, $uibModalInstance, $q)
     {
         //$scope.courseId
         //$scope.assignmentId
@@ -309,10 +317,17 @@ module.controller(
 
         $scope.editorOptions = EditorOptions.basic;
 
+        $scope.uploader = answerAttachService.getUploader();
+        $scope.resetFileUploader = answerAttachService.reset;
+        $scope.canSupportPreview = answerAttachService.canSupportPreview;
+
         if ($scope.method == 'create') {
             // if answer is new, pre-populate the file upload area if needed
             if ($scope.answer.file) {
                 $scope.answer.uploadedFile = true;
+                if (answerAttachService.canSupportPreview($scope.answer.file)) {
+                    answerAttachService.reuploadFile($scope.answer.file, $scope.uploader);
+                }
             }
         } else if($scope.method == 'edit') {
             // refresh the answer if already exists
@@ -322,13 +337,13 @@ module.controller(
                     $scope.answer = ret;
                     if (ret.file) {
                         $scope.answer.uploadedFile = true;
+                        if (answerAttachService.canSupportPreview(ret.file)) {
+                            answerAttachService.reuploadFile(ret.file, $scope.uploader);
+                        }
                     }
                 }
             );
         }
-
-        $scope.uploader = answerAttachService.getUploader();
-        $scope.resetFileUploader = answerAttachService.reset;
 
         $scope.deleteFile = function(file) {
             $scope.answer.file = null;
@@ -339,31 +354,34 @@ module.controller(
             $scope.saveDraft = saveDraft;
             $scope.submitted = true;
 
-            var file = answerAttachService.getFile();
-            if (file) {
-                $scope.answer.file = file;
-                $scope.answer.file_id = file.id
-            } else if ($scope.answer.file) {
-                $scope.answer.file_id = $scope.answer.file.id;
-            } else {
-                $scope.answer.file_id = null;
-            }
+            $q.all(answerAttachService.reUploadPromises($scope.uploader)).then(function() {
 
-            if ($scope.method == 'create') {
-                // save the uploaded file info in case modal is reopened
-                $uibModalInstance.close($scope.answer);
-            } else {
-                // save the answer
-                AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
-                    function (ret) {
-                        $scope.answer = ret;
-                        Toaster.success("Practice Answer Saved");
-                        $uibModalInstance.close($scope.answer);
-                    }
-                ).finally(function() {
-                    $scope.submitted = false;
-                });
-            }
+                var file = answerAttachService.getFile();
+                if (file) {
+                    $scope.answer.file = file;
+                    $scope.answer.file_id = file.id
+                } else if ($scope.answer.file) {
+                    $scope.answer.file_id = $scope.answer.file.id;
+                } else {
+                    $scope.answer.file_id = null;
+                }
+
+                if ($scope.method == 'create') {
+                    // save the uploaded file info in case modal is reopened
+                    $uibModalInstance.close($scope.answer);
+                } else {
+                    // save the answer
+                    AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, $scope.answer).$promise.then(
+                        function (ret) {
+                            $scope.answer = ret;
+                            Toaster.success("Practice Answer Saved");
+                            $uibModalInstance.close($scope.answer);
+                        }
+                    );
+                }
+            }).finally(function() {
+                $scope.submitted = false;
+            });
         };
     }
 ]);
