@@ -413,31 +413,31 @@
 
                             <hr ng-hide="$first" />
 
-                        <!-- Student Reply Metadata Header -->
-                        <div class="each-header clearfix">
-                            <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" main-identifier="comment.user.displayname" secondary-identifier="comment.user.fullname"></compair-avatar>
-                            <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation"> gave private feedback <span class="glyphicon glyphicon-lock"></span></strong>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"> self-evaluated <span class="glyphicon glyphicon-lock"></span></strong>
-                            <strong ng-if="comment.comment_type == AnswerCommentType.public"> gave public feedback <span class="glyphicon glyphicon-eye-open"></span></strong>
-                            on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
-                            <div class="manager-actions pull-right"
-                                 ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.public))">
-                                <a href="" title="Delete this feedback" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="feedback">
-                                    <i class="fa fa-trash-o"></i>
-                                </a>
-                                <a href="" title="Edit this feedback" ng-click="editAnswerComment(answer, comment)">
-                                    Edit
-                                </a>
-                            </div>
+                            <!-- Student Reply Metadata Header -->
+                            <div class="each-header clearfix">
+                                <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" main-identifier="comment.user.displayname" secondary-identifier="comment.user.fullname"></compair-avatar>
+                                <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
+                                <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation"> gave private feedback <span class="glyphicon glyphicon-lock"></span></strong>
+                                <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"> self-evaluated <span class="glyphicon glyphicon-lock"></span></strong>
+                                <strong ng-if="comment.comment_type == AnswerCommentType.public"> gave public feedback <span class="glyphicon glyphicon-eye-open"></span></strong>
+                                on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                                <div class="manager-actions pull-right"
+                                     ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.public))">
+                                    <a href="" title="Delete this feedback" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="feedback">
+                                        <i class="fa fa-trash-o"></i>
+                                    </a>
+                                    <a href="" title="Edit this feedback" ng-click="editAnswerComment(answer, comment)">
+                                        Edit
+                                    </a>
+                                </div>
 
-                            <!-- Student Reply -->
-                            <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
+                                <!-- Student Reply -->
+                                <div class="content" mathjax hljs ng-bind-html="comment.content"></div>
 
-                        </div><!-- closes each-reply (student) -->
+                            </div><!-- closes each-reply (student) -->
 
-                    </div><!-- closes toggle div -->
-
+                        </div><!-- closes ng-repeat div -->
+                    </div><!-- closes showReplies" -->
                 </div>
             </div>
 
