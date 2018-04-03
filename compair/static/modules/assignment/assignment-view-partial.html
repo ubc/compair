@@ -206,9 +206,7 @@
                     </div>
 
                     <!-- Instructor Answer -->
-                    <div class="instructor-answer">
-                        <rich-content content="answer.content" attachment="answer.file"></rich-content>
-                    </div>
+                    <rich-content content="answer.content" attachment="answer.file"></rich-content>
 
                 </div><!-- closes each-answer (instructor) -->
 
@@ -272,7 +270,7 @@
                     </div>
 
                     <!-- Student Answer -->
-                    <div class="{{answer.id}}" get-height>
+                    <div class="{{answer.id}} comparable" get-height>
                         <rich-content content="answer.content" attachment="answer.file" ng-click="revealContent(answer)"></rich-content>
                     </div>
                     <!-- Student Answer Read More Button (not used for instructor answers) -->
