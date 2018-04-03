@@ -38,7 +38,7 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     score = db.relationship("AnswerScore", uselist=False, backref="answer")
     criteria_scores = db.relationship("AnswerCriterionScore", backref="answer")
 
-    # hyprid and other functions
+    # hybrid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
         import_module('compair.models.assignment').Assignment(course_id=course_id))
     course_uuid = association_proxy('assignment', 'course_uuid')

@@ -28,7 +28,7 @@ class LTIContext(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     lti_memberships = db.relationship("LTIMembership", backref="lti_context", lazy="dynamic")
     lti_resource_links = db.relationship("LTIResourceLink", backref="lti_context")
 
-    # hyprid and other functions
+    # hybrid and other functions
     oauth_consumer_key = association_proxy('lti_consumer', 'oauth_consumer_key')
     compair_course_uuid = association_proxy('compair_course', 'uuid')
 

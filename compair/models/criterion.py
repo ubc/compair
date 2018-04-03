@@ -33,7 +33,7 @@ class Criterion(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     comparison_criteria = db.relationship("ComparisonCriterion", backref="criterion", lazy='dynamic')
     answer_criteria_scores = db.relationship("AnswerCriterionScore", backref="criterion", lazy='dynamic')
 
-    # hyprid and other functions
+    # hybrid and other functions
     @hybrid_property
     def compared(self):
         return self.compare_count > 0

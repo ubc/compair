@@ -54,7 +54,7 @@ class AnswerCriterionScore(DefaultTableMixin, WriteTrackingMixin):
     # answer via Answer Model
     # criterion via Criterion Model
 
-    # hyprid and other functions
+    # hybrid and other functions
     criterion_uuid = association_proxy('criterion', 'uuid')
 
     def convert_to_scored_object(self):

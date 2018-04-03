@@ -1,6 +1,5 @@
 import os
 import uuid
-import csv
 import string
 import unicodecsv as csv
 

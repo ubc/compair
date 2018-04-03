@@ -281,10 +281,22 @@ myApp.factory('RouteResolves',
 myApp.config(
     ['$routeProvider', '$logProvider', '$httpProvider', '$locationProvider',
      "RouteResolvesProvider", "ResolveDeferredRouteDataProvider",
+     "localStorageServiceProvider", "chosenProvider",
     function ($routeProvider, $logProvider, $httpProvider, $locationProvider,
-              RouteResolvesProvider, ResolveDeferredRouteDataProvider) {
+              RouteResolvesProvider, ResolveDeferredRouteDataProvider,
+              localStorageServiceProvider, chosenProvider) {
 
     var debugMode = false;
+
+    localStorageServiceProvider.setStorageType('sessionStorage');
+    localStorageServiceProvider.setPrefix('compair');
+    localStorageServiceProvider.setStorageCookie(0); // fallback default settings
+
+    chosenProvider.setOption({
+        disable_search_threshold: 8,
+        search_contains: true,
+        enable_split_word_search: true
+    });
 
     if (!$httpProvider.defaults.headers.common) {
         $httpProvider.defaults.headers.common = {};
@@ -712,23 +724,6 @@ myApp.config(
 
     $logProvider.debugEnabled(debugMode);
 }]);
-
-myApp.config(
-    ['localStorageServiceProvider', 'chosenProvider',
-    function (localStorageServiceProvider, chosenProvider)
-    {
-        localStorageServiceProvider
-            .setPrefix('ComPAIR')
-            .setStorageType('sessionStorage') // options [localStorage, sessionStorage]
-            .setStorageCookie(0); // fallback default settings
-
-        chosenProvider.setOption({
-            disable_search_threshold: 8,
-            search_contains: true,
-            enable_split_word_search: true
-        });
-    }
-]);
 
 myApp.run(
     ['$rootScope',

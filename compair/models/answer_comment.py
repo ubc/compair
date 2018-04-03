@@ -28,7 +28,7 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixi
 
     #readonly
 
-    # hyprid and other functionsx
+    # hybrid and other functionsx
     course_id = association_proxy('answer', 'course_id', creator=lambda course_id:
         import_module('compair.models.answer').Answer(course_id=course_id))
     course_uuid = association_proxy('answer', 'course_uuid')

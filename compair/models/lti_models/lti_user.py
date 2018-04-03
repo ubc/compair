@@ -31,7 +31,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     lti_memberships = db.relationship("LTIMembership", backref="lti_user", lazy="dynamic")
     lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_user", lazy="dynamic")
 
-    # hyprid and other functions
+    # hybrid and other functions
     lti_consumer_uuid = association_proxy('lti_consumer', 'uuid')
     oauth_consumer_key = association_proxy('lti_consumer', 'oauth_consumer_key')
     compair_user_uuid = association_proxy('compair_user', 'uuid')
@@ -76,6 +76,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         lti_user.lis_person_name_given = tool_provider.lis_person_name_given
         lti_user.lis_person_name_family = tool_provider.lis_person_name_family
         lti_user.lis_person_name_full = tool_provider.lis_person_name_full
+        lti_user.fix_name()
         lti_user.lis_person_contact_email_primary = tool_provider.lis_person_contact_email_primary
 
         if lti_consumer.student_number_param and lti_consumer.student_number_param in tool_provider.launch_params:
@@ -121,6 +122,18 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
                 self.compair_user.system_role = self.system_role
 
             db.session.commit()
+
+    def fix_name(self):
+        if self.lis_person_name_full and (not self.lis_person_name_given or not self.lis_person_name_family):
+            full_name_parts = self.lis_person_name_full.split(" ")
+            if len(full_name_parts) >= 2:
+                # assume lis_person_name_given is all but last part
+                self.lis_person_name_given = " ".join(full_name_parts[:-1])
+                self.lis_person_name_family = full_name_parts[-1]
+            else:
+                # not sure what is first or last name, just assignment both to full name
+                self.lis_person_name_given = self.lis_person_name_full
+                self.lis_person_name_family = self.lis_person_name_full
 
     @classmethod
     def __declare_last__(cls):

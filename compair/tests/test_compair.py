@@ -6,6 +6,7 @@ import mock
 import uuid
 import sys
 import os
+import factory.fuzzy
 
 from flask_testing import TestCase
 from os.path import dirname
@@ -221,6 +222,15 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
             launch_params['custom_assignment'] = assignment_uuid
         if query_assignment_uuid:
             launch_url = launch_url+"?assignment="+query_assignment_uuid
+
+        # add basic required launch parameters
+        if not launch_params.get('lti_version'):
+            launch_params['lti_version'] = "LTI-1p0"
+        if not launch_params.get('lti_message_type'):
+            launch_params['lti_message_type'] = "basic-lti-launch-request"
+        if not launch_params.get('lis_person_name_given') and not launch_params.get('lis_person_name_family'):
+            launch_params['lis_person_name_given'] = factory.fuzzy.FuzzyText(length=8)
+            launch_params['lis_person_name_family'] = factory.fuzzy.FuzzyText(length=8)
 
         tool_consumer = ToolConsumer(
             lti_consumer.oauth_consumer_key,

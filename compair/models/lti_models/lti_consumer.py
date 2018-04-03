@@ -26,7 +26,7 @@ class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin)
     lti_resource_links = db.relationship("LTIResourceLink", backref="lti_consumer", lazy="dynamic")
     lti_users = db.relationship("LTIUser", backref="lti_consumer", lazy="dynamic")
 
-    # hyprid and other functions
+    # hybrid and other functions
     @classmethod
     def get_by_consumer_key(cls, consumer_key):
         return LTIConsumer.query \

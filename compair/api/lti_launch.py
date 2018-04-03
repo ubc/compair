@@ -18,6 +18,7 @@ from compair.tasks import update_lti_course_membership
 
 from compair.api.classlist import display_name_generator
 from lti.contrib.flask import FlaskToolProvider
+from lti.launch_params import InvalidLaunchParamError
 from oauthlib.oauth1 import RequestValidator
 
 lti_api = Blueprint("lti_api", __name__)
@@ -36,96 +37,106 @@ class LTIAuthAPI(Resource):
             abort(403, title="Log In Failed",
                 message="Please try an alternate way of logging in. The LTI login has been disabled by your system administrator.")
 
-        tool_provider = FlaskToolProvider.from_flask_request(request=request)
+        # TODO: Add new unit tests for different LTI launch fail conditions
+        # TODO: also add unit tests for full name * give+family name
+        try:
+            tool_provider = FlaskToolProvider.from_flask_request(request=request)
+        except InvalidLaunchParamError as e:
+            return "Invalid Request: {}".format(e.message), 400
+
         validator = ComPAIRRequestValidator()
-        ok = tool_provider.is_valid_request(validator)
+        if not tool_provider.is_valid_request(validator):
+            return _return_validation_error(tool_provider, "Invalid Request: There is something wrong with the LTI tool consumer's request.")
 
-        if ok:
-            lti_consumer = LTIConsumer.get_by_tool_provider(tool_provider)
-            # override user_id if set to override
-            if lti_consumer.user_id_override and lti_consumer.user_id_override in tool_provider.launch_params:
-                tool_provider.user_id = tool_provider.launch_params[lti_consumer.user_id_override]
+        if tool_provider.resource_link_id == None:
+            return _return_validation_error(tool_provider, "ComPAIR requires the LTI tool consumer to provide a resource link id.")
 
-            params = lti_launch_parser.parse_args()
-            # override custom_assignment if not set in launch body but is in querystring
-            if not tool_provider.custom_assignment and params.get('assignment'):
-                tool_provider.custom_assignment = params.get('assignment')
+        if tool_provider.user_id == None:
+            return _return_validation_error(tool_provider, "ComPAIR requires the LTI tool consumer to provide a user's user_id.")
 
-            # chec
-            if tool_provider.user_id != None:
-                # log current user out if needed
-                logout_user()
-                sess.clear()
+        if tool_provider.lti_version not in ["LTI-1p0"]:
+            return _return_validation_error(tool_provider, "ComPAIR requires the LTI tool consumer to use the LTI 1.0 or 1.1 specification.")
 
-                sess['LTI'] = True
+        if tool_provider.lti_message_type != "basic-lti-launch-request":
+            return _return_validation_error(tool_provider, "ComPAIR requires the LTI tool consumer to send a basic lti launch request.")
 
-                sess['lti_consumer'] = lti_consumer.id
+        lti_consumer = LTIConsumer.get_by_tool_provider(tool_provider)
+        # override user_id if set to override
+        if lti_consumer.user_id_override and lti_consumer.user_id_override in tool_provider.launch_params:
+            tool_provider.user_id = tool_provider.launch_params[lti_consumer.user_id_override]
 
-                lti_user = LTIUser.get_by_tool_provider(lti_consumer, tool_provider)
-                sess['lti_user'] = lti_user.id
+        params = lti_launch_parser.parse_args()
+        # override custom_assignment if not set in launch body but is in querystring
+        if not tool_provider.custom_assignment and params.get('assignment'):
+            tool_provider.custom_assignment = params.get('assignment')
 
-                lti_context = LTIContext.get_by_tool_provider(lti_consumer, tool_provider)
-                if lti_context:
-                    sess['lti_context'] = lti_context.id
+        # log current user out if needed
+        logout_user()
+        sess.clear()
 
-                lti_resource_link = LTIResourceLink.get_by_tool_provider(lti_consumer, tool_provider, lti_context)
-                sess['lti_resource_link'] = lti_resource_link.id
+        sess['LTI'] = True
 
-                lti_user_resource_link = LTIUserResourceLink.get_by_tool_provider(lti_resource_link, lti_user, tool_provider)
-                sess['lti_user_resource_link'] = lti_user_resource_link.id
+        sess['lti_consumer'] = lti_consumer.id
 
-                setup_required = False
-                angular_route = None
+        lti_user = LTIUser.get_by_tool_provider(lti_consumer, tool_provider)
+        sess['lti_user'] = lti_user.id
 
-                # if user linked
-                if lti_user.is_linked_to_user():
-                    authenticate(lti_user.compair_user, login_method='LTI')
+        lti_context = LTIContext.get_by_tool_provider(lti_consumer, tool_provider)
+        if lti_context:
+            sess['lti_context'] = lti_context.id
 
-                    # upgrade user system role if needed
-                    lti_user.upgrade_system_role()
-                    lti_user.update_user_profile()
+        lti_resource_link = LTIResourceLink.get_by_tool_provider(lti_consumer, tool_provider, lti_context)
+        sess['lti_resource_link'] = lti_resource_link.id
 
-                    # create/update enrollment if context exists
-                    if lti_context and lti_context.is_linked_to_course():
-                        lti_context.update_enrolment(lti_user.compair_user_id, lti_user_resource_link.course_role)
-                else:
-                    # need to create user link
-                    sess['oauth_create_user_link'] = True
-                    setup_required = True
+        lti_user_resource_link = LTIUserResourceLink.get_by_tool_provider(lti_resource_link, lti_user, tool_provider)
+        sess['lti_user_resource_link'] = lti_user_resource_link.id
 
-                if not lti_context:
-                    # no context, redriect to home page
-                    angular_route = "/"
-                elif lti_context.is_linked_to_course():
-                    # redirect to course page or assignment page if available
-                    angular_route = "/course/"+lti_context.compair_course_uuid
-                    if lti_resource_link.is_linked_to_assignment():
-                        angular_route += "/assignment/"+lti_resource_link.compair_assignment_uuid
-                else:
-                    # instructors can select course, students will recieve a warning message
-                    setup_required = True
+        setup_required = False
+        angular_route = None
 
-                if setup_required:
-                    # if account/course setup required, redirect to lti controller
-                    angular_route = "/lti"
-                elif angular_route == None:
-                    # set angular route to home page by default
-                    angular_route = "/"
+        # if user linked
+        if lti_user.is_linked_to_user():
+            authenticate(lti_user.compair_user, login_method='LTI')
 
-                return current_app.make_response(redirect("/app/#"+angular_route))
+            # upgrade user system role if needed
+            lti_user.upgrade_system_role()
+            lti_user.update_user_profile()
 
-        display_message = "Invalid Request"
-        if ok and tool_provider.user_id == None:
-            display_message = "ComPAIR requires the LTI tool consumer to provide a user_id."
-
-        tool_provider.lti_errormsg = display_message
-        return_url = tool_provider.build_return_url()
-        if return_url:
-            return redirect(return_url)
+            # create/update enrollment if context exists
+            if lti_context and lti_context.is_linked_to_course():
+                lti_context.update_enrolment(lti_user.compair_user_id, lti_user_resource_link.course_role)
         else:
-            return display_message, 400
+            # need to create user link
+            sess['oauth_create_user_link'] = True
+            setup_required = True
+
+        if not lti_context:
+            # no context, redriect to home page
+            angular_route = "/"
+        elif lti_context.is_linked_to_course():
+            # redirect to course page or assignment page if available
+            angular_route = "/course/{}".format(lti_context.compair_course_uuid)
+            if lti_resource_link.is_linked_to_assignment():
+                angular_route += "/assignment/{}".format(lti_resource_link.compair_assignment_uuid)
+        else:
+            # instructors can select course, students will recieve a warning message
+            setup_required = True
+
+        if setup_required:
+            # if account/course setup required, redirect to lti controller
+            angular_route = "/lti"
+        elif angular_route == None:
+            # set angular route to home page by default
+            angular_route = "/"
+
+        return current_app.make_response(redirect("/app/#{}".format(angular_route)))
 
 api.add_resource(LTIAuthAPI, '/auth')
+
+def _return_validation_error(tool_provider, display_message):
+    tool_provider.lti_errormsg = display_message
+    return_url = tool_provider.build_return_url()
+    return redirect(return_url) if return_url else (display_message, 400)
 
 # /status
 class LTIStatusAPI(Resource):

@@ -20,7 +20,7 @@ class AdaptiveMinDeltaPairGenerator(PairGenerator):
         Returns a pair to be compared by the current user.
         If no valid pair can be found, an error is raised
         param scored_objects: list of all scored objects that can be compared
-        param comparison_pairs: list of all comparisons compelted by the current user.
+        param comparison_pairs: list of all comparisons completed by the current user.
         param criterion_scores: dictionary of scored_object key to a dictionary of criterion key to score
         param criterion_weights: dictionary of criterion key to weight
         """

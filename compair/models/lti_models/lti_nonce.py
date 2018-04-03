@@ -20,7 +20,7 @@ class LTINonce(DefaultTableMixin, WriteTrackingMixin):
     # relationships
     # lti_consumer via LTIConsumer Model
 
-    # hyprid and other functions
+    # hybrid and other functions
     @classmethod
     def is_valid_nonce(cls, oauth_consumer_key, oauth_nonce, oauth_timestamp):
         from . import LTIConsumer

@@ -34,9 +34,9 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     _password = db.Column(db.String(255), unique=False, nullable=True)
     system_role = db.Column(EnumType(SystemRole, name="system_role"), nullable=False, index=True)
     displayname = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(254))  # email addresses are max 254 characters
-    firstname = db.Column(db.String(255))
-    lastname = db.Column(db.String(255))
+    email = db.Column(db.String(254), nullable=True)  # email addresses are max 254 characters
+    firstname = db.Column(db.String(255), nullable=True)
+    lastname = db.Column(db.String(255), nullable=True)
     student_number = db.Column(db.String(50), unique=True, nullable=True)
     last_online = db.Column(db.DateTime)
     email_notification_method = db.Column(EnumType(EmailNotificationMethod, name="email_notification_method"),
@@ -84,7 +84,7 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         foreign_keys='LTIUser.compair_user_id',
         backref="compair_user", lazy='dynamic')
 
-    # hyprid and other functions
+    # hybrid and other functions
 
     def _get_password(self):
         return self._password
@@ -103,6 +103,8 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
             return self.firstname
         elif self.lastname:  # only last name provided
             return self.lastname
+        elif self.displayname:
+            return self.displayname
         else:
             return None
 
@@ -116,6 +118,8 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
             return self.firstname
         elif self.lastname:  # only last name provided
             return self.lastname
+        elif self.displayname:
+            return self.displayname
         else:
             return None
 

@@ -27,7 +27,7 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     assignments = db.relationship("Assignment", backref="file", lazy='dynamic')
     answers = db.relationship("Answer", backref="file", lazy='dynamic')
 
-    # hyprid and other functions
+    # hybrid and other functions
     @hybrid_property
     def extension(self):
         return self.name.lower().rsplit('.', 1)[1] if '.' in self.name else None

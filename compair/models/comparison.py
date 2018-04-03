@@ -46,7 +46,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     answer1 = db.relationship("Answer", foreign_keys=[answer1_id])
     answer2 = db.relationship("Answer", foreign_keys=[answer2_id])
 
-    # hyprid and other functions
+    # hybrid and other functions
     course_id = association_proxy('assignment', 'course_id', creator=lambda course_id:
         import_module('compair.models.assignment').Assignment(course_id=course_id))
     course_uuid = association_proxy('assignment', 'course_uuid')
@@ -153,7 +153,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
         # adaptive min delta algo requires extra criterion specific parameters
         if pairing_algorithm == PairingAlgorithm.adaptive_min_delta:
-            # retreive extra criterion score data
+            # retrieve extra criterion score data
             answer_criterion_scores = AnswerCriterionScore.query \
                 .with_entities(AnswerCriterionScore.answer_id,
                     AnswerCriterionScore.criterion_id, AnswerCriterionScore.score) \
@@ -290,7 +290,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         from . import AnswerScore, AnswerCriterionScore, \
             ComparisonCriterion, ScoringAlgorithm
 
-        assignment_id = comparison.assignment_id
+        assignment = comparison.assignment
         answer1_id = comparison.answer1_id
         answer2_id = comparison.answer2_id
 
@@ -298,7 +298,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         other_comparisons = Comparison.query \
             .options(load_only('winner', 'answer1_id', 'answer2_id')) \
             .filter(and_(
-                Comparison.assignment_id == assignment_id,
+                Comparison.assignment_id == assignment.id,
                 Comparison.id != comparison.id,
                 or_(
                     Comparison.answer1_id.in_([answer1_id, answer2_id]),
@@ -315,7 +315,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         other_criterion_comparisons = ComparisonCriterion.query \
             .join("comparison") \
             .filter(and_(
-                Comparison.assignment_id == assignment_id,
+                Comparison.assignment_id == assignment.id,
                 Comparison.id != comparison.id,
                 or_(
                     Comparison.answer1_id.in_([answer1_id, answer2_id]),
@@ -326,7 +326,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
         criteria_scores = AnswerCriterionScore.query \
             .filter(and_(
-                AnswerCriterionScore.assignment_id == assignment_id,
+                AnswerCriterionScore.assignment_id == assignment.id,
                 AnswerCriterionScore.answer_id.in_([answer1_id, answer2_id])
             )) \
             .all()
@@ -338,14 +338,14 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
             criterion_score1 = next((criterion_score for criterion_score in criteria_scores
                 if criterion_score.answer_id == answer1_id and criterion_score.criterion_id == criterion_id),
-                AnswerCriterionScore(assignment_id=assignment_id, answer_id=answer1_id, criterion_id=criterion_id)
+                AnswerCriterionScore(assignment_id=assignment.id, answer_id=answer1_id, criterion_id=criterion_id)
             )
             updated_criteria_scores.append(criterion_score1)
             key1_scored_object = criterion_score1.convert_to_scored_object()
 
             criterion_score2 = next((criterion_score for criterion_score in criteria_scores
                 if criterion_score.answer_id == answer2_id and criterion_score.criterion_id == criterion_id),
-                AnswerCriterionScore(assignment_id=assignment_id, answer_id=answer2_id, criterion_id=criterion_id)
+                AnswerCriterionScore(assignment_id=assignment.id, answer_id=answer2_id, criterion_id=criterion_id)
             )
             updated_criteria_scores.append(criterion_score2)
             key2_scored_object = criterion_score2.convert_to_scored_object()
@@ -372,12 +372,12 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
         updated_scores = []
         score1 = next((score for score in scores if score.answer_id == answer1_id),
-            AnswerScore(assignment_id=assignment_id, answer_id=answer1_id)
+            AnswerScore(assignment_id=assignment.id, answer_id=answer1_id)
         )
         updated_scores.append(score1)
         key1_scored_object = score1.convert_to_scored_object()
         score2 = next((score for score in scores if score.answer_id == answer2_id),
-            AnswerScore(assignment_id=assignment_id, answer_id=answer2_id)
+            AnswerScore(assignment_id=assignment.id, answer_id=answer2_id)
         )
         updated_scores.append(score2)
         key2_scored_object = score2.convert_to_scored_object()

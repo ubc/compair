@@ -23,6 +23,6 @@ def update_lti_course_membership(self, course_id):
         except MembershipInvalidRequestException as err:
             current_app.logger.warning("Error for LTI Membership update for course with id: "+str(course_id)+" named: "+course.name+". The membership request was invalid")
 
-        current_app.logger.info("Compelted LTI Membership update for course with id: "+str(course_id)+" named: "+course.name)
+        current_app.logger.info("Completed LTI Membership update for course with id: "+str(course_id)+" named: "+course.name)
     else:
         current_app.logger.info("Failed LTI Membership update for course with id: "+str(course_id)+". record not found.")
