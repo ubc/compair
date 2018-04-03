@@ -21,6 +21,160 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
     def test_lti_auth(self):
         lti_consumer = self.lti_data.get_consumer()
+        lti_resource_link_id = self.lti_data.generate_resource_link_id()
+        lti_user_id = self.lti_data.generate_user_id()
+        lti_context_id = self.lti_data.generate_context_id()
+
+        # invalid request - invalid lti_consumer
+        invalid_lti_consumer = LTIConsumer(
+            oauth_consumer_key=generate_token(),
+            oauth_consumer_secret=generate_token()
+        )
+        with self.lti_launch(invalid_lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id) as rv:
+            self.assert400(rv)
+
+        # invalid request - bad oauth signature
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id,
+                oauth_signature="FFGTSFanGnwNZclLi5PA70SaGkU=",
+                invalid_launch=True) as rv:
+            self.assert400(rv, "Invalid Request: There is something wrong with the LTI tool consumer's request.")
+
+        # invalid request - no resource_link_id
+        with self.lti_launch(lti_consumer, None,
+                user_id=lti_user_id, context_id=lti_context_id,
+                invalid_launch=True) as rv:
+            self.assert400(rv)
+
+        # invalid request - no resource_link_id (with return url)
+        with self.lti_launch(lti_consumer, None,
+                user_id=lti_user_id, context_id=lti_context_id,
+                invalid_launch=True,
+                launch_presentation_return_url="http://test.url",
+                follow_redirects=False) as rv:
+            self.assertRedirects(rv, 'http://test.url?lti_errormsg=ComPAIR+requires+the+LTI+tool+consumer+to+provide+a+resource+link+id.')
+
+        # invalid request - missing lti version
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id,
+                lti_version=None, invalid_launch=True) as rv:
+            self.assert400(rv, "Invalid Request: There is something wrong with the LTI tool consumer's request.")
+
+        # invalid request - invalid lti versions
+        invalid_lti_versions = ["LTI-1p1", "LTI-1", "LTI-1.0", "LTI-2p0"]
+        for lti_version in invalid_lti_versions:
+            # invalid request - invalid lti version
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id,
+                    lti_version=lti_version) as rv:
+                self.assert400(rv)
+
+            # invalid request - invalid lti version (with return url)
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id,
+                    lti_version=lti_version,
+                    launch_presentation_return_url="http://test.url",
+                    follow_redirects=False) as rv:
+                self.assertRedirects(rv, 'http://test.url?lti_errormsg=ComPAIR+requires+the+LTI+tool+consumer+to+use+the+LTI+1.0+or+1.1+specification.')
+
+        # valid request - valid lti versions
+        valid_lti_versions = ["LTI-1p0"]
+        for lti_version in valid_lti_versions:
+            # invalid request - invalid lti version
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id,
+                    lti_version=lti_version) as rv:
+                self.assert200(rv)
+
+        # invalid request - missing lti message type
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id,
+                lti_message_type=None, invalid_launch=True) as rv:
+            self.assert400(rv, "Invalid Request: There is something wrong with the LTI tool consumer's request.")
+
+        # invalid request - invalid lti message type
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id,
+                lti_message_type="a-basic-lti-launch-request", invalid_launch=True) as rv:
+            self.assert400(rv)
+
+        # invalid request - invalid lti message type (with return url)
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id,
+                launch_presentation_return_url="http://test.url",
+                lti_message_type="a-basic-lti-launch-request", invalid_launch=True,
+                follow_redirects=False) as rv:
+            self.assertRedirects(rv, 'http://test.url?lti_errormsg=ComPAIR+requires+the+LTI+tool+consumer+to+send+a+basic+lti+launch+request.')
+
+        # invalid request - no user id
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=None, context_id=lti_context_id) as rv:
+            self.assert400(rv)
+
+        # invalid request - no user id (with return url)
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=None, context_id=lti_context_id,
+                launch_presentation_return_url="http://test.url",
+                follow_redirects=False) as rv:
+            self.assertRedirects(rv, 'http://test.url?lti_errormsg=ComPAIR+requires+the+LTI+tool+consumer+to+provide+a+user%27s+user_id.')
+
+        # test launch with email but no name
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id,
+                lis_person_contact_email_primary="test@email.com") as rv:
+            self.assert200(rv)
+        lti_user = LTIUser.query \
+            .filter_by(user_id=lti_user_id) \
+            .first()
+        self.assertIsNotNone(lti_user)
+        self.assertEqual(lti_user.lis_person_contact_email_primary, "test@email.com")
+        self.assertIsNone(lti_user.lis_person_name_given)
+        self.assertIsNone(lti_user.lis_person_name_family)
+        self.assertIsNone(lti_user.lis_person_name_full)
+
+        # test launch with given/family but no full name
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id,
+                lis_person_name_given="first", lis_person_name_family="last") as rv:
+            self.assert200(rv)
+        self.assertIsNotNone(lti_user)
+        self.assertIsNone(lti_user.lis_person_contact_email_primary)
+        self.assertEqual(lti_user.lis_person_name_given, "first")
+        self.assertEqual(lti_user.lis_person_name_family, "last")
+        self.assertIsNone(lti_user.lis_person_name_full)
+
+        # test launch with full name but no given or family names
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id,
+                lis_person_name_full="first middle last") as rv:
+            self.assert200(rv)
+        self.assertIsNotNone(lti_user)
+        self.assertIsNone(lti_user.lis_person_contact_email_primary)
+        self.assertEqual(lti_user.lis_person_name_given, "first middle")
+        self.assertEqual(lti_user.lis_person_name_family, "last")
+        self.assertEqual(lti_user.lis_person_name_full, "first middle last")
+
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id,
+                lis_person_name_full="only") as rv:
+            self.assert200(rv)
+        self.assertIsNotNone(lti_user)
+        self.assertIsNone(lti_user.lis_person_contact_email_primary)
+        self.assertEqual(lti_user.lis_person_name_given, "only")
+        self.assertEqual(lti_user.lis_person_name_family, "only")
+        self.assertEqual(lti_user.lis_person_name_full, "only")
+
+        with self.lti_launch(lti_consumer, lti_resource_link_id,
+                user_id=lti_user_id, context_id=lti_context_id,
+                lis_person_name_full="first last") as rv:
+            self.assert200(rv)
+        self.assertIsNotNone(lti_user)
+        self.assertIsNone(lti_user.lis_person_contact_email_primary)
+        self.assertEqual(lti_user.lis_person_name_given, "first")
+        self.assertEqual(lti_user.lis_person_name_family, "last")
+        self.assertEqual(lti_user.lis_person_name_full, "first last")
+
         roles = {
             "Instructor": (SystemRole.instructor, CourseRole.instructor),
             "urn:lti:role:ims/lis/Instructor": (SystemRole.instructor, CourseRole.instructor),
@@ -31,7 +185,10 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             "Student": (SystemRole.student, CourseRole.student),
             "urn:lti:role:ims/lis/Student": (SystemRole.student, CourseRole.student),
             "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant),
-            "urn:lti:role:ims/lis/TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
+            "urn:lti:role:ims/lis/TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant),
+            "random_role": (SystemRole.student, CourseRole.student),
+            "urn:lti:instrole:ims/lis/Alumni": (SystemRole.student, CourseRole.student),
+            None: (SystemRole.student, CourseRole.student)
         }
 
         index = 0
@@ -40,20 +197,6 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             lti_resource_link_id = self.lti_data.generate_resource_link_id()
             lti_user_id = self.lti_data.generate_user_id()
             lti_context_id = self.lti_data.generate_context_id()
-
-            # invalid request - invalid lti_consumer
-            invalid_lti_consumer = LTIConsumer(
-                oauth_consumer_key=generate_token(),
-                oauth_consumer_secret=generate_token()
-            )
-            with self.lti_launch(invalid_lti_consumer, lti_resource_link_id,
-                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role) as rv:
-                self.assert400(rv)
-
-            # invalid request - no user id
-            with self.lti_launch(lti_consumer, lti_resource_link_id,
-                    user_id=None, context_id=lti_context_id, roles=lti_role) as rv:
-                self.assert400(rv)
 
             # test LTI auth disabled
             self.app.config['LTI_LOGIN_ENABLED'] = False
@@ -354,7 +497,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
             # user_id_override parameter is present (new user)
-            custom_puid = "puid123456789_"+lti_role
+            custom_puid = "puid123456789_"+str(lti_role)
             with self.lti_launch(lti_consumer, lti_resource_link_id,
                     user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
                     assignment_uuid=assignment.uuid, follow_redirects=False,

@@ -210,12 +210,24 @@ class UsersAPITests(ComPAIRAPITestCase):
                 username=None,
                 password=None
             )
-            rv = self.client.post(
-                url, data=json.dumps(expected.__dict__), content_type="application/json")
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
             self.assert200(rv)
             self.assertEqual(expected.displayname, rv.json['displayname'])
 
             self.app.config['APP_LOGIN_ENABLED'] = True
+
+            # test creating student without first or last name
+            for value in [None, ""]:
+                expected = UserFactory.stub(
+                    firstname=value,
+                    lastname=value,
+                    system_role=SystemRole.student.value,
+                    email_notification_method=EmailNotificationMethod.enable.value
+                )
+                rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type="application/json")
+                self.assert200(rv)
+                self.assertIsNone(rv.json['firstname'])
+                self.assertIsNone(rv.json['lastname'])
 
     def test_create_user_lti(self):
         url = '/api/users'
@@ -669,7 +681,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.app.config['ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'] = False
             self.app.config['ALLOW_STUDENT_CHANGE_EMAIL'] = False
 
-        # test updating username, student number, usertype for system - instructor
+        # test updating username, student number, first/last name, usertype for system - instructor
         with self.login(instructor.username):
             # for student
 
@@ -742,6 +754,15 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
             self.assert200(rv)
             self.assertEqual(instructor.email_notification_method.value, rv.json['email_notification_method'])
+
+            for value in [None, ""]:
+                valid = expected_instructor.copy()
+                valid['firstname'] = value
+                valid['lastname'] = value
+                rv = self.client.post(instructor_url, data=json.dumps(valid), content_type='application/json')
+                self.assert200(rv)
+                self.assertIsNone(rv.json['firstname'])
+                self.assertIsNone(rv.json['lastname'])
 
         # test updating username, student number, usertype for system - admin
         with self.login('root'):

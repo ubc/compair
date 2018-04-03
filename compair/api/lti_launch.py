@@ -37,8 +37,6 @@ class LTIAuthAPI(Resource):
             abort(403, title="Log In Failed",
                 message="Please try an alternate way of logging in. The LTI login has been disabled by your system administrator.")
 
-        # TODO: Add new unit tests for different LTI launch fail conditions
-        # TODO: also add unit tests for full name * give+family name
         try:
             tool_provider = FlaskToolProvider.from_flask_request(request=request)
         except InvalidLaunchParamError as e:
