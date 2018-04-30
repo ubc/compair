@@ -18,7 +18,7 @@ yum -y update
 yum -y install curl epel-release
 curl --silent --location https://rpm.nodesource.com/setup_7.x | bash -
 curl --silent --location https://bootstrap.pypa.io/get-pip.py | python -
-yum -y install nodejs mariadb-server git nginx gcc redis python-devel policycoreutils-python
+yum -y install nodejs mariadb-server git nginx gcc redis python-devel policycoreutils-python xmlsec1-devel bzip2
 ```
 
 Setup MariaDB
@@ -49,7 +49,7 @@ exit
 #### Verify that the new account works
 
 ```
-mysql compair -u compair - p
+mysql compair -u compair -p
 ```
 
 Setup ComPAIR Codebase
@@ -67,9 +67,9 @@ cd compair
 #### Switch to latest release
 
 ```
-git checkout X.X.X
+git checkout vX.X.X
 ```
-Note: please check github for the latest tagged release and replace `X.X.X` with it
+Note: please check github for the latest tagged release and replace `vX.X.X` with it
 
 #### Setup virtual environment, python libraries, and javascript libraries
 
@@ -124,8 +124,6 @@ systemctl enable compair
 
 Setup NGINX
 -------------
-
-Edit deploy/linux_server/nginx.conf and replace `SERVER_DOMAIN_OR_IP` with your server's IP address or domain name.
 
 ### Copy NGINX config
 
