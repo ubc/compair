@@ -43,8 +43,8 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
     var cacheInterceptor = {
         response: function(response) {
             cache.remove(response.config.url);	// remove cached GET response
-            // removing the suffix of some of the actions - eg. flagged
-            var url = response.config.url.replace(/\/(flagged|top)/g, "");
+            // removing the suffix of some of the actions - eg. top
+            var url = response.config.url.replace(/\/(top)/g, "");
             cache.remove(url);
             url = url.replace(/\/[A-Za-z0-9_-]{22}$/g, "");
 
@@ -79,11 +79,6 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
             get: {url: url, cache: true, interceptor: cacheKeyInterceptor},
             save: {method: 'POST', url: url, interceptor: cacheInterceptor},
             delete: {method: 'DELETE', url: url, interceptor: cacheInterceptor},
-            flagged: {
-                method: 'POST',
-                url: '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/flagged',
-                interceptor: cacheInterceptor
-            },
             topAnswer: {
                 method: 'POST',
                 url: '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/top',

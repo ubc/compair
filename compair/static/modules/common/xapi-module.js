@@ -144,14 +144,6 @@ module.constant('xAPIVerb', {
         id: 'http://xapi.learninganalytics.ubc.ca/verb/draft',
         display: { 'en-US': 'drafted' }
     },
-    'flagged': {
-        id: 'http://xapi.learninganalytics.ubc.ca/verb/flag',
-        display: { 'en-US': 'flagged' }
-    },
-    'unflagged': {
-        id: 'http://xapi.learninganalytics.ubc.ca/verb/unflag',
-        display: { 'en-US': 'unflagged' }
-    },
     'filtered': {
         id: 'http://xapi.learninganalytics.ubc.ca/verb/filter',
         display: { 'en-US': 'filtered' }

@@ -10,8 +10,8 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
         response: function(response) {
             var cache = $cacheFactory.get('$http');
             cache.remove(response.config.url);	// remove cached GET response
-            // removing the suffix of some of the actions - eg. flagged
-            var url = response.config.url.replace(/\/(flagged)/g, "");
+            // removing the suffix of some of the actions - eg. top
+            var url = response.config.url.replace(/\/(top)/g, "");
             cache.remove(url);
             url = url.replace(/\/[A-Za-z0-9_-]{22}$/g, "");
             cache.remove(url);	// remove root GET responses - eg. groups

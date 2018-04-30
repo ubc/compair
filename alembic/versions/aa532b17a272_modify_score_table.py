@@ -26,7 +26,7 @@ class ScoringAlgorithm(Enum):
 def upgrade():
     # Rename score table to answer_criterion_score
     try:
-        # expected foreign key to follow naming convensions
+        # expected foreign key to follow naming conventions
         with op.batch_alter_table('score', naming_convention=convention) as batch_op:
             # drop the fk before altering the column
             batch_op.drop_constraint('fk_score_assignment_id_assignment', 'foreignkey')

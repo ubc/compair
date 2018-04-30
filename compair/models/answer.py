@@ -22,9 +22,6 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     content = db.Column(db.Text)
     round = db.Column(db.Integer, default=0, nullable=False)
     practice = db.Column(db.Boolean(name='practice'), default=False, nullable=False, index=True)
-    flagged = db.Column(db.Boolean(name='flagged'), default=False, nullable=False)
-    flagger_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="SET NULL"),
-        nullable=True)
     draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False, index=True)
     top_answer = db.Column(db.Boolean(name='top_answer'), default=False, nullable=False, index=True)
     comparable = db.Column(db.Boolean(name='comparable'), default=True, nullable=False)

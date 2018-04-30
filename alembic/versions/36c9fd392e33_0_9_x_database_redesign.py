@@ -759,7 +759,7 @@ def upgrade():
         )
     # STEP 3: Handle activity log
     try:
-        # expected foreign key to follow naming convensions
+        # expected foreign key to follow naming conventions
         with op.batch_alter_table('Activities', naming_convention=convention) as batch_op:
             # drop the fk before altering the column
             batch_op.drop_constraint('fk_Activities_users_id_Users', 'foreignkey')

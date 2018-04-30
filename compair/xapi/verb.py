@@ -32,8 +32,6 @@ class XAPIVerb(object):
         'opened': 'http://activitystrea.ms/schema/1.0/open',
         'closed': 'http://activitystrea.ms/schema/1.0/close',
         'drafted': 'http://xapi.learninganalytics.ubc.ca/verb/draft',
-        'flagged': 'http://xapi.learninganalytics.ubc.ca/verb/flag',
-        'unflagged': 'http://xapi.learninganalytics.ubc.ca/verb/unflag',
         'filtered': 'http://xapi.learninganalytics.ubc.ca/verb/filter',
         'sorted': 'http://xapi.learninganalytics.ubc.ca/verb/sort'
     }

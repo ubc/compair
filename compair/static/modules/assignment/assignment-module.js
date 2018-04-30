@@ -950,17 +950,6 @@ module.controller("AssignmentViewController",
             );
         };
 
-        // unflag a flagged answer
-        //$scope.unflagAnswer = function(answer) {
-        //    var params = {'flagged': false};
-        //    AnswerResource.flagged({'courseId': answer.course_id, 'assignmentId': answer.assignment_id, 'answerId': answer.id}, params).$promise.then(
-        //        function () {
-        //            answer['flagged'] = false;
-        //            Toaster.success("Answer Unflagged");
-        //        }
-        //    );
-        //};
-
         // toggle top_answer state for answer
         $scope.setTopAnswer = function(answer, topAnswer) {
             var params = {'top_answer': topAnswer};

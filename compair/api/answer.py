@@ -45,11 +45,6 @@ user_answer_list_parser = RequestParser()
 user_answer_list_parser.add_argument('draft', type=bool, required=False, default=False)
 user_answer_list_parser.add_argument('unsaved', type=bool, required=False, default=False)
 
-flag_parser = RequestParser()
-flag_parser.add_argument('flagged', type=bool, required=True,
-    help="Expected boolean value 'flagged' is missing."
-)
-
 top_answer_parser = RequestParser()
 top_answer_parser.add_argument(
     'top_answer', type=bool, required=True,
@@ -63,7 +58,6 @@ on_answer_get = event.signal('ANSWER_GET')
 on_answer_list_get = event.signal('ANSWER_LIST_GET')
 on_answer_create = event.signal('ANSWER_CREATE')
 on_answer_delete = event.signal('ANSWER_DELETE')
-on_answer_flag = event.signal('ANSWER_FLAG')
 on_set_top_answer = event.signal('SET_TOP_ANSWER')
 on_user_answer_get = event.signal('USER_ANSWER_GET')
 
@@ -510,51 +504,6 @@ class AnswerUserIdAPI(Resource):
 
 
 api.add_resource(AnswerUserIdAPI, '/user')
-
-# /flag
-class AnswerFlagAPI(Resource):
-    @login_required
-    def post(self, course_uuid, assignment_uuid, answer_uuid):
-        """
-        Mark an answer as inappropriate or incomplete to instructors
-        :param course_uuid:
-        :param assignment_uuid:
-        :param answer_uuid:
-        :return: marked answer
-        """
-        course = Course.get_active_by_uuid_or_404(course_uuid)
-        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
-        answer = Answer.get_active_by_uuid_or_404(answer_uuid)
-
-        require(READ, answer,
-            title="Answer Not Flagged",
-            message="Sorry, your role in this course does not allow you to flag answers.")
-        restrict_user = not allow(MANAGE, answer)
-
-        # anyone can flag an answer, but only the original flagger or someone who can manage
-        # the answer can unflag it
-        if answer.flagged and answer.flagger_user_id != current_user.id and \
-                not allow(MANAGE, answer):
-            abort(400, title="Answer Not Updated", message="Sorry, your role in this course does not allow you to unflag answers.")
-
-        params = flag_parser.parse_args()
-        answer.flagged = params['flagged']
-        answer.flagger_user_id = current_user.id
-        db.session.add(answer)
-        db.session.commit()
-
-        on_answer_flag.send(
-            self,
-            event_name=on_answer_flag.name,
-            user=current_user,
-            course_id=course.id,
-            assignment_id=assignment.id,
-            answer=answer,
-            data={'answer_id': answer.id, 'flag': answer.flagged})
-
-        return marshal(answer, dataformat.get_answer(restrict_user))
-
-api.add_resource(AnswerFlagAPI, '/<answer_uuid>/flagged')
 
 # /top
 class TopAnswerAPI(Resource):
