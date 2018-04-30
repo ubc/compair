@@ -182,7 +182,7 @@ Restart server after making any changes to settings
 User Authentication Settings
 ---------------------------
 
-ComPAIR needs at least one of the following settings to be setup so that user can login. Through, you can also enable multiple ones. e.g. you can use both CAS and LTI.
+ComPAIR needs at least one of the following authentication settings so that users can log in. You can also enable multiple options at once, e.g., you can use both CAS and LTI.
 
 ### APP Login Settings
 
