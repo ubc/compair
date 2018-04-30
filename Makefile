@@ -71,7 +71,7 @@ rundev:
 	$(DOCKERRUN_PY) python manage.py runserver -h 0.0.0.0 -dr
 
 docker-image:
-	docker run -it --rm -v "$(PWD)":/app -w /app node npm install
-	docker run -it --rm -v "$(PWD)":/app -w /app node node_modules/gulp/bin/gulp.js
-	docker run -it --rm -v "$(PWD)":/app -w /app node node_modules/gulp/bin/gulp.js prod
+	$(DOCKERRUN_NODE) npm install
+	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js
+	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js prod
 	docker build -t ubcctlt/compair-app .
