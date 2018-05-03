@@ -28,7 +28,7 @@
     <fieldset>
         <legend>Answer Details</legend>
         <div class="h3 text-center" ng-show="!canManageAssignment && showCountDown && comparison_example !== true">
-            <timer end-time="assignment.answer_end">
+            <timer end-time="assignment.answer_end" interval="1000">
                 <span ng-show="minutes > 0 || seconds > 0" title="Official time remaining until deadline" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> {{minutes}} minutes {{seconds}} seconds left</span>
                 <span ng-show="minutes == 0 && seconds == 0" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> DEADLINE REACHED</span>
             </timer>
