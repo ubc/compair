@@ -140,8 +140,8 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             lti_user.system_role = SystemRole.instructor if has_instructor_role else SystemRole.student
             lti_user.lis_person_name_given = member.get('person_name_given')
             lti_user.lis_person_name_family = member.get('person_name_family')
-            lti_user.lis_person_name_full = member.get('lis_person_name_full')
-            lti_user.fix_name()
+            lti_user.lis_person_name_full = member.get('person_name_full')
+            lti_user.handle_fullname_with_missing_first_and_last_name()
 
             lti_user.lis_person_contact_email_primary = member.get('person_contact_email_primary')
 

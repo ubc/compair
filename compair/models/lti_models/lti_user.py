@@ -76,7 +76,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         lti_user.lis_person_name_given = tool_provider.lis_person_name_given
         lti_user.lis_person_name_family = tool_provider.lis_person_name_family
         lti_user.lis_person_name_full = tool_provider.lis_person_name_full
-        lti_user.fix_name()
+        lti_user.handle_fullname_with_missing_first_and_last_name()
         lti_user.lis_person_contact_email_primary = tool_provider.lis_person_contact_email_primary
 
         if lti_consumer.student_number_param and lti_consumer.student_number_param in tool_provider.launch_params:
@@ -123,7 +123,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
             db.session.commit()
 
-    def fix_name(self):
+    def handle_fullname_with_missing_first_and_last_name(self):
         if self.lis_person_name_full and (not self.lis_person_name_given or not self.lis_person_name_family):
             full_name_parts = self.lis_person_name_full.split(" ")
             if len(full_name_parts) >= 2:
