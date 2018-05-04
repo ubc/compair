@@ -1389,13 +1389,127 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             for lti_membership in lti_memberships:
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
                     "compair_student_2", "compair_student_3è", "compair_instructor_2"])
-                self.assertIn(lti_membership.lti_user.lis_person_contact_email_primary, [
-                    'compair_instructor_2@test.com', 'compair_student_1@test.com',
-                    'compair_student_2@test.com', 'compair_student_3è@test.com',
-                    'compair_instructor_2@email.com'
-                ])
-                self.assertIn(lti_membership.lti_user.lis_person_name_given, ['Instructor', 'Student'])
-                self.assertIn(lti_membership.lti_user.lis_person_name_family, ['Two', 'One', 'Six'])
+                if lti_membership.lti_user.user_id == lti_user_instructor.user_id:
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Instructor")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Two")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_instructor_2@test.com")
+                elif lti_membership.lti_user.user_id == lti_user_student_1.user_id:
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "One")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_1@test.com")
+                elif lti_membership.lti_user.user_id == "compair_student_2":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Two")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_2@test.com")
+                elif lti_membership.lti_user.user_id == "compair_student_3è":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Six")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_3è@test.com")
+                elif lti_membership.lti_user.user_id == "compair_instructor_2":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Instructor")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "One")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_instructor_2@email.com")
+
+            # test full name handling in membership response
+            mocked_post_membership_request.return_value = """
+                <message_response>
+                <lti_message_type>basic-lis-readmembershipsforcontext</lti_message_type>
+                <statusinfo>
+                    <codemajor>Success</codemajor>
+                    <severity>Status</severity>
+                    <codeminor>fullsuccess</codeminor>
+                    <description>Roster retrieved</description>
+                </statusinfo>
+                <memberships>
+                    <member>
+                    <user_id>{instructor_user_id}</user_id>
+                    <user_image>http://www.gravatar.com/avatar/1</user_image>
+                    <roles>Instructor</roles>
+                    <person_sourcedid>compair_instructor_2</person_sourcedid>
+                    <person_contact_email_primary>compair_instructor_2@test.com</person_contact_email_primary>
+                    <person_name_full>Instructor Two</person_name_full>
+                    </member>
+                    <member>
+                    <user_id>{student_user_id}</user_id>
+                    <user_image>http://www.gravatar.com/avatar/2</user_image>
+                    <roles>Learner</roles>
+                    <person_sourcedid>compair_student_1</person_sourcedid>
+                    <person_contact_email_primary>compair_student_1@test.com</person_contact_email_primary>
+                    <person_name_full>Student One</person_name_full>
+                    <lis_result_sourcedid>:_676_1::compai:compair_student_1</lis_result_sourcedid>
+                    </member>
+                    <member>
+                    <user_id>compair_student_2</user_id>
+                    <user_image>http://www.gravatar.com/avatar/3</user_image>
+                    <roles>Learner</roles>
+                    <person_sourcedid>compair_student_2</person_sourcedid>
+                    <person_contact_email_primary>compair_student_2@test.com</person_contact_email_primary>
+                    <person_name_full>Student Two</person_name_full>
+                    <lis_result_sourcedid>:_676_1::compai:compair_student_2</lis_result_sourcedid>
+                    </member>
+                    <member>
+                    <user_id>compair_student_3è</user_id>
+                    <user_image>http://www.gravatar.com/avatar/4</user_image>
+                    <roles>TeachingAssistant</roles>
+                    <person_sourcedid>compair_student_3è</person_sourcedid>
+                    <person_contact_email_primary>compair_student_3è@test.com</person_contact_email_primary>
+                    <person_name_full>Student Six</person_name_full>
+                    </member>
+                    <member>
+                    <user_id>compair_instructor_2</user_id>
+                    <user_image>http://www.gravatar.com/avatar/5</user_image>
+                    <roles>TeachingAssistant</roles>
+                    <person_sourcedid>compair_instructor_2</person_sourcedid>
+                    <person_contact_email_primary>compair_instructor_2@email.com</person_contact_email_primary>
+                    <person_name_full>Instructor One</person_name_full>
+                    </member>
+                </memberships>
+                </message_response>
+            """.format(instructor_user_id=lti_user_instructor.user_id, student_user_id=lti_user_student_1.user_id)
+
+            rv = self.client.post(url, data={}, content_type='application/json')
+            self.assert200(rv)
+
+            # 5 members
+            # verify user course roles
+            for user_course in course.user_courses:
+                if user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                elif user_course.user_id == student_1.id:
+                    self.assertEqual(user_course.course_role, CourseRole.student)
+                else:
+                    #everyone else should be dropped
+                    self.assertEqual(user_course.course_role, CourseRole.dropped)
+
+            # verify membership table
+            lti_memberships = LTIMembership.query \
+                .filter_by(compair_course_id=course.id) \
+                .all()
+
+            self.assertEqual(len(lti_memberships), 5)
+            for lti_membership in lti_memberships:
+                self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
+                    "compair_student_2", "compair_student_3è", "compair_instructor_2"])
+                if lti_membership.lti_user.user_id == lti_user_instructor.user_id:
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Instructor")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Two")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_instructor_2@test.com")
+                elif lti_membership.lti_user.user_id == lti_user_student_1.user_id:
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "One")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_1@test.com")
+                elif lti_membership.lti_user.user_id == "compair_student_2":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Two")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_2@test.com")
+                elif lti_membership.lti_user.user_id == "compair_student_3è":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Six")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_3è@test.com")
+                elif lti_membership.lti_user.user_id == "compair_instructor_2":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Instructor")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "One")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_instructor_2@email.com")
 
             # test minimual membership response
             mocked_post_membership_request.return_value = """
@@ -1672,7 +1786,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                     "@id":None,
                                     "name":"Instructor One",
                                     "img":"http://www.gravatar.com/avatar/5",
-                                    "email":"compair_instructor_2@test.com",
+                                    "email":"compair_instructor_2@email.com",
                                     "familyName":"One",
                                     "givenName":"Instructor",
                                     "resultSourcedId":None,
@@ -1730,13 +1844,198 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                 self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
                     "compair_student_2", "compair_student_3è", "compair_instructor_2", "compair_student_100"])
 
-                self.assertIn(lti_membership.lti_user.lis_person_contact_email_primary, [
-                    'compair_instructor_2@test.com', 'compair_student_1@test.com',
-                    'compair_student_2@test.com', 'compair_student_3è@test.com',
-                    'compair_instructor_2@email.com'
-                ])
-                self.assertIn(lti_membership.lti_user.lis_person_name_given, ['Instructor', 'Student'])
-                self.assertIn(lti_membership.lti_user.lis_person_name_family, ['Two', 'One', 'Six'])
+                if lti_membership.lti_user.user_id == lti_user_instructor.user_id:
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Instructor")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Two")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_instructor_2@test.com")
+                elif lti_membership.lti_user.user_id == lti_user_student_1.user_id:
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "One")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_1@test.com")
+                elif lti_membership.lti_user.user_id == "compair_student_2":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Two")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_2@test.com")
+                elif lti_membership.lti_user.user_id == "compair_student_3è":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Six")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_3è@test.com")
+                elif lti_membership.lti_user.user_id == "compair_instructor_2":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Instructor")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "One")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_instructor_2@email.com")
+                elif lti_membership.lti_user.user_id == "compair_student_100":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "One Hundred")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_100@test.com")
+
+            # test full name handling
+            mocked_get_membership_request.return_value = {
+                "@id":None,
+                "@type":"Page",
+                "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                "differences":None,
+                "nextPage":None,
+                "pageOf":{
+                    "membershipPredicate":"http://www.w3.org/ns/org#membership",
+                    "membershipSubject":{
+                        "@id":None,
+                        "name":"Test Course",
+                        "@type":"Context",
+                        "contextId":"4dde05e8ca1973bcca9bffc13e1548820eee93a3",
+                        "membership":[
+                            {
+                                "@id":None,
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Instructor"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Instructor Two",
+                                    "img":"http://www.gravatar.com/avatar/1",
+                                    "email":"compair_instructor_2@test.com",
+                                    "resultSourcedId":"compair_instructor_2",
+                                    "sourcedId":None,
+                                    "userId":lti_user_instructor.user_id
+                                }
+                            },
+                            {
+                                "@id":None,
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Learner"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Student One",
+                                    "img":"http://www.gravatar.com/avatar/2",
+                                    "email":"compair_student_1@test.com",
+                                    "resultSourcedId":None,
+                                    "sourcedId":"compair_student_1",
+                                    "userId":lti_user_student_1.user_id
+                                }
+                            },
+                            {
+                                "@id":None,
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Learner"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Student Two",
+                                    "img":"http://www.gravatar.com/avatar/3",
+                                    "email":"compair_student_2@test.com",
+                                    "resultSourcedId":None,
+                                    "sourcedId":"compair_student_2",
+                                    "userId":"compair_student_2"
+                                }
+                            },
+                            {
+                                "@id":None,
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/TeachingAssistant"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Student Six",
+                                    "img":"http://www.gravatar.com/avatar/4",
+                                    "email":"compair_student_3è@test.com",
+                                    "resultSourcedId":None,
+                                    "sourcedId":"compair_student_3è",
+                                    "userId":"compair_student_3è"
+                                }
+                            },
+                            {
+                                "@id":None,
+                                "status":"Active",
+                                "role":[
+                                    "urn:lti:role:ims/lis/TeachingAssistant"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Instructor One",
+                                    "img":"http://www.gravatar.com/avatar/5",
+                                    "email":"compair_instructor_2@email.com",
+                                    "resultSourcedId":None,
+                                    "sourcedId":"compair_instructor_2",
+                                    "userId":"compair_instructor_2"
+                                }
+                            },
+                            {
+                                "@id":None,
+                                "status":"Inactive",
+                                "role":[
+                                    "urn:lti:role:ims/lis/Learner"
+                                ],
+                                "member":{
+                                    "@id":None,
+                                    "name":"Student One Hundred",
+                                    "img":"http://www.gravatar.com/avatar/6",
+                                    "email":"compair_student_100@test.com",
+                                    "resultSourcedId":None,
+                                    "sourcedId":"compair_student_100",
+                                    "userId":"compair_student_100"
+                                }
+                            }
+                        ]
+                    },
+                    "@id":None,
+                    "@context":"http://purl.imsglobal.org/ctx/lis/v2/MembershipContainer",
+                    "@type":"LISMembershipContainer"
+                }
+            }
+
+            rv = self.client.post(url, data={}, content_type='application/json')
+            self.assert200(rv)
+
+            # 5 members
+            # verify user course roles
+            for user_course in course.user_courses:
+                if user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.course_role, CourseRole.instructor)
+                elif user_course.user_id == student_1.id:
+                    self.assertEqual(user_course.course_role, CourseRole.student)
+                else:
+                    #everyone else should be dropped
+                    self.assertEqual(user_course.course_role, CourseRole.dropped)
+
+            # verify membership table
+            lti_memberships = LTIMembership.query \
+                .filter_by(compair_course_id=course.id) \
+                .all()
+
+            self.assertEqual(len(lti_memberships), 5)
+            for lti_membership in lti_memberships:
+                self.assertIn(lti_membership.lti_user.user_id, [lti_user_instructor.user_id, lti_user_student_1.user_id,
+                    "compair_student_2", "compair_student_3è", "compair_instructor_2", "compair_student_100"])
+
+                if lti_membership.lti_user.user_id == lti_user_instructor.user_id:
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Instructor")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Two")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_instructor_2@test.com")
+                elif lti_membership.lti_user.user_id == lti_user_student_1.user_id:
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "One")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_1@test.com")
+                elif lti_membership.lti_user.user_id == "compair_student_2":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Two")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_2@test.com")
+                elif lti_membership.lti_user.user_id == "compair_student_3è":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Six")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_3è@test.com")
+                elif lti_membership.lti_user.user_id == "compair_instructor_2":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Instructor")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "One")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_instructor_2@email.com")
+                elif lti_membership.lti_user.user_id == "compair_student_100":
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_given, "Student One")
+                    self.assertEqual(lti_membership.lti_user.lis_person_name_family, "Hundred")
+                    self.assertEqual(lti_membership.lti_user.lis_person_contact_email_primary, "compair_student_100@test.com")
 
             # test minimual membership response
             mocked_get_membership_request.return_value = {

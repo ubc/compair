@@ -17,7 +17,7 @@ from compair import create_app
 from compair.manage.database import populate
 from compair.core import db
 from compair.models import User, XAPILog
-from compair.tests import test_app_settings, test_app_xapi_settings
+from compair.tests import test_app_settings
 from lti import ToolConsumer
 from lti.utils import parse_qs
 
@@ -104,7 +104,9 @@ class ComPAIRXAPITestCase(ComPAIRTestCase):
     }
 
     def create_app(self):
-        app = create_app(settings_override=test_app_xapi_settings)
+        settings = test_app_settings.copy()
+        settings['XAPI_ENABLED'] = True
+        app = create_app(settings_override=settings)
         return app
 
     def generate_tracking(self, with_duration=False, **kargs):
@@ -214,8 +216,9 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
     def lti_launch(self, lti_consumer, lti_resource_link_id,
                          assignment_uuid=None, query_assignment_uuid=None,
                          nonce=None, timestamp=None, follow_redirects=True,
-                         **kwargs):
+                         invalid_launch=False, **kwargs):
         launch_url = "http://localhost/api/lti/auth"
+        oauth_signature = kwargs.pop('oauth_signature', None)
         launch_params = kwargs.copy()
         launch_params['resource_link_id'] = lti_resource_link_id
         if assignment_uuid:
@@ -224,13 +227,14 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
             launch_url = launch_url+"?assignment="+query_assignment_uuid
 
         # add basic required launch parameters
-        if not launch_params.get('lti_version'):
-            launch_params['lti_version'] = "LTI-1p0"
-        if not launch_params.get('lti_message_type'):
-            launch_params['lti_message_type'] = "basic-lti-launch-request"
-        if not launch_params.get('lis_person_name_given') and not launch_params.get('lis_person_name_family'):
-            launch_params['lis_person_name_given'] = factory.fuzzy.FuzzyText(length=8)
-            launch_params['lis_person_name_family'] = factory.fuzzy.FuzzyText(length=8)
+        if not 'lti_version' in launch_params:
+           launch_params['lti_version'] = "LTI-1p0"
+
+        if not 'lti_message_type' in launch_params:
+           launch_params['lti_message_type'] = "basic-lti-launch-request"
+
+        if 'roles' in launch_params and launch_params.get('roles') == None:
+            launch_params.pop('roles')
 
         tool_consumer = ToolConsumer(
             lti_consumer.oauth_consumer_key,
@@ -239,8 +243,25 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
             launch_url=launch_url
         )
 
-        launch_request = tool_consumer.generate_launch_request(nonce=nonce, timestamp=timestamp)
+        # overwrite lti_version and lti_message_type if needed (set by lti.LaunchParams)
+        if 'lti_version' in launch_params and launch_params.get('lti_version') == None:
+            tool_consumer.launch_params._params.pop('lti_version')
+
+        if 'lti_message_type' in launch_params and launch_params.get('lti_message_type') == None:
+            tool_consumer.launch_params._params.pop('lti_message_type')
+
+        if invalid_launch:
+            with mock.patch.object(ToolConsumer, 'has_required_params', return_value=True):
+                launch_request = tool_consumer.generate_launch_request(nonce=nonce, timestamp=timestamp)
+        else:
+            launch_request = tool_consumer.generate_launch_request(nonce=nonce, timestamp=timestamp)
+
         launch_data = parse_qs(launch_request.body.decode('utf-8'))
+
+        # overwrite oauth_signature for tests
+        if invalid_launch and oauth_signature:
+            launch_data['oauth_signature'] = oauth_signature
+
         rv = self.client.post('/api/lti/auth', data=launch_data, follow_redirects=follow_redirects)
         yield rv
         rv.close()

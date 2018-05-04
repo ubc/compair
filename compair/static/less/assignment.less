@@ -115,15 +115,10 @@
       border-right: 1px solid @border-darkgray;
 
       /* limit how much of answer/comment content is shown */
-      > .content {
+      .comparable .content {
         max-height: 200px;
         overflow: hidden;
       }
-      /* but not for instructors! */
-      > .content.instructor-answer {
-        max-height: none;
-      }
-
     }//closes each-answer, each-comment
 
     /* alternating answer/comment color to match tab color */

@@ -350,8 +350,8 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
             updated_criteria_scores.append(criterion_score2)
             key2_scored_object = criterion_score2.convert_to_scored_object()
 
-            crterion_result_1, criterion_result_2 = calculate_score_1vs1(
-                package_name=ScoringAlgorithm.elo.value,
+            criterion_result_1, criterion_result_2 = calculate_score_1vs1(
+                package_name=assignment.scoring_algorithm.value,
                 key1_scored_object=key1_scored_object,
                 key2_scored_object=key2_scored_object,
                 winner=comparison_criterion.comparison_pair_winner(),
@@ -361,7 +361,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
                 log=current_app.logger
             )
 
-            for score, result in [(criterion_score1, crterion_result_1), (criterion_score2, criterion_result_2)]:
+            for score, result in [(criterion_score1, criterion_result_1), (criterion_score2, criterion_result_2)]:
                 score.score = result.score
                 score.variable1 = result.variable1
                 score.variable2 = result.variable2
@@ -383,7 +383,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         key2_scored_object = score2.convert_to_scored_object()
 
         result_1, result_2 = calculate_score_1vs1(
-            package_name=ScoringAlgorithm.elo.value,
+            package_name=assignment.scoring_algorithm.value,
             key1_scored_object=key1_scored_object,
             key2_scored_object=key2_scored_object,
             winner=comparison.comparison_pair_winner(),
@@ -410,6 +410,9 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     def calculate_scores(cls, assignment_id):
         from . import AnswerScore, AnswerCriterionScore, \
             AssignmentCriterion, ScoringAlgorithm
+
+        assignment = Assignment.get(assignment_id)
+
         # get all comparisons for this assignment and only load the data we need
         comparisons = Comparison.query \
             .filter(Comparison.assignment_id == assignment_id) \
@@ -433,7 +436,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         # calculate answer score
 
         comparison_results = calculate_score(
-            package_name=ScoringAlgorithm.elo.value,
+            package_name=assignment.scoring_algorithm.value,
             comparison_pairs=comparison_pairs,
             log=current_app.logger
         )
@@ -456,7 +459,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
                 comparison_pairs.append(comparison_criterion.convert_to_comparison_pair())
 
             criterion_comparison_results[assignment_criterion.criterion_id] = calculate_score(
-                package_name=ScoringAlgorithm.elo.value,
+                package_name=assignment.scoring_algorithm.value,
                 comparison_pairs=comparison_pairs,
                 log=current_app.logger
             )

@@ -202,9 +202,7 @@
                     </div>
 
                     <!-- Instructor Answer -->
-                    <div class="instructor-answer">
-                        <rich-content content="answer.content" attachment="answer.file"></rich-content>
-                    </div>
+                    <rich-content content="answer.content" attachment="answer.file"></rich-content>
 
                 </div><!-- closes each-answer (instructor) -->
 
@@ -258,7 +256,7 @@
                     </div>
 
                     <!-- Student Answer -->
-                    <div class="{{answer.id}}" get-height>
+                    <div class="{{answer.id}} comparable" get-height>
                         <rich-content content="answer.content" attachment="answer.file" ng-click="revealContent(answer)"></rich-content>
                     </div>
                     <!-- Student Answer Read More Button (not used for instructor answers) -->
@@ -492,18 +490,17 @@
 
         </div><!-- closes your_comparisons-tab -->
 
-        <div class="tab-pane" ng-class="{active: showTab('comparisons')}" id="comparisons-tab" ng-if="canManageAssignment && showTab('comparisons')">
-            <div ng-controller="ComparisonViewController">
+        <div ng-controller="ComparisonViewController" ng-if="::canManageAssignment">
+            <div class="tab-pane" ng-class="{active: showTab('comparisons')}" id="comparisons-tab" ng-if="canManageAssignment && showTab('comparisons')">
                 <ng-include src="'modules/comparison/comparison-view-partial.html'"></ng-include>
-            </div>
-        </div><!-- closes comparisons-tab -->
+            </div><!-- closes comparisons-tab -->
+        </div>
 
-        <div class="tab-pane" ng-class="{active: showTab('participation')}" id="participation-tab" ng-if="canManageAssignment && showTab('participation')">
-            <div ng-controller="GradebookController">
+        <div ng-controller="GradebookController" ng-if="::canManageAssignment">
+            <div class="tab-pane" ng-class="{active: showTab('participation')}" id="participation-tab" ng-if="canManageAssignment && showTab('participation')">
                 <ng-include src="'modules/gradebook/gradebook-partial.html'"></ng-include>
-            </div>
-        </div><!-- closes gradebook-tab -->
-
+            </div> <!-- closes gradebook-tab -->
+        </div>
     </div><!-- closes tab-content -->
 
 </div>

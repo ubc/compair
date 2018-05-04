@@ -6,6 +6,7 @@ import elo
 from compair.algorithms import ScoredObject
 from compair.algorithms.score import calculate_score_1vs1
 import numbers
+from werkzeug.utils import secure_filename
 
 from flask_script import Manager
 from sqlalchemy import and_, asc
@@ -302,16 +303,16 @@ def create(assignment_id):
     users = query.all()
 
     write_csv(
-            file_name + 'users.csv',
-            ['User Id', 'Student #'],
-            users
+        file_name + 'users.csv',
+        ['User Id', 'Student #'],
+        users
     )
 
     print('Done.')
 
 
 def write_csv(filename, headers, data):
-    with open(filename, 'wt') as csvfile:
+    with open(secure_filename(filename), 'wt') as csvfile:
         report_writer = csv.writer(
             csvfile, delimiter=',',
             quotechar='"', quoting=csv.QUOTE_MINIMAL

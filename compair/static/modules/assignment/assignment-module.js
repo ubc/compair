@@ -110,10 +110,10 @@ module.directive(
                     // find the element's scrollHeight (this tells us the full height regardless of max-height set)
                     scope.thisHeight = element.prop('scrollHeight');
                     // when this full height is outside the max-height, display the read more button to the user
-                    if (scope.thisHeight > 200) {
+                    if (scope.thisHeight >= 200) {
                         scope.showReadMore = true;
                     }
-                }, 7000);
+                }, 0);  // use a timeout of 0. will be evaluated at the next digest cycle
             }
         };
     }
@@ -929,7 +929,7 @@ module.controller("AssignmentViewController",
 
         // revealContent function shows full answer content for abbreviated answers (determined by getHeight directive)
         $scope.revealContent = function(contentItem) {
-            var thisClass = '.content.'+contentItem.id;      // class for the content item to show is "content" plus the content item's ID
+            var thisClass = '.' + contentItem.id + ' .content';      // class for the content item to show is the content item's ID plus "content"
             $(thisClass).css({'max-height' : 'none'}); // now remove height restriction for this content item
             this.showReadMore = false;                 // and hide the read more button for this content item
         };

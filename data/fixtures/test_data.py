@@ -448,7 +448,6 @@ class ComparisonTestData(CriterionTestData):
         self.authorized_student_with_no_answers = self.create_normal_user()
         self.enrol_student(self.authorized_student_with_no_answers, self.get_course())
         self.student_answers = copy.copy(self.answers)
-        self.comparable_answers = copy.copy(self.answers)
         self.comparisons_examples = []
         for assignment in self.get_assignments():
             # make sure we're allowed to compare existing assignments
@@ -456,12 +455,9 @@ class ComparisonTestData(CriterionTestData):
             answer = self.create_answer(assignment, self.secondary_authorized_student)
             self.answers.append(answer)
             self.student_answers.append(answer)
-            self.comparable_answers.append(answer)
-            self.answers.append(answer)
             answer = self.create_answer(assignment, self.get_authorized_student())
             self.answers.append(answer)
             self.student_answers.append(answer)
-            self.comparable_answers.append(answer)
             # add a TA and Instructor answer - not comparable
             answer = self.create_answer(assignment, self.get_authorized_ta())
             answer.comparable = False
@@ -473,16 +469,12 @@ class ComparisonTestData(CriterionTestData):
             answer = self.create_answer(assignment, self.get_authorized_ta())
             answer.comparable = True
             self.answers.append(answer)
-            self.comparable_answers.append(answer)
             answer = self.create_answer(assignment, self.get_authorized_instructor())
             answer.comparable = True
             self.answers.append(answer)
-            self.comparable_answers.append(answer)
             # add a comparison example
             answer1 = self.create_answer(assignment, self.get_authorized_ta())
-            self.answers.append(answer1)
             answer2 = self.create_answer(assignment, self.get_authorized_instructor())
-            self.answers.append(answer2)
             comparison_example = self.create_comparison_example(assignment, answer1, answer2)
             self.comparisons_examples.append(comparison_example)
 
@@ -506,7 +498,7 @@ class ComparisonTestData(CriterionTestData):
         return self.student_answers
 
     def get_comparable_answers(self):
-        return self.comparable_answers
+        return [answer for answer in self.answers if answer.comparable]
 
     def get_assignment_in_answer_period(self):
         return self.answer_period_assignment

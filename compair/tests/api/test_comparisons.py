@@ -431,7 +431,8 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 found_comparison,
                 "Actual comparison received contains a comparison that was not sent.")
 
-    def _submit_all_possible_comparisons_for_user(self, user_id):
+    @mock.patch('random.random')
+    def _submit_all_possible_comparisons_for_user(self, user_id, mock_random):
         example_winner_ids = []
         example_loser_ids = []
         submit_count = 0
@@ -563,6 +564,11 @@ class ComparisonAPITests(ComPAIRAPITestCase):
         This is just a rough check on whether score calculations are correct. Answers
         that has more wins should have the highest scores.
         """
+        # For the logic "winning more rounds -> higher score" to hold in this particular
+        # test case, we are adding one more answer to the assignment
+        ans = self.data.create_answer(self.assignment, self.data.get_authorized_instructor())
+        self.data.answers.append(ans)
+
         # Make sure all answers are compared first
         comparisons_auth = self._submit_all_possible_comparisons_for_user(
             self.data.get_authorized_student().id)

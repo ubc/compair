@@ -35,6 +35,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         default=False, nullable=False)
     enable_self_evaluation = db.Column(db.Boolean(name='enable_self_evaluation'),
         default=False, nullable=False)
+    scoring_algorithm = db.Column(EnumType(ScoringAlgorithm, name="scoring_algorithm"),
+        nullable=True, default=ScoringAlgorithm.elo)
     pairing_algorithm = db.Column(EnumType(PairingAlgorithm, name="pairing_algorithm"),
         nullable=True, default=PairingAlgorithm.random)
     rank_display_limit = db.Column(db.Integer, nullable=True)

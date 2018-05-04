@@ -34,6 +34,3 @@ test_app_settings = {
     'MAIL_NOTIFICATION_ENABLED': True,
     'MAIL_DEFAULT_SENDER': 'compair@example.com'
 }
-
-test_app_xapi_settings = test_app_settings.copy()
-test_app_xapi_settings['XAPI_ENABLED'] = True

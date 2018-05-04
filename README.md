@@ -27,6 +27,14 @@ Developer Installation - Docker
 * [Docker Compose](https://docs.docker.com/compose/install/)
 * [npm](https://www.npmjs.com/get-npm)
 
+For running unit tests you may also require a `lapack` and `atlas`. These are needed by the python libraries `scipy` and `numpy` to install properly. These can be installed with:
+
+    yum install lapack-devel atlas-devel
+
+or
+
+    apt-get install libatlas-base-dev liblapack-dev
+
 ### Clone Repo and Start Server
 
     git clone git@github.com:ubc/compair.git compair
@@ -117,9 +125,12 @@ Running tests
 
 Generate Production Release
 ---------------------------
-Run `gulp prod` to generate the production version. This currently just does two things:
+Run `gulp prod` to generate production assets. This currently just:
 1. Combine all Bower managed javascript libraries into a single minified file.
 2. Compile and minify the less files into a single css file.
+3. Compile and minify the less files used for emails into a single css file in the static folder.
+4. Copies all Bower managed images and fonts into the static folder.
+5. Copies the pdf viewer copy and assets into the static folder.
 
 
 Setting up Learning Analytics
