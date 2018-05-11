@@ -2,9 +2,8 @@ import datetime
 import copy
 import random
 from six.moves import range
-import string
 
-from compair import db
+from compair.core import db, random_generator
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, FileFactory, \
     AnswerCommentFactory, AnswerScoreFactory, ComparisonExampleFactory, \
@@ -13,9 +12,6 @@ from data.factories import CourseFactory, UserFactory, UserCourseFactory, Assign
 
 from compair.models import PairingAlgorithm, SystemRole, CourseRole, Comparison, \
     AnswerComment, AnswerCommentType, Answer, WinningAnswer
-
-def random_generator(size=8, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
 
 class DefaultFixture(object):
     ROOT_USER_ID = 1

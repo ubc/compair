@@ -6,7 +6,7 @@ from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
 
 from . import dataformat
-from compair.core import event, db, abort
+from compair.core import event, db, abort, display_name_generator
 from compair.authorization import require, allow
 from .login import authenticate
 from compair.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
@@ -16,7 +16,6 @@ from compair.models.lti_models import MembershipNoValidContextsException, \
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.tasks import update_lti_course_membership
 
-from compair.api.classlist import display_name_generator
 from lti.contrib.flask import FlaskToolProvider
 from lti.launch_params import InvalidLaunchParamError
 from oauthlib.oauth1 import RequestValidator
@@ -105,7 +104,7 @@ class LTIAuthAPI(Resource):
                 lti_context.update_enrolment(lti_user.compair_user_id, lti_user_resource_link.course_role)
         else:
             # need to create user link
-            sess['oauth_create_user_link'] = True
+            sess['lti_create_user_link'] = True
             setup_required = True
 
         if not lti_context:

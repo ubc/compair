@@ -2,7 +2,6 @@ import os
 import uuid
 import shutil
 import random
-import string
 import errno
 
 from flask import Blueprint, request, current_app
@@ -10,6 +9,7 @@ from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 
+from compair.core import allowed_file, random_generator
 from compair.authorization import allow, require
 from . import dataformat
 from compair.core import db, event, abort
@@ -25,15 +25,6 @@ api = new_restful_api(file_api)
 on_save_file = event.signal('FILE_CREATE')
 on_get_kaltura_token = event.signal('FILE_GET_KALTURA_TOKEN')
 on_save_kaltura_file = event.signal('FILE_CREATE_KALTURA_FILE')
-
-def allowed_file(filename, allowed):
-    return '.' in filename and \
-        filename.lower().rsplit('.', 1)[1] in allowed
-
-
-def random_generator(size=8, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
-
 
 # /
 class FileAPI(Resource):

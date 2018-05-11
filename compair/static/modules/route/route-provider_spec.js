@@ -107,28 +107,6 @@ describe('user-module', function () {
             });
         });
 
-        describe('"/oauth/create"', function() {
-            var path = '/oauth/create';
-
-            it('should load correctly', function() {
-                $httpBackend.expectGET('modules/oauth/oauth-partial.html').respond('');
-
-                expect($route.current).toBeUndefined();
-                $location.path(path);
-
-                expect($route.current).toBeUndefined();
-                $httpBackend.flush();
-
-                expect(Session.getUser).not.toHaveBeenCalled();
-                expect(Authorize.can).not.toHaveBeenCalled();
-
-                expect(toaster.error).not.toHaveBeenCalled();
-                expect($rootScope.routeResolveLoadError).toBeUndefined();
-                expect($route.current.templateUrl).toBe('modules/oauth/oauth-partial.html');
-                expect($route.current.controller).toBe('OAuthController');
-            });
-        });
-
         describe('"/course/create"', function() {
             var path = '/course/create';
 

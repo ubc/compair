@@ -17,11 +17,15 @@ var module = angular.module('ubc.ctlt.compair.classlist',
         'ubc.ctlt.compair.login',
         'ubc.ctlt.compair.lti',
         'ubc.ctlt.compair.authorization',
-        'ubc.ctlt.compair.oauth',
         'ui.bootstrap',
         'ngFileSaver'
     ]
 );
+
+module.constant('ThirdPartyAuthType', {
+    cas: "CAS",
+    saml: 'SAML'
+});
 
 /***** Providers *****/
 module.factory(

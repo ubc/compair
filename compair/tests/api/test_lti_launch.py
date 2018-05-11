@@ -6,7 +6,7 @@ import mock
 from data.fixtures.test_data import SimpleAssignmentTestData, LTITestData, ThirdPartyAuthTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, UserCourse, \
-    LTIConsumer, LTIContext, LTIUser, LTIMembership,  \
+    LTIConsumer, LTIContext, LTIUser, LTIMembership, ThirdPartyUser, \
     LTIResourceLink, LTIUserResourceLink, ThirdPartyType
 from compair.models.lti_models import MembershipInvalidRequestException, MembershipNoResultsException, \
     MembershipNoValidContextsException
@@ -229,8 +229,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # first request for user, oauth_create_user_link should be True
-                self.assertTrue(sess.get('oauth_create_user_link'))
+                # first request for user, lti_create_user_link should be True
+                self.assertTrue(sess.get('lti_create_user_link'))
 
                 # check that user is not logged in
                 self.assertIsNone(sess.get('user_id'))
@@ -255,8 +255,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # user already exists, oauth_create_user_link should be None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
@@ -277,8 +277,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # user already exists, oauth_create_user_link should be None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
@@ -303,8 +303,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # first request for user, oauth_create_user_link should be True
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                # first request for user, lti_create_user_link should be True
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
@@ -334,8 +334,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # user already exists, oauth_create_user_link should be None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
@@ -362,8 +362,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # user already exists, oauth_create_user_link should be None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
@@ -389,8 +389,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # user already exists, oauth_create_user_link should be None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
@@ -431,8 +431,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # user already exists, oauth_create_user_link should be None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
@@ -456,8 +456,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # user already exists, oauth_create_user_link should be None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
@@ -488,8 +488,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # user already exists, oauth_create_user_link should be None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
@@ -518,7 +518,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
                 # user doesn't exist
-                self.assertTrue(sess.get('oauth_create_user_link'))
+                self.assertTrue(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertIsNone(sess.get('user_id'))
@@ -546,8 +546,8 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertEqual(lti_context.id, sess.get('lti_context'))
                 self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
 
-                # user already exists, oauth_create_user_link should be None
-                self.assertIsNone(sess.get('oauth_create_user_link'))
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
@@ -912,7 +912,108 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertTrue(status['assignment']['exists'])
             self.assertEqual(status['assignment']['id'], assignment.uuid)
 
-    def test_cas_auth_via_lti_launch(self):
+    def test_new_cas_auth_via_lti_launch(self):
+        auth_data = ThirdPartyAuthTestData()
+
+        lti_consumer = self.lti_data.get_consumer()
+        roles = {
+            "Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "Faculty": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Faculty": (SystemRole.instructor, CourseRole.instructor),
+            "Staff": (SystemRole.instructor, CourseRole.instructor),
+            "urn:lti:role:ims/lis/Staff": (SystemRole.instructor, CourseRole.instructor),
+            "Student": (SystemRole.student, CourseRole.student),
+            "urn:lti:role:ims/lis/Student": (SystemRole.student, CourseRole.student),
+            "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant),
+            "urn:lti:role:ims/lis/TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
+        }
+
+        for lti_role, (system_role, course_role) in roles.items():
+            lti_context = self.lti_data.create_context(lti_consumer)
+            lti_user = self.lti_data.create_user(lti_consumer, system_role)
+            lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
+            lti_user_resource_link = self.lti_data.create_user_resource_link(
+                lti_user, lti_resource_link, CourseRole.instructor)
+
+            # linked third party user (no context id)
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=None, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            unique_identifier = "unique_identifier_"+lti_role+"_1"
+
+            with self.cas_login(unique_identifier, follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/lti')
+
+                third_party_user = ThirdPartyUser.query \
+                    .filter_by(unique_identifier=unique_identifier, third_party_type=ThirdPartyType.cas) \
+                    .one()
+                self.assertIsNotNone(third_party_user)
+                user = third_party_user.user
+                self.assertIsNotNone(user)
+
+                # check session
+                with self.client.session_transaction() as sess:
+                    self.assertTrue(sess.get('LTI'))
+
+                    # check that lti_create_user_link is None
+                    self.assertIsNone(sess.get('lti_create_user_link'))
+
+                    # check that user is created
+                    self.assertEqual(str(user.id), sess.get('user_id'))
+
+                # check that lti_user is now linked
+                self.assertEqual(lti_user.compair_user_id, user.id)
+
+            # create fresh lti_user
+            lti_user = self.lti_data.create_user(lti_consumer, system_role)
+
+            course = self.data.create_course()
+            lti_context.compair_course_id = course.id
+            db.session.commit()
+
+            # linked third party user (with linked context id)
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            unique_identifier = "unique_identifier_"+lti_role+"_2"
+
+            with self.cas_login(unique_identifier, follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/lti')
+
+                third_party_user = ThirdPartyUser.query \
+                    .filter_by(unique_identifier=unique_identifier, third_party_type=ThirdPartyType.cas) \
+                    .one()
+                self.assertIsNotNone(third_party_user)
+                user = third_party_user.user
+                self.assertIsNotNone(user)
+
+                # check session
+                with self.client.session_transaction() as sess:
+                    self.assertTrue(sess.get('LTI'))
+
+                    # check that lti_create_user_link is None
+                    self.assertIsNone(sess.get('lti_create_user_link'))
+
+                    # check that user is logged in
+                    self.assertEqual(str(user.id), sess.get('user_id'))
+
+                # check that lti_user is now linked
+                self.assertEqual(lti_user.compair_user_id, user.id)
+
+                # verify enrollment
+                user_course = UserCourse.query \
+                    .filter_by(
+                        user_id=user.id,
+                        course_id=course.id,
+                        course_role=course_role
+                    ) \
+                    .one_or_none()
+                self.assertIsNotNone(user_course)
+
+    def test_existing_cas_auth_via_lti_launch(self):
         auth_data = ThirdPartyAuthTestData()
 
         lti_consumer = self.lti_data.get_consumer()
@@ -951,29 +1052,26 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 with self.client.session_transaction() as sess:
                     self.assertTrue(sess.get('LTI'))
 
-                    # check that oauth_create_user_link is None
-                    self.assertIsNone(sess.get('oauth_create_user_link'))
+                    # check that lti_create_user_link is None
+                    self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
                     self.assertEqual(str(user.id), sess.get('user_id'))
 
-                    self.assertIsNone(sess.get('CAS_CREATE'))
-                    self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
-
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
 
-                # create fresh lti_user
-                lti_user = self.lti_data.create_user(lti_consumer, system_role)
+            # create fresh lti_user
+            lti_user = self.lti_data.create_user(lti_consumer, system_role)
 
-                course = self.data.create_course()
-                lti_context.compair_course_id = course.id
-                db.session.commit()
+            course = self.data.create_course()
+            lti_context.compair_course_id = course.id
+            db.session.commit()
 
-                # linked third party user (with linked context id)
-                with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
-                        user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
-                    self.assert200(rv)
+            # linked third party user (with linked context id)
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
 
             user = self.data.create_user(system_role)
             third_party_user = auth_data.create_third_party_user(user=user, third_party_type=ThirdPartyType.cas)
@@ -985,14 +1083,11 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 with self.client.session_transaction() as sess:
                     self.assertTrue(sess.get('LTI'))
 
-                    # check that oauth_create_user_link is None
-                    self.assertIsNone(sess.get('oauth_create_user_link'))
+                    # check that lti_create_user_link is None
+                    self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
                     self.assertEqual(str(user.id), sess.get('user_id'))
-
-                    self.assertIsNone(sess.get('CAS_CREATE'))
-                    self.assertIsNone(sess.get('CAS_UNIQUE_IDENTIFIER'))
 
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
@@ -1007,7 +1102,101 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     .one_or_none()
                 self.assertIsNotNone(user_course)
 
-    def test_saml_auth_via_lti_launch(self):
+    def test_new_saml_auth_via_lti_launch(self):
+        auth_data = ThirdPartyAuthTestData()
+
+        lti_consumer = self.lti_data.get_consumer()
+        roles = {
+            "Instructor": (SystemRole.instructor, CourseRole.instructor),
+            "Student": (SystemRole.student, CourseRole.student),
+            "TeachingAssistant": (SystemRole.student, CourseRole.teaching_assistant)
+        }
+
+        for lti_role, (system_role, course_role) in roles.items():
+            lti_context = self.lti_data.create_context(lti_consumer)
+            lti_user = self.lti_data.create_user(lti_consumer, system_role)
+            lti_resource_link = self.lti_data.create_resource_link(lti_consumer, lti_context)
+            lti_user_resource_link = self.lti_data.create_user_resource_link(
+                lti_user, lti_resource_link, CourseRole.instructor)
+
+            # linked third party user (no context id)
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=None, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            unique_identifier = "unique_identifier_"+lti_role+"_1"
+
+            with self.saml_login(unique_identifier, follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/lti')
+
+                third_party_user = ThirdPartyUser.query \
+                    .filter_by(unique_identifier=unique_identifier, third_party_type=ThirdPartyType.saml) \
+                    .one()
+                self.assertIsNotNone(third_party_user)
+                user = third_party_user.user
+                self.assertIsNotNone(user)
+
+                # check session
+                with self.client.session_transaction() as sess:
+                    self.assertTrue(sess.get('LTI'))
+
+                    # check that lti_create_user_link is None
+                    self.assertIsNone(sess.get('lti_create_user_link'))
+
+                    # check that user is logged in
+                    self.assertEqual(str(user.id), sess.get('user_id'))
+
+                # check that lti_user is now linked
+                self.assertEqual(lti_user.compair_user_id, user.id)
+
+            # create fresh lti_user
+            lti_user = self.lti_data.create_user(lti_consumer, system_role)
+
+            course = self.data.create_course()
+            lti_context.compair_course_id = course.id
+            db.session.commit()
+
+            # linked third party user (with linked context id)
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
+
+            unique_identifier = "unique_identifier_"+lti_role+"_2"
+
+            with self.saml_login(unique_identifier, follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/lti')
+
+                third_party_user = ThirdPartyUser.query \
+                    .filter_by(unique_identifier=unique_identifier, third_party_type=ThirdPartyType.saml) \
+                    .one()
+                self.assertIsNotNone(third_party_user)
+                user = third_party_user.user
+                self.assertIsNotNone(user)
+
+                # check session
+                with self.client.session_transaction() as sess:
+                    self.assertTrue(sess.get('LTI'))
+
+                    # check that lti_create_user_link is None
+                    self.assertIsNone(sess.get('lti_create_user_link'))
+
+                    # check that user is logged in
+                    self.assertEqual(str(user.id), sess.get('user_id'))
+
+                # check that lti_user is now linked
+                self.assertEqual(lti_user.compair_user_id, user.id)
+
+                # verify enrollment
+                user_course = UserCourse.query \
+                    .filter_by(
+                        user_id=user.id,
+                        course_id=course.id,
+                        course_role=course_role
+                    ) \
+                    .one_or_none()
+                self.assertIsNotNone(user_course)
+
+    def test_existing_saml_auth_via_lti_launch(self):
         auth_data = ThirdPartyAuthTestData()
 
         lti_consumer = self.lti_data.get_consumer()
@@ -1039,29 +1228,26 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 with self.client.session_transaction() as sess:
                     self.assertTrue(sess.get('LTI'))
 
-                    # check that oauth_create_user_link is None
-                    self.assertIsNone(sess.get('oauth_create_user_link'))
+                    # check that lti_create_user_link is None
+                    self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
                     self.assertEqual(str(user.id), sess.get('user_id'))
 
-                    self.assertIsNone(sess.get('SAML_CREATE'))
-                    self.assertIsNone(sess.get('SAML_UNIQUE_IDENTIFIER'))
-
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
 
-                # create fresh lti_user
-                lti_user = self.lti_data.create_user(lti_consumer, system_role)
+            # create fresh lti_user
+            lti_user = self.lti_data.create_user(lti_consumer, system_role)
 
-                course = self.data.create_course()
-                lti_context.compair_course_id = course.id
-                db.session.commit()
+            course = self.data.create_course()
+            lti_context.compair_course_id = course.id
+            db.session.commit()
 
-                # linked third party user (with linked context id)
-                with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
-                        user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
-                    self.assert200(rv)
+            # linked third party user (with linked context id)
+            with self.lti_launch(lti_consumer, lti_resource_link.resource_link_id,
+                    user_id=lti_user.user_id, context_id=lti_context.context_id, roles=lti_role) as rv:
+                self.assert200(rv)
 
             user = self.data.create_user(system_role)
             third_party_user = auth_data.create_third_party_user(user=user, third_party_type=ThirdPartyType.saml)
@@ -1073,14 +1259,11 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 with self.client.session_transaction() as sess:
                     self.assertTrue(sess.get('LTI'))
 
-                    # check that oauth_create_user_link is None
-                    self.assertIsNone(sess.get('oauth_create_user_link'))
+                    # check that lti_create_user_link is None
+                    self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
                     self.assertEqual(str(user.id), sess.get('user_id'))
-
-                    self.assertIsNone(sess.get('SAML_CREATE'))
-                    self.assertIsNone(sess.get('SAML_UNIQUE_IDENTIFIER'))
 
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)

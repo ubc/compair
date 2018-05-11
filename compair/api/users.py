@@ -260,21 +260,12 @@ class UserListAPI(Resource):
                 "pages": page.pages, "total": page.total, "per_page": page.per_page}
 
     def post(self):
-        # login_required when oauth_create_user_link not set
-        if not sess.get('oauth_create_user_link'):
-            if not current_app.login_manager._login_disabled and \
-                    not current_user.is_authenticated:
-                return current_app.login_manager.unauthorized()
+        # login_required when lti_create_user_link not set
+        if not sess.get('lti_create_user_link') and not current_user.is_authenticated:
+            return current_app.login_manager.unauthorized()
 
         user = User()
         params = new_user_parser.parse_args()
-
-        # TODO: add block student from changing code when creating new accounts
-        # ALLOW_STUDENT_CHANGE_NAME, ALLOW_STUDENT_CHANGE_DISPLAY_NAME,
-        # ALLOW_STUDENT_CHANGE_STUDENT_NUMBER, ALLOW_STUDENT_CHANGE_EMAIL
-        # This would be best to change after #606 simplify LTI/CAS/SAML login
-        # for now we can use the front end params that are disabled for the student to edit
-        # (they can technically get around this but will be overwritten when next login via CAS/LTI)
         user.student_number = params.get("student_number", None)
         user.email = params.get("email")
         user.firstname = params.get("firstname")
@@ -285,12 +276,7 @@ class UserListAPI(Resource):
         check_valid_email_notification_method(email_notification_method)
         user.email_notification_method = EmailNotificationMethod(email_notification_method)
 
-        # if creating a saml or cas user, do not set username or password
-        if sess.get('oauth_create_user_link') and sess.get('LTI') and \
-                (sess.get('CAS_CREATE') or sess.get('SAML_CREATE')):
-            user.username = None
-            user.password = None
-        elif not current_app.config.get('APP_LOGIN_ENABLED'):
+        if not current_app.config.get('APP_LOGIN_ENABLED'):
             # if APP_LOGIN_ENABLED is not enabled, allow blank username and password
             user.username = None
             user.password = None
@@ -313,49 +299,24 @@ class UserListAPI(Resource):
         if user.student_number is not None and student_number_exists:
             abort(409, title="User Not Saved", message="Sorry, this student number already exists and student numbers must be unique in ComPAIR. Please enter another number and try saving again.")
 
-        # handle oauth_create_user_link setup for third party logins
-        if sess.get('oauth_create_user_link'):
-            login_method = None
+        # handle lti_create_user_link setup for third party logins
+        if sess.get('lti_create_user_link') and sess.get('LTI'):
+            lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+            lti_user.compair_user = user
+            user.system_role = lti_user.system_role
+            lti_user.update_user_profile()
 
-            if sess.get('LTI'):
-                lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-                lti_user.compair_user = user
-                user.system_role = lti_user.system_role
-                lti_user.update_user_profile()
-                login_method = 'LTI'
-
-                if sess.get('lti_context') and sess.get('lti_user_resource_link'):
-                    lti_context = LTIContext.query.get_or_404(sess['lti_context'])
-                    lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
-                    if lti_context.is_linked_to_course():
-                        # create new enrollment
-                        new_user_course = UserCourse(
-                            user=user,
-                            course_id=lti_context.compair_course_id,
-                            course_role=lti_user_resource_link.course_role
-                        )
-                        db.session.add(new_user_course)
-
-                if sess.get('CAS_CREATE'):
-                    thirdpartyuser = ThirdPartyUser(
-                        third_party_type=ThirdPartyType.cas,
-                        unique_identifier=sess.get('CAS_UNIQUE_IDENTIFIER'),
-                        params=sess.get('CAS_PARAMS'),
-                        user=user
+            if sess.get('lti_context') and sess.get('lti_user_resource_link'):
+                lti_context = LTIContext.query.get_or_404(sess['lti_context'])
+                lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+                if lti_context.is_linked_to_course():
+                    # create new enrollment
+                    new_user_course = UserCourse(
+                        user=user,
+                        course_id=lti_context.compair_course_id,
+                        course_role=lti_user_resource_link.course_role
                     )
-                    login_method = ThirdPartyType.cas.value
-                    db.session.add(thirdpartyuser)
-
-                elif sess.get('SAML_CREATE'):
-                    thirdpartyuser = ThirdPartyUser(
-                        third_party_type=ThirdPartyType.saml,
-                        unique_identifier=sess.get('SAML_UNIQUE_IDENTIFIER'),
-                        params=sess.get('SAML_PARAMS'),
-                        user=user
-                    )
-                    login_method = ThirdPartyType.saml.value
-                    db.session.add(thirdpartyuser)
-
+                    db.session.add(new_user_course)
         else:
             system_role = params.get("system_role")
             check_valid_system_role(system_role)
@@ -389,20 +350,10 @@ class UserListAPI(Resource):
             current_app.logger.error("Failed to add new user. Duplicate.")
             abort(409, title="User Not Saved", message="Sorry, this ID already exists and IDs must be unique in ComPAIR. Please try addding another user.")
 
-        # handle oauth_create_user_link teardown for third party logins
-        if sess.get('oauth_create_user_link'):
-            authenticate(user, login_method=login_method)
-            sess.pop('oauth_create_user_link')
-
-            if sess.get('CAS_CREATE'):
-                sess.pop('CAS_CREATE')
-                sess.pop('CAS_UNIQUE_IDENTIFIER')
-                sess['CAS_LOGIN'] = True
-
-            if sess.get('SAML_CREATE'):
-                sess.pop('SAML_CREATE')
-                sess.pop('SAML_UNIQUE_IDENTIFIER')
-                sess['SAML_LOGIN'] = True
+        # handle lti_create_user_link teardown for third party logins
+        if sess.get('lti_create_user_link'):
+            authenticate(user, login_method='LTI')
+            sess.pop('lti_create_user_link')
 
         return marshal_user_data(user)
 

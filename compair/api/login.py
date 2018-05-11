@@ -40,12 +40,12 @@ def login():
     else:
         permissions = authenticate(user, login_method='ComPAIR Account')
 
-        if sess.get('LTI') and sess.get('oauth_create_user_link'):
+        if sess.get('LTI') and sess.get('lti_create_user_link'):
             lti_user = LTIUser.query.get_or_404(sess['lti_user'])
             lti_user.compair_user = user
             lti_user.upgrade_system_role()
             lti_user.update_user_profile()
-            sess.pop('oauth_create_user_link')
+            sess.pop('lti_create_user_link')
 
         if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
             lti_context = LTIContext.query.get_or_404(sess['lti_context'])
@@ -150,36 +150,36 @@ def cas_auth():
                 ) \
                 .one_or_none()
 
-            # store additional CAS attributes if needed
-            if not thirdpartyuser or not thirdpartyuser.user:
-                if sess.get('LTI') and sess.get('oauth_create_user_link'):
-                    sess['CAS_CREATE'] = True
-                    sess['CAS_UNIQUE_IDENTIFIER'] = username
-                    sess['CAS_PARAMS'] = validation_response.attributes
-                    url = '/app/#/oauth/create'
-                else:
-                    current_app.logger.debug("Login failed, invalid username for: " + username)
-                    error_message = "You don't have access to this application."
+            if not thirdpartyuser:
+                thirdpartyuser = ThirdPartyUser(
+                    unique_identifier=username,
+                    third_party_type=ThirdPartyType.cas,
+                    params=validation_response.attributes
+                )
+                db.session.add(thirdpartyuser)
+
+            if not thirdpartyuser.user:
+                thirdpartyuser.generate_user_account()
+
+            authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
+            thirdpartyuser.params = validation_response.attributes
+
+            if sess.get('LTI') and sess.get('lti_create_user_link'):
+                lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+                lti_user.compair_user = thirdpartyuser.user
+                lti_user.upgrade_system_role()
+                lti_user.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
+                sess.pop('lti_create_user_link')
             else:
-                authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
-                thirdpartyuser.params = validation_response.attributes
+                thirdpartyuser.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
 
-                if sess.get('LTI') and sess.get('oauth_create_user_link'):
-                    lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-                    lti_user.compair_user = thirdpartyuser.user
-                    lti_user.upgrade_system_role()
-                    lti_user.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
-                    sess.pop('oauth_create_user_link')
-                else:
-                    thirdpartyuser.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
+            if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
+                lti_context = LTIContext.query.get_or_404(sess['lti_context'])
+                lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+                lti_context.update_enrolment(thirdpartyuser.user_id, lti_user_resource_link.course_role)
 
-                if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
-                    lti_context = LTIContext.query.get_or_404(sess['lti_context'])
-                    lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
-                    lti_context.update_enrolment(thirdpartyuser.user_id, lti_user_resource_link.course_role)
-
-                db.session.commit()
-                sess['CAS_LOGIN'] = True
+            db.session.commit()
+            sess['CAS_LOGIN'] = True
 
     if error_message is not None:
         sess['THIRD_PARTY_AUTH_ERROR_TYPE'] = 'CAS'
@@ -256,36 +256,36 @@ def saml_auth():
             sess['SAML_NAME_ID'] = auth.get_nameid()
             sess['SAML_SESSION_INDEX'] = auth.get_session_index()
 
-            # store additional CAS attributes if needed
-            if not thirdpartyuser or not thirdpartyuser.user:
-                if sess.get('LTI') and sess.get('oauth_create_user_link'):
-                    sess['SAML_CREATE'] = True
-                    sess['SAML_UNIQUE_IDENTIFIER'] = unique_identifier
-                    sess['SAML_PARAMS'] = attributes
-                    url = '/app/#/oauth/create'
-                else:
-                    current_app.logger.debug("Login failed, invalid unique_identifier for: " + unique_identifier)
-                    error_message = "You don't have access to this application."
+            if not thirdpartyuser:
+                thirdpartyuser = ThirdPartyUser(
+                    unique_identifier=unique_identifier,
+                    third_party_type=ThirdPartyType.saml,
+                    params=attributes
+                )
+                db.session.add(thirdpartyuser)
+
+            if not thirdpartyuser.user:
+                thirdpartyuser.generate_user_account()
+
+            authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
+            thirdpartyuser.params = attributes
+
+            if sess.get('LTI') and sess.get('lti_create_user_link'):
+                lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+                lti_user.compair_user_id = thirdpartyuser.user_id
+                lti_user.upgrade_system_role()
+                lti_user.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
+                sess.pop('lti_create_user_link')
             else:
-                authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
-                thirdpartyuser.params = attributes
+                thirdpartyuser.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
 
-                if sess.get('LTI') and sess.get('oauth_create_user_link'):
-                    lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-                    lti_user.compair_user_id = thirdpartyuser.user_id
-                    lti_user.upgrade_system_role()
-                    lti_user.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
-                    sess.pop('oauth_create_user_link')
-                else:
-                    thirdpartyuser.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
+            if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
+                lti_context = LTIContext.query.get_or_404(sess['lti_context'])
+                lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+                lti_context.update_enrolment(thirdpartyuser.user_id, lti_user_resource_link.course_role)
 
-                if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
-                    lti_context = LTIContext.query.get_or_404(sess['lti_context'])
-                    lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
-                    lti_context.update_enrolment(thirdpartyuser.user_id, lti_user_resource_link.course_role)
-
-                db.session.commit()
-                sess['SAML_LOGIN'] = True
+            db.session.commit()
+            sess['SAML_LOGIN'] = True
 
     if error_message is not None:
         sess['THIRD_PARTY_AUTH_ERROR_TYPE'] = 'SAML'
