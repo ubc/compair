@@ -2,10 +2,13 @@ import datetime
 import pytz
 
 from flask import request
+from flask_login import current_user
 
 from tincan import RemoteLRS, Statement, Agent, AgentAccount, Verb, \
     Activity, ActivityDefinition, ActivityList, Extensions, \
     Context, ContextActivities, LanguageMap, StateDocument
+
+from compair.core import impersonation
 
 from .actor import XAPIActor
 from .extension import XAPIExtension
@@ -18,7 +21,10 @@ class XAPIStatement(object):
         if not statement.timestamp:
             statement.timestamp = datetime.datetime.now().replace(tzinfo=pytz.utc).isoformat()
 
-        statement.actor = XAPIActor.generate_actor(user)
+        if impersonation.is_impersonating() and user.id == current_user.id:
+            statement.actor = XAPIActor.generate_actor(impersonation.get_impersonation_original_user())
+        else:
+            statement.actor = XAPIActor.generate_actor(user)
 
         # add default context info
         if not statement.context:
@@ -47,6 +53,12 @@ class XAPIStatement(object):
                 statement.context.extensions = Extensions()
             referer_key = XAPIExtension.context_extensions.get('referer')
             statement.context.extensions[referer_key] = request.environ.get('HTTP_REFERER')
+
+        if impersonation.is_impersonating() and user.id == current_user.id:
+            if not statement.context.extensions:
+                statement.context.extensions = Extensions()
+            impersonating_as_key = XAPIExtension.context_extensions.get('impersonating as')
+            statement.context.extensions[impersonating_as_key] = XAPIActor.generate_actor(user)
 
         return statement
 

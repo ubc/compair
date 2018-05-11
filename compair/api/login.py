@@ -2,13 +2,15 @@ import os
 
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask
 from flask_login import current_user, login_required, login_user, logout_user
+from flask_restful import marshal
 
-from compair.core import db, event, abort
+from compair.core import db, event, abort, impersonation
 from compair.authorization import get_logged_in_user_permissions
 from compair.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext, \
     ThirdPartyUser, ThirdPartyType
 from compair.cas import get_cas_login_url, validate_cas_ticket, get_cas_logout_url
 from compair.saml import get_saml_login_url, get_saml_auth_response, get_saml_logout_url, _get_auth
+from . import dataformat
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
@@ -87,7 +89,11 @@ def logout():
 @login_api.route('/session', methods=['GET'])
 @login_required
 def session():
-    return jsonify({'id': current_user.uuid, 'permissions': get_logged_in_user_permissions()})
+    impersonation_details = _checkImpersonation()
+    if impersonation_details.get('impersonating', False):
+        return jsonify({'id': current_user.uuid, 'permissions': get_logged_in_user_permissions(), 'impersonation': impersonation_details})
+    else:
+        return jsonify({'id': current_user.uuid, 'permissions': get_logged_in_user_permissions()})
 
 
 @login_api.route('/session/permission', methods=['GET'])
@@ -353,3 +359,20 @@ def authenticate(user, login_method=None):
         login_method=login_method
     )
     return get_logged_in_user_permissions()
+
+def _checkImpersonation():
+    if not current_app.config.get('IMPERSONATION_ENABLED', False) or not impersonation.is_impersonating():
+        return {'impersonating' : False}
+
+    original_user = impersonation.get_impersonation_original_user()
+    impersonate_as_user = current_user
+    if original_user is None or impersonate_as_user is None:
+        # something went wrong...
+        abort(503, title="Cannot check impersonation status", \
+            message="Sorry, cannot find information on impersonation status")
+
+    # user is impersonating. treat as restrict_user when calling dataformat
+    return { \
+        'impersonating' : True,
+        'original_user' : marshal(original_user, dataformat.get_user(True))
+    }

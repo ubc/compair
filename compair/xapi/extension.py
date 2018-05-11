@@ -7,7 +7,8 @@ class XAPIExtension(object):
         'referer': 'http://nextsoftwaresolutions.com/xapi/extensions/referer',
         'filters': 'http://xapi.learninganalytics.ubc.ca/extension/filters',
         'sort order': 'http://xapi.learninganalytics.ubc.ca/extension/sort-order',
-        'login method': 'http://xapi.learninganalytics.ubc.ca/extension/login-method'
+        'login method': 'http://xapi.learninganalytics.ubc.ca/extension/login-method',
+        'impersonating as': 'http://xapi.learninganalytics.ubc.ca/extension/impersonating-as'
     }
 
     object_extensions = {

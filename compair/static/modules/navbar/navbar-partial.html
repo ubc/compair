@@ -68,6 +68,11 @@
                                     <i class="fa fa-user fa-fw"></i> Profile
                                 </a>
                             </li>
+                            <li ng-if="canStartStudentView && impersonationEnabled">
+                                <a id="student-view-link" href="" ng-click="selectStudentView()">
+                                    <i class="fa fa-eye fa-fw"></i> Student View
+                                </a>
+                            </li>
                             <li ng-controller="LogoutController">
                                 <a href="" ng-click="logout();" id="logout-link">
                                     <i class="fa fa-sign-out fa-fw"></i> Log Out
@@ -89,5 +94,7 @@
         </li>
     </ul>
     <ng-include src="'modules/common/demo-warning-template.html'"></ng-include>
+    <ng-include src="'modules/common/impersonation-visual-cue-template.html'"></ng-include>
+
 </div>
 

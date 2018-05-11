@@ -9,7 +9,7 @@ from six import text_type
 
 from . import dataformat
 from compair.authorization import is_user_access_restricted, require, allow
-from compair.core import db, event, abort
+from compair.core import db, event, abort, impersonation
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.models import User, SystemRole, Course, UserCourse, CourseRole, Assignment, \
     LTIConsumer, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
@@ -114,7 +114,11 @@ def check_valid_email_notification_method(email_notification_method):
         abort(400, title="User Not Saved", message="Please try again with an email notification checked or unchecked.")
 
 def marshal_user_data(user):
-    if allow(MANAGE, user) or current_user.id == user.id:
+    if impersonation.is_impersonating() and current_user.id == user.id:
+        # when retrieving the profile of the student being impersonated,
+        # don't include full profile (i.e. no email)
+        return marshal(user, dataformat.get_user(False))
+    elif allow(MANAGE, user) or current_user.id == user.id:
         return marshal(user, dataformat.get_full_user())
     else:
         return marshal(user, dataformat.get_user(is_user_access_restricted(user)))

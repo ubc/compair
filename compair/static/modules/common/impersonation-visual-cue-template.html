@@ -1,0 +1,14 @@
+<div class="impersonation_cue container" ng-if="impersonating">
+    <div class="row">
+        <div class="text-center col-md-10">
+            You are viewing ComPAIR as
+            <span ng-if="impersonate_as_user_name">{{impersonate_as_user_name}}</span>
+            <span ng-if="!impersonate_as_user_name">someone else</span>
+        </div>
+        <div class="text-right col-md-2">
+            <button type="button" class="btn btn-primary btn-xs" ng-click="stop_impersonate()">
+                <span class="glyphicon glyphicon-remove"></span> Close Student View
+            </button>
+        </div>
+    </div>
+</div>

@@ -6,6 +6,23 @@
         'ubc.ctlt.compair.user'
     ]);
 
+    module.factory('ImpersonateResource',
+        ['$resource',
+        function($resource)
+        {
+            var impersonate_url = '/api/impersonate';
+            var impersonate_resource = $resource(
+                impersonate_url, {userId: '@userId'}, {
+                    impersonate: {method: 'POST', url: impersonate_url+'/:userId'},
+                    stop_impersonate: {method: 'DELETE'},
+                });
+            return impersonate_resource;
+        }]);
+
+    module.constant('ImpersonationSettings', {
+        enabled: false,
+    });
+
     /**
      * Session Service manages the session data for the frontend
      * It retrieves the user information and permissions from backend if they are not
@@ -13,13 +30,22 @@
      */
     module.factory('Session',
             ["$rootScope",  "$http", "$q", "localStorageService", "$log", "UserResource",
-            function ($rootScope, $http, $q, localStorageService, $log, UserResource) {
+            "$route", "$window", "$location", "ImpersonateResource",
+            function ($rootScope, $http, $q, localStorageService, $log, UserResource,
+                $route, $window, $location, ImpersonateResource) {
         var PERMISSION_REFRESHED_EVENT = "event:Session-refreshPermissions";
+        var IMPERSONATE_START_EVENT = "event:Session-startImpersonation";
+        var IMPERSONATE_END_EVENT = "event:Session-endImpersonation";
 
-        return {
+        // The impersonate functions need to call session refresh.  Assign the
+        // return object to a variable so the functions can reference each others
+        var session_exports = {
             _user: new UserResource,
             _permissions: null,
+            _impersonation: null,
             PERMISSION_REFRESHED_EVENT: PERMISSION_REFRESHED_EVENT,
+            IMPERSONATE_START_EVENT: IMPERSONATE_START_EVENT,
+            IMPERSONATE_END_EVENT: IMPERSONATE_END_EVENT,
             /**
              * Get user object from Session. The user is loaded from local cache if
              * it's already received from remote. Otherwise, it issues API calls.
@@ -63,6 +89,8 @@
                     angular.extend(scope._user, u);
                     scope._permissions = result.data.permissions;
                     localStorageService.set('permissions', scope._permissions);
+                    scope._impersonation = result.data.impersonation;
+                    localStorageService.set('impersonation', scope._impersonation);
                     return deferred.promise;
                 });
             },
@@ -109,12 +137,15 @@
                     delete this._user[prop];
                 }
                 this._permissions = null;
-                localStorageService.remove('user', 'permissions', 'lti_status');
+                this._impersonation = null;
+                localStorageService.remove('user', 'permissions', 'lti_status', 'impersonation');
+                $rootScope.$broadcast(IMPERSONATE_END_EVENT);
             },
-            refresh: function() {
+            refresh: function(use_cache) {
+                use_cache = typeof use_cache !== 'undefined' ? use_cache : true;
                 var scope = this;
                 var deferred = $q.defer();
-                return $http.get('/api/session', { cache:true }).then(function (result) {
+                return $http.get('/api/session', { cache:use_cache }).then(function (result) {
                     // retrieve logged in user's information
                     // return a promise for chaining
                     var u = UserResource.get({"id": result.data.id}, function(user) {
@@ -125,14 +156,79 @@
                     angular.extend(scope._user, u);
                     scope._permissions = result.data.permissions;
                     localStorageService.set('permissions', scope._permissions);
+                    scope._impersonation = result.data.impersonation;
+                    localStorageService.set('impersonation', scope._impersonation);
                     return deferred.promise;
                 });
             },
             expirePermissions: function() {
                 this._permissions = null;
                 localStorageService.remove('permissions');
-            }
+            },
+
+            getImpersonation: function() {
+                if (this._impersonation) {
+                    return $q.when(this._impersonation);
+                } else {
+                    var stored_impersonation = localStorageService.get('impersonation');
+                    if (stored_impersonation) {
+                        return $q.when(stored_impersonation);
+                    }
+                }
+                return $q.when({});
+            },
+            isImpersonating: function() {
+                if (this._impersonation) {
+                    return this._impersonation.impersonating;
+                }
+
+                var stored_impersonation = localStorageService.get('impersonation');
+                if (stored_impersonation) {
+                    return stored_impersonation.impersonating;
+                }
+                return null;
+            },
+            impersonate: function (courseId, userId) {
+                return ImpersonateResource.impersonate({'userId': userId}).$promise.then(function(ret) {
+                    // Destroy the session first. In case the refresh failed (e.g. network issue), 
+                    // a success reload of the page will show the correct student view.
+                    session_exports.destroy();
+                    return session_exports.refresh(false).then(function () {
+                        if (courseId) {
+                            var newPath = '/course/' + courseId;
+                            if ($location.path() == newPath) {
+                                $route.reload();
+                            } else {
+                                $location.path(newPath);
+                            }
+                        } else {
+                            $window.location.assign('/');
+                        }
+                        $rootScope.$broadcast(IMPERSONATE_START_EVENT);
+                    });
+                });
+            },
+            stop_impersonate: function(courseId) {
+                return ImpersonateResource.stop_impersonate({}).$promise.then(function(ret) {
+                    session_exports.destroy();
+                    session_exports.refresh(false).then(function () {
+                        if (courseId) {
+                            var newPath = '/course/' + courseId;
+                            if ($location.path() == newPath) {
+                                $route.reload();
+                            } else {
+                                $location.path(newPath);
+                            }
+                        } else {
+                            $window.location.assign('/');
+                        }
+                        $rootScope.$broadcast(IMPERSONATE_END_EVENT);
+                    });
+                });
+            },
         };
+
+        return session_exports;
     }]);
 
 })();

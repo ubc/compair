@@ -178,9 +178,9 @@ module.controller(
 
 module.controller("UserViewController",
     ['$scope', '$routeParams', 'breadcrumbs', 'SystemRole', 'resolvedData',
-     'UserResource', 'UserSettings', 'EmailNotificationMethod', 'Toaster',
+     'UserResource', 'UserSettings', 'EmailNotificationMethod', 'Toaster', '$route',
     function($scope, $routeParams, breadcrumbs, SystemRole, resolvedData,
-             UserResource, UserSettings, EmailNotificationMethod, Toaster)
+             UserResource, UserSettings, EmailNotificationMethod, Toaster, $route)
     {
         $scope.userId = $routeParams.userId;
 
@@ -201,7 +201,10 @@ module.controller("UserViewController",
 
             UserResource.updateNotifcations({'id': $scope.userId}, $scope.user, function(ret) {
                 Toaster.success('Notifications Saved');
-            }).$promise.finally(function() {
+            }).$promise.catch(function() {
+                // if update failed, refresh the page to show correct status
+                $route.reload();
+            }).finally(function() {
                 $scope.submitted = false;
             });
         };

@@ -121,11 +121,11 @@
         <input type="submit" class="btn btn-success btn-lg" value="Submit"
             ng-click="answerSubmit()"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
-        <p ng-if="submitted && !saveDraft">
+        <p ng-if="submitted && !saveDraft && !isImpersonating">
                 <i class="fa fa-spin fa-spinner"></i>
                 &nbsp; Submitting answer...
         </p>
-        <p ng-if="submitted && saveDraft">
+        <p ng-if="submitted && saveDraft && !isImpersonating">
                 <i class="fa fa-spin fa-spinner"></i>
                 &nbsp; Saving draft...
         </p>

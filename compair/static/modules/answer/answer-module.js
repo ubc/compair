@@ -98,10 +98,10 @@ module.controller(
     "AnswerWriteModalController",
     ["$scope", "$location", "AnswerResource", "ClassListResource", "$route", "TimerResource",
         "AssignmentResource", "Toaster", "$timeout", "UploadValidator", "CourseRole", "$uibModalInstance",
-        "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper", "$q",
+        "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper", "$q", "Session",
     function ($scope, $location, AnswerResource, ClassListResource, $route, TimerResource,
         AssignmentResource, Toaster, $timeout, UploadValidator, CourseRole, $uibModalInstance,
-        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, $q)
+        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, $q, Session)
     {
         if ($scope.answer.file) {
             $scope.answer.uploadedFile = true;
@@ -120,6 +120,7 @@ module.controller(
         // since the "submit as" dropdown (if enabled) is default to current user (or empty if sys admin),
         // the default value of submitAsInstructorOrTA is based on canManageAssignment
         $scope.submitAsInstructorOrTA = $scope.canManageAssignment;
+        $scope.isImpersonating = Session.isImpersonating();
 
         if ($scope.method == "create") {
             $scope.answer = {

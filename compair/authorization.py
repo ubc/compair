@@ -4,7 +4,7 @@ from flask_login import current_user
 from werkzeug.exceptions import Unauthorized
 from sqlalchemy import and_
 
-from .core import abort
+from .core import abort, impersonation
 
 from .models import Course, User, UserCourse, CourseRole, SystemRole, \
     Assignment, Answer, AnswerComment, Comparison, Criterion, \
@@ -13,12 +13,16 @@ from .models import Course, User, UserCourse, CourseRole, SystemRole, \
 USER_IDENTITY = 'permission_user_identity'
 
 
-def define_authorization(user, they):
+def define_authorization(user, they, impersonation_original_user=None):
     """
     Sets up user permissions for Flask-Bouncer
     """
     if not user.is_authenticated:
         return  # user isn't logged in
+
+    original_user_courses_dict = {} if not impersonation_original_user else \
+        {c.course_id: c for c in impersonation_original_user.user_courses \
+            if c.course_role != CourseRole.dropped}
 
     def if_my_student(student):
         course_subquery = Course.query \
@@ -62,6 +66,8 @@ def define_authorization(user, they):
         they.can(CREATE, Criterion)
         they.can(EDIT, User, if_my_student)
         they.can(READ, USER_IDENTITY)
+        # instructors can impersonate their students
+        they.can(impersonation.IMPERSONATE, User, if_my_student) # TODO also check if it is a current course??
 
     # users can edit and read their own user account
     they.can((READ, EDIT), User, id=user.id)
@@ -77,6 +83,11 @@ def define_authorization(user, they):
     # give access to courses the user is enroled in
     for entry in user.user_courses:
         if entry.course_role == CourseRole.dropped:
+            continue
+        # if impersonating and the original user has no access to the course, skip it
+        if impersonation_original_user \
+            and not original_user_courses_dict.get(entry.course_id, None) \
+            and not impersonation_original_user.system_role == SystemRole.sys_admin:
             continue
         they.can(READ, Course, id=entry.course_id)
         they.can(READ, Assignment, course_id=entry.course_id)
@@ -227,9 +238,10 @@ def is_user_access_restricted(user):
     """
     determine if the current user has full view of another user
     This provides a measure of anonymity among students, while instructors and above can see real names.
+    Also restrict access during impersonation
     """
     # Determine if the logged in user can view full info on the target user
-    access_restricted = not allow(READ, user)
+    access_restricted = not allow(READ, user) or impersonation.is_impersonating()
     if access_restricted:
         enrolments = UserCourse.query.filter_by(user_id=user.id).all()
         # if the logged in user can edit the target user's enrolments, then we let them see full info
