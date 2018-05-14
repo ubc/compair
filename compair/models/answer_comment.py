@@ -18,9 +18,9 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixi
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
     content = db.Column(db.Text)
-    comment_type = db.Column(EnumType(AnswerCommentType, name="comment_type"),
+    comment_type = db.Column(EnumType(AnswerCommentType),
         nullable=False, index=True)
-    draft = db.Column(db.Boolean(name='draft'), default=False, nullable=False, index=True)
+    draft = db.Column(db.Boolean(), default=False, nullable=False, index=True)
 
     # relationships
     # answer via Answer Model

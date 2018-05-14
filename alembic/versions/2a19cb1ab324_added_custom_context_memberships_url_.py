@@ -17,7 +17,7 @@ from compair.models import convention
 
 def upgrade():
     with op.batch_alter_table('lti_consumer', naming_convention=convention) as batch_op:
-        batch_op.add_column(sa.Column('canvas_consumer', sa.Boolean(name='canvas_consumer'), nullable=False, default='0', server_default='0'))
+        batch_op.add_column(sa.Column('canvas_consumer', sa.Boolean(), nullable=False, default='0', server_default='0'))
         batch_op.add_column(sa.Column('canvas_api_token', sa.String(255), nullable=True))
 
     with op.batch_alter_table('lti_context', naming_convention=convention) as batch_op:

@@ -32,14 +32,14 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     # table columns
     username = db.Column(db.String(255), unique=True, nullable=True)
     _password = db.Column(db.String(255), unique=False, nullable=True)
-    system_role = db.Column(EnumType(SystemRole, name="system_role"), nullable=False, index=True)
+    system_role = db.Column(EnumType(SystemRole), nullable=False, index=True)
     displayname = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(254), nullable=True)  # email addresses are max 254 characters
     firstname = db.Column(db.String(255), nullable=True)
     lastname = db.Column(db.String(255), nullable=True)
     student_number = db.Column(db.String(50), unique=True, nullable=True)
     last_online = db.Column(db.DateTime)
-    email_notification_method = db.Column(EnumType(EmailNotificationMethod, name="email_notification_method"),
+    email_notification_method = db.Column(EnumType(EmailNotificationMethod),
         nullable=False, default=EmailNotificationMethod.enable, index=True)
 
     # relationships
@@ -85,15 +85,13 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         backref="compair_user", lazy='dynamic')
 
     # hybrid and other functions
-
-    def _get_password(self):
+    @property
+    def password(self):
         return self._password
 
-    def _set_password(self, password):
+    @password.setter
+    def password(self, password):
         self._password = hash_password(password) if password != None else None
-
-    password = property(_get_password, _set_password)
-    password = synonym('_password', descriptor=password)
 
     @hybrid_property
     def fullname(self):

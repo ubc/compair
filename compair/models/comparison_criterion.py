@@ -23,7 +23,7 @@ class ComparisonCriterion(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         nullable=False)
     criterion_id = db.Column(db.Integer, db.ForeignKey('criterion.id', ondelete="CASCADE"),
         nullable=False)
-    winner = db.Column(EnumType(WinningAnswer, name="winner"), nullable=True)
+    winner = db.Column(EnumType(WinningAnswer), nullable=True)
     content = db.Column(db.Text)
 
     # relationships

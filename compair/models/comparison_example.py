@@ -2,7 +2,6 @@
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy_enum34 import EnumType
 
 from . import *
 from importlib import import_module

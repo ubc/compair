@@ -40,8 +40,8 @@ def upgrade():
     for table_name in _table_names:
         with op.batch_alter_table(table_name, naming_convention=convention) as batch_op:
             batch_op.alter_column('pairing_algorithm',
-                type_=EnumType(_NewPairingAlgorithm, '_NewPairingAlgorithm'),
-                existing_type=EnumType(_OldPairingAlgorithm, '_OldPairingAlgorithm'),
+                type_=EnumType(_NewPairingAlgorithm),
+                existing_type=EnumType(_OldPairingAlgorithm),
                 existing_server_default=null(),
                 existing_nullable=True)
 
@@ -51,7 +51,7 @@ def downgrade():
         # first update the adaptive_min_delta algo to adaptive algo
         table = sa.table(table_name,
             sa.Column('id', sa.Integer()),
-            sa.Column('pairing_algorithm', EnumType(_NewPairingAlgorithm, '_NewPairingAlgorithm')))
+            sa.Column('pairing_algorithm', EnumType(_NewPairingAlgorithm)))
         stmt = update(table).\
             where(table.c.pairing_algorithm == bindparam('from_algo')).\
             values(pairing_algorithm = bindparam('to_algo'))
@@ -62,7 +62,7 @@ def downgrade():
         # then modify the enum type
         with op.batch_alter_table(table_name, naming_convention=convention) as batch_op:
             batch_op.alter_column('pairing_algorithm',
-                type_=EnumType(_OldPairingAlgorithm, '_OldPairingAlgorithm'),
-                existing_type=EnumType(_NewPairingAlgorithm, '_NewPairingAlgorithm'),
+                type_=EnumType(_OldPairingAlgorithm),
+                existing_type=EnumType(_NewPairingAlgorithm),
                 existing_server_default=null(),
                 existing_nullable=True)

@@ -9,12 +9,7 @@ class ModifyTrackingMixin(db.Model):
 
     @declared_attr
     def modified(cls):
-        return db.Column(
-            db.DateTime,
-            default=datetime.utcnow,
-            onupdate=datetime.utcnow,
-            nullable=False
-        )
+        return db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     @declared_attr
     def modified_user_id(cls):

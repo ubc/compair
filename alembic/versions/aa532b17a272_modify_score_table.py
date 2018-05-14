@@ -53,7 +53,7 @@ def upgrade():
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('assignment_id', sa.Integer(), nullable=False),
         sa.Column('answer_id', sa.Integer(), nullable=False),
-        sa.Column('scoring_algorithm', EnumType(ScoringAlgorithm, name='scoring_algorithm'), nullable=True),
+        sa.Column('scoring_algorithm', EnumType(ScoringAlgorithm), nullable=True),
         sa.Column('score', sa.Float(), nullable=False),
         sa.Column('variable1', sa.Float(), nullable=True),
         sa.Column('variable2', sa.Float(), nullable=True),

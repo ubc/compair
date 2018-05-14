@@ -26,13 +26,9 @@ class OldThirdPartyType(Enum):
 
 def upgrade():
     with op.batch_alter_table('third_party_user', naming_convention=convention) as batch_op:
-        batch_op.alter_column('third_party_type',
-            type_=EnumType(NewThirdPartyType, name="third_party_type"),
-            existing_type=EnumType(OldThirdPartyType, name="third_party_type"))
+        batch_op.alter_column('third_party_type', type_=EnumType(NewThirdPartyType), existing_type=EnumType(OldThirdPartyType))
 
 
 def downgrade():
     with op.batch_alter_table('third_party_user', naming_convention=convention) as batch_op:
-        batch_op.alter_column('third_party_type',
-            type_=EnumType(OldThirdPartyType, name="third_party_type"),
-            existing_type=EnumType(NewThirdPartyType, name="third_party_type"))
+        batch_op.alter_column('third_party_type', type_=EnumType(OldThirdPartyType), existing_type=EnumType(NewThirdPartyType))

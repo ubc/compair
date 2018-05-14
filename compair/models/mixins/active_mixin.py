@@ -8,12 +8,7 @@ class ActiveMixin(db.Model):
 
     @declared_attr
     def active(cls):
-        return db.Column(
-            db.Boolean(name='active'),
-            default=True,
-            nullable=False,
-            index=True
-        )
+        return db.Column(db.Boolean(), default=True, nullable=False, index=True)
 
     @classmethod
     def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):

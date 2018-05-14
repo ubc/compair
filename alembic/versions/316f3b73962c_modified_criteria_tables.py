@@ -32,10 +32,10 @@ def upgrade():
         logging.warning('Drop unique constraint is not support for SQLite, dropping uq_Critiera_name ignored!')
 
     # set existing criteria's active attribute to True using server_default
-    op.add_column('CriteriaAndCourses',
-                  sa.Column('active', sa.Boolean(name='active'), default=True, server_default='1', nullable=False))
-    op.add_column('Criteria',
-                  sa.Column('public', sa.Boolean(name='public'), default=False, server_default='0', nullable=False))
+    with op.batch_alter_table('CriteriaAndCourses', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('active', sa.Boolean(), default=True, server_default='1', nullable=False))
+    with op.batch_alter_table('Criteria', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('public', sa.Boolean(), default=False, server_default='0', nullable=False))
 
     # set the first criteria as public
     t = {"name": "Which is better?", "public": True}

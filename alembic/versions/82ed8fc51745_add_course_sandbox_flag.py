@@ -16,7 +16,9 @@ import sqlalchemy as sa
 from compair.models import convention
 
 def upgrade():
-    op.add_column('course', sa.Column('sandbox', sa.Boolean(name='sandbox'), nullable=False, server_default='0', default=False, index=True))
+    with op.batch_alter_table('course', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('sandbox', sa.Boolean(), nullable=False, server_default='0', default=False))
+    op.create_index(op.f('ix_course_sandbox'), 'course', ['sandbox'], unique=False)
 
 def downgrade():
     with op.batch_alter_table('course', naming_convention=convention) as batch_op:

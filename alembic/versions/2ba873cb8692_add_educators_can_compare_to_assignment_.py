@@ -18,7 +18,7 @@ from compair.models import convention
 
 def upgrade():
     with op.batch_alter_table('assignment', naming_convention=convention) as batch_op:
-        batch_op.add_column(sa.Column('educators_can_compare', sa.Boolean(name='educators_can_compare'), nullable=False, server_default='0'))
+        batch_op.add_column(sa.Column('educators_can_compare', sa.Boolean(), nullable=False, server_default='0'))
 
 def downgrade():
     with op.batch_alter_table('assignment', naming_convention=convention) as batch_op:

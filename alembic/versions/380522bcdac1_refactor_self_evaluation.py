@@ -47,8 +47,9 @@ def upgrade():
         # batch_op.drop_index("selfevaltype_id")
         batch_op.drop_column("selfevaltype_id")
 
-    op.add_column('PostsForJudgements',
-                  sa.Column('selfeval', sa.Boolean(name='selfeval'), nullable=False, server_default='0', default=False))
+    with op.batch_alter_table('PostsForJudgements', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('selfeval', sa.Boolean(),
+            nullable=False, server_default='0', default=False))
 
 
 # insert = text(
@@ -59,7 +60,8 @@ def upgrade():
 
 def downgrade():
     # insert selfevaltype_id column into Questions table
-    op.add_column('Questions', sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
+    with op.batch_alter_table('Questions', naming_convention=convention) as batch_op:
+        batch_op.add_column(sa.Column('selfevaltype_id', sa.Integer(), nullable=True))
 
     # populate the column - only populate the no comparison self evaluation type
     type = text(

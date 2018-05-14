@@ -22,7 +22,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     lis_person_contact_email_primary = db.Column(db.String(255), nullable=True)
     compair_user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"),
         nullable=True)
-    system_role = db.Column(EnumType(SystemRole, name="system_role"), nullable=False)
+    system_role = db.Column(EnumType(SystemRole), nullable=False)
     student_number = db.Column(db.String(255), nullable=True)
 
     # relationships
