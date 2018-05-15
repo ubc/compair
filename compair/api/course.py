@@ -255,9 +255,18 @@ class CourseDuplicateAPI(Resource):
                 assignment_copy_data['compare_end'] = datetime.datetime.strptime(
                     assignment_copy_data.get('compare_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
 
+            if assignment_copy_data.get('self_eval_start'):
+                assignment_copy_data['self_eval_start'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('self_eval_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
+            if assignment_copy_data.get('self_eval_end'):
+                assignment_copy_data['self_eval_end'] = datetime.datetime.strptime(
+                    assignment_copy_data.get('self_eval_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
+
             valid, error_message = Assignment.validate_periods(start_date, end_date,
                 assignment_copy_data.get('answer_start'), assignment_copy_data.get('answer_end'),
-                assignment_copy_data.get('compare_start'), assignment_copy_data.get('compare_end'))
+                assignment_copy_data.get('compare_start'), assignment_copy_data.get('compare_end'),
+                assignment_copy_data.get('self_eval_start'), assignment_copy_data.get('self_eval_end'))
             if not valid:
                 error_message = error_message.replace(".", "") + " for assignment "+text_type(assignment_copy_data.get('name', ''))+"."
                 abort(400, title="Course Not Saved", message=error_message)

@@ -70,7 +70,7 @@ module.controller(
             xAPIStatementHelper.interacted_answer_comment($scope.answer2_feedback, $scope.tracking.getRegistration(), duration);
         });
 
-        $scope.total = $scope.assignment.total_steps_required;
+        $scope.total = $scope.assignment.total_comparisons_required;
 
         // if there is a comparison end date, check if timer is needed
         var due_date = new Date($scope.assignment.compare_end);
@@ -232,10 +232,15 @@ module.controller(
                                     $route.reload();
                                     window.scrollTo(0, 0);
                                 // self-evaluation
-                                } else if ($scope.assignment.enable_self_evaluation && ret.status.answers.answered) {
-                                    Toaster.success("Comparison Submitted", "Write a self-evaluation now, and your assignment will be complete.");
+                                } else if ($scope.assignment.enable_self_evaluation && ret.status.answers.answered && !ret.status.comparisons.self_evaluation_completed) {
                                     $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                    $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/self_evaluation');
+                                    if ($scope.assignment.self_eval_period) {
+                                        Toaster.success("Comparison Submitted", "Write a self-evaluation now, and your assignment will be complete.");
+                                        $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/self_evaluation');
+                                    } else {
+                                        Toaster.success("Comparison Submitted", "Comparisons are now complete. Make sure to write a self-evaluation when it becomes available.");
+                                        $location.path('/course/' + $scope.courseId);
+                                    }
                                 } else {
                                     Toaster.success("Comparison Submitted", "Your assignment is now complete. Way to go!");
                                     $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
@@ -273,6 +278,8 @@ module.controller(
         $scope.assignmentStatus = resolvedData.assignmentStatus;
         $scope.loggedInUserId = resolvedData.loggedInUser.id;
 
+        $scope.selfEvalComment = true;
+
         $scope.comment = {
             draft: true
         };
@@ -283,7 +290,12 @@ module.controller(
             );
         });
         $scope.preventExit = true; //user should be warned before leaving page by default
-        $scope.total = $scope.assignmentStatus.status.comparisons.count + 1;
+        $scope.total = $scope.assignmentStatus.status.comparisons.count;
+        $scope.instructions = $scope.assignment.self_eval_instructions;
+
+        if (!$scope.instructions) {
+            $scope.instructions = "Now write an evaluation of your own answer and <strong>give feedback to yourself</strong>, considering the other answers you've seen. What did you do well? Where might you improve?";
+        }
 
         $scope.answerId = undefined;
         if (!resolvedData.userAnswers.objects.length) {
@@ -309,7 +321,7 @@ module.controller(
                         assignmentId: $scope.assignmentId,
                         answerId: $scope.answerId
                     };
-                    $scope.comment.comment_type = AnswerCommentType.evaluation;
+                    $scope.comment.comment_type = AnswerCommentType.self_evaluation;
                     $scope.comment.draft = true;
                     AnswerCommentResource.save(params, $scope.comment).$promise.then(
                         function(ret) {

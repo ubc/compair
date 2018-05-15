@@ -22,18 +22,14 @@
     padding-top: .5em;
     color: @breadcrumb-gray;
     border-top: 2px dotted @green-blue;
+    overflow-x: hidden;
 
     /* each piece of data */
     li {
 
-      margin-top: .3em;
-      padding: .2em .5em .2em 0;
-
-      // add padding+border to the left of all elements except the first non-empty one
-      &:not(.ng-hide) ~ li {
-        padding-left: .5em;
-        border-left: 1px solid @green-blue;
-      }
+      margin: .3em 0 0 -.25em;
+      padding: .2em .5em;
+      border-left: 1px solid @green-blue;
 
       &.label {
         font-size: 1.1em;
@@ -46,7 +42,8 @@
       }
 
       .label {
-          font-size: 1.05em;
+          font-size: 1em;
+          padding-bottom: .2em;
       }
 
     }//closes li

@@ -235,9 +235,9 @@ module.directive('assignmentActionButton', function() {
                                 }
                             },
                             'selfEval' : {
-                                'label' : !permissions.hasDraftSelfEval ? "Compare Pairs" : "Finish Comparison",
+                                'label' : !permissions.hasDraftSelfEval ? "Self-Evaluate" : "Finish Self-Eval",
                                 'href'  : "#/course/" + courseId +"/assignment/" + assignmentId + "/self_evaluation",
-                                'title' : !permissions.hasDraftSelfEval ? "Compare Pairs" : "Finish Comparison",
+                                'title' : !permissions.hasDraftSelfEval ? "Self-Evaluate" : "Finish Self-Eval",
                                 'disabled' : !permissions.canSelfEval,
                                 'show' : {
                                     'user' : permissions.needsSelfEval,
@@ -298,28 +298,35 @@ module.directive('assignmentText', function() {
 
                         var allDirText = {
                             'answerDue' : {
-                                'label' : assignment.answer_end ? "<em>Answer due </em> " + $filter('date')(assignment.answer_end, 'MMM d') : "",
+                                'label' : "<em>Answer due </em> " + $filter('date')(assignment.answer_end, 'MMM d'),
                                 'show' : {
-                                    'user' : permissions.canAnswer && permissions.needsAnswer,
+                                    'user' : permissions.canAnswer && permissions.needsAnswer && assignment.answer_end,
                                     'instructor' : false
                                 }
                             },
                             'comparisonsDue' : {
-                                'label': assignment.compare_end ? "<em>Comparisons due </em> " + $filter('date')(assignment.compare_end, 'MMM d') : "",
+                                'label': "<em>Comparisons due </em> " + $filter('date')(assignment.compare_end, 'MMM d'),
                                 'show' : {
-                                    'user' : permissions.isComparePeriod && permissions.needsCompareOrSelfEval,
+                                    'user' : permissions.canCompare && permissions.needsCompare && assignment.compare_end,
+                                    'instructor' : false
+                                }
+                            },
+                            'selfEvalDue' : {
+                                'label': "<em>Self-evaluation due </em> " + $filter('date')(assignment.self_eval_end, 'MMM d'),
+                                'show' : {
+                                    'user' : permissions.needsSelfEval && assignment.self_eval_end,
                                     'instructor' : false
                                 }
                             },
                             'notEnoughAnswers'  : {
                                 'label' : "Not enough answers to compare<br />(Refresh the page to check again)",
                                 'show' : {
-                                    'user' : permissions.canCompare && permissions.needsCompareOrSelfEval && !permissions.hasComparisonsAvailable,
-                                    'instructor' : permissions.canCompare && permissions.needsCompareOrSelfEval && !permissions.hasComparisonsAvailable,
+                                    'user' : permissions.canCompare && permissions.needsCompare && !permissions.hasComparisonsAvailable,
+                                    'instructor' : permissions.canCompare && permissions.needsCompare && !permissions.hasComparisonsAvailable,
                                 }
                             },
                             'noSelfEval' : {
-                                'label': "Self-evaluation comparison unavailable",
+                                'label': "Self-evaluation unavailable because you did not answer",
                                 'show' : {
                                     'user' : permissions.needsSelfEval && !permissions.canSelfEval,
                                     'instructor' : false
@@ -398,17 +405,48 @@ module.directive('assignmentMetadata', function() {
                                 }
                             },
                             'answeringDates' : {
-                                'label': "<em>Answering:</em> " + (assignment.answer_start ? $filter('date')(assignment.answer_start, 'MMM d @ h:mm a') + " - " + $filter('date')(assignment.answer_end, 'MMM d @ h:mm a') : "NOT SET"),
+                                'label': "<em>Answering:</em> " + function() {
+                                    if (assignment.answer_start) {
+                                        return $filter('date')(assignment.answer_start, 'MMM d @ h:mm a') + " - " + $filter('date')(assignment.answer_end, 'MMM d @ h:mm a');
+                                    }
+                                    return "NOT SET";
+                                }(),
                                 'show' : {
                                     'user'  : false,
                                     'instructor' : true,
                                 }
                             },
                             'comparingDates' : {
-                                'label': "<em>Comparing:</em> " + (assignment.compare_start ? $filter('date')(assignment.compare_start, 'MMM d @ h:mm a') + " - " + $filter('date')(assignment.compare_end, 'MMM d @ h:mm a') : "NOT SET"),
+                                'label': "<em>Comparing:</em> " + function() {
+                                    if (assignment.compare_start) {
+                                        return $filter('date')(assignment.compare_start, 'MMM d @ h:mm a') + " - " + $filter('date')(assignment.compare_end, 'MMM d @ h:mm a');
+                                    }
+                                    else if (assignment.answer_end) {
+                                        return "starting " + $filter('date')(assignment.answer_end, 'MMM d @ h:mm a');
+                                    }
+                                    return "NOT SET";
+                                }(),
                                 'show' : {
                                     'user'  : false,
                                     'instructor' : true,
+                                }
+                            },
+                            'selfEvalDates' : {
+                                'label': "<em>Self-Evaluating:</em> " + function() {
+                                    if (assignment.self_eval_start) {
+                                        return $filter('date')(assignment.self_eval_start, 'MMM d @ h:mm a') + " - " + $filter('date')(assignment.self_eval_end, 'MMM d @ h:mm a');
+                                    }
+                                    else if (assignment.compare_start) {
+                                        return "starting " + $filter('date')(assignment.compare_start, 'MMM d @ h:mm a');
+                                    }
+                                    else if (assignment.answer_end) {
+                                        return "starting " + $filter('date')(assignment.answer_end, 'MMM d @ h:mm a');
+                                    }
+                                    return "NOT SET";
+                                }(),
+                                'show' : {
+                                    'user'  : false,
+                                    'instructor' : assignment.enable_self_evaluation,
                                 }
                             },
                             'answerCountEmpty' : {
@@ -449,42 +487,80 @@ module.directive('assignmentMetadata', function() {
                                 }
                             },
                             'completedFeedback' : {
-                                'label': "You " +
-                                        (!permissions.needsAnswer ? "<strong>answered</strong>" +
-                                        (permissions.hasCompared ? " and " : "") : "") +
-                                        (permissions.hasCompared ? "<strong>compared " + assignment.status.comparisons.count + " pair" + (assignment.status.comparisons.count != 1 ? "s" : "") + "</strong>" : ""),
+                                'label': function(){
+                                    var completed = [];
+                                    if (!permissions.needsAnswer) {
+                                        completed.push("<strong>answered</strong>");
+                                    }
+                                    if (permissions.hasCompared) {
+                                        completed.push("<strong>compared " + assignment.status.comparisons.count + " pair" + (assignment.status.comparisons.count != 1 ? "s" : "") + "</strong>");
+                                    }
+                                    if (assignment.enable_self_evaluation && permissions.hasSelfEvaluated) {
+                                        completed.push((completed.length > 1 ? "and " : "") + "<strong>self-evaluated</strong>");
+                                    }
+                                    return "You " + completed.join(completed.length > 2 ? ", " : " and ");
+                                }(),
                                 'show' : {
-                                    'user' : permissions.hasCompared || !permissions.needsAnswer,
+                                    'user' : permissions.hasCompared || !permissions.needsAnswer || (assignment.enable_self_evaluation && permissions.hasSelfEvaluated),
                                     'instructor'  : false,
                                 }
                             },
                             'missedFeedback' : {
-                                'label': "You missed " +
-                                        (permissions.hasMissedAnswer ? "answering " +
-                                        (permissions.hasMissedCompare ? " and " : "") : "") +
-                                        (permissions.hasMissedCompare ? "comparing " + (permissions.needsCompare ? assignment.steps_left + " pair" + (assignment.steps_left != 1 ? "s" : "") : "") : ""),
+                                'label': function(){
+                                    var missed = [];
+                                    if (permissions.hasMissedAnswer) {
+                                        missed.push("answering");
+                                    }
+                                    if (permissions.hasMissedCompare) {
+                                        missed.push("comparing " + (permissions.needsCompare ? assignment.status.comparisons.left + " pair" + (assignment.status.comparisons.left != 0 ? "s" : "") : ""));
+                                    }
+                                    if (assignment.enable_self_evaluation && permissions.hasMissedSelfEval) {
+                                        missed.push((missed.length > 1 ? "and " : "") + "self-evaluating");
+                                    }
+                                    return "You missed " + missed.join(missed.length > 2 ? ", " : " and ");
+                                }(),
                                 'show' : {
-                                    'user' : permissions.hasMissedAnswer || permissions.hasMissedCompare,
+                                    'user' : permissions.hasMissedAnswer || permissions.hasMissedCompare || (assignment.enable_self_evaluation && permissions.hasMissedSelfEval),
                                     'instructor'  : false,
                                 }
                             },
                             'missingFeedback' : {
-                                'label': (permissions.canAnswer && permissions.needsAnswer ? "1 answer" +
-                                         (permissions.isComparePeriod && permissions.needsCompareOrSelfEval > 0 ? ", " : "") : "") +
-                                         (permissions.isComparePeriod && permissions.needsCompareOrSelfEval > 0 ? assignment.steps_left + " comparison" + (assignment.steps_left != 1 ? "s" : "") : "") + " needed",
+                                'label': function(){
+                                    var missing = [];
+                                    if (permissions.canAnswer && permissions.needsAnswer) {
+                                        missing.push("1 answer");
+                                    }
+                                    if (permissions.isComparePeriod && permissions.needsCompare) {
+                                        missing.push(assignment.status.comparisons.left + " comparison" + (assignment.status.comparisons.left != 1 ? "s" : ""));
+                                    }
+                                    if (permissions.canSelfEval && permissions.needsSelfEval) {
+                                        missing.push((missing.length > 1 ? "and a " : "") + "self-evaluation");
+                                    }
+                                    return missing.join(missing.length > 2 ? ", " : " and ") + " needed";
+                                }(),
                                 'class': 'label label-warning',
                                 'show' : {
-                                            // suggested: (canAnswer && needsAnswer) || (>>>> canCompare <<<< && needsCompareOrSelfEval)
-                                    'user' : (permissions.canAnswer && permissions.needsAnswer) || (permissions.isComparePeriod && permissions.needsCompareOrSelfEval),
+                                            // suggested: (canAnswer && needsAnswer) || (>>>> canCompare <<<< && needsCompare)
+                                    'user' : (permissions.canAnswer && permissions.needsAnswer) ||
+                                             (permissions.isComparePeriod && permissions.needsCompare) ||
+                                             (permissions.canSelfEval && permissions.needsSelfEval),
                                     'instructor'  : false,
                                 }
                             },
                             'missingComparisonsFeedback' : {
-                                'label': assignment.steps_left + " comparison" + (assignment.steps_left != 1 ? "s" : "") + " needed",
+                                'label': assignment.status.comparisons.left + " comparison" + (assignment.status.comparisons.left != 1 ? "s" : "") + " needed",
                                 'class': 'label label-warning',
                                 'show' : {
                                             // suggested: >>>> canCompare <<<< && needsCompareOrSelfEval && !hasCompareDueDate
-                                    'user' : permissions.isComparePeriod && permissions.needsCompareOrSelfEval && !permissions.hasCompareDueDate,
+                                    'user' : permissions.isComparePeriod && permissions.needsCompare && !permissions.hasCompareDueDate,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'missingSelfEvalFeedback' : {
+                                'label': "Self-evaluation needed",
+                                'class': 'label label-warning',
+                                'show' : {
+                                    'user' : !permissions.isComparePeriod && permissions.isSelfEvalPeriod && permissions.needsSelfEval && !permissions.hasSelfEvalDueDate,
                                     'instructor'  : false,
                                 }
                             },
@@ -500,17 +576,29 @@ module.directive('assignmentMetadata', function() {
                                 'label': assignment.compare_end ? "Comparisons due: " + $filter('date')(assignment.compare_end, 'MMM d @ h:mm a') : "",
                                 'class': 'label label-warning',
                                 'show' : {
-                                            // suggested: >>>> canCompare <<<< && needsCompareOrSelfEval && hasCompareDueDate
-                                    'user' : permissions.isComparePeriod && permissions.needsCompareOrSelfEval && permissions.hasCompareDueDate,
+                                            // suggested: >>>> canCompare <<<< && needsCompare && hasCompareDueDate
+                                    'user' : permissions.isComparePeriod && permissions.needsCompare && permissions.hasCompareDueDate,
+                                    'instructor'  : false,
+                                }
+                            },
+                            'selfEvalDue' : {
+                                'label': assignment.self_eval_end ? "Self-evaluation due: " + $filter('date')(assignment.self_eval_end, 'MMM d @ h:mm a') : "",
+                                'class': 'label label-warning',
+                                'show' : {
+                                    'user' : permissions.isSelfEvalPeriod && permissions.needsSelfEval && permissions.hasSelfEvalDueDate,
                                     'instructor'  : false,
                                 }
                             },
                             'assignmentScheduled' : {
                                 'label': function(){
-                                    if (permissions.isAfterAnswerDue && permissions.hasCompareDueDate) {
-                                        return "Comparing scheduled for " + $filter('date')(assignment.compare_start, 'MMM d');
-                                    }
-                                    else if (permissions.isAfterAnswerDue) {
+                                    var selfEvalAfterCompare = assignment.compare_start < assignment.self_eval_start && (assignment.compare_start < assignment.self_eval_start);
+                                    if (permissions.isAfterAnswerDue) {
+                                        if (permissions.hasCompareDueDate && (selfEvalAfterCompare || !permissions.hasSelfEvalDueDate)) {
+                                            return "Comparing scheduled for " + $filter('date')(assignment.compare_start, 'MMM d');
+                                        }
+                                        else if (permissions.hasSelfEvalDueDate) {
+                                            return "Self-evaluation scheduled for " + $filter('date')(assignment.self_eval_start, 'MMM d');
+                                        }
                                         return "Comparing not scheduled";
                                     }
                                     else {
@@ -519,20 +607,22 @@ module.directive('assignmentMetadata', function() {
                                 }(),
                                 'show' : {
                                     'user'  : false,
-                                    'instructor' : !permissions.isAnswerPeriod && !permissions.isComparePeriod && !permissions.canViewAnswers,
+                                    'instructor' : !permissions.isAnswerPeriod && !permissions.isComparePeriod && !permissions.isSelfEvalPeriod && !permissions.canViewAnswers,
                                 }
                             },
                             'periodLabel' : {
                                 'label': function(){
-                                    if (permissions.isAnswerPeriod && !permissions.isComparePeriod) {
-                                        return "Answer period";
+                                    var periods = [];
+                                    if (permissions.isAnswerPeriod) {
+                                        periods.push("Answer");
                                     }
-                                    else if (!permissions.isAnswerPeriod && permissions.isComparePeriod) {
-                                        return "Comparison period";
+                                    if (permissions.isComparePeriod) {
+                                        periods.push("Comparison");
                                     }
-                                    else if (permissions.isAnswerPeriod && permissions.isComparePeriod) {
-                                        return "Answer/comparison period";
+                                    if (permissions.isSelfEvalPeriod) {
+                                        periods.push("Self-Evaluation");
                                     }
+                                    return periods.join(" / ") + " period";
                                 }(),
                                 'class': 'label label-warning',
                                 'show' : {
@@ -629,14 +719,21 @@ module.factory( "AssignmentPermissions", function (){
 
             if (assignment.status) {
 
-                assignment.steps_left = assignment.status.comparisons.left + (assignment.self_evaluation_needed ? 1 : 0);
-
+                // ensure dates are formatted properly for date comparison
                 if (!(assignment.answer_end instanceof Date) && assignment.answer_end) {
                     assignment.answer_end = new Date(assignment.answer_end);
                 }
                 if (!(assignment.compare_end instanceof Date) && assignment.compare_end) {
                     assignment.compare_end = new Date(assignment.compare_end);
                 }
+                if (!(assignment.self_eval_end instanceof Date) && assignment.self_eval_end) {
+                    assignment.self_eval_end = new Date(assignment.self_eval_end);
+                }
+
+                // used below
+                var isAfterAnswer = (
+                    // either (the answer period is active AND the assignment has been answered) OR the answer period is not active
+                    (assignment.answer_period && assignment.status.answers.answered) || !assignment.answer_period );
 
                 permissions = {
 
@@ -654,14 +751,7 @@ module.factory( "AssignmentPermissions", function (){
                     'canCompare'        : assignment.compare_period &&
                                           (
                                             // regular users
-                                            (!canManageAssignment &&
-                                                (
-                                                // either (the answer period is active AND the assignment has been answered)
-                                                (assignment.answer_period && assignment.status.answers.answered) ||
-                                                // OR the answer period is not active
-                                                !assignment.answer_period
-                                                )
-                                            ) ||
+                                            (!canManageAssignment && isAfterAnswer) ||
                                             // instructors
                                             (canManageAssignment && assignment.educators_can_compare)
                                           ),
@@ -672,22 +762,36 @@ module.factory( "AssignmentPermissions", function (){
                     'isAfterCompareDue' : !assignment.compare_period && assignment.compare_end && assignment.compare_end < new Date(),
                     'hasCompareDueDate' : assignment.compare_end,
 
-                    // self-eval
-                    'canSelfEval'       : assignment.status.answers.answered && assignment.status.comparisons.left == 0,
-                    'needsSelfEval'     : assignment.status.comparisons.left == 0 && assignment.self_evaluation_needed, // && canCompare (added below)
+                    // self-eval (some additions defined below)
+                    'isSelfEvalPeriod'  : assignment.self_eval_period,
+                    'canSelfEval'       : assignment.status.answers.answered,
+                    'needsSelfEval'     : assignment.enable_self_evaluation && assignment.self_eval_period && !canManageAssignment
+                                            && !assignment.status.comparisons.self_evaluation_completed, // conditional additions below
                     'hasDraftSelfEval'  : assignment.status.comparisons.self_evaluation_draft,
+                    'hasSelfEvaluated'  : assignment.status.self_evaluation_completed,
+                    'hasSelfEvalDate'   : assignment.self_eval_start,
+                    'hasSelfEvalDueDate': assignment.self_eval_end,
+                    'isAfterSelfEvalDue': false, // defined below
 
                     // general / mixed
                     'isOwner': (assignment.user_id == loggedInUserId),
                     'isAvailable': assignment.available,
-                    'needsCompareOrSelfEval': assignment.steps_left > 0,
                 }
 
-                // just so we don't repeat that big conditional for canCompare
-                permissions.needsSelfEval &= permissions.canCompare;
+                if (permissions.hasSelfEvalDate) {
+                    permissions.isAfterSelfEvalDue = assignment.self_eval_end < new Date();
+                }
+                else {
+                    permissions.isAfterSelfEvalDue = permissions.isAfterCompareDue;
+
+                    if (permissions.hasCompareDueDate && permissions.isComparePeriod) {
+                        permissions.needsSelfEval &= assignment.status.comparisons.left == 0;
+                    }
+                }
 
                 permissions.hasMissedAnswer = permissions.isAfterAnswerDue && permissions.needsAnswer;
                 permissions.hasMissedCompare = permissions.isAfterCompareDue && permissions.needsCompare;
+                permissions.hasMissedSelfEval = assignment.enable_self_evaluation && permissions.isAfterSelfEvalDue && !assignment.status.comparisons.self_evaluation_completed;
             }
 
             return permissions;
@@ -773,7 +877,6 @@ module.controller("AssignmentViewController",
             group: null,
             author: null
         };
-        $scope.self_evaluation_needed = false;
         $scope.rankLimit = null;
         $scope.WinningAnswer = WinningAnswer;
         var tab = $location.search().tab || 'answers';
@@ -786,6 +889,12 @@ module.controller("AssignmentViewController",
         }
         if ($scope.assignment.compare_end != null) {
             $scope.assignment.compare_end = new Date($scope.assignment.compare_end);
+        }
+        if ($scope.assignment.self_eval_start != null) {
+            $scope.assignment.self_eval_start = new Date($scope.assignment.self_eval_start);
+        }
+        if ($scope.assignment.self_eval_end != null) {
+            $scope.assignment.self_eval_end = new Date($scope.assignment.self_eval_end);
         }
         if ($scope.assignment.rank_display_limit) {
             $scope.rankLimit = $scope.assignment.rank_display_limit;
@@ -842,9 +951,6 @@ module.controller("AssignmentViewController",
                 $scope.assignment.status = ret.status;
 
                 $scope.comparisons_left = $scope.assignment.status.comparisons.left;
-                $scope.self_evaluation_needed = $scope.assignment.enable_self_evaluation ?
-                    !$scope.assignment.status.comparisons.self_evaluation_completed : false;
-                $scope.steps_left = $scope.comparisons_left + ($scope.self_evaluation_needed ? 1 : 0);
 
                 if ($scope.assignment.compare_end) {
                     // if comparison period is set answers can be seen after it ends
@@ -1269,8 +1375,10 @@ module.controller("AssignmentWriteController",
         $scope.date = {
             'astart': {'date': new Date(), 'time': new Date().setHours(0, 0, 0, 0)},
             'aend': {'date': new Date(), 'time': new Date().setHours(23, 59, 0, 0)},
-            'cstart': {'date': new Date(), 'time': new Date().setHours(23, 59, 0, 0)},
-            'cend': {'date': new Date(), 'time': new Date().setHours(23, 59, 0, 0)}
+            'cstart': {'date': new Date(), 'time': new Date().setHours(0, 0, 0, 0)},
+            'cend': {'date': new Date(), 'time': new Date().setHours(23, 59, 0, 0)},
+            'sestart': {'date': new Date(), 'time': new Date().setHours(0, 0, 0, 0)},
+            'seend': {'date': null, 'time': new Date().setHours(23, 59, 0, 0)}
         };
 
         $scope.comparison_example = {
@@ -1302,6 +1410,8 @@ module.controller("AssignmentWriteController",
             $scope.date.aend.date = null;
             $scope.date.cstart.date = null;
             $scope.date.cend.date = null;
+            $scope.date.sestart.date = null;
+            $scope.date.seend.date = null;
 
         } else if ($scope.method == "edit") {
             if ($scope.assignment.file) {
@@ -1325,6 +1435,19 @@ module.controller("AssignmentWriteController",
                 $scope.date.cend.date = new Date();
                 $scope.date.cend.date.setDate($scope.date.cstart.date.getDate()+7);
                 $scope.date.cend.time = new Date($scope.date.aend.time);
+            }
+
+            if ($scope.assignment.self_eval_start) {
+                $scope.assignment.selfEvalCheck = true;
+                $scope.date.sestart.date = new Date($scope.assignment.self_eval_start);
+                $scope.date.sestart.time = new Date($scope.assignment.self_eval_start);
+                if ($scope.assignment.self_eval_end) {
+                    $scope.date.seend.date = new Date($scope.assignment.self_eval_end);
+                    $scope.date.seend.time = new Date($scope.assignment.self_eval_end);
+                }
+            } else {
+                $scope.date.sestart.date = new Date($scope.date.cend.date);
+                $scope.date.sestart.time = new Date($scope.date.cend.time);
             }
 
             $scope.assignment.addPractice = resolvedData.assignmentComparisonExamples.objects.length > 0;
@@ -1378,6 +1501,19 @@ module.controller("AssignmentWriteController",
                 $scope.date.cend.date = new Date();
                 $scope.date.cend.date.setDate($scope.date.cstart.date.getDate()+7);
                 $scope.date.cend.time = new Date($scope.date.aend.time);
+            }
+
+            if (originalAssignment.self_eval_start) {
+                $scope.assignment.selfEvalCheck = true;
+                $scope.date.sestart.date = new Date(originalAssignment.self_eval_start);
+                $scope.date.sestart.time = new Date(originalAssignment.self_eval_start);
+                if ( originalAssignment.self_eval_end) {
+                    $scope.date.seend.date = new Date(originalAssignment.self_eval_end);
+                    $scope.date.seend.time = new Date(originalAssignment.self_eval_end);
+                }
+            } else {
+                $scope.date.sestart.date = new Date($scope.date.cend.date);
+                $scope.date.sestart.time = new Date($scope.date.cend.time);
             }
 
             // copy assignment comparison examples
@@ -1585,6 +1721,22 @@ module.controller("AssignmentWriteController",
             $scope.assignment.answer_end = combineDateTime($scope.date.aend);
             $scope.assignment.compare_start = combineDateTime($scope.date.cstart);
             $scope.assignment.compare_end = combineDateTime($scope.date.cend);
+            if ($scope.assignment.enable_self_evaluation) {
+                if ($scope.assignment.selfEvalCheck) {
+                    $scope.assignment.self_eval_start = combineDateTime($scope.date.sestart);
+                    $scope.assignment.self_eval_end = $scope.date.seend.date ? combineDateTime($scope.date.seend) : null;
+                }
+                else {
+                    $scope.assignment.self_eval_start = null;
+                    $scope.assignment.self_eval_end = null;
+                }
+            }
+            else {
+                $scope.assignment.selfEvalCheck = false;
+                $scope.assignment.self_eval_instructions = null;
+                $scope.assignment.self_eval_start = null;
+                $scope.assignment.self_eval_end = null;
+            }
 
             // answer end datetime has to be after answer start datetime
             if ($scope.assignment.answer_start >= $scope.assignment.answer_end) {
@@ -1597,6 +1749,18 @@ module.controller("AssignmentWriteController",
                 return;
             } else if ($scope.assignment.availableCheck && $scope.assignment.compare_start >= $scope.assignment.compare_end) {
                 Toaster.warning("Assignment Not Saved", 'Please set comparison end time after comparison start time and save again.');
+                $scope.submitted = false;
+                return;
+            } else if ($scope.assignment.availableCheck && $scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start <= $scope.assignment.compare_start) {
+                Toaster.warning("Assignment Not Saved", 'Please set self-evaluation start time after compare start time and save again.');
+                $scope.submitted = false;
+                return;
+            } else if (!$scope.assignment.availableCheck && $scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start <= $scope.assignment.answer_end) {
+                Toaster.warning("Assignment Not Saved", 'Please set self-evaluation start time after answer end time and save again.');
+                $scope.submitted = false;
+                return;
+            } else if ($scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start >= $scope.assignment.self_eval_end) {
+                Toaster.warning("Assignment Not Saved", 'Please set self-evaluation end time after self-evaluation start time and save again.');
                 $scope.submitted = false;
                 return;
             }

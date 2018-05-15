@@ -28,6 +28,21 @@
             <span ng-if="assignmentForm.assignmentName.$error.maxlength" class="help-block has-error">Maximum length is 255 characters</span>
         </compair-field-with-feedback>
 
+        <label class="required-star">Self-Evaluation</label>
+        <br>
+        <label class="form-check-label not-bold">
+            <input class="form-check-input" id="enable_self_evaluation_1" type="radio" name="enable_self_evaluation"
+                    ng-model="assignment.enable_self_evaluation" ng-value="true">
+            &nbsp;Include self-evaluation for students &nbsp;&nbsp;
+        </label>
+        <label class="form-check-label not-bold">
+            <input class="form-check-input" id="enable_self_evaluation_0" type="radio" name="enable_self_evaluation"
+                    ng-model="assignment.enable_self_evaluation" ng-value="false" ng-checked="!assignment.enable_self_evaluation">
+            &nbsp;Do not include self-evaluation
+        </label>
+        <br />
+        <br />
+
         <div>
             <label for="importFile">Related Attachment</label>
             <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
@@ -96,7 +111,7 @@
         <legend>Schedule</legend>
         <div class="instructional-text">
             <p><strong>Students can submit and edit their answers only during the answering dates and times you set below.</strong> Students do not see an assignment in the application until the answer period begins. Students can read all answers only <em>after</em> the answer period ends <em>and</em> they have completed the required number of comparisons.</p>
-            <p><strong>By default, students can compare answers after the answer period ends.</strong> You may instead set specific dates and times for the comparison period. Note that if you manually set a comparison period, students can read all answers only <em>after</em> the answer <em>and</em> comparison periods end.</p>
+            <p><strong>By default, students can compare answers after the answer period ends<span ng-if="assignment.enable_self_evaluation">, and self-evaluate after comparing</span>.</strong> You may instead set specific dates and times for the comparison<span ng-if="assignment.enable_self_evaluation"> and self-evaluation</span> period<span ng-if="assignment.enable_self_evaluation">s</span>. Note that if you manually set a comparison period, students can read all answers only <em>after</em> the answer <em>and</em> comparison periods end.</p>
         </div>
 
         <div class="row">
@@ -139,7 +154,7 @@
         <hr />
 
         <input id="availableCheck" type="checkbox" ng-model="assignment.availableCheck">
-        <label for="availableCheck">Manually set when students compare answers for this assignment<span ng-show="assignment.availableCheck">:</span></label>
+        <label for="availableCheck">Manually set when students compare answers<span ng-show="assignment.availableCheck">:</span></label>
         <br /><br />
 
         <div ng-show="assignment.availableCheck">
@@ -181,27 +196,92 @@
                 </div>
             </div>
         </div>
+
+        <div ng-show="assignment.enable_self_evaluation">
+            <hr />
+            <input id="selfEvalCheck" type="checkbox" ng-model="assignment.selfEvalCheck">
+            <label for="selfEvalCheck">Manually set when students self-evaluate<span ng-show="assignment.selfEvalCheck">:</span></label>
+            <br /><br />
+
+            <div ng-show="assignment.selfEvalCheck">
+
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label class="required-star">Self-Evaluation Begins</label><br />
+                        <div class="assignment-date">
+                            <span class="input-group">
+                                <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.sestart.date"
+                                    is-open="date.sestart.opened" ng-required="assignment.selfEvalCheck"
+                                    datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(date.seend.date, course.end_date) }"
+                                    />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.sestart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="assignment-date">
+                            <div uib-timepicker ng-model="date.sestart.time" minute-step="1" mousewheel="false"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Self-Evaluation Ends</label><br />
+                        <div class="assignment-date">
+                            <span class="input-group">
+                                <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.seend.date"
+                                    is-open="date.seend.opened"
+                                    datepicker-options="{ minDate: datePickerMinDate(date.astart.date, date.sestart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
+                                    />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.seend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="assignment-date">
+                            <div uib-timepicker ng-model="date.seend.time" minute-step="1" mousewheel="false"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </fieldset>
 
     <fieldset>
-        <legend>Comparison Prompts</legend>
+        <legend>Prompts</legend>
         <div class="instructional-text">
-            <p><strong>These criteria and instructions appear when students compare answers</strong> for this assignment, to guide them in their critical-thinking process. For each comparison, students have to choose a preferred answer for each criterion listed below and provide peer feedback to both answers as prompted below.</p>
+            <p><strong>These criteria and instructions appear when students compare answers<span ng-if="assignment.enable_self_evaluation"> and self-evaluate</span></strong> for this assignment, to guide them in their critical-thinking process. For each comparison, students have to choose a preferred answer for each criterion listed below and provide peer feedback to both answers as prompted below.<span ng-if="assignment.enable_self_evaluation"> For the self-evaluation, students provide reflection to their own answer as prompted below.</span></p>
             <p>Note that the <strong>number of criteria is permanently set once students start comparing</strong>, so you won't be able to add or drop criteria after comparing begins. For multiple criteria, if you use the adaptive answer selection setting (see next section), you may also add a weight for each criterion before comparing begins.</p>
         </div>
         <ng-include src="'modules/criterion/criterion-assignment-partial.html'"></ng-include>
         <hr />
         <label>Peer Feedback Instructions</label>
         <br />
-        <div ng-show="!assignment.peerFeedbackCheck">
+        <div ng-show="!assignment.peerFeedbackCheck && !assignment.peer_feedback_prompt">
             <p>You are currently using the default:</p>
             <blockquote>Use any instructor-provided guidelines or answer general questions, based on the criteria above: What did the author do well? Where might the author improve? Remember to make your comments—including criticisms—encouraging, respectful, and specific.</blockquote>
         </div>
         <input id="peerFeedbackCheck" type="checkbox" ng-model="assignment.peerFeedbackCheck" ng-checked="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt" ng-disabled="assignment.peer_feedback_prompt">
-        <label for="peerFeedbackCheck">Manually set how students are prompted for peer feedback<span ng-if="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt">:</span></label>
+        <label ng-class="{'not-bold': assignment.peerFeedbackCheck || assignment.peer_feedback_prompt}" for="peerFeedbackCheck">Manually set how students are prompted for peer feedback<span ng-if="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt">:</span></label>
         <div ng-if="assignment.peerFeedbackCheck || assignment.peer_feedback_prompt">
             <div class="form-group">
                 <textarea ng-model="assignment.peer_feedback_prompt" id="assignmentPeerFeedbackPrompt" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
+            </div>
+        </div>
+
+        <div ng-show="assignment.enable_self_evaluation">
+            <hr />
+            <label>Self-Evaluation Instructions</label>
+            <br />
+            <div ng-show="!assignment.selfEvalInstructionsCheck && !assignment.self_eval_instructions">
+                <p>You are currently using the default:</p>
+                <blockquote>Now write an evaluation of your own answer and <strong>give feedback to yourself</strong>, considering the other answers you've seen. What did you do well? Where might you improve?</blockquote>
+            </div>
+            <input id="selfEvalInstructionsCheck" type="checkbox" ng-model="assignment.selfEvalInstructionsCheck" ng-checked="assignment.selfEvalInstructionsCheck || assignment.self_eval_instructions" ng-disabled="assignment.self_eval_instructions">
+            <label ng-class="{'not-bold': assignment.selfEvalInstructionsCheck || assignment.self_eval_instructions}" for="selfEvalInstructionsCheck">Manually set the instructions students see for self-evaluation<span ng-if="assignment.selfEvalInstructionsCheck || assignment.self_eval_instructions">:</span></label>
+            <div ng-if="assignment.selfEvalInstructionsCheck || assignment.self_eval_instructions">
+                <div class="form-group">
+                    <textarea ng-model="assignment.self_eval_instructions" id="selfEvalInstructions" class="form-control" ckeditor="editorOptions" rows="4"></textarea>
+                </div>
             </div>
         </div>
         <br />
@@ -210,7 +290,7 @@
     <fieldset>
         <legend>Comparison Settings</legend>
         <div class="instructional-text">
-            <p>For each comparison, students have to choose a preferred answer for each criterion listed above and provide peer feedback to both answers as prompted above. In a self-evaluation, students provide feedback on their own answer. For this assignment, students are currently required to submit:
+            <p>For each comparison, students have to choose a preferred answer for each criterion listed above and provide peer feedback to both answers as prompted above. For this assignment, students are currently required to submit:
                 <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons}} comparison<span ng-show="assignment.number_of_comparisons > 1">s</span></strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*1+1}} comparisons</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">1 comparison</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">0 comparisons</strong><span ng-show="assignment.enable_self_evaluation"> and <strong>1 self-evaluation</strong></span>.
             </p>
             <p>By default, <strong>answers are scored and ranked</strong> during comparisons, and scores are used to pair similar answers. However, you may disable this by changing the answer selection option below.</p>
@@ -324,11 +404,6 @@
             </div>
 
         </div>
-
-        <br />
-
-        <input id="enable_self_evaluation" type="checkbox" name="enable_self_evaluation" ng-model="assignment.enable_self_evaluation">
-        <label class="not-bold" for="enable_self_evaluation">Require that students also self-evaluate by leaving feedback on their own answer (after peer comparisons)</label>
 
         <br />
 

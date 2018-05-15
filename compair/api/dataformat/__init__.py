@@ -195,6 +195,9 @@ def get_assignment(restrict_user=True):
         'answer_end': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.answer_end)),
         'compare_start': fields.DateTime(dt_format='iso8601', default=None, attribute=lambda x: replace_tzinfo(x.compare_start)),
         'compare_end': fields.DateTime(dt_format='iso8601', default=None, attribute=lambda x: replace_tzinfo(x.compare_end)),
+        'self_eval_start': fields.DateTime(dt_format='iso8601', default=None, attribute=lambda x: replace_tzinfo(x.self_eval_start)),
+        'self_eval_end': fields.DateTime(dt_format='iso8601', default=None, attribute=lambda x: replace_tzinfo(x.self_eval_end)),
+        'self_eval_instructions': fields.String(default=None),
         'available': fields.Boolean,
 
         'students_can_reply': fields.Boolean,
@@ -212,6 +215,7 @@ def get_assignment(restrict_user=True):
         'answer_period': fields.Boolean,
         'compare_period': fields.Boolean,
         'after_comparing': fields.Boolean,
+        'self_eval_period': fields.Boolean,
         'evaluation_count': fields.Integer,
         'answer_count': fields.Integer,
         'self_evaluation_count': fields.Integer,

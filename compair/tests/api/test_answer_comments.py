@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import json
+import datetime
 import six
 import mock
 
@@ -298,7 +299,30 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                 'content': 'great answer'
             }
 
+            # test student can not submit self-eval after self-eval grace period
+            orig_answer_end = self.assignment.answer_end
+            self.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
+            self.assignment.self_eval_start = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
+            self.assignment.self_eval_end = datetime.datetime.utcnow() - datetime.timedelta(minutes=10)
+
+            db.session.add(self.assignment)
+            db.session.commit()
+
+            rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual("Self-Evaluation Not Submitted", rv.json['title'])
+            self.assertEqual("Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.",
+                rv.json['message'])
+
+            self.assignment.answer_end = orig_answer_end
+            self.assignment.self_eval_start = None
+            self.assignment.self_eval_end = None
+
+
             with mail.record_messages() as outbox:
+                orig_answer_end = self.assignment.answer_end
+                self.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
+
                 rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
                 self.assert200(rv)
 
@@ -321,6 +345,8 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                     [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
                 )
                 mocked_update_assignment_grades_run.reset_mock()
+
+                self.assignment.answer_end = orig_answer_end
 
         # test with impersonation
         student = self.data.get_extra_student(0)
@@ -621,7 +647,28 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 'draft': True
             }
 
+            # test student can not submit self-eval after self-eval grace period
+            orig_answer_end = self.assignment.answer_end
+            self.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
+            self.assignment.self_eval_start = datetime.datetime.utcnow() - datetime.timedelta(hours=1)
+            self.assignment.self_eval_end = datetime.datetime.utcnow() - datetime.timedelta(minutes=10)
+
+            db.session.add(self.assignment)
+            db.session.commit()
+
+            rv = self.client.post(self_evaluation_url, data=json.dumps(content), content_type='application/json')
+            self.assert403(rv)
+            self.assertEqual("Self-Evaluation Not Submitted", rv.json['title'])
+            self.assertEqual("Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.",
+                rv.json['message'])
+
+            self.assignment.answer_end = orig_answer_end
+            self.assignment.self_eval_start = None
+            self.assignment.self_eval_end = None
+
+
             with mail.record_messages() as outbox:
+                self.assignment.answer_end = datetime.datetime.utcnow() - datetime.timedelta(hours=12)
                 rv = self.client.post(self_evaluation_url, data=json.dumps(content), content_type='application/json')
                 self.assert200(rv)
                 self.assertEqual(content['content'], rv.json['content'])

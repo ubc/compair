@@ -29,7 +29,12 @@ var assignmentTemplate = {
     "total_steps_required": 3,
     "compare_end": null,
     "compare_start": null,
+    "self_eval_end": null,
+    "self_eval_start": null,
     "peer_feedback_prompt": null,
+    "self_eval_start": null,
+    "self_eval_end": null,
+    "self_eval_instructions": null,
     "created": "Tue, 19 Apr 2016 20:06:43 -0000",
     "modified": "Tue, 19 Apr 2016 20:06:43 -0000",
     "user": {

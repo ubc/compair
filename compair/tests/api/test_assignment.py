@@ -235,7 +235,7 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             now = datetime.datetime.utcnow()
             course = self.data.get_course()
             course.start_date = now
-            course.end_date = now + datetime.timedelta(days=90)
+            course.end_date = now + datetime.timedelta(days=120)
             db.session.commit()
 
             valid_answer_start = now.isoformat() + 'Z'
@@ -243,21 +243,30 @@ class AssignmentAPITests(ComPAIRAPITestCase):
 
             invalid_answer_start = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
             invalid_answer_end = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
-            invalid_answer_end2 = (now + datetime.timedelta(days=91)).isoformat() + 'Z'
+            invalid_answer_end2 = (now + datetime.timedelta(days=121)).isoformat() + 'Z'
 
             valid_compare_start = now.isoformat() + 'Z'
             valid_compare_end = (now + datetime.timedelta(days=90)).isoformat() + 'Z'
 
             invalid_compare_start = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
             invalid_compare_end = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
-            invalid_compare_end2 = (now + datetime.timedelta(days=91)).isoformat() + 'Z'
+            invalid_compare_end2 = (now + datetime.timedelta(days=121)).isoformat() + 'Z'
+
+            valid_self_eval_start = (now + datetime.timedelta(days=92)).isoformat() + 'Z'
+            valid_self_eval_end = (now + datetime.timedelta(days=120)).isoformat() + 'Z'
+
+            invalid_self_eval_start = now.isoformat() + 'Z' # = compare_start
+            invalid_self_eval_start2 = (now + datetime.timedelta(days=90)).isoformat() + 'Z' # = answer_end
+            invalid_self_eval_end = (now + datetime.timedelta(days=91)).isoformat() + 'Z'   # < self_eval_start
+            invalid_self_eval_end2 = (now + datetime.timedelta(days=121)).isoformat() + 'Z'  # > course_end
+
             assignment_expected = {
                 'name': 'this is a new assignment\'s name',
                 'description': 'this is the new assignment\'s description.',
                 'answer_start': valid_answer_start,
                 'answer_end': valid_answer_end,
-                'compare_start': valid_answer_start,
-                'compare_end': valid_answer_end,
+                'compare_start': valid_compare_start,
+                'compare_end': valid_compare_end,
                 'number_of_comparisons': 3,
                 'students_can_reply': False,
                 'enable_self_evaluation': False,
@@ -318,6 +327,52 @@ class AssignmentAPITests(ComPAIRAPITestCase):
             rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
             self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Compare period end time must be before the course end time.'})
+
+            # test invalid assignment self-eval start
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['self_eval_start'] = None
+            invalid_expected['self_eval_end'] = valid_self_eval_end
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'No self-evaluation start time provided.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['self_eval_start'] = invalid_self_eval_start
+            invalid_expected['self_eval_end'] = valid_self_eval_end
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Self-evaluation start time must be after the compare start time.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['compare_start'] = None
+            invalid_expected['compare_end'] = None
+            invalid_expected['self_eval_start'] = invalid_self_eval_start2
+            invalid_expected['self_eval_end'] = valid_self_eval_end
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Self-evaluation start time must be after the answer end time.'})
+
+            # test invalid assignment self-eval end
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['self_eval_start'] = valid_self_eval_start
+            invalid_expected['self_eval_end'] = None
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'No self-evaluation end time provided.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['self_eval_start'] = valid_self_eval_start
+            invalid_expected['self_eval_end'] = invalid_self_eval_end
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Self-evaluation end time must be after the self-evaluation start time.'})
+
+            invalid_expected = assignment_expected.copy()
+            invalid_expected['self_eval_start'] = valid_self_eval_start
+            invalid_expected['self_eval_end'] = invalid_self_eval_end2
+            rv = self.client.post(self.url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json, {'title': 'Assignment Not Saved', 'message': 'Self-evaluation end time must be before the course end time.'})
 
     def test_edit_assignment(self):
         criterion2 = self.data.create_criterion(self.data.get_authorized_instructor())

@@ -425,7 +425,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
         self.valid_assignment = self.data.create_assignment_in_answer_period(self.valid_course, self.data.get_authorized_instructor())
 
         self.valid_start_date = now.isoformat() + 'Z'
-        self.valid_end_date = (now + datetime.timedelta(days=90)).isoformat() + 'Z'
+        self.valid_end_date = (now + datetime.timedelta(days=120)).isoformat() + 'Z'
 
         self.invalid_end_date = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
 
@@ -434,14 +434,22 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
 
         self.invalid_answer_start = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
         self.invalid_answer_end = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
-        self.invalid_answer_end2 = (now + datetime.timedelta(days=91)).isoformat() + 'Z'
+        self.invalid_answer_end2 = (now + datetime.timedelta(days=121)).isoformat() + 'Z'
 
         self.valid_compare_start = now.isoformat() + 'Z'
         self.valid_compare_end = (now + datetime.timedelta(days=90)).isoformat() + 'Z'
 
         self.invalid_compare_start = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
         self.invalid_compare_end = (now - datetime.timedelta(days=1)).isoformat() + 'Z'
-        self.invalid_compare_end2 = (now + datetime.timedelta(days=91)).isoformat() + 'Z'
+        self.invalid_compare_end2 = (now + datetime.timedelta(days=121)).isoformat() + 'Z'
+
+        self.valid_self_eval_start = (now + datetime.timedelta(days=92)).isoformat() + 'Z'
+        self.valid_self_eval_end = (now + datetime.timedelta(days=120)).isoformat() + 'Z'
+
+        self.invalid_self_eval_start = now.isoformat() + 'Z' # = compare_start
+        self.invalid_self_eval_start2 = (now + datetime.timedelta(days=90)).isoformat() + 'Z' # = answer_end
+        self.invalid_self_eval_end = (now + datetime.timedelta(days=91)).isoformat() + 'Z'   # < self_eval_start
+        self.invalid_self_eval_end2 = (now + datetime.timedelta(days=121)).isoformat() + 'Z'  # > course_end
 
         self.validation_url = '/api/courses/' + self.valid_course.uuid + '/duplicate'
         self.validate_expected_assignment = {
@@ -554,6 +562,64 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
             self.assertEqual(rv.json["title"], "Course Not Saved")
             self.assertEqual(rv.json["message"], "Compare period end time must be before the course end time for assignment "+self.valid_assignment.name+".")
+
+            # test invalid assignment self-eval start
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['self_eval_start'] = None
+            invalid_expected['assignments'][0]['self_eval_end'] = self.valid_self_eval_end
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "No self-evaluation start time provided for assignment "+self.valid_assignment.name+".")
+
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['self_eval_start'] = self.invalid_self_eval_start
+            invalid_expected['assignments'][0]['self_eval_end'] = self.valid_self_eval_end
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Self-evaluation start time must be after the compare start time for assignment "+self.valid_assignment.name+".")
+
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['compare_start'] = None
+            invalid_expected['assignments'][0]['compare_end'] = None
+            invalid_expected['assignments'][0]['self_eval_start'] = self.invalid_self_eval_start2
+            invalid_expected['assignments'][0]['self_eval_end'] = self.valid_self_eval_end
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Self-evaluation start time must be after the answer end time for assignment "+self.valid_assignment.name+".")
+
+            # test invalid assignment self-eval end
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['self_eval_start'] = self.valid_self_eval_start
+            invalid_expected['assignments'][0]['self_eval_end'] = None
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "No self-evaluation end time provided for assignment "+self.valid_assignment.name+".")
+
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['self_eval_start'] = self.valid_self_eval_start
+            invalid_expected['assignments'][0]['self_eval_end'] = self.invalid_self_eval_end
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Self-evaluation end time must be after the self-evaluation start time for assignment "+self.valid_assignment.name+".")
+
+            invalid_expected = self.validate_expected_course.copy()
+            invalid_expected['assignments'][0] = self.validate_expected_assignment.copy()
+            invalid_expected['assignments'][0]['self_eval_start'] = self.valid_self_eval_start
+            invalid_expected['assignments'][0]['self_eval_end'] = self.invalid_self_eval_end2
+            rv = self.client.post(self.validation_url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["title"], "Course Not Saved")
+            self.assertEqual(rv.json["message"], "Self-evaluation end time must be before the course end time for assignment "+self.valid_assignment.name+".")
 
             # test deep copy assignments
             rv = self.client.post(self.url, data=json.dumps(self.expected), content_type='application/json')

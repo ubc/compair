@@ -35,6 +35,9 @@ new_assignment_parser.add_argument('answer_start', required=True)
 new_assignment_parser.add_argument('answer_end', required=True)
 new_assignment_parser.add_argument('compare_start', default=None)
 new_assignment_parser.add_argument('compare_end', default=None)
+new_assignment_parser.add_argument('self_eval_start', default=None)
+new_assignment_parser.add_argument('self_eval_end', default=None)
+new_assignment_parser.add_argument('self_eval_instructions', type=non_blank_text, default=None)
 new_assignment_parser.add_argument('file_id', default=None)
 new_assignment_parser.add_argument('students_can_reply', type=bool, default=False)
 new_assignment_parser.add_argument('number_of_comparisons', type=int, required=True)
@@ -138,7 +141,7 @@ class AssignmentIdAPI(Resource):
         assignment.answer_end = datetime.datetime.strptime(
             params.get('answer_end', assignment.answer_end),
             '%Y-%m-%dT%H:%M:%S.%fZ')
-        # if nothing in request, assume user don't want comparison date
+        # if nothing in request, assume user doesn't want comparison date
         assignment.compare_start = params.get('compare_start', None)
         if assignment.compare_start is not None:
             assignment.compare_start = datetime.datetime.strptime(
@@ -150,15 +153,29 @@ class AssignmentIdAPI(Resource):
                 params.get('compare_end', assignment.compare_end),
                 '%Y-%m-%dT%H:%M:%S.%fZ')
 
-        # validate answer + comparison period start & end times
+        assignment.enable_self_evaluation = params.get('enable_self_evaluation', assignment.enable_self_evaluation)
+        assignment.self_eval_instructions = params.get('self_eval_instructions', None)
+        assignment.self_eval_start = params.get('self_eval_start', None)
+        if assignment.self_eval_start is not None:
+            assignment.self_eval_start = datetime.datetime.strptime(
+                assignment.self_eval_start,
+                '%Y-%m-%dT%H:%M:%S.%fZ')
+        assignment.self_eval_end = params.get('self_eval_end', None)
+        if assignment.self_eval_end is not None:
+            assignment.self_eval_end = datetime.datetime.strptime(
+                params.get('self_eval_end', assignment.self_eval_end),
+                '%Y-%m-%dT%H:%M:%S.%fZ')
+
+        # validate answer + comparison period + self-eval start & end times
         valid, error_message = Assignment.validate_periods(course.start_date, course.end_date,
-             assignment.answer_start, assignment.answer_end, assignment.compare_start, assignment.compare_end)
+             assignment.answer_start, assignment.answer_end,
+             assignment.compare_start, assignment.compare_end,
+             assignment.self_eval_start, assignment.self_eval_end)
         if not valid:
             abort(400, title="Assignment Not Saved", message=error_message)
 
         assignment.students_can_reply = params.get('students_can_reply', False)
         assignment.number_of_comparisons = params.get('number_of_comparisons', assignment.number_of_comparisons)
-        assignment.enable_self_evaluation = params.get('enable_self_evaluation', assignment.enable_self_evaluation)
 
         if assignment.student_answer_count == 0:
             assignment.enable_group_answers = params.get('enable_group_answers')
@@ -381,16 +398,25 @@ class AssignmentRootAPI(Resource):
         if new_assignment.compare_end is not None:
             new_assignment.compare_end = dateutil.parser.parse(params.get('compare_end', None))
 
+        new_assignment.enable_self_evaluation = params.get('enable_self_evaluation', False)
+        new_assignment.self_eval_instructions = params.get('self_eval_instructions', None)
+        new_assignment.self_eval_start = params.get('self_eval_start', None)
+        if new_assignment.self_eval_start is not None:
+            new_assignment.self_eval_start = dateutil.parser.parse(new_assignment.self_eval_start)
+        new_assignment.self_eval_end = params.get('self_eval_end', None)
+        if new_assignment.self_eval_end is not None:
+            new_assignment.self_eval_end = dateutil.parser.parse(new_assignment.self_eval_end)
+
         # validate answer + comparison period start & end times
         valid, error_message = Assignment.validate_periods(course.start_date, course.end_date,
              new_assignment.answer_start, new_assignment.answer_end,
-             new_assignment.compare_start, new_assignment.compare_end)
+             new_assignment.compare_start, new_assignment.compare_end,
+             new_assignment.self_eval_start, new_assignment.self_eval_end)
         if not valid:
             abort(400, title="Assignment Not Saved", message=error_message)
 
         new_assignment.students_can_reply = params.get('students_can_reply', False)
         new_assignment.number_of_comparisons = params.get('number_of_comparisons')
-        new_assignment.enable_self_evaluation = params.get('enable_self_evaluation')
         new_assignment.enable_group_answers = params.get('enable_group_answers')
 
         new_assignment.answer_grade_weight = params.get('answer_grade_weight')
