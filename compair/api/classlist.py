@@ -1,6 +1,5 @@
 import os
 import uuid
-import string
 import unicodecsv as csv
 
 from bouncer.constants import EDIT, READ, MANAGE
@@ -14,13 +13,12 @@ from werkzeug.utils import secure_filename
 from flask_restful.reqparse import RequestParser
 
 from . import dataformat
-from compair.core import db, event, abort
+from compair.core import db, event, abort, allowed_file, display_name_generator
 from compair.authorization import allow, require, USER_IDENTITY
 from compair.models import UserCourse, Course, User, SystemRole, CourseRole, \
     ThirdPartyType, ThirdPartyUser
 from compair.tasks import set_passwords
 from .util import new_restful_api
-from .file import random_generator, allowed_file
 
 classlist_api = Blueprint('classlist_api', __name__)
 api = new_restful_api(classlist_api)
@@ -67,9 +65,6 @@ on_classlist_instructor = event.signal('CLASSLIST_INSTRUCTOR_GET')
 on_classlist_student = event.signal('CLASSLIST_STUDENT_GET')
 on_classlist_update_users_course_roles = event.signal('CLASSLIST_UPDATE_USERS_COURSE_ROLES')
 
-
-def display_name_generator(role="student"):
-    return "".join([role, '_', random_generator(8, string.digits)])
 
 def _parse_user_row(import_type, row):
     length = len(row)

@@ -32,7 +32,6 @@ var myApp = angular.module('myApp', [
     'ubc.ctlt.compair.navbar',
     'ubc.ctlt.compair.assignment',
     'ubc.ctlt.compair.report',
-    'ubc.ctlt.compair.oauth',
     'localytics.directives',
     'templates'
 ]);
@@ -330,18 +329,6 @@ myApp.config(
                             canAddCourse: RouteResolves.canAddCourse(),
                             canManageUsers: RouteResolves.canManageUsers(),
                         });
-                    }
-                }
-            })
-        .when ('/oauth/create',
-            {
-                title: 'Add User',
-                templateUrl: 'modules/oauth/oauth-partial.html',
-                label: "Add User", // breadcrumb label
-                controller: 'OAuthController',
-                resolve: {
-                    resolvedData: function() {
-                        // no data to preload
                     }
                 }
             })

@@ -14,7 +14,7 @@ from sqlalchemy_enum34 import EnumType
 
 from . import *
 
-from compair.core import db
+from compair.core import db, display_name_generator
 
 # Flask-Login requires the user class to have some methods, the easiest way
 # to get those methods is to inherit from the UserMixin class.
@@ -59,61 +59,109 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
             message = "Sorry, this third party user was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
+    def generate_user_account(self):
+        from . import SystemRole, User
+
+        if self.user_id == None:
+            self.user = User(
+                username=None,
+                password=None,
+                system_role=self._get_system_role()
+            )
+            self._sync_name()
+            self._sync_email()
+            if self.user.system_role == SystemRole.student:
+                self._sync_student_number()
+
+            # instructors can have their display names set to their full name by default
+            if self.user.system_role != SystemRole.student and self.user.fullname != None:
+                self.user.displayname = self.user.fullname
+            else:
+                self.user.displayname = display_name_generator(self.user.system_role.value)
+
+            db.session.commit()
 
     def update_user_profile(self):
         if self.user and self.user.system_role == SystemRole.student and self.params:
             # overwrite first/last name if student not allowed to change it
             if not current_app.config.get('ALLOW_STUDENT_CHANGE_NAME'):
-                if self.third_party_type == ThirdPartyType.cas:
-                    firstname_attribute = current_app.config.get('CAS_ATTRIBUTE_FIRST_NAME')
-                    if firstname_attribute and firstname_attribute in self.params:
-                        self.user.firstname = self.params.get(firstname_attribute)
-
-                    lastname_attribute = current_app.config.get('CAS_ATTRIBUTE_LAST_NAME')
-                    if lastname_attribute and lastname_attribute in self.params:
-                        self.user.lastname = self.params.get(lastname_attribute)
-
-                elif self.third_party_type == ThirdPartyType.saml:
-                    firstname_attribute = current_app.config.get('SAML_ATTRIBUTE_FIRST_NAME')
-                    if firstname_attribute and firstname_attribute in self.params:
-                        first_name = self.params.get(firstname_attribute)
-                        if isinstance(first_name, list):
-                            first_name = first_name[0]
-                        self.user.firstname = first_name
-
-                    lastname_attribute = current_app.config.get('SAML_ATTRIBUTE_LAST_NAME')
-                    if lastname_attribute and lastname_attribute in self.params:
-                        last_name = self.params.get(lastname_attribute)
-                        if isinstance(last_name, list):
-                            last_name = last_name[0]
-                        self.user.lastname = last_name
+                self._sync_name()
 
             # overwrite email if student not allowed to change it
             if not current_app.config.get('ALLOW_STUDENT_CHANGE_EMAIL'):
-                if self.third_party_type == ThirdPartyType.cas:
-                    email_attribute = current_app.config.get('CAS_ATTRIBUTE_EMAIL')
-                    if email_attribute and email_attribute in self.params:
-                        self.user.email = self.params.get(email_attribute)
-
-                elif self.third_party_type == ThirdPartyType.saml:
-                    email_attribute = current_app.config.get('SAML_ATTRIBUTE_EMAIL')
-                    if email_attribute and email_attribute in self.params:
-                        email = self.params.get(email_attribute)
-                        if isinstance(email, list):
-                            email = email[0]
-                        self.user.email = email
+                self._sync_email()
 
             # overwrite student number if student not allowed to change it
             if not current_app.config.get('ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'):
-                if self.third_party_type == ThirdPartyType.cas:
-                    student_number_attribute = current_app.config.get('CAS_ATTRIBUTE_STUDENT_NUMBER')
-                    if student_number_attribute and student_number_attribute in self.params:
-                        self.user.student_number = self.params.get(student_number_attribute)
+                self._sync_student_number()
 
-                elif self.third_party_type == ThirdPartyType.saml:
-                    student_number_attribute = current_app.config.get('SAML_ATTRIBUTE_STUDENT_NUMBER')
-                    if student_number_attribute and student_number_attribute in self.params:
-                        student_number = self.params.get(student_number_attribute)
-                        if isinstance(student_number, list):
-                            student_number = student_number[0]
-                        self.user.student_number = student_number
+            db.session.commit()
+
+    def _sync_name(self):
+        if self.params:
+            if self.third_party_type == ThirdPartyType.cas:
+                firstname_attribute = current_app.config.get('CAS_ATTRIBUTE_FIRST_NAME')
+                lastname_attribute = current_app.config.get('CAS_ATTRIBUTE_LAST_NAME')
+            elif self.third_party_type == ThirdPartyType.saml:
+                firstname_attribute = current_app.config.get('SAML_ATTRIBUTE_FIRST_NAME')
+                lastname_attribute = current_app.config.get('SAML_ATTRIBUTE_LAST_NAME')
+
+            if firstname_attribute and firstname_attribute in self.params:
+                first_name = self.params.get(firstname_attribute)
+                if isinstance(first_name, list):
+                    first_name = first_name[0] if len(first_name) > 0 else None
+                self.user.firstname = first_name
+
+            if lastname_attribute and lastname_attribute in self.params:
+                last_name = self.params.get(lastname_attribute)
+                if isinstance(last_name, list):
+                    last_name = last_name[0] if len(last_name) > 0 else None
+                self.user.lastname = last_name
+
+    def _sync_email(self):
+        if self.params:
+            if self.third_party_type == ThirdPartyType.cas:
+                email_attribute = current_app.config.get('CAS_ATTRIBUTE_EMAIL')
+            elif self.third_party_type == ThirdPartyType.saml:
+                email_attribute = current_app.config.get('SAML_ATTRIBUTE_EMAIL')
+
+            if email_attribute and email_attribute in self.params:
+                email = self.params.get(email_attribute)
+                if isinstance(email, list):
+                    email = email[0] if len(email) > 0 else None
+                self.user.email = email
+
+    def _sync_student_number(self):
+        if self.params:
+            if self.third_party_type == ThirdPartyType.cas:
+                student_number_attribute = current_app.config.get('CAS_ATTRIBUTE_STUDENT_NUMBER')
+            elif self.third_party_type == ThirdPartyType.saml:
+                student_number_attribute = current_app.config.get('SAML_ATTRIBUTE_STUDENT_NUMBER')
+
+            if student_number_attribute and student_number_attribute in self.params:
+                student_number = self.params.get(student_number_attribute)
+                if isinstance(student_number, list):
+                    student_number = student_number[0] if len(student_number) > 0 else None
+                self.user.student_number = student_number
+
+    def _get_system_role(self):
+        from . import SystemRole
+
+        if self.params:
+            if self.third_party_type == ThirdPartyType.cas:
+                user_roles_attribute = current_app.config.get('CAS_USER_ROLE_FIELD')
+                instructor_role_values = list(current_app.config.get('CAS_INSTRUCTOR_ROLE_VALUES'))
+            if self.third_party_type == ThirdPartyType.saml:
+                user_roles_attribute = current_app.config.get('SAML_USER_ROLE_FIELD')
+                instructor_role_values = list(current_app.config.get('SAML_INSTRUCTOR_ROLE_VALUES'))
+
+            if user_roles_attribute and instructor_role_values and user_roles_attribute in self.params:
+                user_roles = self.params.get(user_roles_attribute)
+                if not isinstance(user_roles, list):
+                    user_roles = [user_roles]
+
+                for user_role in user_roles:
+                    if user_role in instructor_role_values:
+                        return SystemRole.instructor
+
+        return SystemRole.student

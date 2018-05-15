@@ -8,6 +8,8 @@ from flask import session as sess, abort as flask_abort
 from flask_bouncer import Bouncer
 from celery import Celery
 from flask_mail import Mail
+import string
+import random
 
 from flask_login import LoginManager, user_logged_in
 from flask_sqlalchemy import SQLAlchemy
@@ -46,7 +48,15 @@ event = Namespace()
 def generate_session_token(sender, user, **extra):
     sess['session_token'] = user.generate_session_token()
 
+def random_generator(size=8, chars=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
+def allowed_file(filename, allowed):
+    return '.' in filename and \
+        filename.lower().rsplit('.', 1)[1] in allowed
+
+def display_name_generator(role="student"):
+    return "".join([role, '_', random_generator(8, string.digits)])
 
 def abort(code=500, message=None, **kwargs):
     try:

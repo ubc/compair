@@ -7,13 +7,10 @@ from flask_login import current_user
 from sqlalchemy import exc, asc, or_, and_, func
 
 from . import dataformat
-from compair.core import db, event, abort
+from compair.core import db, event, abort, random_generator, display_name_generator
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.models import User, SystemRole, UserCourse, CourseRole
 from compair.api.login import authenticate
-
-from .classlist import display_name_generator
-from .file import random_generator
 
 demo_api = Blueprint('demo_api', __name__)
 api = new_restful_api(demo_api)

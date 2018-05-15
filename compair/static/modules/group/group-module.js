@@ -11,7 +11,6 @@ var module = angular.module('ubc.ctlt.compair.group',
         'ubc.ctlt.compair.common.interceptor',
         'ubc.ctlt.compair.login',
         'ubc.ctlt.compair.toaster',
-        'ubc.ctlt.compair.oauth',
         'ui.bootstrap'
     ]
 );

@@ -211,6 +211,10 @@ Restart server after making any changes to settings
 
 `CAS_USE_SAML`: Determines which authorization endpoint to use. '/serviceValidate' if false (default). '/samlValidate' if true.
 
+`CAS_USER_ROLE_FIELD`: CAS field will determine the user's default system role on account creation (default: none). Will only promote to instructor if there is a match against `CAS_INSTRUCTOR_ROLE_VALUES`. If not specified or does not match any value from `CAS_INSTRUCTOR_ROLE_VALUES`, the user will be given the student system role and will manually need to be promoted if needed.
+
+`CAS_INSTRUCTOR_ROLE_VALUES`: List of values `CAS_USER_ROLE_FIELD` can contain that would indicate the user is an instructor (default: empty set). Separate values by a space (ex: `instructor teacher staff`).
+
 `CAS_ATTRIBUTE_FIRST_NAME`: Optionally automatically sync user's first name with the supplied CAS attribute (Will only override if attribute is present a contains content).
 
 `CAS_ATTRIBUTE_LAST_NAME`: Optionally automatically sync user's last name with the supplied CAS attribute (Will only override if attribute is present a contains content).
@@ -236,6 +240,10 @@ Restart server after making any changes to settings
 `SAML_METADATA_ENTITY_ID` Use when loading ipd metadata with multiple public entity ids.
 
 `SAML_EXPOSE_METADATA_ENDPOINT` Optionally expose the `/api/saml/metadata` endpoint for the idp's usage (disabled by default).
+
+`SAML_USER_ROLE_FIELD`: SAML field will determine the user's default system role on account creation (default: none). Will only promote to instructor if there is a match against `SAML_INSTRUCTOR_ROLE_VALUES`. If not specified or does not match any value from `SAML_INSTRUCTOR_ROLE_VALUES`, the user will be given the student system role and will manually need to be promoted if needed.
+
+`SAML_INSTRUCTOR_ROLE_VALUES`: List of values `SAML_USER_ROLE_FIELD` can contain that would indicate the user is an instructor (default: empty set). Separate values by a space (ex: `instructor teacher staff`).
 
 `SAML_ATTRIBUTE_FIRST_NAME`: Optionally automatically sync user's first name with the supplied SAML attribute (Will only override if attribute is present a contains content).
 
@@ -317,6 +325,17 @@ You can set the data the first time by running:
 
     python manage.py database create
 
+Attachments Settings
+---------------------------
+
+`ATTACHMENT_UPLOAD_LIMIT`: The file size upload limit (in bytes) for all attachments including Kaltura uploads. (default 250MB).
+
+`ATTACHMENT_ALLOWED_EXTENSIONS`: List of file extensions allowed for upload (default: pdf, mp3, mp4, webm, jpg, jpeg, png). Separate values by a space (ex: `pdf mp3 mp4 webm jpg jpeg png`).
+
+`CAN_PREVIEW_EXTENSIONS`: List of file extensions allowed for image preview (default: jpg, jpeg, png). Must also be included in `ATTACHMENT_ALLOWED_EXTENSIONS`. Separate values by a space (ex: `jpg jpeg png`).
+
+Restart server after making any changes to settings
+
 (Optional) Kaltura Media Attachments
 ---------------------------
 
@@ -340,11 +359,9 @@ Currently only version 3 of the Kaltura api is supported.
 
 `KALTURA_PLAYER_ID`: A Kaltura player id (conf ui id) to display the media in.
 
-`ATTACHMENT_UPLOAD_LIMIT`: The file size upload limit (in bytes) for all attachments including Kaltura uploads. (default 250MB).
+`KALTURA_VIDEO_EXTENSIONS`: Set of video file extensions that will be uploaded to the Kaltura instead of ComPAIR (default: mp4, mov, and webm). Separate values by a space (ex: `mp4 mov webm`).
 
-`KALTURA_VIDEO_EXTENSIONS`: Set of video file extensions that will be uploaded to the Kaltura instead of ComPAIR (default: mp4, mov, and webm).
-
-`KALTURA_AUDIO_EXTENSIONS`: Set of audio file extensions that will be uploaded to the Kaltura instead of ComPAIR (default: mp3).
+`KALTURA_AUDIO_EXTENSIONS`: Set of audio file extensions that will be uploaded to the Kaltura instead of ComPAIR (default: mp3). Separate values by a space (ex: `mp3`).
 
 Restart server after making any changes to settings
 

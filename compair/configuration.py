@@ -22,6 +22,7 @@ Currently the supported environment variables:
 
 import os
 import json
+import re
 
 from distutils.util import strtobool
 from flask import Config
@@ -64,10 +65,12 @@ if 'DATABASE' in config:
 
 env_overridables = [
     'CAS_SERVER', 'CAS_AUTH_PREFIX',
+    'CAS_USER_ROLE_FIELD',
     'CAS_ATTRIBUTE_FIRST_NAME', 'CAS_ATTRIBUTE_LAST_NAME',
     'CAS_ATTRIBUTE_STUDENT_NUMBER', 'CAS_ATTRIBUTE_EMAIL',
     'SAML_UNIQUE_IDENTIFIER', 'SAML_SETTINGS_FILE',
     'SAML_METADATA_URL', 'SAML_METADATA_ENTITY_ID',
+    'SAML_USER_ROLE_FIELD',
     'SAML_ATTRIBUTE_FIRST_NAME', 'SAML_ATTRIBUTE_LAST_NAME',
     'SAML_ATTRIBUTE_STUDENT_NUMBER', 'SAML_ATTRIBUTE_EMAIL',
     'SECRET_KEY', 'REPORT_FOLDER', 'UPLOAD_FOLDER',
@@ -102,6 +105,12 @@ env_int_overridables = [
     'MAIL_PORT', 'MAIL_MAX_EMAILS'
 ]
 
+env_set_overridables = [
+    'ATTACHMENT_ALLOWED_EXTENSIONS', 'CAN_PREVIEW_EXTENSIONS',
+    'KALTURA_VIDEO_EXTENSIONS', 'KALTURA_AUDIO_EXTENSIONS',
+    'SAML_INSTRUCTOR_ROLE_VALUES', 'CAS_INSTRUCTOR_ROLE_VALUES'
+]
+
 env_json_overridables = [
     'SAML_SETTINGS'
 ]
@@ -117,6 +126,10 @@ for env in env_bool_overridables:
 for env in env_int_overridables:
     if os.environ.get(env) != None:
         config[env] = int(os.environ.get(env))
+
+for env in env_set_overridables:
+    if os.environ.get(env) != None:
+        config[env] = set(re.split('\s+', os.environ.get(env).strip()))
 
 for env in env_json_overridables:
     if os.environ.get(env) != None:
