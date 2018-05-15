@@ -6,6 +6,7 @@ import mock
 
 from compair import db
 from data.factories import AnswerCommentFactory
+from data.fixtures import DefaultFixture
 from data.fixtures.test_data import TestFixture, LTITestData
 from compair.models import PairingAlgorithm, AnswerCommentType
 from compair.tests.test_compair import ComPAIRAPITestCase
@@ -29,9 +30,13 @@ class GradebookAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self.base_url, data=json.dumps({}))
             self.assert403(rv)
 
-        with self.login(self.fixtures.unauthorized_student.username):
-            rv = self.client.get(self.base_url, data=json.dumps({}))
-            self.assert403(rv)
+        for student in [self.fixtures.students[0], self.fixtures.unauthorized_student]:
+            for user_context in [ \
+                    self.login(student.username), \
+                    self.impersonate(DefaultFixture.ROOT_USER, student)]:
+                with user_context:
+                    rv = self.client.get(self.base_url, data=json.dumps({}))
+                    self.assert403(rv)
 
         # authorized instructor
         with self.login(self.fixtures.instructor.username):

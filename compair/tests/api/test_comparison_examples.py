@@ -4,7 +4,7 @@ import json
 import datetime
 
 from compair import db
-from data.fixtures import AnswerFactory
+from data.fixtures import AnswerFactory, DefaultFixture
 from data.fixtures.test_data import TestFixture
 from compair.models import Answer
 from compair.tests.test_compair import ComPAIRAPITestCase
@@ -30,13 +30,13 @@ class ComparionExampleAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self.base_url)
             self.assert403(rv)
 
-        with self.login(self.fixtures.unauthorized_student.username):
-            rv = self.client.get(self.base_url)
-            self.assert403(rv)
-
-        with self.login(self.fixtures.students[0].username):
-            rv = self.client.get(self.base_url)
-            self.assert403(rv)
+        for student in [self.fixtures.unauthorized_student, self.fixtures.students[0]]:
+            for user_context in [ \
+                    self.login(student.username), \
+                    self.impersonate(DefaultFixture.ROOT_USER, student)]:
+                with user_context:
+                    rv = self.client.get(self.base_url)
+                    self.assert403(rv)
 
         # instructor
         with self.login(self.fixtures.instructor.username):
@@ -85,12 +85,16 @@ class ComparionExampleAPITests(ComPAIRAPITestCase):
         self.assert401(rv)
 
         # test unauthorized users
-        with self.login(self.fixtures.unauthorized_student.username):
-            rv = self.client.post(
-                self.base_url,
-                data=json.dumps(expected_comparison_example),
-                content_type='application/json')
-            self.assert403(rv)
+        student = self.fixtures.unauthorized_student
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(DefaultFixture.ROOT_USER, student)]:
+            with user_context:
+                rv = self.client.post(
+                    self.base_url,
+                    data=json.dumps(expected_comparison_example),
+                    content_type='application/json')
+                self.assert403(rv)
 
         with self.login(self.fixtures.unauthorized_instructor.username):
             rv = self.client.post(
@@ -99,12 +103,16 @@ class ComparionExampleAPITests(ComPAIRAPITestCase):
                 content_type='application/json')
             self.assert403(rv)
 
-        with self.login(self.fixtures.students[0].username):
-            rv = self.client.post(
-                self.base_url,
-                data=json.dumps(expected_comparison_example),
-                content_type='application/json')
-            self.assert403(rv)
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                rv = self.client.post(
+                    self.base_url,
+                    data=json.dumps(expected_comparison_example),
+                    content_type='application/json')
+                self.assert403(rv)
 
         # instructor
         with self.login(self.fixtures.instructor.username):
@@ -203,19 +211,16 @@ class ComparionExampleAPITests(ComPAIRAPITestCase):
                 content_type='application/json')
             self.assert403(rv)
 
-        with self.login(self.fixtures.unauthorized_student.username):
-            rv = self.client.post(
-                self.base_url + '/' + comparison_example.uuid,
-                data=json.dumps(expected),
-                content_type='application/json')
-            self.assert403(rv)
-
-        with self.login(self.fixtures.students[0].username):
-            rv = self.client.post(
-                self.base_url + '/' + comparison_example.uuid,
-                data=json.dumps(expected),
-                content_type='application/json')
-            self.assert403(rv)
+        for student in [self.fixtures.unauthorized_student, self.fixtures.students[0]]:
+            for user_context in [ \
+                    self.login(student.username), \
+                    self.impersonate(DefaultFixture.ROOT_USER, student)]:
+                with user_context:
+                    rv = self.client.post(
+                        self.base_url + '/' + comparison_example.uuid,
+                        data=json.dumps(expected),
+                        content_type='application/json')
+                    self.assert403(rv)
 
         # instructor
         with self.login(self.fixtures.instructor.username):
@@ -312,13 +317,13 @@ class ComparionExampleAPITests(ComPAIRAPITestCase):
             rv = self.client.delete(self.base_url + '/' + comparison_example.uuid)
             self.assert403(rv)
 
-        with self.login(self.fixtures.unauthorized_student.username):
-            rv = self.client.delete(self.base_url + '/' + comparison_example.uuid)
-            self.assert403(rv)
-
-        with self.login(self.fixtures.students[0].username):
-            rv = self.client.delete(self.base_url + '/' + comparison_example.uuid)
-            self.assert403(rv)
+        for student in [self.fixtures.unauthorized_student, self.fixtures.students[0]]:
+            for user_context in [ \
+                    self.login(student.username), \
+                    self.impersonate(DefaultFixture.ROOT_USER, student)]:
+                with user_context:
+                    rv = self.client.delete(self.base_url + '/' + comparison_example.uuid)
+                    self.assert403(rv)
 
         with self.login(self.fixtures.instructor.username):
              # test invalid assignment id

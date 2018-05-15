@@ -256,16 +256,20 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(students[0]['name'], expected['name'])
 
         # test success - student
-        with self.login(self.data.get_authorized_student().username):
-            rv = self.client.get(url)
-            self.assert200(rv)
-            students = rv.json['objects']
-            expected = {
-                'id': self.data.get_authorized_student().uuid,
-                'name': self.data.get_authorized_student().displayname
-            }
-            self.assertEqual(students[0]['id'], expected['id'])
-            self.assertEqual(students[0]['name'], expected['name'] + ' (You)')
+        student =self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(url)
+                self.assert200(rv)
+                students = rv.json['objects']
+                expected = {
+                    'id': self.data.get_authorized_student().uuid,
+                    'name': self.data.get_authorized_student().displayname
+                }
+                self.assertEqual(students[0]['id'], expected['id'])
+                self.assertEqual(students[0]['name'], expected['name'] + ' (You)')
 
     def test_get_instructors_course(self):
         url = self.url + "/instructors"
@@ -313,28 +317,32 @@ class ClassListAPITest(ComPAIRAPITestCase):
                     self.assertEqual(actual[key], expect[key])
 
         # test success - student
-        with self.login(self.data.get_authorized_student().username):
-            rv = self.client.get(url)
-            self.assert200(rv)
-            instructors = rv.json['objects']
-            expected = [
-                {
-                    'role': 'Teaching Assistant',
-                    'id': self.data.get_authorized_ta().uuid,
-                    'name': self.data.get_authorized_ta().displayname
-                },
-                {
-                    'role': 'Instructor',
-                    'id': self.data.get_authorized_instructor().uuid,
-                    'name': self.data.get_authorized_instructor().displayname
-                }
-            ]
+        student =self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(url)
+                self.assert200(rv)
+                instructors = rv.json['objects']
+                expected = [
+                    {
+                        'role': 'Teaching Assistant',
+                        'id': self.data.get_authorized_ta().uuid,
+                        'name': self.data.get_authorized_ta().displayname
+                    },
+                    {
+                        'role': 'Instructor',
+                        'id': self.data.get_authorized_instructor().uuid,
+                        'name': self.data.get_authorized_instructor().displayname
+                    }
+                ]
 
-            self.assertEqual(len(instructors), len(expected))
-            for expect in expected:
-                actual = next((x for x in instructors if x['id'] == expect['id']), None)
-                for key in expect:
-                    self.assertEqual(actual[key], expect[key])
+                self.assertEqual(len(instructors), len(expected))
+                for expect in expected:
+                    actual = next((x for x in instructors if x['id'] == expect['id']), None)
+                    for key in expect:
+                        self.assertEqual(actual[key], expect[key])
 
     def test_enrol_instructor(self):
         url = self._create_enrol_url(self.url, self.data.get_dropped_instructor().uuid)
@@ -476,11 +484,14 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assert403(rv)
             uploaded_file.close()
 
-        with self.login(self.data.get_authorized_student().username):
-            uploaded_file = io.BytesIO(student.username.encode('utf-8'))
-            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
-            self.assert403(rv)
-            uploaded_file.close()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(instructor, student)]:
+            with user_context:
+                uploaded_file = io.BytesIO(student.username.encode('utf-8'))
+                rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+                self.assert403(rv)
+                uploaded_file.close()
 
         with self.login(self.data.get_authorized_ta().username):
             uploaded_file = io.BytesIO(student.username.encode('utf-8'))
@@ -769,11 +780,14 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assert403(rv)
             uploaded_file.close()
 
-        with self.login(self.data.get_authorized_student().username):
-            uploaded_file = io.BytesIO(cas_student.unique_identifier.encode('utf-8'))
-            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
-            self.assert403(rv)
-            uploaded_file.close()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(instructor, student)]:
+            with user_context:
+                uploaded_file = io.BytesIO(cas_student.unique_identifier.encode('utf-8'))
+                rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+                self.assert403(rv)
+                uploaded_file.close()
 
         with self.login(self.data.get_authorized_ta().username):
             uploaded_file = io.BytesIO(cas_student.unique_identifier.encode('utf-8'))
@@ -1009,11 +1023,14 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assert403(rv)
             uploaded_file.close()
 
-        with self.login(self.data.get_authorized_student().username):
-            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
-            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
-            self.assert403(rv)
-            uploaded_file.close()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(instructor, student)]:
+            with user_context:
+                uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+                rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+                self.assert403(rv)
+                uploaded_file.close()
 
         with self.login(self.data.get_authorized_ta().username):
             uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
@@ -1239,6 +1256,18 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 data=json.dumps(params),
                 content_type='application/json')
             self.assert403(rv)
+
+        # test with impersonating student
+        student = self.data.authorized_student
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.authorized_instructor, student)]:
+            with user_context:
+                rv = self.client.post(
+                    url,
+                    data=json.dumps(params),
+                    content_type='application/json')
+                self.assert403(rv)
 
         with self.login(self.data.get_authorized_instructor().username):
             # test invalid course id

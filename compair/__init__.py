@@ -222,9 +222,9 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
                         #     message="Sorry, you can't perform that action in the student view. Only the real student can do this.", \
                         #     disabled_by_impersonation=True)
 
-                        # TODO aborting a DELETE request seems to generate response in html instead of json.
+                        # TODO aborting a DELETE request on /api/users seems to generate response in html instead of json.
                         # The following code can get around it. Need to check why though
-                        if (request.method in ['DELETE']):
+                        if (request.method in ['DELETE'] and request.full_path.startswith('/api/users')):
                             # use make_response and jsonify here to make sure the reply is in JSON
                             abort(make_response(jsonify(title="Action Temporarily Disabled", \
                                 message="Sorry, you can't perform that action in the student view. Only the real student can do this.", \
