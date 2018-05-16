@@ -695,7 +695,6 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     "compair_student_3è", "compair_instructor_2"])
 
                 # ensure the lti_user_resource_link is generated and stores the lis_result_sourcedid
-                print(lti_membership.lti_user.user_id)
                 if lti_membership.lti_user.user_id in [lti_user.user_id, "compair_student_3è", "compair_instructor_2"]:
                     self.assertIsNone(lti_membership.lis_result_sourcedids)
                 else:

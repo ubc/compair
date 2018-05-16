@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import json
 
 from data.fixtures import DefaultFixture
@@ -85,7 +87,7 @@ class ImpersonationAPITests(ComPAIRAPITestCase):
     #     with self.login(self.instructor_main_course.username):
     #         self.assert200(self._start_impersonation(self.student_main_course))
     #         self._verify_impersonation(original=self.instructor_main_course, pretending=self.student_main_course)
-    # 
+    #
     #         # explicit logout
     #         self.assert403(self.logout())
     #         self._verify_impersonation(original=self.instructor_main_course, pretending=self.student_main_course)
@@ -161,7 +163,7 @@ class ImpersonationAPITests(ComPAIRAPITestCase):
         # enrol main course instructor and student to second course too
         self.data.enrol_student(self.student_main_course, self.data.secondary_course)
         self.data.enrol_instructor(self.instructor_main_course, self.data.secondary_course)
-        
+
         with self.login(self.student_main_course.username):
             # student can access it
             rv = self.client.get(self.course_base_url + '/' + self.data.secondary_course.uuid + '/assignments')

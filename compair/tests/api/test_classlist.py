@@ -1,6 +1,9 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import json
 import io
 import unicodecsv as csv
+import six
 
 from compair.core import db
 from data.fixtures.test_data import BasicTestData, ThirdPartyAuthTestData
@@ -14,6 +17,8 @@ class ClassListAPITest(ComPAIRAPITestCase):
         self.data = BasicTestData()
         self.auth_data = ThirdPartyAuthTestData()
         self.url = "/api/courses/" + self.data.get_course().uuid + "/users"
+
+        self.delimiter = ",".encode('utf-8') if six.PY2 else ","
 
     def test_get_classlist(self):
         # test login required
@@ -44,7 +49,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
-            reader = csv.reader(rv.data.splitlines(), delimiter=',')
+            reader = csv.reader(rv.data.splitlines(), delimiter=self.delimiter)
 
             self.assertEqual(['username', 'student_number', 'firstname', 'lastname', 'displayname', 'group_name'], next(reader))
             for user, group_name in expected:
@@ -58,7 +63,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
-            reader = csv.reader(rv.data.splitlines(), delimiter=',')
+            reader = csv.reader(rv.data.splitlines(), delimiter=self.delimiter)
 
             self.assertEqual(['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
             for user, group_name in expected:
@@ -86,7 +91,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
-            reader = csv.reader(rv.data.splitlines(), delimiter=',')
+            reader = csv.reader(rv.data.splitlines(), delimiter=self.delimiter)
 
             self.assertEqual(['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
             for user, group_name in expected:
@@ -137,7 +142,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
                 self.assert200(rv)
                 self.assertEqual('text/csv', rv.content_type)
-                reader = csv.reader(rv.data.splitlines(), delimiter=',')
+                reader = csv.reader(rv.data.splitlines(), delimiter=self.delimiter)
 
                 expected_header = ['username', 'saml_username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name']
                 if not cas_enabled:
@@ -183,7 +188,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
             self.assert200(rv)
             self.assertEqual('text/csv', rv.content_type)
-            reader = csv.reader(rv.data.splitlines(), delimiter=',')
+            reader = csv.reader(rv.data.splitlines(), delimiter=self.delimiter)
 
             self.assertEqual(['username', 'saml_username', 'cas_username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
             for user, saml_username, cas_username, group_name in expected:

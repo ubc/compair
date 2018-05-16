@@ -1,8 +1,11 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import json
 import io
 import os
 import unicodecsv as csv
 import re
+import six
 
 from data.fixtures.test_data import TestFixture
 from compair.tests.test_compair import ComPAIRAPITestCase
@@ -17,6 +20,8 @@ class ReportAPITest(ComPAIRAPITestCase):
             with_draft_student=True, with_comments=True, with_comparisons=True)
         self.url = "/api/courses/" + self.fixtures.course.uuid + "/report"
         self.files_to_cleanup = []
+
+        self.delimiter = ",".encode('utf-8') if six.PY2 else ","
 
     def tearDown(self):
         folder = current_app.config['REPORT_FOLDER']
@@ -93,7 +98,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading1 = next(reader)
                 heading2 = next(reader)
@@ -126,7 +131,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading1 = next(reader)
                 heading2 = next(reader)
@@ -148,7 +153,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading1 = next(reader)
                 heading2 = next(reader)
@@ -170,7 +175,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading1 = next(reader)
                 heading2 = next(reader)
@@ -196,7 +201,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading1 = next(reader)
                 heading2 = next(reader)
@@ -227,7 +232,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading = next(reader)
                 assignments = self.fixtures.assignments
@@ -258,7 +263,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading = next(reader)
                 self._check_participation_stat_report_heading_rows(heading)
@@ -283,7 +288,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading = next(reader)
                 assignments = self.fixtures.assignments
@@ -316,7 +321,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading = next(reader)
                 self._check_participation_stat_report_heading_rows(heading)
@@ -347,7 +352,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading1 = next(reader)
                 heading2 = next(reader)
@@ -372,7 +377,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading1 = next(reader)
                 heading2 = next(reader)
@@ -396,7 +401,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading1 = next(reader)
                 heading2 = next(reader)
@@ -424,7 +429,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading1 = next(reader)
                 heading2 = next(reader)
@@ -460,7 +465,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
             tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
             with open(tmp_name, 'rb') as csvfile:
-                reader = csv.reader(csvfile, delimiter=',')
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
 
                 heading1 = next(reader)
                 heading2 = next(reader)
