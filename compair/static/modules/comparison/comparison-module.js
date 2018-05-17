@@ -44,10 +44,10 @@ module.controller(
     'ComparisonController',
     ['$location', '$route', '$scope', '$timeout', '$routeParams', '$anchorScroll', 'AssignmentResource', 'AnswerResource',
         'ComparisonResource', 'AnswerCommentResource', 'Toaster', 'AnswerCommentType',
-        'EditorOptions', "xAPI", "xAPIStatementHelper", "WinningAnswer", "resolvedData",
+        'EditorOptions', "xAPI", "xAPIStatementHelper", "WinningAnswer", "resolvedData", "Session",
     function($location, $route, $scope, $timeout, $routeParams, $anchorScroll, AssignmentResource, AnswerResource,
         ComparisonResource, AnswerCommentResource, Toaster, AnswerCommentType,
-        EditorOptions, xAPI, xAPIStatementHelper, WinningAnswer, resolvedData)
+        EditorOptions, xAPI, xAPIStatementHelper, WinningAnswer, resolvedData, Session)
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId;
@@ -115,10 +115,14 @@ module.controller(
                             comment_type: AnswerCommentType.evaluation,
                             draft: true
                         };
-                        // generate id for answer comment for tracking
-                        AnswerCommentResource.save(params, $scope[answerStr+'_feedback'], function(ret) {
-                            $scope[answerStr+'_feedback'] = ret;
-                        });
+                        // TODO review suppression logic.  For now, dont save when impersonating.
+                        // logic will probably be revised when xapi handling be changed in the future.
+                        if (!Session.isImpersonating()) {
+                            // generate id for answer comment for tracking
+                            AnswerCommentResource.save(params, $scope[answerStr+'_feedback'], function(ret) {
+                                $scope[answerStr+'_feedback'] = ret;
+                            });
+                        }
                     }
                 });
 

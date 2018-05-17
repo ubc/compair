@@ -133,13 +133,17 @@ module.controller(
             AnswerResource.userUnsaved({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
                 function(answerUnsaved) {
                     if (!answerUnsaved.objects.length) {
-                        // if no answers found, create a new draft answer
-                        AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, {draft: true}).$promise.then(
-                            function (ret) {
-                                // set answer id to new answer id
-                                $scope.answer.id = ret.id;
-                            }
-                        );
+                        // TODO review suppression logic. For now, avoid saving the answer when impersonating.
+                        // logic will probably be revised when xapi handling be changed in the future.
+                        if  (!$scope.isImpersonating) {
+                            // if no answers found, create a new draft answer
+                            AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, {draft: true}).$promise.then(
+                                function (ret) {
+                                    // set answer id to new answer id
+                                    $scope.answer.id = ret.id;
+                                }
+                            );
+                        }
                     } else {
                         // draft found for user, use it
                         $scope.answer.id = answerUnsaved.objects[0].id;
