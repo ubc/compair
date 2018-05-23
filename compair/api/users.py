@@ -8,7 +8,7 @@ from sqlalchemy import exc, asc, or_, and_, func, desc, asc
 from six import text_type
 
 from . import dataformat
-from compair.authorization import is_user_access_restricted, require, allow
+from compair.authorization import is_user_access_restricted, require, allow, USER_IDENTITY
 from compair.core import db, event, abort
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.models import User, SystemRole, Course, UserCourse, CourseRole, Assignment, \
@@ -222,7 +222,9 @@ class UserAPI(Resource):
 class UserListAPI(Resource):
     @login_required
     def get(self):
-        restrict_user = not allow(READ, User)
+        require(READ, USER_IDENTITY,
+            title="User List Unavailable",
+            message="Sorry, your system role does not allow you to view the list of users.")
 
         params = user_list_parser.parse_args()
 
@@ -252,7 +254,7 @@ class UserListAPI(Resource):
             event_name=on_user_list_get.name,
             user=current_user)
 
-        return {"objects": marshal(page.items, dataformat.get_user(restrict_user)), "page": page.page,
+        return {"objects": marshal(page.items, dataformat.get_user(False)), "page": page.page,
                 "pages": page.pages, "total": page.total, "per_page": page.per_page}
 
     def post(self):
