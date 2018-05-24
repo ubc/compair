@@ -45,20 +45,16 @@ jobs:
     - stage: acceptance test + deploy
       python: "3.6"
       env: COMPILE_ASSETS=true
-      before_install:
+      before_install: true
+      install: true
+      before_script:
       - make docker-image
-      install:
-      - docker-compose up -d; sleep 10;
-      before_script: true
       script:
-      # test image in dev mode, e.g. settings from docker-compose
-      - curl -sSfL http://localhost:8080 | grep '<title ng-bind=".*">ComPAIR Learning Application</title>' > /dev/null && curl -sSf http://localhost:8080/api/healthz > /dev/null
       # test image in prod mode
-      - docker-compose stop app
-      - docker run -d --name compair_app_prod --network compair_default -e DATABASE_URI=mysql+pymysql://compair:compair@db:3306/compair ubcctlt/compair-app
-      - curl -sSfL http://localhost:8080 | grep '<title ng-bind=".*">ComPAIR Learning Application</title>' > /dev/null && curl -sSf http://localhost:8080/api/healthz > /dev/null
+      - docker-compose -f deploy/docker/docker-compose.yml up -d; sleep 10;
+      - curl -sSL http://localhost > /dev/null && curl -sS http://localhost/api/healthz > /dev/null
       # copy assets from docker image for s3 deployment
-      - docker cp compair_app_prod:/code/compair/static/dist compair/static/dist
+      - docker cp docker_app_1:/code/compair/static/dist compair/static/dist
       after_success:
       - ./scripts/deploy_dockerhub.sh
       - ./scripts/deploy.sh

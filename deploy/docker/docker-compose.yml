@@ -15,8 +15,6 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - ./.data/redis:/data
-    ports:
-      - "16379:6379"
     restart: always
   app: &app
     image: "ubcctlt/compair-app:${COMPAIR_VERSION:-latest}"
@@ -28,22 +26,13 @@ services:
       - DB_PORT=3306
       - DB_NAME=compair
       - SQLALCHEMY_POOL_RECYCLE=299
-      - DEV=0
       - CELERY_BROKER_URL=redis://redis:6379
-      #- GA_TRACKING_ID=12345
-      - ENFORCE_SSL=0
-      - MAIL_NOTIFICATION_ENABLED=1
-      - MAIL_SERVER=mail
-      - MAIL_PORT=1025
-      - MAIL_USERNAME=compair
-      - MAIL_PASSWORD=compair
-      - MAIL_DEFAULT_SENDER=compair@example.com
+      - ASSET_LOCATION=local
     volumes:
       - ../../.data/persistent:/code/persistent
     depends_on:
       - db
       - redis
-      - mail
     restart: always
   worker: &worker
     <<: *app
@@ -56,16 +45,9 @@ services:
       - DB_PORT=3306
       - DB_NAME=compair
       - SQLALCHEMY_POOL_RECYCLE=299
-      - DEV=0
       - CELERY_BROKER_URL=redis://redis:6379
+      - ASSET_LOCATION=local
       - C_FORCE_ROOT=1
-      - ENFORCE_SSL=0
-      - MAIL_NOTIFICATION_ENABLED=1
-      - MAIL_SERVER=mail
-      - MAIL_PORT=1025
-      - MAIL_USERNAME=compair
-      - MAIL_PASSWORD=compair
-      - MAIL_DEFAULT_SENDER=compair@example.com
   worker_scheduler:
     <<: *worker
     command: celery beat --app=celery_worker.celery --loglevel=INFO
