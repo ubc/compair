@@ -57,12 +57,11 @@ before_script:
 
 before_install:
   - if [ "$DOCKER" != "true" ]; then nvm install 6.4; fi
-  - if [ "$DOCKER" = "true" ]; then make docker-image; fi
 
 # command to install dependencies
 install:
   - if [ "$DOCKER" != "true" ]; then make deps; node_modules/gulp/bin/gulp.js prod; fi
-  - if [ "$DOCKER" = "true" ]; then docker-compose up -d; sleep 10; fi
+  - if [ "$DOCKER" = "true" ]; then make docker-image; fi
 
 script:
   - ./scripts/travis_script.sh
