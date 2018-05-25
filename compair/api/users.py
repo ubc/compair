@@ -296,6 +296,8 @@ class UserListAPI(Resource):
             user.password = params.get("password")
             if user.password == None:
                 abort(400, title="User Not Saved", message="A password is required. Please enter a password and try saving again.")
+            elif len(params.get("password")) < 4:
+                abort(400, title="User Not Saved", message="The password must be at least 4 characters long.")
 
             user.username = params.get("username")
             if user.username == None:
@@ -802,6 +804,8 @@ class UserUpdatePasswordAPI(Resource):
             abort(400, title="Password Not Saved", message="Sorry, the old password is required. Please enter the old password and try saving again.")
         elif current_user.id == user.id and not user.verify_password(oldpassword):
             abort(400, title="Password Not Saved", message="Sorry, the old password is not correct. Please double-check the old password and try saving again.")
+        elif len(params.get('newpassword')) < 4:
+            abort(400, title="Password Not Saved", message="The new password must be at least 4 characters long.")
 
         user.password = params.get('newpassword')
         db.session.commit()
