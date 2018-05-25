@@ -65,15 +65,16 @@
         </compair-field-with-feedback>
         <div ng-if="method == 'create'">
             <compair-field-with-feedback form-control="userForm.password">
-                <label for=password" class="required-star">ComPAIR Password </label>
+                <label for="password" class="required-star">ComPAIR Password </label>
                 <input class="form-control" id="password" type="password"
-                    name="password" ng-model="user.password" required />
+                    name="password" ng-model="user.password"
+                    ng-minlength="4" required />
             </compair-field-with-feedback>
             <compair-field-with-feedback form-control="userForm.verifyPassword">
-                <label for=verifyPassword" class="required-star">Verify Password </label>
+                <label for="verifyPassword" class="required-star">Verify Password </label>
                 <input class="form-control" id="verifyPassword" type="password"
                     name="verifyPassword" ng-model="user.verifyPassword"
-                    required pw-match="password" />
+                    ng-minlength="4" required pw-match="password" />
             </compair-field-with-feedback>
         </div>
         <div ng-if="method != 'create' && ((ownProfile || canManageUsers) && user.uses_compair_login)">
