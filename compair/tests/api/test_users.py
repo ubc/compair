@@ -19,10 +19,6 @@ class UsersAPITests(ComPAIRAPITestCase):
         super(UsersAPITests, self).setUp()
         self.data = BasicTestData()
 
-    def test_unauthorized(self):
-        rv = self.client.get('/api/users')
-        self.assert401(rv)
-
     def test_login(self):
         with self.login('root', 'password') as rv:
             root = User.query.get(1)
@@ -73,7 +69,36 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertNotIn('email', root)
 
     def test_users_list(self):
+        rv = self.client.get('/api/users')
+        self.assert401(rv)
+
+        with self.login(self.data.authorized_student.username):
+            rv = self.client.get('/api/users')
+            self.assert403(rv)
+
         with self.login('root'):
+            expected = sorted(
+                [user for user in self.data.users],
+                key=lambda user: (user.lastname, user.firstname)
+            )[:20]
+            rv = self.client.get('/api/users')
+            self.assert200(rv)
+            result = rv.json['objects']
+            self.assertEqual([u.uuid for u in expected], [u['id'] for u in result])
+            self.assertEqual(1, rv.json['page'])
+            self.assertEqual(1, rv.json['pages'])
+            self.assertEqual(20, rv.json['per_page'])
+            self.assertEqual(len(expected), rv.json['total'])
+
+            rv = self.client.get('/api/users?search='+self.data.get_unauthorized_instructor().firstname)
+            self.assert200(rv)
+            self.assertEqual(self.data.get_unauthorized_instructor().uuid, rv.json['objects'][0]['id'])
+            self.assertEqual(1, rv.json['page'])
+            self.assertEqual(1, rv.json['pages'])
+            self.assertEqual(20, rv.json['per_page'])
+            self.assertEqual(1, rv.json['total'])
+
+        with self.login(self.data.authorized_instructor.username):
             expected = sorted(
                 [user for user in self.data.users],
                 key=lambda user: (user.lastname, user.firstname)
