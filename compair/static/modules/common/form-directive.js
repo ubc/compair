@@ -59,6 +59,10 @@ module.directive('confirmFormExit', function(){
                     return "Are you sure you want to refresh this page? Any unsaved changed you've made will be lost.";
                 }
             }
+            // clean up event handlers
+            scope.$on('$destroy', function() {
+                window.onbeforeunload = function() {};
+            });
             //change URL
             scope.$on('$locationChangeStart', function(event, next, current) {
                 if (scope.forcePreventExit) {
