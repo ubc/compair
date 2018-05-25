@@ -161,6 +161,17 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertEqual("User Not Saved", rv.json['title'])
             self.assertEqual("A password is required. Please enter a password and try saving again.", rv.json['message'])
 
+            # test short password
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value,
+                password="123"
+            )
+            rv = self.client.post(url, data=json.dumps(expected.__dict__), content_type='application/json')
+            self.assertStatus(rv, 400)
+            self.assertEqual("User Not Saved", rv.json['title'])
+            self.assertEqual("The password must be at least 4 characters long.", rv.json['message'])
+
             # test missing username
             expected = UserFactory.stub(
                 system_role=SystemRole.student.value,
@@ -1422,6 +1433,17 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
             self.assertEqual('Password Not Saved', rv.json['title'])
             self.assertEqual('Sorry, the old password is not correct. Please double-check the old password and try saving again.',
+                rv.json['message'])
+
+            # test short password
+            invalid_input = data.copy()
+            invalid_input['newpassword'] = '123'
+            rv = self.client.post(
+                url.format(self.data.authorized_student.uuid),
+                data=json.dumps(invalid_input), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual('Password Not Saved', rv.json['title'])
+            self.assertEqual('The new password must be at least 4 characters long.',
                 rv.json['message'])
 
             # test with old password

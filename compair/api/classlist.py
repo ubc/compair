@@ -196,6 +196,9 @@ def import_users(import_type, course, users):
                 if password in [None, '*']:
                     invalids.append({'user': u, 'message': 'The password is required.'})
                     continue
+                elif len(password) < 4:
+                    invalids.append({'user': u, 'message': 'The password must be at least 4 characters long.'})
+                    continue
                 else:
                     set_user_passwords.append((u, password))
 

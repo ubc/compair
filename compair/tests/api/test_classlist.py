@@ -503,6 +503,18 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual('The password is required.', result['invalids'][0]['message'])
             uploaded_file.close()
 
+            # test short password provided
+            content = "".join(["shortpasswordusername", ",123"])
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual("shortpasswordusername", result['invalids'][0]['user']['username'])
+            self.assertEqual('The password must be at least 4 characters long.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
             # test duplicate usernames in file
             content = "".join([student.username, ",password\n", student.username, ",password"])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
