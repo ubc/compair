@@ -9,7 +9,7 @@ from data.fixtures.test_data import AnswerCommentsTestData, LTITestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.api.answer_comment import api, AnswerCommentListAPI, AnswerCommentAPI
 from compair.models import AnswerCommentType, AnswerComment, \
-    CourseGrade, AssignmentGrade
+    CourseGrade, AssignmentGrade, SystemRole
 
 class AnswerCommentListAPITests(ComPAIRAPITestCase):
     """ Tests for answer comment list API """
@@ -60,17 +60,25 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                 rv.json[0]['user']['fullname'])
 
         # test non-owner student of answer access comments
-        with self.login(self.data.get_authorized_student().username):
-            rv = self.client.get(url)
-            self.assert200(rv)
-            self.assertEqual(0, len(rv.json))
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(url)
+                self.assert200(rv)
+                self.assertEqual(0, len(rv.json))
 
         # test owner student of answer access comments
-        with self.login(self.data.get_extra_student(0).username):
-            rv = self.client.get(url)
-            self.assert200(rv)
-            self.assertEqual(1, len(rv.json))
-            self.assertNotIn('user_fullname', rv.json[0])
+        student = self.data.get_extra_student(0)
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(url)
+                self.assert200(rv)
+                self.assertEqual(1, len(rv.json))
+                self.assertNotIn('user_fullname', rv.json[0])
 
     def test_get_list_query_params(self):
         comment = AnswerCommentsTestData.create_answer_comment(
@@ -169,37 +177,45 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                 [comment.uuid, self.data.answer_comments_by_assignment[self.assignment.id][0].uuid],
                 [c['id'] for c in rv.json])
 
-        with self.login(self.data.get_extra_student(1).username):
-            answer_ids = [answer.uuid for answer in self.answers[self.assignment.id]]
-            params = dict(base_params, answer_ids=','.join(answer_ids), user_ids=self.data.get_extra_student(1).uuid)
-            rv = self.client.get(self.get_url(**params))
-            self.assert200(rv)
-            self.assertEqual(1, len(rv.json))
+        student = self.data.get_extra_student(1)
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                answer_ids = [answer.uuid for answer in self.answers[self.assignment.id]]
+                params = dict(base_params, answer_ids=','.join(answer_ids), user_ids=self.data.get_extra_student(1).uuid)
+                rv = self.client.get(self.get_url(**params))
+                self.assert200(rv)
+                self.assertEqual(1, len(rv.json))
 
-            # answer is not from the student but comment is
-            answer_ids = [self.answers[self.assignment.id][1].uuid]
-            params = dict(base_params, answer_ids=','.join(answer_ids), user_ids=self.data.get_extra_student(0).uuid)
-            rv = self.client.get(self.get_url(**params))
-            self.assert200(rv)
-            self.assertEqual(1, len(rv.json))
-            self.assertEqual(self.data.get_extra_student(0).uuid, rv.json[0]['user_id'])
+                # answer is not from the student but comment is
+                answer_ids = [self.answers[self.assignment.id][1].uuid]
+                params = dict(base_params, answer_ids=','.join(answer_ids), user_ids=self.data.get_extra_student(0).uuid)
+                rv = self.client.get(self.get_url(**params))
+                self.assert200(rv)
+                self.assertEqual(1, len(rv.json))
+                self.assertEqual(self.data.get_extra_student(0).uuid, rv.json[0]['user_id'])
 
         # test drafts
-        with self.login(self.data.get_extra_student(0).username):
-            params = dict(base_params, user_ids=self.data.get_extra_student(0).uuid)
-            rv = self.client.get(self.get_url(draft='only', **params))
-            self.assert200(rv)
-            self.assertEqual(1, len(rv.json))
-            self.assertEqual(draft_comment.uuid, rv.json[0]['id'])
+        student = self.data.get_extra_student(0)
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                params = dict(base_params, user_ids=self.data.get_extra_student(0).uuid)
+                rv = self.client.get(self.get_url(draft='only', **params))
+                self.assert200(rv)
+                self.assertEqual(1, len(rv.json))
+                self.assertEqual(draft_comment.uuid, rv.json[0]['id'])
 
-            rv = self.client.get(self.get_url(draft='false', **params))
-            self.assert200(rv)
-            self.assertEqual(3, len(rv.json))
+                rv = self.client.get(self.get_url(draft='false', **params))
+                self.assert200(rv)
+                self.assertEqual(3, len(rv.json))
 
-            rv = self.client.get(self.get_url(draft='true', **params))
-            self.assert200(rv)
-            self.assertEqual(4, len(rv.json))
-            self.assertEqual(draft_comment.uuid, rv.json[0]['id'])
+                rv = self.client.get(self.get_url(draft='true', **params))
+                self.assert200(rv)
+                self.assertEqual(4, len(rv.json))
+                self.assertEqual(draft_comment.uuid, rv.json[0]['id'])
 
     @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
     @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
@@ -330,6 +346,25 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                 )
                 mocked_update_assignment_grades_run.reset_mock()
 
+        # test with impersonation
+        student = self.data.get_extra_student(0)
+        with self.impersonate(self.data.get_authorized_instructor(), student):
+            lti_consumer = self.lti_data.lti_consumer
+            (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(
+                self.data.get_authorized_student(), self.course, self.assignment)
+
+            course_grade = CourseGrade.get_user_course_grade(self.course, self.data.get_authorized_student()).grade
+            assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, self.data.get_authorized_student()).grade
+
+            content = {
+                'comment_type': AnswerCommentType.self_evaluation.value,
+                'content': 'great answer'
+            }
+
+            with mail.record_messages() as outbox:
+                rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
 
 class AnswerCommentAPITests(ComPAIRAPITestCase):
     """ Tests for answer comment API """
@@ -368,9 +403,13 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
             self.assert403(rv)
 
         # test unauthorized user student fetching draft of another student
-        with self.login(self.data.get_extra_student(0).username):
-            rv = self.client.get(draft_url)
-            self.assert403(rv)
+        student = self.data.get_extra_student(0)
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(draft_url)
+                self.assert403(rv)
 
         # test invalid course id
         with self.login(self.data.get_authorized_instructor().username):
@@ -406,17 +445,25 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
             self.assertTrue(rv.json['draft'])
 
         # test author
-        with self.login(self.data.get_extra_student(0).username):
-            rv = self.client.get(url)
-            self.assert200(rv)
-            self.assertEqual(comment.content, rv.json['content'])
+        student = self.data.get_extra_student(0)
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(url)
+                self.assert200(rv)
+                self.assertEqual(comment.content, rv.json['content'])
 
         # test draft author
-        with self.login(self.data.get_extra_student(1).username):
-            rv = self.client.get(draft_url)
-            self.assert200(rv)
-            self.assertEqual(draft_comment.content, rv.json['content'])
-            self.assertTrue(rv.json['draft'])
+        student = self.data.get_extra_student(1)
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(draft_url)
+                self.assert200(rv)
+                self.assertEqual(draft_comment.content, rv.json['content'])
+                self.assertTrue(rv.json['draft'])
 
 
     @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
@@ -528,6 +575,19 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
 
                 self.assertEqual(len(outbox), 0)
 
+        # test author with impersonation
+        student = self.data.get_extra_student(0)
+        with self.impersonate(self.data.get_authorized_instructor(), student):
+            content['content'] = 'I am the author'
+            rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+            self.assert403(rv)
+            self.assertTrue(rv.json['disabled_by_impersonation'])
+
+            content['draft'] = True
+            rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
+            self.assert403(rv)
+            self.assertTrue(rv.json['disabled_by_impersonation'])
+
         # test draft author
         with self.login(self.data.get_extra_student(1).username):
             with mail.record_messages() as outbox:
@@ -549,6 +609,20 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 self.assertEqual(len(outbox), 1)
                 self.assertEqual(outbox[0].subject, "New Answer Feedback in "+self.data.get_course().name)
                 self.assertEqual(outbox[0].recipients, [self.answers[self.assignment.id][0].user.email])
+
+        # test draft author with impersonation
+        student = self.data.get_extra_student(1)
+        with self.impersonate(self.data.get_authorized_instructor(), student):
+            draft_content['content'] = 'I am the author'
+            rv = self.client.post(draft_url, data=json.dumps(draft_content), content_type='application/json')
+            self.assert403(rv)
+            self.assertTrue(rv.json['disabled_by_impersonation'])
+
+            # cant change draft to False
+            draft_content['draft'] = False
+            rv = self.client.post(draft_url, data=json.dumps(draft_content), content_type='application/json')
+            self.assert403(rv)
+            self.assertTrue(rv.json['disabled_by_impersonation'])
 
         answer = self.answers[self.assignment.id][0]
         self_evaluation = self.data.create_answer_comment(
@@ -612,6 +686,31 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 )
                 mocked_update_course_grades_run.reset_mock()
 
+        # test self-evaluation with impersonation
+        answers = self.answers[self.assignment.id]
+        for answer in [a for a in answers if a.user.system_role == SystemRole.student]:
+            self_evaluation = self.data.create_answer_comment(
+                answer.user, answer, comment_type=AnswerCommentType.self_evaluation, draft=True)
+            self_evaluation_url = self.get_url(
+                course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
+                answer_uuid=answer.uuid, answer_comment_uuid=self_evaluation.uuid)
+
+            with self.impersonate(self.data.get_authorized_instructor(), answer.user):
+                content = {
+                    'id': self_evaluation.uuid,
+                    'content': 'insightful.',
+                    'comment_type': AnswerCommentType.self_evaluation.value,
+                    'draft': True
+                }
+
+                rv = self.client.post(self_evaluation_url, data=json.dumps(content), content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
+                # attempt to change draft to False
+                content['draft'] = False
+                rv = self.client.post(self_evaluation_url, data=json.dumps(content), content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
 
     @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
     @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
@@ -643,6 +742,16 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(comment.uuid, rv.json['id'])
 
+        # test author with impersonation
+        student = self.data.get_extra_student(1)
+        with self.impersonate(self.data.get_authorized_instructor(), student):
+            url = self.get_url(
+                course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
+                answer_uuid=self.answers[self.assignment.id][0].uuid, answer_comment_uuid=comment.uuid)
+            rv = self.client.delete(url)
+            self.assert403(rv)
+            self.assertTrue(rv.json['disabled_by_impersonation'])
+
         # test author
         with self.login(self.data.get_extra_student(1).username):
             comment = self.data.get_answer_comments_by_assignment(self.assignment)[1]
@@ -652,6 +761,20 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
             rv = self.client.delete(url)
             self.assert200(rv)
             self.assertEqual(comment.uuid, rv.json['id'])
+
+        # test delete self-evaulation with impersonation
+        answers = self.answers[self.assignment.id]
+        for answer in [a for a in answers if a.user.system_role == SystemRole.student]:
+            self_evaluation = self.data.create_answer_comment(
+                answer.user, answer, comment_type=AnswerCommentType.self_evaluation, draft=True)
+
+            with self.impersonate(self.data.get_authorized_instructor(), answer.user):
+                url = self.get_url(
+                    course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
+                    answer_uuid=answer.uuid, answer_comment_uuid=self_evaluation.uuid)
+                rv = self.client.delete(url)
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
 
         # test delete self-evaulation
         answer = self.answers[self.assignment.id][0]

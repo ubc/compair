@@ -268,6 +268,16 @@ class ComPAIRAPITestCase(ComPAIRTestCase):
         yield rv
         rv.close()
 
+    @contextmanager
+    def impersonate(self, original_user, target_user):
+        with self.login(original_user.username) if original_user else contextlib.suppress():
+            rv = self.client.post('/api/impersonate/' + target_user.uuid,
+                content_type='application/json', follow_redirects=True)
+            self.assert200(rv)
+            yield rv
+            rv = self.client.delete('/api/impersonate', follow_redirects=True)
+            self.assert200(rv)
+
     def get_url(self, **values):
         return self.api.url_for(self.resource, **values)
 

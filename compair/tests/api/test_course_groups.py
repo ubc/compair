@@ -40,10 +40,20 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
 
         # test TA
         with self.login(self.fixtures.ta.username):
+            rv = self.client.get(url)
             self.assert200(rv)
             actual = rv.json['objects']
             self.assertEqual(len(actual), 3)
             self.assertEqual(actual[0], self.fixtures.groups[0])
+
+        # test student
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                rv = self.client.get(url)
+                self.assert403(rv)
 
     def test_get_group_members(self):
         course = self.fixtures.course
@@ -80,6 +90,15 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(10, len(rv.json['objects']))
             self.assertEqual(self.fixtures.students[0].uuid, rv.json['objects'][0]['id'])
+
+        # test student
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                rv = self.client.get(url)
+                self.assert403(rv)
 
     def test_group_enrolment(self):
         # frequently used objects
@@ -136,6 +155,16 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url, data={}, content_type='application/json')
             self.assert404(rv)
 
+        # test student
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                url = self._create_group_user_url(course, self.fixtures.instructor, group_name)
+                rv = self.client.post(url, data={}, content_type='application/json')
+                self.assert403(rv)
+
     def test_group_unenrolment(self):
         course = self.fixtures.course
 
@@ -172,6 +201,16 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
             url = '/api/courses/'+course.uuid+'/users/999/groups'
             rv = self.client.delete(url)
             self.assert404(rv)
+
+        # test student
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                url = self._create_group_user_url(course, self.fixtures.students[0])
+                rv = self.client.delete(url)
+                self.assert403(rv)
 
     def test_group_multiple_enrolment(self):
         # frequently used objects
@@ -238,6 +277,17 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
                 if user_course.user_id in student_ids:
                     self.assertEqual(user_course.group_name, group_name_2)
 
+        # test student
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                rv = self.client.post(url,
+                    data=json.dumps(params),
+                    content_type='application/json')
+                self.assert403(rv)
+
     def test_group_multiple_unenrolment(self):
         course = self.fixtures.course
         url = self._create_group_users_url(course)
@@ -287,6 +337,17 @@ class CourseGroupsAPITests(ComPAIRAPITestCase):
             for user_course in course.user_courses:
                 if user_course.user_id in student_ids:
                     self.assertEqual(user_course.group_name, None)
+
+        # test student
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                rv = self.client.post(url,
+                    data=json.dumps(params),
+                    content_type='application/json')
+                self.assert403(rv)
 
     def _create_group_user_url(self, course, user, group_name=None):
         url = '/api/courses/'+course.uuid+'/users/'+user.uuid+'/groups'

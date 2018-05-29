@@ -5,10 +5,10 @@ import datetime
 import mock
 
 from compair import db
-from data.fixtures import AnswerFactory
+from data.fixtures import AnswerFactory, DefaultFixture
 from data.fixtures.test_data import TestFixture, LTITestData
 from compair.models import Answer, CourseGrade, AssignmentGrade, \
-    CourseRole, SystemRole
+    CourseRole, SystemRole, User
 from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 
 
@@ -45,171 +45,175 @@ class AnswersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self.base_url)
             self.assert403(rv)
 
-        with self.login(self.fixtures.students[0].username):
-            # test non-existent entry
-            rv = self.client.get(self._build_url(self.fixtures.course.uuid, "4903409"))
-            self.assert404(rv)
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                # test non-existent entry
+                rv = self.client.get(self._build_url(self.fixtures.course.uuid, "4903409"))
+                self.assert404(rv)
 
-            # test data retrieve is correct
-            self.fixtures.assignment.answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
-            db.session.add(self.fixtures.assignment)
-            db.session.commit()
-            rv = self.client.get(self.base_url)
-            self.assert200(rv)
-            actual_answers = rv.json['objects']
-            expected_answers = Answer.query \
-                .filter_by(active=True, draft=False, assignment_id=self.fixtures.assignment.id) \
-                .filter(~Answer.id.in_([a.id for a in self.fixtures.dropped_answers])) \
-                .order_by(Answer.created.desc()) \
-                .paginate(1, 20)
-            for i, expected in enumerate(expected_answers.items):
-                actual = actual_answers[i]
-                self.assertEqual(expected.content, actual['content'])
-                # students should NOT see rank/score when not retrieving answers ordered by score
-                self.assertFalse('score' in actual)
-            self.assertEqual(1, rv.json['page'])
-            self.assertEqual(2, rv.json['pages'])
-            self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(expected_answers.total, rv.json['total'])
+                # test data retrieve is correct
+                self.fixtures.assignment.answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
+                db.session.add(self.fixtures.assignment)
+                db.session.commit()
+                rv = self.client.get(self.base_url)
+                self.assert200(rv)
+                actual_answers = rv.json['objects']
+                expected_answers = Answer.query \
+                    .filter_by(active=True, draft=False, assignment_id=self.fixtures.assignment.id) \
+                    .filter(~Answer.id.in_([a.id for a in self.fixtures.dropped_answers])) \
+                    .order_by(Answer.created.desc()) \
+                    .paginate(1, 20)
+                for i, expected in enumerate(expected_answers.items):
+                    actual = actual_answers[i]
+                    self.assertEqual(expected.content, actual['content'])
+                    # students should NOT see rank/score when not retrieving answers ordered by score
+                    self.assertFalse('score' in actual)
+                self.assertEqual(1, rv.json['page'])
+                self.assertEqual(2, rv.json['pages'])
+                self.assertEqual(20, rv.json['per_page'])
+                self.assertEqual(expected_answers.total, rv.json['total'])
 
-            # test the second page
-            rv = self.client.get(self.base_url + '?page=2')
-            self.assert200(rv)
-            actual_answers = rv.json['objects']
-            expected_answers = Answer.query \
-                .filter_by(active=True, draft=False, assignment_id=self.fixtures.assignment.id) \
-                .filter(~Answer.id.in_([a.id for a in self.fixtures.dropped_answers])) \
-                .order_by(Answer.created.desc()) \
-                .paginate(2, 20)
-            for i, expected in enumerate(expected_answers.items):
-                actual = actual_answers[i]
-                self.assertEqual(expected.content, actual['content'])
-                # students should NOT see rank/score when not retrieving answers ordered by score
-                self.assertFalse('score' in actual)
-            self.assertEqual(2, rv.json['page'])
-            self.assertEqual(2, rv.json['pages'])
-            self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(expected_answers.total, rv.json['total'])
+                # test the second page
+                rv = self.client.get(self.base_url + '?page=2')
+                self.assert200(rv)
+                actual_answers = rv.json['objects']
+                expected_answers = Answer.query \
+                    .filter_by(active=True, draft=False, assignment_id=self.fixtures.assignment.id) \
+                    .filter(~Answer.id.in_([a.id for a in self.fixtures.dropped_answers])) \
+                    .order_by(Answer.created.desc()) \
+                    .paginate(2, 20)
+                for i, expected in enumerate(expected_answers.items):
+                    actual = actual_answers[i]
+                    self.assertEqual(expected.content, actual['content'])
+                    # students should NOT see rank/score when not retrieving answers ordered by score
+                    self.assertFalse('score' in actual)
+                self.assertEqual(2, rv.json['page'])
+                self.assertEqual(2, rv.json['pages'])
+                self.assertEqual(20, rv.json['per_page'])
+                self.assertEqual(expected_answers.total, rv.json['total'])
 
-            # test sorting by rank (display_rank_limit 10)
-            self.fixtures.assignment.rank_display_limit = 10
-            db.session.commit()
-            rv = self.client.get(self.base_url + '?orderBy=score')
-            self.assert200(rv)
-            result = rv.json['objects']
-            # test the result is paged and sorted
-            expected = sorted(
-                [answer for answer in self.fixtures.answers if answer.score],
-                key=lambda ans: (ans.score.score, ans.created),
-                reverse=True)[:10]
-            self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
-            for ans in result:
-                self.assertTrue('score' in ans)
-                self.assertFalse('normalized_score' in ans['score'])
-                self.assertTrue('rank' in ans['score'])
-            self.assertEqual(1, rv.json['page'])
-            self.assertEqual(1, rv.json['pages'])
-            self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(len(expected), rv.json['total'])
+                # test sorting by rank (display_rank_limit 10)
+                self.fixtures.assignment.rank_display_limit = 10
+                db.session.commit()
+                rv = self.client.get(self.base_url + '?orderBy=score')
+                self.assert200(rv)
+                result = rv.json['objects']
+                # test the result is paged and sorted
+                expected = sorted(
+                    [answer for answer in self.fixtures.answers if answer.score],
+                    key=lambda ans: (ans.score.score, ans.created),
+                    reverse=True)[:10]
+                self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
+                for ans in result:
+                    self.assertTrue('score' in ans)
+                    self.assertFalse('normalized_score' in ans['score'])
+                    self.assertTrue('rank' in ans['score'])
+                self.assertEqual(1, rv.json['page'])
+                self.assertEqual(1, rv.json['pages'])
+                self.assertEqual(20, rv.json['per_page'])
+                self.assertEqual(len(expected), rv.json['total'])
 
-            # test sorting by rank (display_rank_limit 20)
-            self.fixtures.assignment.rank_display_limit = 20
-            db.session.commit()
-            rv = self.client.get(self.base_url + '?orderBy=score')
-            self.assert200(rv)
-            result = rv.json['objects']
-            # test the result is paged and sorted
-            expected = sorted(
-                [answer for answer in self.fixtures.answers if answer.score],
-                key=lambda ans: (ans.score.score, ans.created),
-                reverse=True)[:20]
-            self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
-            for ans in result:
-                self.assertTrue('score' in ans)
-                self.assertFalse('normalized_score' in ans['score'])
-                self.assertTrue('rank' in ans['score'])
-            self.assertEqual(1, rv.json['page'])
-            self.assertEqual(1, rv.json['pages'])
-            self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(len(expected), rv.json['total'])
+                # test sorting by rank (display_rank_limit 20)
+                self.fixtures.assignment.rank_display_limit = 20
+                db.session.commit()
+                rv = self.client.get(self.base_url + '?orderBy=score')
+                self.assert200(rv)
+                result = rv.json['objects']
+                # test the result is paged and sorted
+                expected = sorted(
+                    [answer for answer in self.fixtures.answers if answer.score],
+                    key=lambda ans: (ans.score.score, ans.created),
+                    reverse=True)[:20]
+                self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
+                for ans in result:
+                    self.assertTrue('score' in ans)
+                    self.assertFalse('normalized_score' in ans['score'])
+                    self.assertTrue('rank' in ans['score'])
+                self.assertEqual(1, rv.json['page'])
+                self.assertEqual(1, rv.json['pages'])
+                self.assertEqual(20, rv.json['per_page'])
+                self.assertEqual(len(expected), rv.json['total'])
 
-            # test sorting by rank (display_rank_limit None).
-            # expect to see errors if the course has no display rank limit set
-            self.fixtures.assignment.rank_display_limit = None
-            db.session.commit()
-            rv = self.client.get(self.base_url + '?orderBy=score')
-            self.assert400(rv)
+                # test sorting by rank (display_rank_limit None).
+                # expect to see errors if the course has no display rank limit set
+                self.fixtures.assignment.rank_display_limit = None
+                db.session.commit()
+                rv = self.client.get(self.base_url + '?orderBy=score')
+                self.assert400(rv)
 
-            self.fixtures.assignment.rank_display_limit = 20
-            db.session.commit()
+                self.fixtures.assignment.rank_display_limit = 20
+                db.session.commit()
 
-            # test author filter
-            rv = self.client.get(self.base_url + '?author={}'.format(self.fixtures.students[0].uuid))
-            self.assert200(rv)
-            result = rv.json['objects']
-            self.assertEqual(len(result), 1)
-            self.assertEqual(result[0]['user_id'], self.fixtures.students[0].uuid)
+                # test author filter
+                rv = self.client.get(self.base_url + '?author={}'.format(self.fixtures.students[0].uuid))
+                self.assert200(rv)
+                result = rv.json['objects']
+                self.assertEqual(len(result), 1)
+                self.assertEqual(result[0]['user_id'], self.fixtures.students[0].uuid)
 
-            # test group filter
-            rv = self.client.get(self.base_url + '?group={}'.format(self.fixtures.groups[0]))
-            self.assert200(rv)
-            result = rv.json['objects']
-            self.assertEqual(len(result),
-                (len(self.fixtures.answers) - self.NUM_NON_COMPARABLE_INSTRUCTOR_ANSWER) / len(self.fixtures.groups))
+                # test group filter
+                rv = self.client.get(self.base_url + '?group={}'.format(self.fixtures.groups[0]))
+                self.assert200(rv)
+                result = rv.json['objects']
+                self.assertEqual(len(result),
+                    (len(self.fixtures.answers) - self.NUM_NON_COMPARABLE_INSTRUCTOR_ANSWER) / len(self.fixtures.groups))
 
-            # test ids filter
-            ids = {a.uuid for a in self.fixtures.answers[:3]}
-            rv = self.client.get(self.base_url + '?ids={}'.format(','.join(ids)))
-            self.assert200(rv)
-            result = rv.json['objects']
-            self.assertEqual(ids, {str(a['id']) for a in result})
+                # test ids filter
+                ids = {a.uuid for a in self.fixtures.answers[:3]}
+                rv = self.client.get(self.base_url + '?ids={}'.format(','.join(ids)))
+                self.assert200(rv)
+                result = rv.json['objects']
+                self.assertEqual(ids, {str(a['id']) for a in result})
 
-            # test top_answer filter
-            top_answer_ids = {a.uuid for a in top_answers}
-            rv = self.client.get(self.base_url + '?top=true')
-            self.assert200(rv)
-            result = rv.json['objects']
-            self.assertEqual(top_answer_ids, {a['id'] for a in result})
+                # test top_answer filter
+                top_answer_ids = {a.uuid for a in top_answers}
+                rv = self.client.get(self.base_url + '?top=true')
+                self.assert200(rv)
+                result = rv.json['objects']
+                self.assertEqual(top_answer_ids, {a['id'] for a in result})
 
-            # test combined filter
-            rv = self.client.get(
-                self.base_url + '?orderBy=score&group={}'.format(
-                    self.fixtures.groups[0]
+                # test combined filter
+                rv = self.client.get(
+                    self.base_url + '?orderBy=score&group={}'.format(
+                        self.fixtures.groups[0]
+                    )
                 )
-            )
-            self.assert200(rv)
-            result = rv.json['objects']
-            # test the result is paged and sorted
-            answers_per_group = int((len(self.fixtures.answers) - self.NUM_NON_COMPARABLE_INSTRUCTOR_ANSWER) / len(self.fixtures.groups)) if len(
-                self.fixtures.groups) else 0
-            answers = self.fixtures.answers[:answers_per_group]
-            expected = sorted([ ans for ans in answers if ans.comparable and ans.score ], key=lambda ans: ans.score.score, reverse=True)
-            self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
+                self.assert200(rv)
+                result = rv.json['objects']
+                # test the result is paged and sorted
+                answers_per_group = int((len(self.fixtures.answers) - self.NUM_NON_COMPARABLE_INSTRUCTOR_ANSWER) / len(self.fixtures.groups)) if len(
+                    self.fixtures.groups) else 0
+                answers = self.fixtures.answers[:answers_per_group]
+                expected = sorted([ ans for ans in answers if ans.comparable and ans.score ], key=lambda ans: ans.score.score, reverse=True)
+                self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
 
-            # all filters
-            rv = self.client.get(
-                self.base_url + '?orderBy=score&group={}&author={}&top=true&page=1&perPage=20'.format(
-                    self.fixtures.groups[0],
-                    self.fixtures.students[0].uuid
+                # all filters
+                rv = self.client.get(
+                    self.base_url + '?orderBy=score&group={}&author={}&top=true&page=1&perPage=20'.format(
+                        self.fixtures.groups[0],
+                        self.fixtures.students[0].uuid
+                    )
                 )
-            )
-            self.assert200(rv)
-            result = rv.json['objects']
-            self.assertEqual(len(result), 1)
-            self.assertEqual(result[0]['user_id'], self.fixtures.students[0].uuid)
+                self.assert200(rv)
+                result = rv.json['objects']
+                self.assertEqual(len(result), 1)
+                self.assertEqual(result[0]['user_id'], self.fixtures.students[0].uuid)
 
-            # test data retrieve before answer period ended with non-privileged user
-            self.fixtures.assignment.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
-            db.session.add(self.fixtures.assignment)
-            db.session.commit()
-            rv = self.client.get(self.base_url)
-            self.assert200(rv)
-            actual_answers = rv.json['objects']
-            self.assertEqual(1, len(actual_answers))
-            self.assertEqual(1, rv.json['page'])
-            self.assertEqual(1, rv.json['pages'])
-            self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(1, rv.json['total'])
+                # test data retrieve before answer period ended with non-privileged user
+                self.fixtures.assignment.answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
+                db.session.add(self.fixtures.assignment)
+                db.session.commit()
+                rv = self.client.get(self.base_url)
+                self.assert200(rv)
+                actual_answers = rv.json['objects']
+                self.assertEqual(1, len(actual_answers))
+                self.assertEqual(1, rv.json['page'])
+                self.assertEqual(1, rv.json['pages'])
+                self.assertEqual(20, rv.json['per_page'])
+                self.assertEqual(1, rv.json['total'])
 
         # test data retrieve before answer period ended with privileged user
         with self.login(self.fixtures.instructor.username):
@@ -560,6 +564,18 @@ class AnswersAPITests(ComPAIRAPITestCase):
             actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
             self.assertEqual(expected_answer['content'], actual_answer.content)
 
+        # can't create during impersonation
+        student = self.fixtures.students[-1]
+        instructor = self.fixtures.instructor
+        for impersonator in [DefaultFixture.ROOT_USER, instructor]:
+            with self.impersonate(impersonator, student):
+                rv = self.client.post(
+                    self.base_url,
+                    data=json.dumps(expected_answer),
+                    content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
+
     def test_get_answer(self):
         assignment_uuid = self.fixtures.assignments[0].uuid
         answer = self.fixtures.answers[0]
@@ -575,37 +591,45 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assert403(rv)
 
         # test invalid course id
-        with self.login(self.fixtures.students[0].username):
-            rv = self.client.get(self._build_url("999", assignment_uuid, '/' + answer.uuid))
-            self.assert404(rv)
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                rv = self.client.get(self._build_url("999", assignment_uuid, '/' + answer.uuid))
+                self.assert404(rv)
 
-            # test invalid answer id
-            rv = self.client.get(self._build_url(self.fixtures.course.uuid, assignment_uuid, '/' + "999"))
-            self.assert404(rv)
+                # test invalid answer id
+                rv = self.client.get(self._build_url(self.fixtures.course.uuid, assignment_uuid, '/' + "999"))
+                self.assert404(rv)
 
-            # test invalid get another user's draft answer
-            rv = self.client.get(self.base_url + '/' + draft_answer.uuid)
-            self.assert403(rv)
+                # test invalid get another user's draft answer
+                rv = self.client.get(self.base_url + '/' + draft_answer.uuid)
+                self.assert403(rv)
 
-            # test authorized student
-            rv = self.client.get(self.base_url + '/' + answer.uuid)
-            self.assert200(rv)
-            self.assertEqual(assignment_uuid, rv.json['assignment_id'])
-            self.assertEqual(answer.user_uuid, rv.json['user_id'])
-            self.assertEqual(answer.content, rv.json['content'])
-            self.assertFalse(rv.json['draft'])
+                # test authorized student
+                rv = self.client.get(self.base_url + '/' + answer.uuid)
+                self.assert200(rv)
+                self.assertEqual(assignment_uuid, rv.json['assignment_id'])
+                self.assertEqual(answer.user_uuid, rv.json['user_id'])
+                self.assertEqual(answer.content, rv.json['content'])
+                self.assertFalse(rv.json['draft'])
 
-            # students should not see score/rank when retrieving answer by id
-            self.assertFalse('score' in rv.json)
+                # students should not see score/rank when retrieving answer by id
+                self.assertFalse('score' in rv.json)
 
         # test authorized student draft answer
-        with self.login(self.fixtures.draft_student.username):
-            rv = self.client.get(self.base_url + '/' + draft_answer.uuid)
-            self.assert200(rv)
-            self.assertEqual(assignment_uuid, rv.json['assignment_id'])
-            self.assertEqual(draft_answer.user_uuid, rv.json['user_id'])
-            self.assertEqual(draft_answer.content, rv.json['content'])
-            self.assertTrue(rv.json['draft'])
+        student = self.fixtures.draft_student
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                rv = self.client.get(self.base_url + '/' + draft_answer.uuid)
+                self.assert200(rv)
+                self.assertEqual(assignment_uuid, rv.json['assignment_id'])
+                self.assertEqual(draft_answer.user_uuid, rv.json['user_id'])
+                self.assertEqual(draft_answer.content, rv.json['content'])
+                self.assertTrue(rv.json['draft'])
 
         # test authorized teaching assistant
         with self.login(self.fixtures.ta.username):
@@ -855,6 +879,18 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assertEqual(answer.uuid, rv.json['id'])
             self.assertEqual('This is an edit', rv.json['content'])
 
+        # test with impersonation
+        student = self.fixtures.students[0]
+        instructor = self.fixtures.instructor
+        for impersonator in [DefaultFixture.ROOT_USER, instructor]:
+            with self.impersonate(impersonator, student):
+                rv = self.client.post(
+                    self.base_url + '/' + answer.uuid,
+                    data=json.dumps(expected),
+                    content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
+
     @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
     @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
     def test_delete_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
@@ -916,6 +952,15 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(answer_uuid2, rv.json['id'])
 
+        # test with impersonation
+        student = self.fixtures.students[0]
+        instructor = self.fixtures.instructor
+        for impersonator in [DefaultFixture.ROOT_USER, instructor]:
+            with self.impersonate(impersonator, student):
+                rv = self.client.delete(self.base_url + '/' + answer_uuid)
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
+
     def test_get_user_answers(self):
         assignment = self.fixtures.assignments[0]
         answer = self.fixtures.answers[0]
@@ -926,27 +971,31 @@ class AnswersAPITests(ComPAIRAPITestCase):
         rv = self.client.get(url)
         self.assert401(rv)
 
-        with self.login(self.fixtures.students[0].username):
-            # test invalid course
-            rv = self.client.get(self._build_url("999", assignment.uuid, '/user'))
-            self.assert404(rv)
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                # test invalid course
+                rv = self.client.get(self._build_url("999", assignment.uuid, '/user'))
+                self.assert404(rv)
 
-            # test invalid assignment
-            rv = self.client.get(self._build_url(self.fixtures.course.uuid, "999", '/user'))
-            self.assert404(rv)
+                # test invalid assignment
+                rv = self.client.get(self._build_url(self.fixtures.course.uuid, "999", '/user'))
+                self.assert404(rv)
 
-            # test successful query
-            rv = self.client.get(url)
-            self.assert200(rv)
-            self.assertEqual(1, len(rv.json['objects']))
-            self.assertEqual(answer.uuid, rv.json['objects'][0]['id'])
-            self.assertEqual(answer.content, rv.json['objects'][0]['content'])
-            self.assertEqual(answer.draft, rv.json['objects'][0]['draft'])
+                # test successful query
+                rv = self.client.get(url)
+                self.assert200(rv)
+                self.assertEqual(1, len(rv.json['objects']))
+                self.assertEqual(answer.uuid, rv.json['objects'][0]['id'])
+                self.assertEqual(answer.content, rv.json['objects'][0]['content'])
+                self.assertEqual(answer.draft, rv.json['objects'][0]['draft'])
 
-            # test draft query
-            rv = self.client.get(url, query_string={'draft': True})
-            self.assert200(rv)
-            self.assertEqual(0, len(rv.json['objects']))
+                # test draft query
+                rv = self.client.get(url, query_string={'draft': True})
+                self.assert200(rv)
+                self.assertEqual(0, len(rv.json['objects']))
 
         with self.login(self.fixtures.draft_student.username):
             # test successful query
@@ -1009,6 +1058,59 @@ class AnswersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
 
+    def test_get_user_draft_answers_during_impersonation(self):
+        assignment = self.fixtures.assignments[0]
+        answer = self.fixtures.answers[0]
+        draft_answer = self.fixtures.draft_answers[0]
+        url = self._build_url(self.fixtures.course.uuid, assignment.uuid, '/user')
+
+        student = self.fixtures.draft_student
+        with self.impersonate(self.fixtures.instructor, student):
+            # test successful query
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
+            # test draft query
+            rv = self.client.get(url, query_string={'draft': True})
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
+            self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
+            self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
+
+            # test unsaved query. 'draft' is default to be False.
+            # hence no result will be retrived
+            rv = self.client.get(url, query_string={'unsaved': True})
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
+            # test draft + unsaved query
+            rv = self.client.get(url, query_string={'draft': True, 'unsaved': True})
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
+            self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
+            self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
+
+            # update the answer so it is no longer in unsaved state (but still in draft)
+            draft_answer.content = draft_answer.content+"123"
+            db.session.commit()
+
+            rv = self.client.get(url, query_string={'draft': True})
+            self.assert200(rv)
+            self.assertEqual(1, len(rv.json['objects']))
+            self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
+            self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
+            self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
+            rv = self.client.get(url, query_string={'unsaved': True, 'draft': True})
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+            # not draft and not unsaved. nothing will be retrieved
+            rv = self.client.get(url)
+            self.assert200(rv)
+            self.assertEqual(0, len(rv.json['objects']))
+
     def test_top_answer(self):
         answer = self.fixtures.answers[0]
         top_answer_url = self.base_url + "/" + answer.uuid + "/top"
@@ -1023,19 +1125,27 @@ class AnswersAPITests(ComPAIRAPITestCase):
         self.assert401(rv)
 
         # test unauthorized users
-        with self.login(self.fixtures.unauthorized_student.username):
-            rv = self.client.post(
-                top_answer_url,
-                data=json.dumps(expected_top_on),
-                content_type='application/json')
-            self.assert403(rv)
+        student = self.fixtures.unauthorized_student
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(DefaultFixture.ROOT_USER, student)]:
+            with user_context:
+                rv = self.client.post(
+                    top_answer_url,
+                    data=json.dumps(expected_top_on),
+                    content_type='application/json')
+                self.assert403(rv)
 
-        with self.login(self.fixtures.students[0].username):
-            rv = self.client.post(
-                top_answer_url,
-                data=json.dumps(expected_top_on),
-                content_type='application/json')
-            self.assert403(rv)
+        student = self.fixtures.students[0]
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.fixtures.instructor, student)]:
+            with user_context:
+                rv = self.client.post(
+                    top_answer_url,
+                    data=json.dumps(expected_top_on),
+                    content_type='application/json')
+                self.assert403(rv)
 
         # test allow setting top_answer by instructor
         with self.login(self.fixtures.instructor.username):
@@ -1075,6 +1185,7 @@ class AnswerDemoAPITests(ComPAIRAPIDemoTestCase):
 
     def test_delete_demo_answer(self):
         answers = Answer.query.all()
+        student = User.query.filter_by(system_role=SystemRole.student).first()
 
         for answer in answers:
             url = '/api/courses/' + answer.course_uuid + '/assignments/' + answer.assignment_uuid + '/answers/' + answer.uuid
@@ -1085,6 +1196,14 @@ class AnswerDemoAPITests(ComPAIRAPIDemoTestCase):
                 rv = self.client.delete(url)
                 self.assert400(rv)
 
+            # test with impersonation
+            with self.impersonate(DefaultFixture.ROOT_USER, student):
+                self.app.config['DEMO_INSTALLATION'] = True
+                rv = self.client.delete(url)
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
+
+            with self.login('root'):
                 # test deletion success
                 self.app.config['DEMO_INSTALLATION'] = False
                 rv = self.client.delete(url)
@@ -1092,6 +1211,7 @@ class AnswerDemoAPITests(ComPAIRAPIDemoTestCase):
 
     def test_edit_demo_answer(self):
         answers = Answer.query.all()
+        student = User.query.filter_by(system_role=SystemRole.student).first()
 
         for answer in answers:
             url = '/api/courses/' + answer.course_uuid + '/assignments/' + answer.assignment_uuid + '/answers/' + answer.uuid
@@ -1107,7 +1227,14 @@ class AnswerDemoAPITests(ComPAIRAPIDemoTestCase):
                 rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
                 self.assert400(rv)
 
+            # test with impersonation
+            with self.impersonate(DefaultFixture.ROOT_USER, student):
+                self.app.config['DEMO_INSTALLATION'] = True
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
 
+            with self.login('root'):
                 # test deletion success
                 self.app.config['DEMO_INSTALLATION'] = False
                 rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')

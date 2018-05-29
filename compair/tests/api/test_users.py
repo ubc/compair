@@ -70,13 +70,39 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertNotIn('fullname_sortable', root)
             self.assertNotIn('email', root)
 
+        # impersonate as student and enquire info on admin
+        with self.impersonate(DefaultFixture.ROOT_USER, user):
+            rv = self.client.get('/api/users/' + DefaultFixture.ROOT_USER.uuid)
+            self.assert200(rv)
+            root = rv.json
+            self.assertEqual(root['displayname'], 'root')
+            # personal information shouldn't be transmitted
+            self.assertNotIn('firstname', root)
+            self.assertNotIn('lastname', root)
+            self.assertNotIn('fullname', root)
+            self.assertNotIn('fullname_sortable', root)
+            self.assertNotIn('email', root)
+
+        # don't show own email when being impersonated
+        with self.impersonate(DefaultFixture.ROOT_USER, user):
+            rv = self.client.get('/api/users/' + user.uuid)
+            self.assert200(rv)
+            user_info = rv.json
+            self.assertEqual(user_info['displayname'], user.displayname)
+            # email shouldn't be transmitted
+            self.assertNotIn('email', user_info)
+
     def test_users_list(self):
         rv = self.client.get('/api/users')
         self.assert401(rv)
 
-        with self.login(self.data.authorized_student.username):
-            rv = self.client.get('/api/users')
-            self.assert403(rv)
+        student = self.data.authorized_student
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.authorized_instructor, student)]:
+            with user_context:
+                rv = self.client.get('/api/users')
+                self.assert403(rv)
 
         with self.login('root'):
             expected = sorted(
@@ -151,6 +177,17 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(
                 url, data=json.dumps(expected.__dict__), content_type='application/json')
             self.assert403(rv)
+
+        # should fail when root impersonating a student
+        with self.impersonate(DefaultFixture.ROOT_USER, self.data.get_authorized_student()):
+            expected = UserFactory.stub(
+                system_role=SystemRole.student.value,
+                email_notification_method=EmailNotificationMethod.enable.value
+            )
+            rv = self.client.post(
+                url, data=json.dumps(expected.__dict__), content_type='application/json')
+            self.assert403(rv)
+            self.assertTrue(rv.json['disabled_by_impersonation'])
 
         # only system admins can create users
         with self.login('root'):
@@ -491,6 +528,16 @@ class UsersAPITests(ComPAIRAPITestCase):
         with self.login(self.data.get_unauthorized_instructor().username):
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
             self.assert403(rv)
+
+        # should fail during impersonation
+        with self.impersonate(instructor, user):
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert403(rv)
+            self.assertTrue(rv.json['disabled_by_impersonation'])
+        with self.impersonate(DefaultFixture.ROOT_USER, user):
+            rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+            self.assert403(rv)
+            self.assertTrue(rv.json['disabled_by_impersonation'])
 
         # test invalid user id
         with self.login('root'):
@@ -923,6 +970,15 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(0, len(rv.json['objects']))
 
+        # test with impersonation
+        for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
+            with self.impersonate(impersonator, self.data.get_authorized_student()):
+                url = '/api/users/courses'
+                rv = self.client.get(url)
+                self.assert200(rv)
+                self.assertEqual(1, len(rv.json['objects']))
+                self.assertEqual(self.data.get_course().name, rv.json['objects'][0]['name'])
+
     def test_get_user_lti_users_list(self):
 
         # setup
@@ -958,6 +1014,14 @@ class UsersAPITests(ComPAIRAPITestCase):
             url = '/api/users/'+ student1.uuid +'/lti/users'
             rv = self.client.get(url)
             self.assert403(rv)
+
+        # test with impersonation
+        for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
+            impersonated = self.data.get_authorized_student()
+            with self.impersonate(impersonator, impersonated):
+                url = '/api/users/'+ impersonated.uuid +'/lti/users'
+                rv = self.client.get(url)
+                self.assert403(rv)
 
         # test admin
         with self.login('root'):
@@ -1009,6 +1073,14 @@ class UsersAPITests(ComPAIRAPITestCase):
             url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user2.uuid
             rv = self.client.delete(url)
             self.assert403(rv)
+
+        # test with impersonation
+        for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
+            with self.impersonate(impersonator, student1):
+                url = '/api/users/'+ student1.uuid +'/lti/users'+ lti_user2.uuid
+                rv = self.client.delete(url)
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
 
         # test admin
         with self.login('root'):
@@ -1063,6 +1135,14 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert403(rv)
 
+        # test with impersonation
+        for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
+            impersonated = self.data.get_authorized_student()
+            with self.impersonate(impersonator, impersonated):
+                url = '/api/users/'+ impersonated.uuid +'/third_party/users'
+                rv = self.client.get(url)
+                self.assert403(rv)
+
         # test admin
         with self.login('root'):
             # test invalid data
@@ -1111,6 +1191,14 @@ class UsersAPITests(ComPAIRAPITestCase):
             url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user2.uuid
             rv = self.client.delete(url)
             self.assert403(rv)
+
+        # test with impersonation
+        for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
+            with self.impersonate(impersonator, student1):
+                url = '/api/users/'+ student1.uuid +'/third_party/users'+ third_party_user2.uuid
+                rv = self.client.delete(url)
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
 
         # test admin
         with self.login('root'):
@@ -1222,6 +1310,14 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert403(rv)
 
+        # test with impersonation
+        for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
+            impersonated = self.data.get_authorized_student()
+            with self.impersonate(impersonator, impersonated):
+                url = '/api/users/'+ impersonated.uuid +'/courses'
+                rv = self.client.get(url)
+                self.assert403(rv)
+
     def test_get_teaching_course(self):
         url = '/api/users/courses/teaching'
 
@@ -1252,6 +1348,14 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(2, len(rv.json['courses']))
+
+        # test with impersonation
+        for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
+            impersonated = self.data.get_authorized_student()
+            with self.impersonate(impersonator, impersonated):
+                rv = self.client.get(url)
+                self.assert200(rv)
+                self.assertEqual(0, len(rv.json['courses']))
 
     def test_update_notification(self):
         url = '/api/users/{}/notification'
@@ -1331,6 +1435,35 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertEqual(self.data.get_authorized_student().uuid, rv.json['id'])
             self.assertEqual(self.data.get_authorized_student().email_notification_method.value, data['email_notification_method'])
 
+        # test with impersonation
+        for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
+            impersonated = self.data.get_authorized_student()
+            with self.impersonate(impersonator, impersonated):
+                # test incorrect email notification method
+                invalid_input = data.copy()
+                invalid_input['email_notification_method'] = 'wrong'
+                rv = self.client.post(
+                    url.format(impersonated.uuid),
+                    data=json.dumps(invalid_input), content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
+
+                # test with correct format
+                rv = self.client.post(
+                    url.format(impersonated.uuid),
+                    data=json.dumps(data),
+                    content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
+
+                # try to update impersonator
+                rv = self.client.post(
+                    url.format(impersonator.uuid),
+                    data=json.dumps(data),
+                    content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
+
     def test_update_password(self):
         url = '/api/users/{}/password'
         data = {
@@ -1343,6 +1476,26 @@ class UsersAPITests(ComPAIRAPITestCase):
             url.format(self.data.authorized_instructor.uuid),
             data=json.dumps(data), content_type='application/json')
         self.assert401(rv)
+
+        # test with impersonation
+        for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
+            impersonated = self.data.get_authorized_student()
+            with self.impersonate(impersonator, impersonated):
+                # try to update impersonated
+                rv = self.client.post(
+                    url.format(impersonated.uuid),
+                    data=json.dumps(data),
+                    content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
+
+                # try to update impersonator
+                rv = self.client.post(
+                    url.format(impersonator.uuid),
+                    data=json.dumps(data),
+                    content_type='application/json')
+                self.assert403(rv)
+                self.assertTrue(rv.json['disabled_by_impersonation'])
 
         # test student update password
         with self.login(self.data.authorized_student.username):
@@ -1475,6 +1628,14 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertTrue(rv.json['available'])
+
+        # test with impersonation
+        for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
+            impersonated = self.data.get_authorized_student()
+            with self.impersonate(impersonator, impersonated):
+                rv = self.client.get(url)
+                self.assert200(rv)
+                self.assertTrue(rv.json['available'])
 
     def _verify_permissions(self, user_id, permissions):
         operations = [MANAGE, CREATE, EDIT, DELETE, READ]

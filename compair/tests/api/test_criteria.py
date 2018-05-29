@@ -52,12 +52,16 @@ class CriterionAPITests(ComPAIRAPITestCase):
             self.assertEqual(criterion_expected['description'], criterion_actual['description'])
 
         # Test fail criterion creation - student
-        with self.login(self.data.get_authorized_student().username):
-            rv = self.client.post(
-                criterion_api_url,
-                data=json.dumps(criterion_expected),
-                content_type='application/json')
-            self.assert403(rv)
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.post(
+                    criterion_api_url,
+                    data=json.dumps(criterion_expected),
+                    content_type='application/json')
+                self.assert403(rv)
 
     def test_get_criterion(self):
         criterion_api_url = '/api/criteria/' + self.data.get_criterion().uuid
@@ -71,6 +75,15 @@ class CriterionAPITests(ComPAIRAPITestCase):
         with self.login(self.data.get_unauthorized_instructor().username):
             rv = self.client.get(criterion_api_url)
             self.assert403(rv)
+
+        # Test student
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(criterion_api_url)
+                self.assert403(rv)
 
         # Test admin access
         with self.login('root'):
@@ -122,6 +135,18 @@ class CriterionAPITests(ComPAIRAPITestCase):
                 data=json.dumps(criterion_expected),
                 content_type='application/json')
             self.assert403(rv)
+
+        # Test student
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.post(
+                    criterion_api_url,
+                    data=json.dumps(criterion_expected),
+                    content_type='application/json')
+                self.assert403(rv)
 
         # Test invalid criterion id
         with self.login(self.data.get_authorized_instructor().username):
@@ -181,6 +206,18 @@ class CriterionAPITests(ComPAIRAPITestCase):
             self.assertEqual(len(rv.json['objects']), 2)
             self._verify_critera(self.data.get_default_criterion(), rv.json['objects'][0])
             self._verify_critera(self.data.get_secondary_criterion(), rv.json['objects'][1])
+
+        # Test student
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(criterion_api_url)
+                self.assert200(rv)
+                # one public
+                self.assertEqual(len(rv.json['objects']), 1)
+                self._verify_critera(self.data.get_default_criterion(), rv.json['objects'][0])
 
         # Test admin
         with self.login('root'):

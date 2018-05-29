@@ -7,6 +7,7 @@ import unicodecsv as csv
 import re
 import six
 
+from data.fixtures import DefaultFixture
 from data.fixtures.test_data import TestFixture
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import CourseRole, Answer, Comparison, AnswerComment, AnswerCommentType
@@ -44,6 +45,13 @@ class ReportAPITest(ComPAIRAPITestCase):
             rv = self.client.post(self.url)
             self.assert403(rv)
 
+        for student in [self.fixtures.students[0], self.fixtures.unauthorized_student]:
+            for user_context in [ \
+                    self.login(student.username), \
+                    self.impersonate(DefaultFixture.ROOT_USER, student)]:
+                with user_context:
+                    rv = self.client.post(self.url)
+                    self.assert403(rv)
 
         # valid instructor with invalid input
         with self.login(self.fixtures.instructor.username):

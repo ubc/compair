@@ -4,6 +4,7 @@ import datetime
 import json
 from compair import db
 
+from data.fixtures import DefaultFixture
 from data.fixtures.test_data import BasicTestData, ComparisonTestData, LTITestData, SimpleAssignmentTestData
 from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 from compair.models import Course, UserCourse
@@ -53,19 +54,27 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self._verify_course_info(self.data.get_course(), rv.json)
 
-        with self.login(self.data.get_authorized_student().username):
-            rv = self.client.get(course_api_url)
-            self.assert200(rv)
-            self._verify_course_info(self.data.get_course(), rv.json)
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(course_api_url)
+                self.assert200(rv)
+                self._verify_course_info(self.data.get_course(), rv.json)
 
         # Test unenroled user not permitted to get info
         with self.login(self.data.get_unauthorized_instructor().username):
             rv = self.client.get(course_api_url)
             self.assert403(rv)
 
-        with self.login(self.data.get_unauthorized_student().username):
-            rv = self.client.get(course_api_url)
-            self.assert403(rv)
+        student = self.data.get_unauthorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(DefaultFixture.ROOT_USER, student)]:
+            with user_context:
+                rv = self.client.get(course_api_url)
+                self.assert403(rv)
 
         # Test get invalid course
         with self.login("root"):
@@ -87,11 +96,15 @@ class CoursesAPITests(ComPAIRAPITestCase):
             data=json.dumps(course_expected), content_type='application/json')
         self.assert401(rv)
         # Test unauthorized user
-        with self.login(self.data.get_authorized_student().username):
-            rv = self.client.post(
-                '/api/courses',
-                data=json.dumps(course_expected), content_type='application/json')
-            self.assert403(rv)
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.post(
+                    '/api/courses',
+                    data=json.dumps(course_expected), content_type='application/json')
+                self.assert403(rv)
 
         # Test course creation
         with self.login(self.data.get_authorized_instructor().username):
@@ -169,6 +182,21 @@ class CoursesAPITests(ComPAIRAPITestCase):
         rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
         self.assert401(rv)
 
+        # test with student
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert403(rv)
+
+                # test unmatched course id
+                rv = self.client.post(
+                    '/api/courses/' + self.data.get_secondary_course().uuid,
+                    data=json.dumps(expected), content_type='application/json')
+                self.assert403(rv)
+
         # test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
@@ -228,9 +256,13 @@ class CoursesAPITests(ComPAIRAPITestCase):
             rv = self.client.delete(url)
             self.assert403(rv)
 
-        with self.login(self.data.get_authorized_student().username):
-            rv = self.client.delete(url)
-            self.assert403(rv)
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.delete(url)
+                self.assert403(rv)
 
         with self.login(self.data.get_authorized_ta().username):
             rv = self.client.delete(url)
@@ -277,6 +309,15 @@ class CoursesAPITests(ComPAIRAPITestCase):
         # test login required
         rv = self.client.post(url, content_type='application/json')
         self.assert401(rv)
+
+        # test student
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
+                self.assert403(rv)
 
         # test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):

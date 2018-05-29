@@ -6,6 +6,7 @@ import copy
 import operator
 import datetime
 
+from data.fixtures import DefaultFixture
 from data.fixtures.test_data import ComparisonTestData, LTITestData
 from data.factories import AssignmentCriterionFactory
 from compair.models import Answer, Comparison, CourseGrade, AssignmentGrade, \
@@ -61,17 +62,21 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             self.assert403(rv)
 
         # enroled user from this point on
-        with self.login(self.data.get_authorized_student().username):
-            # test non-existent course
-            rv = self.client.get(self._build_url("9993929", self.assignment.uuid))
-            self.assert404(rv)
-            # test non-existent assignment
-            rv = self.client.get(self._build_url(self.course.uuid, "23902390"))
-            self.assert404(rv)
-            # no comparisons has been entered yet, assignment is not in comparing period
-            rv = self.client.get(self._build_url(
-                self.course.uuid, self.data.get_assignment_in_answer_period().uuid))
-            self.assert403(rv)
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                # test non-existent course
+                rv = self.client.get(self._build_url("9993929", self.assignment.uuid))
+                self.assert404(rv)
+                # test non-existent assignment
+                rv = self.client.get(self._build_url(self.course.uuid, "23902390"))
+                self.assert404(rv)
+                # no comparisons has been entered yet, assignment is not in comparing period
+                rv = self.client.get(self._build_url(
+                    self.course.uuid, self.data.get_assignment_in_answer_period().uuid))
+                self.assert403(rv)
 
     def test_submit_comparison_access_control(self):
         # test login required
@@ -82,19 +87,27 @@ class ComparisonAPITests(ComPAIRAPITestCase):
         self.assert401(rv)
 
         # establish expected data by first getting an answer pair
-        with self.login(self.data.get_authorized_student().username):
-            rv = self.client.get(self.base_url)
-            self.assert200(rv)
-            # expected_comparisons = rv.json
-            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
+        student = self.data.get_authorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(self.data.get_authorized_instructor(), student)]:
+            with user_context:
+                rv = self.client.get(self.base_url)
+                self.assert200(rv)
+                # expected_comparisons = rv.json
+                comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
 
         # test deny access to unenrolled users
-        with self.login(self.data.get_unauthorized_student().username):
-            rv = self.client.post(
-                self.base_url,
-                data=json.dumps(comparison_submit),
-                content_type='application/json')
-            self.assert403(rv)
+        student = self.data.get_unauthorized_student()
+        for user_context in [ \
+                self.login(student.username), \
+                self.impersonate(DefaultFixture.ROOT_USER, student)]:
+            with user_context:
+                rv = self.client.post(
+                    self.base_url,
+                    data=json.dumps(comparison_submit),
+                    content_type='application/json')
+                self.assert403(rv)
 
         with self.login(self.data.get_unauthorized_instructor().username):
             rv = self.client.post(
@@ -173,6 +186,12 @@ class ComparisonAPITests(ComPAIRAPITestCase):
             ok_comparisons = copy.deepcopy(comparison_submit)
             rv = self.client.post(self.base_url, data=json.dumps(ok_comparisons), content_type='application/json')
             self.assert200(rv)
+
+        # test with impersonation
+        with self.impersonate(self.data.get_authorized_instructor(), self.data.get_authorized_student()):
+            rv = self.client.post(self.base_url, data=json.dumps(ok_comparisons), content_type='application/json')
+            self.assert403(rv)
+            self.assertTrue(rv.json['disabled_by_impersonation'])
 
         self.assignment.educators_can_compare = False
         db.session.commit()
@@ -404,6 +423,95 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 else:
                     self.assertEqual("Comparisons Unavailable", rv.json['title'])
                     self.assertEqual("You have compared all the currently available answer pairs. Please check back later for more answers.", rv.json['message'])
+
+    def test_get_and_submit_comparison_with_impersonation(self):
+        user = self.data.get_authorized_student()
+
+        valid_answer_uuids = set()
+        for answer in self.data.get_comparable_answers():
+            if answer.assignment.id == self.assignment.id and answer.user_id != user.id:
+                valid_answer_uuids.add(answer.uuid)
+
+        for comparison_example in self.data.comparisons_examples:
+            if comparison_example.assignment_id == self.assignment.id:
+                valid_answer_uuids.add(comparison_example.answer1_uuid)
+                valid_answer_uuids.add(comparison_example.answer2_uuid)
+
+        with self.impersonate(self.data.get_authorized_instructor(), user):
+            course_grade = CourseGrade.get_user_course_grade(self.course, user).grade
+            assignment_grade = AssignmentGrade.get_user_assignment_grade(self.assignment, user).grade
+
+            # establish expected data by first getting an answer pair
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+            answer1_uuid = rv.json['comparison']['answer1_id']
+            answer1_feedback = rv.json['comparison']['answer1_feedback']
+            answer1 = Answer.query.filter_by(uuid=answer1_uuid).first()
+            answer2_uuid = rv.json['comparison']['answer2_id']
+            answer2_feedback = rv.json['comparison']['answer2_feedback']
+            answer2 = Answer.query.filter_by(uuid=answer2_uuid).first()
+            self.assertIn(answer1_uuid, valid_answer_uuids)
+            self.assertIn(answer2_uuid, valid_answer_uuids)
+            self.assertNotEqual(answer1_uuid, answer2_uuid)
+
+            self.assertTrue(rv.json['new_pair'])
+            self.assertEqual(rv.json['current'], 1)
+            # no user info should be included in the answer
+            self.assertFalse('user' in rv.json['comparison']['answer1'] or
+                'user_id' in rv.json['comparison']['answer1'])
+            self.assertFalse('user' in rv.json['comparison']['answer2'] or
+                'user_id' in rv.json['comparison']['answer2'])
+            # no score info should be included in the answer
+            self.assertFalse('score' in rv.json['comparison']['answer1'])
+            self.assertFalse('score' in rv.json['comparison']['answer2'])
+            # feedback should be empty or have 1 evaluation
+            answer1_comment = next((c for c in answer1.comments if c.user_id == user.id and c.comment_type == AnswerCommentType.evaluation), None)
+            answer2_comment = next((c for c in answer2.comments if c.user_id == user.id and c.comment_type == AnswerCommentType.evaluation), None)
+            for expected, actual in [(answer1_comment, answer1_feedback), (answer2_comment, answer2_feedback)]:
+                if expected:
+                    self.assertEqual(len(actual), 1)
+                    self.assertEqual(actual[0]['id'], expected.uuid)
+                else:
+                    self.assertEqual(len(actual), 0)
+
+            # fetch again
+            rv = self.client.get(self.base_url)
+            self.assert200(rv)
+            expected_comparison = rv.json['comparison']
+            self.assertEqual(answer1_uuid, rv.json['comparison']['answer1_id'])
+            self.assertEqual(answer2_uuid, rv.json['comparison']['answer2_id'])
+            self.assertFalse(rv.json['new_pair'])
+            self.assertEqual(rv.json['current'], 1)
+            for expected, actual in [(answer1_comment, answer1_feedback), (answer2_comment, answer2_feedback)]:
+                if expected:
+                    self.assertEqual(len(actual), 1)
+                    self.assertEqual(actual[0]['id'], expected.uuid)
+                else:
+                    self.assertEqual(len(actual), 0)
+
+            # test draft post
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value, True)
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert403(rv)
+
+            # test draft post (no winner)
+            comparison_submit = self._build_comparison_submit(None)
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert403(rv)
+
+            # test normal post
+            comparison_submit = self._build_comparison_submit(WinningAnswer.answer1.value)
+            rv = self.client.post(
+                self.base_url,
+                data=json.dumps(comparison_submit),
+                content_type='application/json')
+            self.assert403(rv)
 
     def _validate_comparison_submit(self, comparison_submit, actual_comparison, expected_comparison):
         self.assertEqual(
