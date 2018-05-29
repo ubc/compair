@@ -68,6 +68,11 @@
                                     <i class="fa fa-user fa-fw"></i> Profile
                                 </a>
                             </li>
+                            <li ng-if="impersonating">
+                                <a id="close-student-view-link" href="" ng-click="stop_impersonate()">
+                                    <i class="fa fa-eye-slash fa-fw"></i> Close Student View
+                                </a>
+                            </li>
                             <li ng-if="canStartStudentView && impersonationEnabled">
                                 <a id="student-view-link" href="" ng-click="selectStudentView()">
                                     <i class="fa fa-eye fa-fw"></i> Student View
