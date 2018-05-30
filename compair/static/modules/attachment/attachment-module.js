@@ -14,7 +14,7 @@ module.constant('UploadSettings', {
     attachmentExtensions: [],
     attachmentUploadLimit: 26214400, //1024 * 1024 * 25 -> max 25 MB
     kalturaExtensions: null, //only set when kaltura is enabled
-    canPreviewExtensions: [],
+    attachmentPreviewExtensions: [],
 });
 
 /***** Providers *****/
@@ -77,7 +77,7 @@ module.factory('UploadValidator',
 
             isPreviewExtension: function(extension) {
                 return this.isAttachmentExtension(extension) &&
-                    ('|'+UploadSettings.canPreviewExtensions.join('|')+'|').indexOf('|'+extension+'|') !== -1;
+                    ('|'+UploadSettings.attachmentPreviewExtensions.join('|')+'|').indexOf('|'+extension+'|') !== -1;
             },
             canSupportPreview: function(item) {
                 // check browswer capability

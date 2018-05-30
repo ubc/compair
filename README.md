@@ -213,9 +213,9 @@ Restart server after making any changes to settings
 
 `CAS_USE_SAML`: Determines which authorization endpoint to use. '/serviceValidate' if false (default). '/samlValidate' if true.
 
-`CAS_USER_ROLE_FIELD`: CAS field will determine the user's default system role on account creation (default: none). Will only promote to instructor if there is a match against `CAS_INSTRUCTOR_ROLE_VALUES`. If not specified or does not match any value from `CAS_INSTRUCTOR_ROLE_VALUES`, the user will be given the student system role and will manually need to be promoted if needed.
+`CAS_ATTRIBUTE_USER_ROLE`: CAS field will determine the user's default system role on account creation (default: none). Will only promote to instructor if there is a match against `CAS_INSTRUCTOR_ROLE_VALUES`. If not specified or does not match any value from `CAS_INSTRUCTOR_ROLE_VALUES`, the user will be given the student system role and will manually need to be promoted if needed.
 
-`CAS_INSTRUCTOR_ROLE_VALUES`: List of values `CAS_USER_ROLE_FIELD` can contain that would indicate the user is an instructor (default: empty set). Separate values by a space (ex: `instructor teacher staff`).
+`CAS_INSTRUCTOR_ROLE_VALUES`: List of values `CAS_ATTRIBUTE_USER_ROLE` can contain that would indicate the user is an instructor (default: empty set). Separate values by a space (ex: `instructor teacher staff`).
 
 `CAS_ATTRIBUTE_FIRST_NAME`: Optionally automatically sync user's first name with the supplied CAS attribute (Will only override if attribute is present a contains content).
 
@@ -243,9 +243,9 @@ Restart server after making any changes to settings
 
 `SAML_EXPOSE_METADATA_ENDPOINT` Optionally expose the `/api/saml/metadata` endpoint for the idp's usage (disabled by default).
 
-`SAML_USER_ROLE_FIELD`: SAML field will determine the user's default system role on account creation (default: none). Will only promote to instructor if there is a match against `SAML_INSTRUCTOR_ROLE_VALUES`. If not specified or does not match any value from `SAML_INSTRUCTOR_ROLE_VALUES`, the user will be given the student system role and will manually need to be promoted if needed.
+`SAML_ATTRIBUTE_USER_ROLE`: SAML field will determine the user's default system role on account creation (default: none). Will only promote to instructor if there is a match against `SAML_INSTRUCTOR_ROLE_VALUES`. If not specified or does not match any value from `SAML_INSTRUCTOR_ROLE_VALUES`, the user will be given the student system role and will manually need to be promoted if needed.
 
-`SAML_INSTRUCTOR_ROLE_VALUES`: List of values `SAML_USER_ROLE_FIELD` can contain that would indicate the user is an instructor (default: empty set). Separate values by a space (ex: `instructor teacher staff`).
+`SAML_INSTRUCTOR_ROLE_VALUES`: List of values `SAML_ATTRIBUTE_USER_ROLE` can contain that would indicate the user is an instructor (default: empty set). Separate values by a space (ex: `instructor teacher staff`).
 
 `SAML_ATTRIBUTE_FIRST_NAME`: Optionally automatically sync user's first name with the supplied SAML attribute (Will only override if attribute is present a contains content).
 
@@ -355,7 +355,7 @@ Attachments Settings
 
 `ATTACHMENT_ALLOWED_EXTENSIONS`: List of file extensions allowed for upload (default: pdf, mp3, mp4, webm, jpg, jpeg, png). Separate values by a space (ex: `pdf mp3 mp4 webm jpg jpeg png`).
 
-`CAN_PREVIEW_EXTENSIONS`: List of file extensions allowed for image preview (default: jpg, jpeg, png). Must also be included in `ATTACHMENT_ALLOWED_EXTENSIONS`. Separate values by a space (ex: `jpg jpeg png`).
+`ATTACHMENT_PREVIEW_EXTENSIONS`: List of file extensions allowed for image preview (default: jpg, jpeg, png). Must also be included in `ATTACHMENT_ALLOWED_EXTENSIONS`. Separate values by a space (ex: `jpg jpeg png`).
 
 Restart server after making any changes to settings
 

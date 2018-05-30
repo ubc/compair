@@ -46,7 +46,7 @@ class LoginAPITests(ComPAIRAPITestCase):
             self.app.config['CAS_ATTRIBUTE_LAST_NAME'] = None
             self.app.config['CAS_ATTRIBUTE_STUDENT_NUMBER'] = None
             self.app.config['CAS_ATTRIBUTE_EMAIL'] = None
-            self.app.config['CAS_USER_ROLE_FIELD'] = None
+            self.app.config['CAS_ATTRIBUTE_USER_ROLE'] = None
             self.app.config['CAS_INSTRUCTOR_ROLE_VALUES'] = {}
             self.app.config['CAS_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = None
 
@@ -135,7 +135,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.app.config['CAS_ATTRIBUTE_LAST_NAME'] = 'lastName'
                 self.app.config['CAS_ATTRIBUTE_STUDENT_NUMBER'] = 'studentNumber'
                 self.app.config['CAS_ATTRIBUTE_EMAIL'] = 'email'
-                self.app.config['CAS_USER_ROLE_FIELD'] = 'system_role_field'
+                self.app.config['CAS_ATTRIBUTE_USER_ROLE'] = 'system_role_field'
                 self.app.config['CAS_INSTRUCTOR_ROLE_VALUES'] = {}
                 self.app.config['CAS_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = 'puid'
                 unique_identifier = system_role.value + "_with_used_attributes"
@@ -195,7 +195,7 @@ class LoginAPITests(ComPAIRAPITestCase):
             self.app.config['CAS_ATTRIBUTE_LAST_NAME'] = None
             self.app.config['CAS_ATTRIBUTE_STUDENT_NUMBER'] = None
             self.app.config['CAS_ATTRIBUTE_EMAIL'] = None
-            self.app.config['CAS_USER_ROLE_FIELD'] = None
+            self.app.config['CAS_ATTRIBUTE_USER_ROLE'] = None
             self.app.config['CAS_INSTRUCTOR_ROLE_VALUES'] = {}
             self.app.config['CAS_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = None
 
@@ -305,7 +305,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user.student_number, original_student_number)
                 self.assertIsNone(user.global_unique_identifier)
 
-            self.app.config['CAS_USER_ROLE_FIELD'] = 'system_role_field'
+            self.app.config['CAS_ATTRIBUTE_USER_ROLE'] = 'system_role_field'
             self.app.config['CAS_INSTRUCTOR_ROLE_VALUES'] = {SystemRole.instructor.value}
             # test automatic upgrading of system role for existing accounts
             for third_party_system_role in [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]:
@@ -355,7 +355,7 @@ class LoginAPITests(ComPAIRAPITestCase):
             self.app.config['SAML_ATTRIBUTE_LAST_NAME'] = None
             self.app.config['SAML_ATTRIBUTE_STUDENT_NUMBER'] = None
             self.app.config['SAML_ATTRIBUTE_EMAIL'] = None
-            self.app.config['SAML_USER_ROLE_FIELD'] = None
+            self.app.config['SAML_ATTRIBUTE_USER_ROLE'] = None
             self.app.config['SAML_INSTRUCTOR_ROLE_VALUES'] = {}
             self.app.config['SAML_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = None
 
@@ -448,7 +448,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.app.config['SAML_ATTRIBUTE_LAST_NAME'] = 'urn:oid:2.5.4.4'
                 self.app.config['SAML_ATTRIBUTE_STUDENT_NUMBER'] = 'urn:oid:2.16.840.1.113730.3.1.3'
                 self.app.config['SAML_ATTRIBUTE_EMAIL'] = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.6'
-                self.app.config['SAML_USER_ROLE_FIELD'] = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.7'
+                self.app.config['SAML_ATTRIBUTE_USER_ROLE'] = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.7'
                 self.app.config['SAML_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = 'puid'
                 self.app.config['SAML_INSTRUCTOR_ROLE_VALUES'] = {}
                 unique_identifier = system_role.value + "_with_used_attributes"
@@ -531,7 +531,7 @@ class LoginAPITests(ComPAIRAPITestCase):
             self.app.config['SAML_ATTRIBUTE_LAST_NAME'] = None
             self.app.config['SAML_ATTRIBUTE_STUDENT_NUMBER'] = None
             self.app.config['SAML_ATTRIBUTE_EMAIL'] = None
-            self.app.config['SAML_USER_ROLE_FIELD'] = None
+            self.app.config['SAML_ATTRIBUTE_USER_ROLE'] = None
             self.app.config['SAML_INSTRUCTOR_ROLE_VALUES'] = {}
             self.app.config['SAML_GLOBAL_UNIQUE_IDENTIFIER_FIELD'] = None
 
@@ -652,7 +652,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user.student_number, original_student_number)
                 self.assertIsNone(user.global_unique_identifier)
 
-            self.app.config['SAML_USER_ROLE_FIELD'] = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.7'
+            self.app.config['SAML_ATTRIBUTE_USER_ROLE'] = 'urn:oid:1.3.6.1.4.1.5923.1.1.1.7'
             self.app.config['SAML_INSTRUCTOR_ROLE_VALUES'] = {SystemRole.instructor.value}
             # test automatic upgrading of system role for existing accounts
             for third_party_system_role in [SystemRole.student, SystemRole.instructor, SystemRole.sys_admin]:

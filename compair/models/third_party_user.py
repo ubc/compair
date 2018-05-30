@@ -174,10 +174,10 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         if self.params:
             user_roles_attribute = instructor_role_values = None
             if self.third_party_type == ThirdPartyType.cas:
-                user_roles_attribute = current_app.config.get('CAS_USER_ROLE_FIELD')
+                user_roles_attribute = current_app.config.get('CAS_ATTRIBUTE_USER_ROLE')
                 instructor_role_values = list(current_app.config.get('CAS_INSTRUCTOR_ROLE_VALUES'))
             if self.third_party_type == ThirdPartyType.saml:
-                user_roles_attribute = current_app.config.get('SAML_USER_ROLE_FIELD')
+                user_roles_attribute = current_app.config.get('SAML_ATTRIBUTE_USER_ROLE')
                 instructor_role_values = list(current_app.config.get('SAML_INSTRUCTOR_ROLE_VALUES'))
 
             if user_roles_attribute and instructor_role_values and user_roles_attribute in self.params:

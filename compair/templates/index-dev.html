@@ -158,7 +158,7 @@
                     {% if kaltura_enabled %}
                     UploadSettings.kalturaExtensions = {{ kaltura_extensions|string|safe if attachment_extensions else [] }};
                     {% endif %}
-                    UploadSettings.canPreviewExtensions = {{ can_preview_extensions|string|safe if can_preview_extensions else [] }};
+                    UploadSettings.attachmentPreviewExtensions = {{ attachment_preview_extensions|string|safe if attachment_preview_extensions else [] }};
                 }]);
                 angular.module('ubc.ctlt.compair.common.xapi')
                 .run( ['$location', 'xAPISettings', function($location, xAPISettings) {
