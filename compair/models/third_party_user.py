@@ -29,7 +29,7 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     # relationships
     # user via User Model
-    compair_user_uuid = association_proxy('user', 'uuid')
+    user_uuid = association_proxy('user', 'uuid')
 
     # hybrid and other functions
 
@@ -40,6 +40,23 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     @params.setter
     def params(self, params):
         self._params = json.dumps(params) if params else None
+
+    @property
+    def global_unique_identifier(self):
+        if self.params:
+            global_unique_identifier_attribute = None
+            if self.third_party_type == ThirdPartyType.cas:
+                global_unique_identifier_attribute = current_app.config.get('CAS_GLOBAL_UNIQUE_IDENTIFIER_FIELD')
+            elif self.third_party_type == ThirdPartyType.saml:
+                global_unique_identifier_attribute = current_app.config.get('SAML_GLOBAL_UNIQUE_IDENTIFIER_FIELD')
+
+            if global_unique_identifier_attribute and global_unique_identifier_attribute in self.params:
+                global_unique_identifier = self.params.get(global_unique_identifier_attribute)
+                if isinstance(global_unique_identifier, list):
+                    global_unique_identifier = global_unique_identifier[0] if len(global_unique_identifier) > 0 else None
+                return global_unique_identifier
+
+        return None
 
     @classmethod
     def __declare_last__(cls):
@@ -59,27 +76,33 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
             message = "Sorry, this third party user was deleted or is no longer accessible."
         return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
-    def generate_user_account(self):
+    def generate_or_link_user_account(self):
         from . import SystemRole, User
 
-        if self.user_id == None:
-            self.user = User(
-                username=None,
-                password=None,
-                system_role=self._get_system_role()
-            )
-            self._sync_name()
-            self._sync_email()
-            if self.user.system_role == SystemRole.student:
-                self._sync_student_number()
+        if not self.user:
+            # check if global_unique_identifier user already exists
+            if self.global_unique_identifier:
+                self.user = User.query \
+                    .filter_by(global_unique_identifier=self.global_unique_identifier) \
+                    .one_or_none()
 
-            # instructors can have their display names set to their full name by default
-            if self.user.system_role != SystemRole.student and self.user.fullname != None:
-                self.user.displayname = self.user.fullname
-            else:
-                self.user.displayname = display_name_generator(self.user.system_role.value)
+            if not self.user:
+                self.user = User(
+                    username=None,
+                    password=None,
+                    system_role=self._get_system_role(),
+                    global_unique_identifier=self.global_unique_identifier
+                )
+                self._sync_name()
+                self._sync_email()
+                if self.user.system_role == SystemRole.student:
+                    self._sync_student_number()
 
-            db.session.commit()
+                # instructors can have their display names set to their full name by default
+                if self.user.system_role != SystemRole.student and self.user.fullname != None:
+                    self.user.displayname = self.user.fullname
+                else:
+                    self.user.displayname = display_name_generator(self.user.system_role.value)
 
     def update_user_profile(self):
         if self.user and self.user.system_role == SystemRole.student and self.params:
@@ -95,10 +118,9 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
             if not current_app.config.get('ALLOW_STUDENT_CHANGE_STUDENT_NUMBER'):
                 self._sync_student_number()
 
-            db.session.commit()
-
     def _sync_name(self):
         if self.params:
+            firstname_attribute = lastname_attribute = None
             if self.third_party_type == ThirdPartyType.cas:
                 firstname_attribute = current_app.config.get('CAS_ATTRIBUTE_FIRST_NAME')
                 lastname_attribute = current_app.config.get('CAS_ATTRIBUTE_LAST_NAME')
@@ -120,6 +142,7 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     def _sync_email(self):
         if self.params:
+            email_attribute = None
             if self.third_party_type == ThirdPartyType.cas:
                 email_attribute = current_app.config.get('CAS_ATTRIBUTE_EMAIL')
             elif self.third_party_type == ThirdPartyType.saml:
@@ -133,6 +156,7 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     def _sync_student_number(self):
         if self.params:
+            student_number_attribute = None
             if self.third_party_type == ThirdPartyType.cas:
                 student_number_attribute = current_app.config.get('CAS_ATTRIBUTE_STUDENT_NUMBER')
             elif self.third_party_type == ThirdPartyType.saml:
@@ -148,6 +172,7 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         from . import SystemRole
 
         if self.params:
+            user_roles_attribute = instructor_role_values = None
             if self.third_party_type == ThirdPartyType.cas:
                 user_roles_attribute = current_app.config.get('CAS_USER_ROLE_FIELD')
                 instructor_role_values = list(current_app.config.get('CAS_INSTRUCTOR_ROLE_VALUES'))
@@ -165,3 +190,12 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
                         return SystemRole.instructor
 
         return SystemRole.student
+
+    def upgrade_system_role(self):
+        # upgrade system role is needed
+        if self.user and self.params and self._get_system_role():
+            system_role = self._get_system_role()
+            if self.user.system_role == SystemRole.student and system_role == SystemRole.instructor:
+                self.user.system_role = system_role
+
+            db.session.commit()

@@ -156,22 +156,25 @@ def cas_auth():
                     third_party_type=ThirdPartyType.cas,
                     params=validation_response.attributes
                 )
+                thirdpartyuser.generate_or_link_user_account()
                 db.session.add(thirdpartyuser)
-
-            if not thirdpartyuser.user:
-                thirdpartyuser.generate_user_account()
+                db.session.commit()
+            elif not thirdpartyuser.user:
+                thirdpartyuser.generate_or_link_user_account()
+                db.session.commit()
 
             authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
             thirdpartyuser.params = validation_response.attributes
 
             if sess.get('LTI') and sess.get('lti_create_user_link'):
                 lti_user = LTIUser.query.get_or_404(sess['lti_user'])
-                lti_user.compair_user = thirdpartyuser.user
+                lti_user.compair_user_id = thirdpartyuser.user_id
                 lti_user.upgrade_system_role()
-                lti_user.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
+                lti_user.update_user_profile()
                 sess.pop('lti_create_user_link')
             else:
-                thirdpartyuser.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
+                thirdpartyuser.upgrade_system_role()
+                thirdpartyuser.update_user_profile()
 
             if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
                 lti_context = LTIContext.query.get_or_404(sess['lti_context'])
@@ -262,10 +265,12 @@ def saml_auth():
                     third_party_type=ThirdPartyType.saml,
                     params=attributes
                 )
+                thirdpartyuser.generate_or_link_user_account()
                 db.session.add(thirdpartyuser)
-
-            if not thirdpartyuser.user:
-                thirdpartyuser.generate_user_account()
+                db.session.commit()
+            elif not thirdpartyuser.user:
+                thirdpartyuser.generate_or_link_user_account()
+                db.session.commit()
 
             authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
             thirdpartyuser.params = attributes
@@ -274,10 +279,11 @@ def saml_auth():
                 lti_user = LTIUser.query.get_or_404(sess['lti_user'])
                 lti_user.compair_user_id = thirdpartyuser.user_id
                 lti_user.upgrade_system_role()
-                lti_user.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
+                lti_user.update_user_profile()
                 sess.pop('lti_create_user_link')
             else:
-                thirdpartyuser.update_user_profile() # only one update_user_profile needed TODO: simplify this in #606
+                thirdpartyuser.upgrade_system_role()
+                thirdpartyuser.update_user_profile()
 
             if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
                 lti_context = LTIContext.query.get_or_404(sess['lti_context'])

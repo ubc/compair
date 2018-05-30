@@ -58,10 +58,6 @@ class LTIAuthAPI(Resource):
             return _return_validation_error(tool_provider, "ComPAIR requires the LTI tool consumer to send a basic lti launch request.")
 
         lti_consumer = LTIConsumer.get_by_tool_provider(tool_provider)
-        # override user_id if set to override
-        if lti_consumer.user_id_override and lti_consumer.user_id_override in tool_provider.launch_params:
-            tool_provider.user_id = tool_provider.launch_params[lti_consumer.user_id_override]
-
         params = lti_launch_parser.parse_args()
         # override custom_assignment if not set in launch body but is in querystring
         if not tool_provider.custom_assignment and params.get('assignment'):

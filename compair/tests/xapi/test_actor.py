@@ -39,10 +39,8 @@ class AccountXAPITests(ComPAIRXAPITestCase):
 
             # test without homepage set
             # (should use compair actor account)
-            self.app.config['LRS_ACTOR_ACCOUNT_USE_THIRD_PARTY'] = True
-            self.app.config['LRS_ACTOR_ACCOUNT_THIRD_PARTY_HOMEPAGE'] = None
-            self.app.config['LRS_ACTOR_ACCOUNT_SAML_IDENTIFIER'] = None
-            self.app.config['LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER'] = None
+            self.app.config['LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER'] = True
+            self.app.config['LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE'] = None
             expected_actor = self.get_compair_actor(user)
 
             on_assignment_modified.send(
@@ -55,33 +53,9 @@ class AccountXAPITests(ComPAIRXAPITestCase):
             self.assertEqual(len(statements), 1)
             self.assertEqual(statements[0]['actor'], expected_actor)
 
-            # test with homepage set
-            # (should use cas/saml actor account with unique_identifier)
-            self.app.config['LRS_ACTOR_ACCOUNT_THIRD_PARTY_HOMEPAGE'] = "http://third.party.homepage"
-            expected_actor = self.get_third_party_actor(
-                user,
-                "http://third.party.homepage",
-                third_party_auth.unique_identifier
-            )
-
-            on_assignment_modified.send(
-                current_app._get_current_object(),
-                event_name=on_assignment_modified.name,
-                user=user,
-                assignment=self.assignment
-            )
-            statements = self.get_and_clear_statement_log()
-            self.assertEqual(len(statements), 1)
-            self.assertEqual(statements[0]['actor'], expected_actor)
-
-            # test with homepage set and identifer override set with no value found
+            # test with homepage set and global unique identifier not set
             # (should use compair actor account)
-            if third_party_auth.third_party_type == ThirdPartyType.saml:
-                self.app.config['LRS_ACTOR_ACCOUNT_SAML_IDENTIFIER'] = 'puid'
-            elif third_party_auth.third_party_type == ThirdPartyType.cas:
-                self.app.config['LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER'] = 'puid'
-            expected_actor = self.get_compair_actor(user)
-
+            self.app.config['LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE'] = "http://third.party.homepage"
             on_assignment_modified.send(
                 current_app._get_current_object(),
                 event_name=on_assignment_modified.name,
@@ -91,25 +65,17 @@ class AccountXAPITests(ComPAIRXAPITestCase):
             statements = self.get_and_clear_statement_log()
             self.assertEqual(len(statements), 1)
             self.assertEqual(statements[0]['actor'], expected_actor)
+            expected_actor = self.get_compair_actor(user)
 
-            # test with homepage set and identifer override set
+            # test with homepage set and global unique identifier set
             # (should use cas/saml actor account with overridden value used for name)
-            if third_party_auth.third_party_type == ThirdPartyType.saml:
-                third_party_auth.params = {
-                    'puid': ['mock_puid']
-                }
-            elif third_party_auth.third_party_type == ThirdPartyType.cas:
-                third_party_auth.params = {
-                    'puid': 'mock_puid'
-                }
+            user.global_unique_identifier = 'mock_puid_è_'+third_party_auth.third_party_type.value
             db.session.commit()
-
             expected_actor = self.get_third_party_actor(
                 user,
                 "http://third.party.homepage",
-                "mock_puid"
+                'mock_puid_è_'+third_party_auth.third_party_type.value
             )
-
             on_assignment_modified.send(
                 current_app._get_current_object(),
                 event_name=on_assignment_modified.name,
@@ -120,9 +86,8 @@ class AccountXAPITests(ComPAIRXAPITestCase):
             self.assertEqual(len(statements), 1)
             self.assertEqual(statements[0]['actor'], expected_actor)
 
-            # disabling LRS_ACTOR_ACCOUNT_USE_THIRD_PARTY should skip checking third party accounts
-            self.app.config['LRS_ACTOR_ACCOUNT_USE_THIRD_PARTY'] = False
-
+            # disabling LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER should skip checking global unique identifer
+            self.app.config['LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER'] = False
             expected_actor = self.get_compair_actor(user)
             on_assignment_modified.send(
                 current_app._get_current_object(),

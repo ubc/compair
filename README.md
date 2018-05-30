@@ -158,17 +158,19 @@ Note that [https://lrs.adlnet.gov/](https://lrs.adlnet.gov/) is set up for testi
 
 xAPI statements require an actor (currently logged in user) account information. The ComPAIR account information will be used by default unless the following settings are changed.
 
-`LRS_ACTOR_ACCOUNT_USE_THIRD_PARTY`: Flag indicating if SAML/CAS account information should be used by default if available (disabled by default)
-
-`LRS_ACTOR_ACCOUNT_THIRD_PARTY_HOMEPAGE`: Set the homepage of the SAML/CAS account
-
-`LRS_ACTOR_ACCOUNT_CAS_IDENTIFIER`: Optionally set a param to set as the actor's unique key for the CAS account. (uses CAS username by default)
-
-`LRS_ACTOR_ACCOUNT_SAML_IDENTIFIER`: Optionally set a param to set as the actor's unique key for the SAML account. (uses value associated with `SAML_UNIQUE_IDENTIFIER` by default)
-
 `LRS_USER_INPUT_FIELD_SIZE_LIMIT`: Set the byte limit on xAPI statement fields containing user input. Set this in order to prevent sending large statements to the LRS that it can't handle (1048576 by default or 1MB)
 
 Restart server after making any changes to settings
+
+### Actor Account settings
+
+Use these settings to control the actor information sent to the LRS. This requires that all users in the system have a globally unique identifier and that the user has an account outside of the system. See [_Global Unique Identifiers_](#global-unique-identifiers) for more information on configuring global unique identifers though different authorization methods.
+
+`LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER`: Flag indicating if `global_unique_identifier` should be used for the actor identifier instead of `uuid`.
+
+`LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE`: Set the actor's homepage when using `global_unique_identifier`.
+
+Note: Both `LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER` and `LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE` need to be configured and the user must have a `global_unique_identifier` or else the default ComPAIR actor will be sent.
 
 (Optional) Setting up Background Tasks
 ---------------------------
@@ -233,11 +235,11 @@ Restart server after making any changes to settings
 
 `SAML_SETTINGS_FILE` File location for JSON Settings (only if `SAML_SETTINGS` not used)
 
-`SAML_UNIQUE_IDENTIFIER` Set the attribute that uniquely identitifies the user (default: 'uid')
+`SAML_UNIQUE_IDENTIFIER` Set the attribute that uniquely identifies the user (default: 'uid')
 
 `SAML_METADATA_URL` Optionally load SAML idp metadata by loading the ipd's public metadata.
 
-`SAML_METADATA_ENTITY_ID` Use when loading ipd metadata with multiple public entity ids.
+`SAML_METADATA_ENTITY_ID` Use when loading idp metadata with multiple public entity ids.
 
 `SAML_EXPOSE_METADATA_ENDPOINT` Optionally expose the `/api/saml/metadata` endpoint for the idp's usage (disabled by default).
 
@@ -266,7 +268,7 @@ You can use `SAML_EXPOSE_METADATA_ENDPOINT` to expose public metadata for the id
     # yum
     yum install xmlsec1-devel
 
-Note: [https://www.testshib.org](https://www.testshib.org) is used for using saml authetification for development purposes. `deploy/development/dev_saml_settings.json` contains testing settings and should not be used in production. if you edit `dev_saml_settings.json`, you must upload it to [https://www.testshib.org/register.html](https://www.testshib.org/register.html). Please also replace `deploy/development/compair_dev_saml_metadata.xml` with the metadata so it can be kept track of.
+Note: [https://www.testshib.org](https://www.testshib.org) is used for using saml authentication for development purposes. `deploy/development/dev_saml_settings.json` contains testing settings and should not be used in production. if you edit `dev_saml_settings.json`, you must upload it to [https://www.testshib.org/register.html](https://www.testshib.org/register.html). Please also replace `deploy/development/compair_dev_saml_metadata.xml` with the metadata so it can be kept track of.
 
 ### LTI Settings
 
@@ -281,6 +283,27 @@ In addition, you must create a LTI consumer key/secret by:
 - Entering a unique key and a hard to guess secret and clicking 'Save'
 
 You can enable/disable consumers from the Manage LTI screen as needed
+
+### Global Unique Identifiers
+
+Useful if your institution has globally unique identifers that are available from the different authorization methods (CAS, SAML, LTI).
+
+Global unique identifers allow ComPAIR to:
+- Automatically linking new CAS, SAML, LTI logins to existing accounts associated with the `global_unique_identifier`. The user will not be prompted to login or create a new account.
+- Enhance LTI membership service/extension roster syncing by allowing new LTI accounts can be automatically linking to existing ComPAIR accounts or creating new ones (user would no longer be forced to launch an LTI link at least once from the LTI consumer).
+- Send learning records to the LRS using `global_unique_identifier` and a different homepage url for the actor account instead of ComPAIR `uuid` and the ComPAIR app url. See [_Actor Account settings_](#actor-account-settings) for more information.
+
+#### CAS
+
+`CAS_GLOBAL_UNIQUE_IDENTIFIER_FIELD`: CAS attribute used to identify an account across third party logins and LTI. Only required when CAS is enabled.
+
+#### SAML
+
+`SAML_GLOBAL_UNIQUE_IDENTIFIER_FIELD`: Optional SAML attribute used to identify an account across third party logins and LTI.
+
+#### LTI
+
+System admins can manage global unique identifiers for each LTI consumer from the 'Manage LTI' screen. Setting the `global_unique_identifier_param` field will use that param to unique identify an account across third party logins and LTI.
 
 (Optional) Email Notification Settings
 -----------------------------
@@ -341,7 +364,7 @@ Restart server after making any changes to settings
 
 You may optionally enable Kaltura uploads to support more media file attachment types with better cross browser playback compatibility.
 
-It is highly recommended to create a seperate account for ComPAIR so it does not interfere with other content. ComPAIR treats the account provided as a bucket account to store all video/audio uploads. You should have a Kaltura player setup and configured for the account.
+It is highly recommended to create a separate account for ComPAIR so it does not interfere with other content. ComPAIR treats the account provided as a bucket account to store all video/audio uploads. You should have a Kaltura player setup and configured for the account.
 
 Currently only version 3 of the Kaltura api is supported.
 

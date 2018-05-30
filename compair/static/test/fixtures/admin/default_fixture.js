@@ -260,7 +260,8 @@ storage.course_assignments[course.id].push(assignment_upcoming.id);
 storage.assignment_status[assignment_upcoming.id] = assignmentStatusFactory.generateAssignmentStatus(assignment_upcoming.id, admin, {});
 
 var consumer1 = ltiConsumerFactory.generateConsumer("1abcABC123-abcABC123_Z", "consumer_key_1", "consumer_secret_1", {
-    "user_id_override": "consumer_user_id_override"
+    "global_unique_identifier_param": "consumer_global_unique_identifier_param",
+    "student_number_param": "consumer_consumer_student_number_param"
 });
 var consumer2 = ltiConsumerFactory.generateConsumer("2abcABC123-abcABC123_Z", "consumer_key_2", "consumer_secret_2");
 var consumer3 = ltiConsumerFactory.generateConsumer("3abcABC123-abcABC123_Z", "consumer_key_3", "consumer_secret_3", {

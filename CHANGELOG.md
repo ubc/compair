@@ -3,9 +3,10 @@
 ## Breaking changes
 
 * `CAS_LOGIN_ENABLED` is now disabled by default.
-* Renamed `LRS_ACTOR_ACCOUNT_USE_CAS` to `LRS_ACTOR_ACCOUNT_USE_THIRD_PARTY`
-* Renamed `LRS_ACTOR_ACCOUNT_CAS_HOMEPAGE` to `LRS_ACTOR_ACCOUNT_THIRD_PARTY_HOMEPAGE`
 * Renamed `EXPOSE_CAS_USERNAME_TO_INSTRUCTOR` to `EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR`
+* Renamed `LRS_ACTOR_ACCOUNT_USE_CAS` to `LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER`
+* Renamed `LRS_ACTOR_ACCOUNT_CAS_HOMEPAGE` to `LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE`
+* The LTI Consumer field `user_id_override` functionality has changed. It is now called `global_unique_identifier_param` and stores the global unique identifier for the user in the `lti_user` table. This was changed for compatibility with LTI Assignment and Grade Services which requires the launch `user_id` which was previously being overwritten. All `lti_user` entries associated with LTI consumers that used `user_id_override` will automatically be removed. These users will have their accounts automatically re-linked the next time they launch from the LTI provider.
 
 ## Notable changes
 

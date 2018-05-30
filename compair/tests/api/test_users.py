@@ -1156,7 +1156,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(2, len(rv.json['objects']))
             for index, result in enumerate(rv.json['objects']):
-                self.assertEqual(student1.uuid, rv.json['objects'][index]['compair_user_id'])
+                self.assertEqual(student1.uuid, rv.json['objects'][index]['user_id'])
                 self.assertEqual(third_party_users[index].unique_identifier, rv.json['objects'][index]['unique_identifier'])
 
     def test_delete_user_third_party_user(self):

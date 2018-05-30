@@ -145,8 +145,14 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
             lti_user.lis_person_contact_email_primary = member.get('person_contact_email_primary')
 
+            if member.get('global_unique_identifier'):
+                lti_user.global_unique_identifier = member.get('global_unique_identifier')
+
             if member.get('student_number'):
                 lti_user.student_number = member.get('student_number')
+
+            if not lti_user.is_linked_to_user() and lti_user.global_unique_identifier:
+                lti_user.generate_or_link_user_account()
 
             course_role = CourseRole.student
             if has_instructor_role:
@@ -300,6 +306,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             member = {
                 'user_id': record.findtext('user_id'),
                 'roles': roles_text.split(",") if roles_text != None else [],
+                'global_unique_identifier': None,
                 'student_number': None,
                 'lis_result_sourcedid': record.findtext('lis_result_sourcedid'),
                 'person_contact_email_primary': record.findtext('person_contact_email_primary'),
@@ -308,9 +315,9 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 'person_name_full': record.findtext('person_name_full')
             }
 
-            # override user_id with user_id_override if present in membership result
-            if lti_consumer.user_id_override and record.findtext(lti_consumer.user_id_override):
-                member['user_id'] = record.findtext(lti_consumer.user_id_override)
+            # find global unique identifier if available
+            if lti_consumer.global_unique_identifier_param and record.findtext(lti_consumer.global_unique_identifier_param):
+                member['global_unique_identifier'] = record.findtext(lti_consumer.global_unique_identifier_param)
 
             # find student number if available
             if lti_consumer.student_number_param and record.findtext(lti_consumer.student_number_param):
@@ -356,6 +363,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 member = {
                     'user_id': record['member'].get('userId'),
                     'roles': record.get('role'),
+                    'global_unique_identifier': None,
                     'student_number': None,
                     'person_contact_email_primary': record['member'].get('email'),
                     'person_name_given': record['member'].get('givenName'),
@@ -363,26 +371,26 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                     'person_name_full': record['member'].get('name')
                 }
 
-                if (lti_consumer.user_id_override or lti_consumer.student_number_param) and 'message' in record:
+                if (lti_consumer.global_unique_identifier_param or lti_consumer.student_number_param) and 'message' in record:
                     for message in record['message']:
                         if not message['message_type'] == 'basic-lti-launch-request':
                             continue
 
-                        # override user_id with user_id_override if present in membership result
-                        if lti_consumer.user_id_override:
-                            # check if user_id_override is a basic lti parameter
-                            if lti_consumer.user_id_override in message:
-                                member['user_id'] = message[lti_consumer.user_id_override]
-                            # check if user_id_override is an extension and present
-                            elif lti_consumer.user_id_override.startswith('ext_'):
-                                ext_override = lti_consumer.user_id_override[len('ext_'):]
-                                if ext_override in message['ext']:
-                                    member['user_id'] = message['ext'][ext_override]
-                            # check if user_id_override is an custom attribute and present
-                            elif lti_consumer.user_id_override.startswith('custom_'):
-                                custom_override = lti_consumer.user_id_override[len('custom_'):]
-                                if custom_override in message['custom']:
-                                    member['user_id'] = message['custom'][custom_override]
+                        # find global unique identifier if present in membership result
+                        if lti_consumer.global_unique_identifier_param:
+                            # check if global_unique_identifier_param is a basic lti parameter
+                            if lti_consumer.global_unique_identifier_param in message:
+                                member['global_unique_identifier'] = message[lti_consumer.global_unique_identifier_param]
+                            # check if global_unique_identifier_param is an extension and present
+                            elif lti_consumer.global_unique_identifier_param.startswith('ext_'):
+                                ext_global_unique_identifier = lti_consumer.global_unique_identifier_param[len('ext_'):]
+                                if ext_global_unique_identifier in message['ext']:
+                                    member['global_unique_identifier'] = message['ext'][ext_global_unique_identifier]
+                            # check if global_unique_identifier_param is an custom attribute and present
+                            elif lti_consumer.global_unique_identifier_param.startswith('custom_'):
+                                custom_global_unique_identifier = lti_consumer.global_unique_identifier_param[len('custom_'):]
+                                if custom_global_unique_identifier in message['custom']:
+                                    member['global_unique_identifier'] = message['custom'][custom_global_unique_identifier]
 
                         # get student number if present in membership result
                         if lti_consumer.student_number_param:

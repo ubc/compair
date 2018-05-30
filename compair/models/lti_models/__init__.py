@@ -2,7 +2,7 @@
 from compair.models.mixins import ActiveMixin, UUIDMixin, DefaultTableMixin, WriteTrackingMixin
 
 # import models
-from compair.models import UserCourse, Course, Assignment
+from compair.models import UserCourse, Course, Assignment, User
 
 # import enums
 from compair.models import SystemRole, CourseRole

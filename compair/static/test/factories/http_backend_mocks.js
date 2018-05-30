@@ -970,6 +970,34 @@ module.exports.httpbackendMock = function(storageFixtures) {
             }, {}]
         });
 
+        // get assignment gradebook
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/gradebook$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+
+            var assignment = storageFixture.storage().assignments[assignmentId];
+
+            return [200, {
+                gradebook: [],
+                total_comparisons_required: assignment.total_comparisons_required,
+                include_scores: true,
+                include_self_evaluation: assignment.enable_self_evaluation
+            }, {}]
+        });
+
+        // get assignment comparisons
+        $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/users\/comparisons\?.*$/).respond(function(method, url, data, headers) {
+            var courseId = url.split('/')[3];
+            var assignmentId = url.split('/')[5];
+
+            var assignment = storageFixture.storage().assignments[assignmentId];
+
+            return [200, {
+                comparisons: [],
+                self_evaluations: [],
+            }, {}]
+        });
+
         // get assignment comparison examples
         $httpBackend.whenGET(/\/api\/courses\/[A-Za-z0-9_-]{22}\/assignments\/[A-Za-z0-9_-]{22}\/comparisons\/examples$/).respond(function(method, url, data, headers) {
             var courseId = url.split('/')[3];

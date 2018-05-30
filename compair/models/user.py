@@ -30,6 +30,7 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     __tablename__ = 'user'
 
     # table columns
+    global_unique_identifier = db.Column(db.String(255), nullable=True) #should be treated as write once and only once
     username = db.Column(db.String(255), unique=True, nullable=True)
     _password = db.Column(db.String(255), unique=False, nullable=True)
     system_role = db.Column(EnumType(SystemRole), nullable=False, index=True)
@@ -199,17 +200,8 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
 
-# This could be used for token based authentication
-# def verify_auth_token(token):
-#     s = Serializer(current_app.config['SECRET_KEY'])
-#     try:
-#         data = s.loads(token)
-#     except SignatureExpired:
-#         return None  # valid token, but expired
-#     except BadSignature:
-#         return None  # invalid token
-#
-#     if 'id' not in data:
-#         return None
-#
-#     return data['id']
+    __table_args__ = (
+        # prevent duplicate user in course
+        db.UniqueConstraint('global_unique_identifier', name='_unique_global_unique_identifier'),
+        DefaultTableMixin.default_table_args
+    )
