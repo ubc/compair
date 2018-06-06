@@ -305,15 +305,19 @@ class CourseDuplicateAPI(Resource):
                 compare_start=assignment_copy_data.get('compare_start'),
                 compare_end=assignment_copy_data.get('compare_end'),
 
-                #TODO: uncomment when grade pull request is accepted
-                #answer_grade_weight=assignment.answer_grade_weight,
-                #comparison_grade_weight=assignment.comparison_grade_weight,
-                #self_evaluation_grade_weight=assignment.self_evaluation_grade_weight,
+                answer_grade_weight=assignment.answer_grade_weight,
+                comparison_grade_weight=assignment.comparison_grade_weight,
+                self_evaluation_grade_weight=assignment.self_evaluation_grade_weight,
 
                 number_of_comparisons=assignment.number_of_comparisons,
                 students_can_reply=assignment.students_can_reply,
                 enable_self_evaluation=assignment.enable_self_evaluation,
-                pairing_algorithm=assignment.pairing_algorithm
+                enable_group_answers=assignment.enable_group_answers,
+                pairing_algorithm=assignment.pairing_algorithm,
+                scoring_algorithm=assignment.scoring_algorithm,
+                peer_feedback_prompt=assignment.peer_feedback_prompt,
+                educators_can_compare=assignment.educators_can_compare,
+                rank_display_limit=assignment.rank_display_limit,
             )
             db.session.add(duplicate_assignment)
 
@@ -333,7 +337,7 @@ class CourseDuplicateAPI(Resource):
                 answer1 = comparison_example.answer1
                 answer2 = comparison_example.answer2
 
-                # duplicate assignemnt comparisons example answers
+                # duplicate assignment comparisons example answers
                 duplicate_answer1 = Answer(
                     assignment=duplicate_assignment,
                     user_id=current_user.id,
@@ -345,7 +349,7 @@ class CourseDuplicateAPI(Resource):
                 )
                 db.session.add(duplicate_answer1)
 
-                # duplicate assignemnt comparisons example answers
+                # duplicate assignment comparisons example answers
                 duplicate_answer2 = Answer(
                     assignment=duplicate_assignment,
                     user_id=current_user.id,

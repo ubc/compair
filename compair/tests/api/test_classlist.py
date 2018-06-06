@@ -8,7 +8,7 @@ import six
 from compair.core import db
 from data.fixtures.test_data import BasicTestData, ThirdPartyAuthTestData
 from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
-from compair.models import CourseRole, UserCourse, ThirdPartyType, Course
+from compair.models import CourseRole, UserCourse, ThirdPartyType, Course, Group
 
 
 class ClassListAPITest(ComPAIRAPITestCase):
@@ -72,20 +72,25 @@ class ClassListAPITest(ComPAIRAPITestCase):
                     next(reader)
                 )
 
+            instructor_group = self.data.create_group(self.data.main_course)
+            ta_group = self.data.create_group(self.data.main_course)
+            student_group = self.data.create_group(self.data.main_course)
+
             # test export csv with group names
             for user_course in self.data.main_course.user_courses:
                 if user_course.user_id == self.data.get_authorized_instructor().id:
-                    user_course.group_name = "instructor_group"
+                    user_course.group_id = instructor_group.id
                 elif user_course.user_id == self.data.get_authorized_ta().id:
-                    user_course.group_name = "ta_group"
+                    user_course.group_id = ta_group.id
                 elif user_course.user_id == self.data.get_authorized_student().id:
-                    user_course.group_name = "student_group"
+                    user_course.group_id = student_group.id
             db.session.commit()
 
             expected = [
-                (self.data.get_authorized_instructor(), "instructor_group"),
-                (self.data.get_authorized_ta(), "ta_group"),
-                (self.data.get_authorized_student(), "student_group")]
+                (self.data.get_authorized_instructor(), instructor_group.name),
+                (self.data.get_authorized_ta(), ta_group.name),
+                (self.data.get_authorized_student(), student_group.name)
+            ]
             expected.sort(key=lambda x: x[0].lastname)
 
             rv = self.client.get(self.url, headers={'Accept': 'text/csv'})
@@ -93,7 +98,10 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual('text/csv', rv.content_type)
             reader = csv.reader(rv.data.splitlines(), delimiter=self.delimiter)
 
-            self.assertEqual(['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'], next(reader))
+            self.assertEqual(
+                ['username', 'student_number', 'firstname', 'lastname', 'email', 'displayname', 'group_name'],
+                next(reader)
+            )
             for user, group_name in expected:
                 self.assertEqual(
                     [user.username, user.student_number or '', user.firstname, user.lastname, user.email, user.displayname, group_name],
@@ -129,9 +137,9 @@ class ClassListAPITest(ComPAIRAPITestCase):
             db.session.commit()
 
             expected = [
-                (self.data.get_authorized_instructor(), saml_instructor.unique_identifier, cas_instructor.unique_identifier, "instructor_group"),
-                (self.data.get_authorized_ta(), saml_ta.unique_identifier, cas_ta.unique_identifier, "ta_group"),
-                (self.data.get_authorized_student(), saml_student.unique_identifier, cas_student.unique_identifier, "student_group")]
+                (self.data.get_authorized_instructor(), saml_instructor.unique_identifier, cas_instructor.unique_identifier, instructor_group.name),
+                (self.data.get_authorized_ta(), saml_ta.unique_identifier, cas_ta.unique_identifier, ta_group.name),
+                (self.data.get_authorized_student(), saml_student.unique_identifier, cas_student.unique_identifier, student_group.name)]
             expected.sort(key=lambda x: x[0].lastname)
 
             # test every combination of cas/saml enabled
@@ -239,21 +247,34 @@ class ClassListAPITest(ComPAIRAPITestCase):
             students = rv.json['objects']
             expected = {
                 'id': self.data.get_authorized_student().uuid,
-                'name': self.data.get_authorized_student().fullname_sortable
+                'name': self.data.get_authorized_student().fullname_sortable,
+                'group_id': None,
+                'role': 'Student',
             }
             self.assertEqual(students[0]['id'], expected['id'])
             self.assertEqual(students[0]['name'], expected['name'])
+            self.assertEqual(students[0]['group_id'], expected['group_id'])
+            self.assertEqual(students[0]['role'], expected['role'])
 
         with self.login(self.data.get_authorized_ta().username):
             rv = self.client.get(url)
             self.assert200(rv)
             students = rv.json['objects']
-            expected = {
-                'id': self.data.get_authorized_student().uuid,
-                'name': self.data.get_authorized_student().fullname_sortable
-            }
-            self.assertEqual(students[0]['id'], expected['id'])
-            self.assertEqual(students[0]['name'], expected['name'])
+            expected = [
+                {
+                    'id': self.data.get_authorized_student().uuid,
+                    'name': self.data.get_authorized_student().fullname_sortable,
+                    'group_id': None,
+                    'role': 'Student'
+                }
+            ]
+
+            self.assertEqual(len(students), len(expected))
+            for index, expect in enumerate(expected):
+                self.assertEqual(students[index]['id'], expect['id'])
+                self.assertEqual(students[index]['name'], expect['name'])
+                self.assertEqual(students[index]['group_id'], expect['group_id'])
+                self.assertEqual(students[index]['role'], expect['role'])
 
         # test success - student
         student =self.data.get_authorized_student()
@@ -264,12 +285,21 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 rv = self.client.get(url)
                 self.assert200(rv)
                 students = rv.json['objects']
-                expected = {
-                    'id': self.data.get_authorized_student().uuid,
-                    'name': self.data.get_authorized_student().displayname
-                }
-                self.assertEqual(students[0]['id'], expected['id'])
-                self.assertEqual(students[0]['name'], expected['name'] + ' (You)')
+                expected = [
+                    {
+                        'id': self.data.get_authorized_student().uuid,
+                        'name': self.data.get_authorized_student().displayname + ' (You)',
+                        'group_id': None,
+                        'role': 'Student'
+                    }
+                ]
+
+                self.assertEqual(len(students), len(expected))
+                for index, expect in enumerate(expected):
+                    self.assertEqual(students[index]['id'], expect['id'])
+                    self.assertEqual(students[index]['name'], expect['name'])
+                    self.assertEqual(students[index]['group_id'], expect['group_id'])
+                    self.assertEqual(students[index]['role'], expect['role'])
 
     def test_get_instructors_course(self):
         url = self.url + "/instructors"
@@ -297,52 +327,39 @@ class ClassListAPITest(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             instructors = rv.json['objects']
-            expected = [
-                {
-                    'role': 'Teaching Assistant',
-                    'id': self.data.get_authorized_ta().uuid,
-                    'name': self.data.get_authorized_ta().fullname_sortable
-                },
-                {
-                    'role': 'Instructor',
-                    'id': self.data.get_authorized_instructor().uuid,
-                    'name': self.data.get_authorized_instructor().fullname_sortable
-                }
-            ]
-
+            expected = sorted([self.data.get_authorized_ta(), self.data.get_authorized_instructor()],
+                key=lambda user: (user.lastname, user.firstname)
+            )
             self.assertEqual(len(instructors), len(expected))
-            for expect in expected:
-                actual = next((x for x in instructors if x['id'] == expect['id']), None)
-                for key in expect:
-                    self.assertEqual(actual[key], expect[key])
+            for index, user in enumerate(expected):
+                self.assertEqual(instructors[index]['id'], user.uuid)
+                self.assertEqual(instructors[index]['name'], user.fullname_sortable)
+                self.assertEqual(instructors[index]['group_id'], None)
+                if user.id == self.data.get_authorized_instructor().id:
+                    self.assertEqual(instructors[index]['role'], CourseRole.instructor.value)
+                else:
+                    self.assertEqual(instructors[index]['role'], CourseRole.teaching_assistant.value)
 
         # test success - student
         student =self.data.get_authorized_student()
-        for user_context in [ \
-                self.login(student.username), \
-                self.impersonate(self.data.get_authorized_instructor(), student)]:
+        for user_context in [self.login(student.username), self.impersonate(self.data.get_authorized_instructor(), student)]:
             with user_context:
                 rv = self.client.get(url)
                 self.assert200(rv)
                 instructors = rv.json['objects']
-                expected = [
-                    {
-                        'role': 'Teaching Assistant',
-                        'id': self.data.get_authorized_ta().uuid,
-                        'name': self.data.get_authorized_ta().displayname
-                    },
-                    {
-                        'role': 'Instructor',
-                        'id': self.data.get_authorized_instructor().uuid,
-                        'name': self.data.get_authorized_instructor().displayname
-                    }
-                ]
+                expected = sorted([self.data.get_authorized_ta(), self.data.get_authorized_instructor()],
+                    key=lambda user: (user.lastname, user.firstname)
+                )
 
                 self.assertEqual(len(instructors), len(expected))
-                for expect in expected:
-                    actual = next((x for x in instructors if x['id'] == expect['id']), None)
-                    for key in expect:
-                        self.assertEqual(actual[key], expect[key])
+                for index, user in enumerate(expected):
+                    self.assertEqual(instructors[index]['id'], user.uuid)
+                    self.assertEqual(instructors[index]['name'], user.displayname)
+                    self.assertEqual(instructors[index]['group_id'], None)
+                    if user.id == self.data.get_authorized_instructor().id:
+                        self.assertEqual(instructors[index]['role'], CourseRole.instructor.value)
+                    else:
+                        self.assertEqual(instructors[index]['role'], CourseRole.teaching_assistant.value)
 
     def test_enrol_instructor(self):
         url = self._create_enrol_url(self.url, self.data.get_dropped_instructor().uuid)
@@ -710,15 +727,29 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 ) \
                 .all()
 
+            groups = Group.query \
+                .filter_by(
+                    course_id=self.data.get_course().id,
+                    active=True
+                ) \
+                .all()
+
             self.assertEqual(len(user_courses), 3)
+            self.assertEqual(len(groups), 3)
+
             for user_course in user_courses:
                 self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
+                self.assertIsNotNone(user_course.group_id)
                 if user_course.user_id == student.id:
-                    self.assertEqual(user_course.group_name, 'group_student')
+                    self.assertEqual(user_course.group.name, 'group_student')
                 elif user_course.user_id == instructor.id:
-                    self.assertEqual(user_course.group_name, 'group_instructor')
+                    self.assertEqual(user_course.group.name, 'group_instructor')
                 elif user_course.user_id == ta.id:
-                    self.assertEqual(user_course.group_name, 'group_ta')
+                    self.assertEqual(user_course.group.name, 'group_ta')
+
+            for group in groups:
+                self.assertIn(group.name, ['group_student', 'group_instructor', 'group_ta'])
+                self.assertEqual(len(group.user_courses.all()), 1)
 
             # test authorized instructor - group unenrollment
             content = "".join([
@@ -741,10 +772,73 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 ) \
                 .all()
 
+            groups = Group.query \
+                .filter_by(
+                    course_id=self.data.get_course().id,
+                    active=True
+                ) \
+                .all()
+
             self.assertEqual(len(user_courses), 3)
+            self.assertEqual(len(groups), 3)
             for user_course in user_courses:
                 self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
-                self.assertEqual(user_course.group_name, None)
+                self.assertEqual(user_course.group_id, None)
+
+            for group in groups:
+                self.assertIn(group.name, ['group_student', 'group_instructor', 'group_ta'])
+                self.assertEqual(len(group.user_courses.all()), 0)
+
+            # test adding into existing groups
+            content = "".join([
+                student.username, ",*,,,,,,group_student\n",
+                instructor.username, ",*,,,,,,group_instructor2\n",
+                ta.username, ",*,,,,,,group_instructor2\n",
+            ])
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            uploaded_file.close()
+
+            user_courses = UserCourse.query \
+                .filter(
+                    UserCourse.course_id == self.data.get_course().id,
+                    UserCourse.course_role != CourseRole.dropped
+                ) \
+                .all()
+
+            groups = Group.query \
+                .filter_by(
+                    course_id=self.data.get_course().id,
+                    active=True
+                ) \
+                .all()
+
+            self.assertEqual(len(user_courses), 3)
+            self.assertEqual(len(groups), 4)
+
+            for user_course in user_courses:
+                self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
+                self.assertIsNotNone(user_course.group_id)
+                if user_course.user_id == student.id:
+                    self.assertEqual(user_course.group.name, 'group_student')
+                elif user_course.user_id == instructor.id:
+                    self.assertEqual(user_course.group.name, 'group_instructor2')
+                elif user_course.user_id == ta.id:
+                    self.assertEqual(user_course.group.name, 'group_instructor2')
+
+            for group in groups:
+                self.assertIn(group.name, ['group_student', 'group_instructor', 'group_ta', 'group_instructor2'])
+                if group.name in ['group_instructor', 'group_ta']:
+                    self.assertEqual(len(group.user_courses.all()), 0)
+                elif group.name == 'group_instructor2':
+                    self.assertEqual(len(group.user_courses.all()), 2)
+                else:
+                    self.assertEqual(len(group.user_courses.all()), 1)
+
 
     def test_import_cas_classlist(self):
         url = '/api/courses/' + self.data.get_course().uuid + '/users'
@@ -956,12 +1050,13 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(len(user_courses), 3)
             for user_course in user_courses:
                 self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
+                self.assertIsNotNone(user_course.group_id)
                 if user_course.user_id == student.id:
-                    self.assertEqual(user_course.group_name, 'group_student')
+                    self.assertEqual(user_course.group.name, 'group_student')
                 elif user_course.user_id == instructor.id:
-                    self.assertEqual(user_course.group_name, 'group_instructor')
+                    self.assertEqual(user_course.group.name, 'group_instructor')
                 elif user_course.user_id == ta.id:
-                    self.assertEqual(user_course.group_name, 'group_ta')
+                    self.assertEqual(user_course.group.name, 'group_ta')
 
             # test authorized instructor - group unenrollment
             content = "".join([
@@ -987,7 +1082,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(len(user_courses), 3)
             for user_course in user_courses:
                 self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
-                self.assertEqual(user_course.group_name, None)
+                self.assertEqual(user_course.group_id, None)
 
     def test_import_saml_classlist(self):
         url = '/api/courses/' + self.data.get_course().uuid + '/users'
@@ -1199,12 +1294,13 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(len(user_courses), 3)
             for user_course in user_courses:
                 self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
+                self.assertIsNotNone(user_course.group_id)
                 if user_course.user_id == student.id:
-                    self.assertEqual(user_course.group_name, 'group_student')
+                    self.assertEqual(user_course.group.name, 'group_student')
                 elif user_course.user_id == instructor.id:
-                    self.assertEqual(user_course.group_name, 'group_instructor')
+                    self.assertEqual(user_course.group.name, 'group_instructor')
                 elif user_course.user_id == ta.id:
-                    self.assertEqual(user_course.group_name, 'group_ta')
+                    self.assertEqual(user_course.group.name, 'group_ta')
 
             # test authorized instructor - group unenrollment
             content = "".join([
@@ -1230,7 +1326,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(len(user_courses), 3)
             for user_course in user_courses:
                 self.assertIn(user_course.user_id, [student.id, instructor.id, ta.id])
-                self.assertEqual(user_course.group_name, None)
+                self.assertEqual(user_course.group_id, None)
 
 
     def test_update_course_role_miltiple(self):

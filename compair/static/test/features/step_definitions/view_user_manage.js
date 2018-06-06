@@ -57,7 +57,7 @@ var viewUserManageStepDefinitionsWrapper = function () {
     this.When("I set the first course's group to '$groupname'", function (groupname) {
         var groupSelect = element.all(by.exactRepeater("course in courses"))
             .get(0)
-            .element(by.model('course.group_name'));
+            .element(by.model('course.group_id'));
         if (browser.browserName == "firefox") {
             groupSelect.click();
         }

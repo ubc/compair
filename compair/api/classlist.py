@@ -16,7 +16,7 @@ from . import dataformat
 from compair.core import db, event, abort, allowed_file, display_name_generator
 from compair.authorization import allow, require, USER_IDENTITY
 from compair.models import UserCourse, Course, User, SystemRole, CourseRole, \
-    ThirdPartyType, ThirdPartyUser
+    ThirdPartyType, ThirdPartyUser, Group
 from compair.tasks import set_passwords
 from .util import new_restful_api
 
@@ -46,7 +46,7 @@ COMPAIR_IMPORT = {
     'group_name': 7
 }
 
-CAS_IMPORT = {
+CAS_OR_SAML_IMPORT = {
     'username': 0,
     'student_number': 1,
     'firstname': 2,
@@ -71,7 +71,7 @@ def _parse_user_row(import_type, row):
 
     columns = COMPAIR_IMPORT
     if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
-        columns = CAS_IMPORT
+        columns = CAS_OR_SAML_IMPORT
 
     # get common columns
     user = {
@@ -94,7 +94,7 @@ def _parse_user_row(import_type, row):
 def _get_existing_users_by_identifier(import_type, users):
     username_index = COMPAIR_IMPORT['username']
     if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
-        username_index = CAS_IMPORT['username']
+        username_index = CAS_OR_SAML_IMPORT['username']
     usernames = [u[username_index] for u in users if len(u) > username_index]
     if len(usernames) == 0:
         return {}
@@ -123,7 +123,7 @@ def _get_existing_users_by_identifier(import_type, users):
 def _get_existing_users_by_student_number(import_type, users):
     student_number_index = COMPAIR_IMPORT['student_number']
     if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
-        student_number_index = CAS_IMPORT['student_number']
+        student_number_index = CAS_OR_SAML_IMPORT['student_number']
     student_number = [u[student_number_index] for u in users if len(u) > student_number_index]
     if len(student_number) == 0:
         return {}
@@ -149,6 +149,11 @@ def import_users(import_type, course, users):
     # store unique user identifiers - eg. student number - throws error if duplicate in file
     existing_system_usernames = _get_existing_users_by_identifier(import_type, users)
     existing_system_student_numbers = _get_existing_users_by_student_number(import_type, users)
+
+    groups = course.groups.all()
+    groups_by_name = {}
+    for group in groups:
+        groups_by_name[group.name] = group
 
     # create / update users in file
     for user_row in users:
@@ -239,9 +244,21 @@ def import_users(import_type, course, users):
     students = {s.user_id: s for s in students}
 
     # enrol valid users in file
-    for user, group in imported_users:
+    for user, group_name in imported_users:
         enrol = enroled.get(user.id, UserCourse(course_id=course.id, user_id=user.id))
-        enrol.group_name = group
+        enrol.group = None
+        if group_name:
+            group = groups_by_name.get(group_name)
+            # add new groups if needed
+            if not group:
+                group = Group(
+                    course=course,
+                    name=group_name
+                )
+                groups_by_name[group_name] = group
+                db.session.add(group)
+            enrol.group = group
+
         # do not overwrite instructor or teaching assistant roles
         if enrol.course_role not in [CourseRole.instructor, CourseRole.teaching_assistant]:
             enrol.course_role = CourseRole.student
@@ -259,7 +276,7 @@ def import_users(import_type, course, users):
         if enrolment.course_role == CourseRole.dropped:
             continue
         enrolment.course_role = CourseRole.dropped
-        enrolment.group_name = None
+        enrolment.group_id = None
         db.session.add(enrolment)
     db.session.commit()
 
@@ -329,17 +346,20 @@ class ClasslistRootAPI(Resource):
         db.session.expire(current_user)
 
         users = User.query \
-            .join(UserCourse, UserCourse.user_id == User.id) \
-            .add_columns(UserCourse.course_role, UserCourse.group_name) \
-            .filter(and_(
-                UserCourse.course_id == course.id,
-                UserCourse.course_role != CourseRole.dropped
+            .with_entities(User, UserCourse) \
+            .options(joinedload(UserCourse.group)) \
+            .join(UserCourse, and_(
+                UserCourse.user_id == User.id,
+                UserCourse.course_id == course.id
             )) \
+            .filter(
+                UserCourse.course_role != CourseRole.dropped
+            ) \
             .order_by(User.lastname, User.firstname) \
             .all()
 
         if not restrict_user:
-            user_ids = [_user.id for (_user, _course_role, _group_name) in users]
+            user_ids = [_user.id for (_user, _user_course) in users]
             third_party_auths = ThirdPartyUser.query \
                 .filter(and_(
                     ThirdPartyUser.user_id.in_(user_ids),
@@ -351,9 +371,11 @@ class ClasslistRootAPI(Resource):
                 .all()
 
         class_list = []
-        for (_user, _course_role, _group_name) in users:
-            _user.course_role = _course_role
-            _user.group_name = _group_name
+        for (_user, _user_course) in users:
+            _user.course_role = _user_course.course_role
+            _user.group = _user_course.group
+            _user.group_uuid = _user.group.uuid if _user.group else None
+            _user.group_name = _user.group.name if _user.group else None
 
             if not restrict_user:
                 cas_auth = next(
@@ -564,7 +586,7 @@ class StudentsAPI(Resource):
         restrict_user = not allow(MANAGE, course)
 
         students = User.query \
-            .with_entities(User, UserCourse.group_name) \
+            .with_entities(User, UserCourse) \
             .join(UserCourse, UserCourse.user_id == User.id) \
             .filter(
                 UserCourse.course_id == course.id,
@@ -580,7 +602,8 @@ class StudentsAPI(Resource):
                 users.append({
                     'id': u.User.uuid,
                     'name': u.User.fullname_sortable,
-                    'group_name': u.group_name
+                    'group_id': u.UserCourse.group_id,
+                    'role': u.UserCourse.course_role.value
                 })
             else:
                 name = u.User.displayname
@@ -589,7 +612,8 @@ class StudentsAPI(Resource):
                 users.append({
                     'id': u.User.uuid,
                     'name': name,
-                    'group_name': u.group_name
+                    'group_id': u.UserCourse.group_id,
+                    'role': u.UserCourse.course_role.value
                 })
 
         on_classlist_student.send(
@@ -615,7 +639,7 @@ class InstructorsAPI(Resource):
         restrict_user = not allow(MANAGE, course)
 
         instructors = User.query \
-            .with_entities(User, UserCourse.group_name, UserCourse.course_role) \
+            .with_entities(User, UserCourse) \
             .join(UserCourse, UserCourse.user_id == User.id) \
             .filter(
                 UserCourse.course_id == course.id,
@@ -634,15 +658,15 @@ class InstructorsAPI(Resource):
                 users.append({
                     'id': u.User.uuid,
                     'name': u.User.fullname_sortable,
-                    'group_name': u.group_name,
-                    'role': u.course_role.value
+                    'group_id': u.UserCourse.group_id,
+                    'role': u.UserCourse.course_role.value
                 })
             else:
                 users.append({
                     'id': u.User.uuid,
                     'name': u.User.displayname,
-                    'group_name': u.group_name,
-                    'role': u.course_role.value
+                    'group_id': u.UserCourse.group_id,
+                    'role': u.UserCourse.course_role.value
                 })
 
         on_classlist_instructor.send(
@@ -711,7 +735,7 @@ class UserCourseRoleAPI(Resource):
             # skip current user
             if user_course.user_id == current_user.id:
                 continue
-            # update user's role'
+            # update user's role
             user_course.course_role = course_role
 
         db.session.commit()

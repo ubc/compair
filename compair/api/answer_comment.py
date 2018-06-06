@@ -45,42 +45,8 @@ on_answer_comment_delete = event.signal('ANSWER_COMMENT_DELETE')
 
 class AnswerCommentListAPI(Resource):
     @login_required
-    def get(self, **kwargs):
+    def get(self, course_uuid, assignment_uuid, **kwargs):
         """
-        **Example request**:
-
-        .. sourcecode:: http
-
-            GET /api/answer/123/comments HTTP/1.1
-            Host: example.com
-            Accept: application/json
-
-        .. sourcecode:: http
-
-            GET /api/answer_comments?ids=1,2,3&self_evaluation=only HTTP/1.1
-            Host: example.com
-            Accept: application/json
-
-        **Example response**:
-
-        .. sourcecode:: http
-
-            HTTP/1.1 200 OK
-            Vary: Accept
-            Content-Type: application/json
-            [{
-                'id': 1
-                'content': 'comment text',
-                'created': '',
-                'user_id': 1,
-                'user_displayname': 'John',
-                'user_fullname': 'John Smith',
-                'fullname_sortable': 'Smith, John (12345678)',
-                'user_avatar': '12k3jjh24k32jhjksaf',
-                'comment_type': 'self_evaluation',
-                'course_id': 1,
-            }]
-
         :query string ids: a comma separated comment uuids to query
         :query string answer_ids: a comma separated answer uuids for answer filter
         :query string assignment_id: filter the answer comments with a assignment uuid
@@ -97,6 +63,9 @@ class AnswerCommentListAPI(Resource):
         :statuscode 404: answers don't exist
 
         """
+        course = Course.get_active_by_uuid_or_404(course_uuid)
+        assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+
         params = answer_comment_list_parser.parse_args()
         answer_uuids = []
         if 'answer_uuid' in kwargs:
@@ -111,6 +80,7 @@ class AnswerCommentListAPI(Resource):
 
         answers = Answer.query \
             .filter(
+                Answer.assignment_id == assignment.id,
                 Answer.active == True,
                 Answer.draft == False,
                 Answer.uuid.in_(answer_uuids)
@@ -120,6 +90,9 @@ class AnswerCommentListAPI(Resource):
             # non-existing answer ids.
             abort(404, title="Replies Unavailable", message="There was a problem getting the replies for this answer. Please try again.")
 
+        group = current_user.get_course_group(course.id)
+        course_role = current_user.get_course_role(course.id)
+
         # build query condition for each answer
         for answer in answers:
             clauses = [AnswerComment.answer_id == answer.id]
@@ -127,8 +100,8 @@ class AnswerCommentListAPI(Resource):
             # student can only see the comments for themselves or public ones.
             # since the owner of the answer can access all comments. We only filter
             # on non-owners
-            if current_user.get_course_role(answer.course_id) == CourseRole.student \
-                    and answer.user_id != current_user.id:
+            answer_owner = answer.user_id == current_user.id or (group and group.id == answer.group_id)
+            if course_role == CourseRole.student and not answer_owner:
                 # public comments or comments owned by current user
                 clauses.append(or_(
                     AnswerComment.comment_type == AnswerCommentType.public,
@@ -137,9 +110,12 @@ class AnswerCommentListAPI(Resource):
 
             conditions.append(and_(*clauses))
 
-        query = AnswerComment.query. \
-            filter(AnswerComment.active==True) .\
-            filter(or_(*conditions))
+        query = AnswerComment.query \
+            .filter(
+                AnswerComment.assignment_id == assignment.id,
+                AnswerComment.active==True,
+                or_(*conditions)
+            )
 
         if params['ids']:
             query = query.filter(AnswerComment.uuid.in_(params['ids'].split(',')))
@@ -176,10 +152,6 @@ class AnswerCommentListAPI(Resource):
         else:
             # do not include draft. Default
             query = query.filter(AnswerComment.draft == False)
-
-        if params['assignment_id']:
-            query = query.join(AnswerComment.answer). \
-                filter_by(assignment_uuid=params['assignment_id'])
 
         if params['user_ids']:
             user_ids = params['user_ids'].split(',')

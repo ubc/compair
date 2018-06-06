@@ -70,8 +70,8 @@
                                 ng-change="updateRole(course)"></select>
                     </td>
                     <td>
-                        <select ng-model="course.group_name"
-                                ng-options="g as g for g in course.groups"
+                        <select ng-model="course.group_id"
+                                ng-options="g.id as g.name for g in course.groups"
                                 ng-change="updateGroup(course)"
                                 ng-if="course.groups.length">
                             <option value="">- None -</option>

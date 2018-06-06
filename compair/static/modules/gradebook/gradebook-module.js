@@ -29,11 +29,11 @@ module.factory(
 /***** Controllers *****/
 module.controller("GradebookController",
     ["$scope", "$window", "$routeParams", "CourseResource", "GradebookResource",
-        "GroupResource", "AssignmentResource", "Authorize", "Toaster",
-        "xAPIStatementHelper", "$filter",
+        "GroupResource", "GroupUserResource", "AssignmentResource", "Authorize",
+        "xAPIStatementHelper",
     function($scope, $window, $routeParams, CourseResource, GradebookResource,
-        GroupResource, AssignmentResource, Authorize, Toaster,
-        xAPIStatementHelper, $filter)
+        GroupResource, GroupUserResource, AssignmentResource, Authorize,
+        xAPIStatementHelper)
     {
         $scope.users = [];
         $scope.gradebookFilters = {
@@ -110,7 +110,7 @@ module.controller("GradebookController",
                 if ($scope.gradebookFilters.group == null) {
                     $scope.updateUserIds($scope.allStudents);
                 } else {
-                    GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.gradebookFilters.group}).$promise.then(
+                    GroupUserResource.get({'courseId': $scope.courseId, 'groupId': $scope.gradebookFilters.group}).$promise.then(
                         function (ret) {
                             $scope.updateUserIds(ret.objects);
                         }
@@ -122,7 +122,7 @@ module.controller("GradebookController",
                 if ($scope.gradebookFilters.student == null) {
                     $scope.updateUserIds($scope.users);
                 } else {
-                    userIds[$scope.gradebookFilters.student.id] = 1;
+                    userIds[$scope.gradebookFilters.student] = 1;
                 }
             }
             xAPIStatementHelper.filtered_page_section("participation tab", $scope.gradebookFilters);

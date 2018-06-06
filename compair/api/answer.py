@@ -12,7 +12,8 @@ from . import dataformat
 from compair.core import db, event, abort
 from compair.authorization import require, allow, is_user_access_restricted
 from compair.models import Answer, Assignment, Course, User, Comparison, Criterion, \
-    AnswerScore, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType, File
+    AnswerScore, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType, \
+    File, Group
 
 from .util import new_restful_api, get_model_changes, pagination_parser
 
@@ -21,6 +22,7 @@ api = new_restful_api(answers_api)
 
 new_answer_parser = RequestParser()
 new_answer_parser.add_argument('user_id', default=None)
+new_answer_parser.add_argument('group_id', default=None)
 new_answer_parser.add_argument('comparable', type=bool, default=True)
 new_answer_parser.add_argument('content', default=None)
 new_answer_parser.add_argument('file_id', default=None)
@@ -29,6 +31,7 @@ new_answer_parser.add_argument('draft', type=bool, default=False)
 existing_answer_parser = RequestParser()
 existing_answer_parser.add_argument('id', required=True, help="Answer id is required.")
 existing_answer_parser.add_argument('user_id', default=None)
+existing_answer_parser.add_argument('group_id', default=None)
 existing_answer_parser.add_argument('comparable', type=bool, default=True)
 existing_answer_parser.add_argument('content', default=None)
 existing_answer_parser.add_argument('file_id', default=None)
@@ -96,18 +99,21 @@ class AnswerRootAPI(Resource):
         query = Answer.query \
             .options(joinedload('file')) \
             .options(joinedload('user')) \
+            .options(joinedload('group')) \
             .options(joinedload('score')) \
             .options(undefer_group('counts')) \
-            .join(UserCourse, and_(
+            .outerjoin(UserCourse, and_(
                 Answer.user_id == UserCourse.user_id,
                 UserCourse.course_id == course.id
             )) \
             .add_columns(
                 and_(
+                    UserCourse != None,
                     UserCourse.course_role.__eq__(CourseRole.instructor),
                     not Answer.comparable
                 ).label("instructor_role"),
                 and_(
+                    UserCourse != None,
                     UserCourse.course_role.__eq__(CourseRole.teaching_assistant),
                     not Answer.comparable
                 ).label("ta_role")
@@ -117,15 +123,29 @@ class AnswerRootAPI(Resource):
                 Answer.active == True,
                 Answer.practice == False,
                 Answer.draft == False,
-                UserCourse.course_role != CourseRole.dropped
+                or_(
+                    and_(UserCourse.course_role != CourseRole.dropped, Answer.user_id != None),
+                    Answer.group_id != None
+                )
             )) \
             .order_by(desc('instructor_role'), desc('ta_role'))
 
         if params['author']:
             user = User.get_by_uuid_or_404(params['author'])
-            query = query.filter(Answer.user_id == user.id)
+            group = user.get_course_group(course.id)
+            if group:
+                query = query.filter(or_(
+                    Answer.user_id == user.id,
+                    Answer.group_id == group.id
+                ))
+            else:
+                query = query.filter(Answer.user_id == user.id)
         elif params['group']:
-            query = query.filter(UserCourse.group_name == params['group'])
+            group = Group.get_active_by_uuid_or_404(params['group'])
+            query = query.filter(or_(
+                UserCourse.group_id == group.id,
+                Answer.group_id == group.id
+            ))
 
         if params['ids']:
             query = query.filter(Answer.uuid.in_(params['ids'].split(',')))
@@ -149,7 +169,7 @@ class AnswerRootAPI(Resource):
 
                 # display answers with score >= score_for_rank
                 if score_for_rank != None:
-                    # will get all answer with a score greater than or equal to the score for a given rank
+                    # will get all answers with a score greater than or equal to the score for a given rank
                     # the '- 0.00001' fixes floating point precision problems
                     query = query.filter(AnswerScore.score >= score_for_rank - 0.00001)
 
@@ -209,44 +229,66 @@ class AnswerRootAPI(Resource):
             abort(400, title="Answer Not Submitted", message="Please provide content in the text editor or upload a file and try submitting again.")
 
         user_uuid = params.get("user_id")
+        group_uuid = params.get("group_id")
         # we allow instructor and TA to submit multiple answers for other users in the class
         if user_uuid and not allow(MANAGE, Answer(course_id=course.id)):
             abort(400, title="Answer Not Submitted", message="Only instructors and teaching assistants can submit an answer on behalf of another.")
+        if group_uuid and not assignment.enable_group_answers:
+            abort(400, title="Answer Not Submitted", message="Group answers are not allowed for this assignment.")
+        if group_uuid and not allow(MANAGE, Answer(course_id=course.id)):
+            abort(400, title="Answer Not Submitted", message="Only instructors and teaching assistants can submit an answer on behalf of a group.")
+        if group_uuid and user_uuid:
+            abort(400, title="Answer Not Submitted", message="You cannot submit an answer for a user and a group at the same time.")
 
-        explicitSubmitAsStudent = False
-        if user_uuid:
-            user = User.get_by_uuid_or_404(user_uuid)
-            answer.user_id = user.id
-            explicitSubmitAsStudent = user.get_course_role(course.id) == CourseRole.student
-        else:
-            answer.user_id = current_user.id
+        user = User.get_by_uuid_or_404(user_uuid) if user_uuid else current_user
+        group = Group.get_active_by_uuid_or_404(group_uuid) if group_uuid else None
 
-        # instructor / TA can mark the answer as non-comparable, unless the answer is for a student
-        if allow(MANAGE, Answer(course_id=course.id)) and not explicitSubmitAsStudent:
-            answer.comparable = params.get("comparable")
-        else:
+        if restrict_user and assignment.enable_group_answers and not group:
+            group = current_user.get_course_group(course.id)
+            if group == None:
+                abort(400, title="Answer Not Submitted",
+                    message="You are currently not in any group for this course. Please contact your instructor to be added to a group.")
+
+        check_for_existing_answers = False
+        if group and assignment.enable_group_answers:
+            if group.course_id != course.id:
+                abort(400, title="Answer Not Submitted",
+                    message="Group answers can be submitted to courses they belong in.")
+
+            answer.user_id = None
+            answer.group_id = group.id
             answer.comparable = True
+            check_for_existing_answers = True
+        else:
+            answer.user_id = user.id
+            answer.group_id = None
 
-        user_course = UserCourse.query \
-            .filter_by(
-                course_id=course.id,
-                user_id=answer.user_id
-            ) \
-            .one_or_none()
+            course_role = User.get_user_course_role(answer.user_id, course.id)
 
-        if user_course == None:
             # only system admin can add answers for themselves to a class without being enrolled in it
             # required for managing comparison examples as system admin
-            if current_user.id != answer.user_id or current_user.system_role != SystemRole.sys_admin:
+            if (not course_role or course_role == CourseRole.dropped) and current_user.system_role != SystemRole.sys_admin:
                 abort(400, title="Answer Not Submitted", message="Answers can be submitted only by those enrolled in the course. Please double-check your enrollment in this course.")
 
-        # we allow instructor and TA to submit multiple answers for their own,
-        # but not for student. Each student can only have one answer.
-        elif user_course.course_role.value not in [CourseRole.instructor.value, CourseRole.teaching_assistant.value]:
+            if course_role == CourseRole.student and assignment.enable_group_answers:
+                abort(400, title="Answer Not Submitted", message="Students can only submit group answers for this assignment.")
+
+            # we allow instructor and TA to submit multiple answers for their own,
+            # but not for student. Each student can only have one answer.
+            if course_role and course_role == CourseRole.student:
+                check_for_existing_answers = True
+                answer.comparable = True
+            else:
+                # instructor / TA / Sys Admin can mark the answer as non-comparable, unless the answer is for a student
+                answer.comparable = params.get("comparable")
+
+        if check_for_existing_answers:
+            # check for answers with user_id or group_id
             prev_answers = Answer.query \
                 .filter_by(
                     assignment_id=assignment.id,
                     user_id=answer.user_id,
+                    group_id=answer.group_id,
                     active=True
                 ) \
                 .all()
@@ -273,8 +315,12 @@ class AnswerRootAPI(Resource):
 
         # update course & assignment grade for user if answer is fully submitted
         if not answer.draft:
-            assignment.calculate_grade(answer.user)
-            course.calculate_grade(answer.user)
+            if answer.user:
+                assignment.calculate_grade(answer.user)
+                course.calculate_grade(answer.user)
+            elif answer.group:
+                assignment.calculate_group_grade(answer.group)
+                course.calculate_group_grade(answer.group)
 
         return marshal(answer, dataformat.get_answer(restrict_user))
 
@@ -291,7 +337,7 @@ class AnswerIdAPI(Resource):
 
         answer = Answer.get_active_by_uuid_or_404(
             answer_uuid,
-            joinedloads=['file', 'user', 'score']
+            joinedloads=['file', 'user', 'group', 'score']
         )
         require(READ, answer,
             title="Answer Unavailable",
@@ -332,60 +378,84 @@ class AnswerIdAPI(Resource):
         params = existing_answer_parser.parse_args()
         # make sure the answer id in the url and the id matches
         if params['id'] != answer_uuid:
-            abort(400, title="Answer Not Saved", message="The answer's ID does not match the URL, which is required in order to save the answer.")
+            abort(400, title="Answer Not Submitted", message="The answer's ID does not match the URL, which is required in order to save the answer.")
 
         # modify answer according to new values, preserve original values if values not passed
         answer.content = params.get("content")
 
         user_uuid = params.get("user_id")
-        explicitSubmitAsStudent = False
-        if user_uuid:
-            user = User.get_by_uuid_or_404(user_uuid)
-            explicitSubmitAsStudent = user.get_course_role(course.id) == CourseRole.student
-
-        # instructor / TA can mark the answer as non-comparable if it is not a student answer
-        if allow(MANAGE, Answer(course_id=course.id)) and not explicitSubmitAsStudent:
-            answer.comparable = params.get("comparable")
-
+        group_uuid = params.get("group_id")
         # we allow instructor and TA to submit multiple answers for other users in the class
-        if user_uuid and user_uuid != answer.user_uuid:
-            if not allow(MANAGE, answer) or not answer.draft:
-                abort(400, title="Answer Not Saved",
-                    message="Only instructors and teaching assistants can update an answer on behalf of another.")
-            user = User.get_by_uuid_or_404(user_uuid)
+        if user_uuid and user_uuid != answer.user_uuid and not allow(MANAGE, answer):
+            abort(400, title="Answer Not Submitted", message="Only instructors and teaching assistants can submit an answer on behalf of another.")
+        if group_uuid and not assignment.enable_group_answers:
+            abort(400, title="Answer Not Submitted", message="Group answers are not allowed for this assignment.")
+        if group_uuid and group_uuid != answer.group_uuid and not allow(MANAGE, answer):
+            abort(400, title="Answer Not Submitted", message="Only instructors and teaching assistants can submit an answer on behalf of a group.")
+        if group_uuid and user_uuid:
+            abort(400, title="Answer Not Submitted", message="You cannot submit an answer for a user and a group at the same time.")
+
+        user = User.get_by_uuid_or_404(user_uuid) if user_uuid else answer.user
+        group = Group.get_active_by_uuid_or_404(group_uuid) if group_uuid else answer.group
+
+        check_for_existing_answers = False
+        if group and assignment.enable_group_answers:
+            if group.course_id != course.id:
+                abort(400, title="Answer Not Submitted",
+                    message="Group answers can be submitted to courses they belong in.")
+
+            answer.user_id = None
+            answer.group_id = group.id
+            answer.comparable = True
+            check_for_existing_answers = True
+        else:
             answer.user_id = user.id
+            answer.group_id = None
 
-            user_course = UserCourse.query \
+            course_role = User.get_user_course_role(answer.user_id, course.id)
+
+            # only system admin can add answers for themselves to a class without being enrolled in it
+            # required for managing comparison examples as system admin
+            if (not course_role or course_role == CourseRole.dropped) and current_user.system_role != SystemRole.sys_admin:
+                abort(400, title="Answer Not Submitted", message="Answers can be submitted only by those enrolled in the course. Please double-check your enrollment in this course.")
+
+            if course_role == CourseRole.student and assignment.enable_group_answers:
+                abort(400, title="Answer Not Submitted", message="Students can only submit group answers for this assignment.")
+
+            # we allow instructor and TA to submit multiple answers for their own,
+            # but not for student. Each student can only have one answer.
+            if course_role and course_role == CourseRole.student:
+                check_for_existing_answers = True
+                answer.comparable = True
+            else:
+                # instructor / TA / Sys Admin can mark the answer as non-comparable, unless the answer is for a student
+                answer.comparable = params.get("comparable")
+
+        if check_for_existing_answers:
+            # check for answers with user_id or group_id
+            prev_answers = Answer.query \
                 .filter_by(
-                    course_id=course.id,
-                    user_id=answer.user_id
+                    assignment_id=assignment.id,
+                    user_id=answer.user_id,
+                    group_id=answer.group_id,
+                    active=True
                 ) \
-                .one_or_none()
+                .filter(Answer.id != answer.id) \
+                .all()
 
-            if user_course.course_role.value not in [CourseRole.instructor.value, CourseRole.teaching_assistant.value]:
-                prev_answers = Answer.query \
-                    .filter_by(
-                        assignment_id=assignment.id,
-                        user_id=answer.user_id,
-                        active=True
-                    ) \
-                    .filter(Answer.id != answer.id) \
-                    .all()
+            # check if there is a previous answer submitted for the student
+            non_draft_answers = [prev_answer for prev_answer in prev_answers if not prev_answer.draft]
+            if len(non_draft_answers) > 0:
+                abort(400, title="Answer Not Submitted", message="An answer has already been submitted for this assignment by you or on your behalf.")
 
-                # check if there is a previous answer submitted for the student
-                non_draft_answers = [prev_answer for prev_answer in prev_answers if not prev_answer.draft]
-                if len(non_draft_answers) > 0:
-                    abort(400, title="Answer Not Saved", message="An answer has already been submitted for this assignment by you or on your behalf.")
-
-                # check if there is a previous draft answer submitted for the student (soft-delete if present)
-                draft_answers = [prev_answer for prev_answer in prev_answers if prev_answer.draft]
-                for draft_answer in draft_answers:
-                    draft_answer.active = False
+            # check if there is a previous draft answer submitted for the student (soft-delete if present)
+            draft_answers = [prev_answer for prev_answer in prev_answers if prev_answer.draft]
+            for draft_answer in draft_answers:
+                draft_answer.active = False
 
         # can only change draft status while a draft
         if answer.draft:
             answer.draft = params.get("draft")
-        uploaded = params.get('uploadFile')
 
         file_uuid = params.get('file_id')
         if file_uuid:
@@ -413,8 +483,12 @@ class AnswerIdAPI(Resource):
 
         # update course & assignment grade for user if answer is fully submitted
         if not answer.draft:
-            assignment.calculate_grade(answer.user)
-            course.calculate_grade(answer.user)
+            if answer.user:
+                assignment.calculate_grade(answer.user)
+                course.calculate_grade(answer.user)
+            elif answer.group:
+                assignment.calculate_group_grade(answer.group)
+                course.calculate_group_grade(answer.group)
 
         return marshal(answer, dataformat.get_answer(restrict_user))
 
@@ -437,8 +511,12 @@ class AnswerIdAPI(Resource):
 
         # update course & assignment grade for user if answer was fully submitted
         if not answer.draft:
-            assignment.calculate_grade(answer.user)
-            course.calculate_grade(answer.user)
+            if answer.user:
+                assignment.calculate_grade(answer.user)
+                course.calculate_grade(answer.user)
+            elif answer.group:
+                assignment.calculate_group_grade(answer.group)
+                course.calculate_group_grade(answer.group)
 
         on_answer_delete.send(
             self,
@@ -479,14 +557,25 @@ class AnswerUserIdAPI(Resource):
             .options(joinedload('comments')) \
             .options(joinedload('file')) \
             .options(joinedload('user')) \
+            .options(joinedload('group')) \
             .options(joinedload('score')) \
             .filter_by(
                 active=True,
                 assignment_id=assignment.id,
                 course_id=course.id,
-                user_id=current_user.id,
                 draft=params.get('draft')
             )
+
+        # get group and individual answers for user if applicable
+        group = current_user.get_course_group(course.id)
+        if group:
+            query = query.filter(or_(
+                Answer.user_id == current_user.id,
+                Answer.group_id == group.id
+            ))
+        # get just individual answers for user
+        else:
+            query = query.filter(Answer.user_id == current_user.id)
 
         if params.get('unsaved'):
             query = query.filter(not_(Answer.saved))

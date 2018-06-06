@@ -7,13 +7,15 @@ import factory.fuzzy
 from compair import db
 from six.moves import range
 from compair.models import SystemRole, CourseRole, Course, \
-    Comparison, ThirdPartyType, AnswerCommentType, WinningAnswer
+    Comparison, ThirdPartyType, AnswerCommentType, WinningAnswer, \
+    UserCourse
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, ComparisonCriterionFactory, \
     AnswerCommentFactory, AnswerScoreFactory, AnswerCriterionScoreFactory, \
     ComparisonExampleFactory, AssignmentCriterionFactory, FileFactory, \
     LTIConsumerFactory, LTIContextFactory, LTIResourceLinkFactory, \
-    LTIUserFactory, LTIUserResourceLinkFactory, ThirdPartyUserFactory
+    LTIUserFactory, LTIUserResourceLinkFactory, ThirdPartyUserFactory, \
+    GroupFactory
 from data.fixtures import DefaultFixture
 
 class BasicTestData:
@@ -66,23 +68,47 @@ class BasicTestData:
         self.users.append(user)
         return user
 
-    def enrol_student(self, user, course):
-        self.enrol_user(user, course, CourseRole.student)
+    def enrol_student(self, user, course, group=None):
+        self.enrol_user(user, course, CourseRole.student, group)
 
-    def enrol_instructor(self, user, course):
-        self.enrol_user(user, course, CourseRole.instructor)
+    def enrol_instructor(self, user, course, group=None):
+        self.enrol_user(user, course, CourseRole.instructor, group)
 
-    def enrol_ta(self, user, course):
-        self.enrol_user(user, course, CourseRole.teaching_assistant)
+    def enrol_ta(self, user, course, group=None):
+        self.enrol_user(user, course, CourseRole.teaching_assistant, group)
 
-    def unenrol(self, user, course):
-        self.enrol_user(user, course, CourseRole.dropped)
+    def unenrol(self, user, course, group=None):
+        self.enrol_user(user, course, CourseRole.dropped, group)
 
-    def enrol_user(self, user, course, type):
-        user_courses = UserCourseFactory(course=course, user=user,
-                                            course_role=type)
+    def enrol_user(self, user, course, course_role, group=None):
+        user_courses = UserCourseFactory(
+            course=course,
+            user=user,
+            group=group,
+            course_role=course_role
+        )
         db.session.commit()
         return user_courses
+
+    def create_group(self, course, **kwargs):
+        group = GroupFactory(
+            course=course,
+            **kwargs
+        )
+        db.session.commit()
+        return group
+
+    def change_group(self, course, user, group):
+        user_course = UserCourse.query \
+            .filter_by(
+                course_id=course.id,
+                user_id=user.id
+            ) \
+            .one()
+        user_course.group = group
+        db.session.commit()
+
+        return user_course
 
     def get_authorized_instructor(self):
         return self.authorized_instructor
@@ -276,10 +302,19 @@ class SimpleAssignmentTestData(BasicTestData):
         BasicTestData.__init__(self)
         self.assignments = []
         self.criteria_by_assignments = {}
-        self.assignments.append(self.create_assignment_in_answer_period(self.get_course(), \
-                                                                    self.get_authorized_instructor()))
-        self.assignments.append(self.create_assignment_in_answer_period(self.get_course(), \
-                                                                    self.get_authorized_instructor()))
+        self.assignments.append(self.create_assignment_in_answer_period(
+            self.get_course(), self.get_authorized_instructor()
+        ))
+        self.assignments.append(self.create_assignment_in_comparison_period(
+            self.get_course(), self.get_authorized_instructor()
+        ))
+        self.assignments.append(self.create_assignment_in_answer_period(
+            self.get_course(), self.get_authorized_instructor(), enable_group_answers=True
+        ))
+        self.assignments.append(self.create_assignment_in_comparison_period(
+            self.get_course(), self.get_authorized_instructor(), enable_group_answers=True
+        ))
+
         db.session.commit()
 
     def create_assignment_in_comparison_period(self, course, author, **kwargs):
@@ -314,27 +349,36 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
     def __init__(self, num_answer=2, num_draft_answers=1):
         SimpleAssignmentTestData.__init__(self)
         self.extra_student = []
+        self.groups = []
         for _ in range(num_answer + num_draft_answers):
             student = self.create_normal_user()
             self.extra_student.append(student)
-            self.enrol_student(student, self.get_course())
+            group = self.create_group(self.get_course())
+            self.groups.append(group)
+            self.enrol_student(student, self.get_course(), group)
         self.answers = []
         self.draft_answers = []
-        self.answersByassignment = {}
+        self.answers_by_assignment = {}
         for assignment in self.get_assignments():
             answers_for_assignment = []
             for i in range(num_answer):
-                answer = self.create_answer(assignment, self.extra_student[i])
+                if assignment.enable_group_answers:
+                    answer = self.create_group_answer(assignment, self.groups[i])
+                else:
+                    answer = self.create_answer(assignment, self.extra_student[i])
                 answers_for_assignment.append(answer)
-                self.answersByassignment[assignment.id] = answers_for_assignment
+                self.answers_by_assignment[assignment.id] = answers_for_assignment
             self.answers += answers_for_assignment
 
             # add some draft answers to all assignments. generally these shouldn't be returned by the API
             # except for the answers API in some cases. hence they are stored outside of self.answers
-            # and answersByassignment
+            # and answers_by_assignment
             draft_answers_for_assignment = []
             for i in range(num_draft_answers):
-                answer = self.create_answer(assignment, self.extra_student[num_answer+i], draft=True)
+                if assignment.enable_group_answers:
+                    answer = self.create_group_answer(assignment, self.groups[num_answer+i], draft=True)
+                else:
+                    answer = self.create_answer(assignment, self.extra_student[num_answer+i], draft=True)
                 draft_answers_for_assignment.append(answer)
             self.draft_answers += draft_answers_for_assignment
         db.session.commit()
@@ -343,10 +387,35 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
             assignment.calculate_grades()
         self.get_course().calculate_grades()
 
-    def create_answer(self, assignment, author, draft=False, with_score=True):
+    def create_answer(self, assignment, user, draft=False, with_score=True):
         answer = AnswerFactory(
             assignment=assignment,
-            user=author,
+            user=user,
+            group=None,
+            draft=draft
+        )
+        if with_score:
+            AnswerScoreFactory(
+                assignment=assignment,
+                answer=answer
+            )
+            for criterion in assignment.criteria:
+                AnswerCriterionScoreFactory(
+                    assignment=assignment,
+                    answer=answer,
+                    criterion=criterion
+                )
+        db.session.commit()
+        return answer
+
+    def get_groups(self):
+        return self.groups
+
+    def create_group_answer(self, assignment, group, draft=False, with_score=True):
+        answer = AnswerFactory(
+            assignment=assignment,
+            group=group,
+            user=None,
             draft=draft
         )
         if with_score:
@@ -377,7 +446,7 @@ class SimpleAnswersTestData(SimpleAssignmentTestData):
         return self.answers
 
     def get_answers_by_assignment(self):
-        return self.answersByassignment
+        return self.answers_by_assignment
 
     def get_extra_student(self, index):
         return self.extra_student[index]
@@ -388,13 +457,12 @@ class AnswerCommentsTestData(SimpleAnswersTestData):
         SimpleAnswersTestData.__init__(self)
         self.answer_comments_by_assignment = {}
         for assignment in self.get_assignments():
-            comment_extra_student1 = self.create_answer_comment(self.get_extra_student(0),
-                                                                self.answersByassignment[assignment.id][1])
-            comment_extra_student2 = self.create_answer_comment(self.get_extra_student(1),
-                                                                self.answersByassignment[assignment.id][0])
-            draft_comment_extra_student2 = self.create_answer_comment(self.get_extra_student(1),
-                                                                self.answersByassignment[assignment.id][0],
-                                                                draft=True)
+            comment_extra_student1 = self.create_answer_comment(
+                self.get_extra_student(0), self.answers_by_assignment[assignment.id][1])
+            comment_extra_student2 = self.create_answer_comment(
+                self.get_extra_student(1), self.answers_by_assignment[assignment.id][0])
+            draft_comment_extra_student2 = self.create_answer_comment(
+                self.get_extra_student(1), self.answers_by_assignment[assignment.id][0], draft=True)
             self.answer_comments_by_assignment[assignment.id] = [
                 comment_extra_student1, comment_extra_student2, draft_comment_extra_student2
             ]
@@ -449,15 +517,36 @@ class ComparisonTestData(CriterionTestData):
         self.enrol_student(self.authorized_student_with_no_answers, self.get_course())
         self.student_answers = copy.copy(self.answers)
         self.comparisons_examples = []
+
+        self.authorized_student_group = self.create_group(self.main_course)
+        self.groups.append(self.authorized_student_group)
+        self.change_group(self.main_course, self.authorized_student, self.authorized_student_group)
+
+        self.secondary_authorized_student_group = self.create_group(self.main_course)
+        self.groups.append(self.secondary_authorized_student_group)
+        self.change_group(self.main_course, self.secondary_authorized_student, self.secondary_authorized_student_group)
+
         for assignment in self.get_assignments():
             # make sure we're allowed to compare existing assignments
             self.set_assignment_to_comparison_period(assignment)
-            answer = self.create_answer(assignment, self.secondary_authorized_student)
-            self.answers.append(answer)
-            self.student_answers.append(answer)
-            answer = self.create_answer(assignment, self.get_authorized_student())
-            self.answers.append(answer)
-            self.student_answers.append(answer)
+
+            if assignment.enable_group_answers:
+                answer = self.create_group_answer(assignment, self.secondary_authorized_student_group)
+                self.answers.append(answer)
+                self.student_answers.append(answer)
+
+                answer = self.create_group_answer(assignment, self.authorized_student_group)
+                self.answers.append(answer)
+                self.student_answers.append(answer)
+            else:
+                answer = self.create_answer(assignment, self.secondary_authorized_student)
+                self.answers.append(answer)
+                self.student_answers.append(answer)
+
+                answer = self.create_answer(assignment, self.get_authorized_student())
+                self.answers.append(answer)
+                self.student_answers.append(answer)
+
             # add a TA and Instructor answer - not comparable
             answer = self.create_answer(assignment, self.get_authorized_ta())
             answer.comparable = False
@@ -465,6 +554,7 @@ class ComparisonTestData(CriterionTestData):
             answer = self.create_answer(assignment, self.get_authorized_instructor())
             answer.comparable = False
             self.answers.append(answer)
+
             # add a TA and Instructor answer - comparable
             answer = self.create_answer(assignment, self.get_authorized_ta())
             answer.comparable = True
@@ -472,6 +562,7 @@ class ComparisonTestData(CriterionTestData):
             answer = self.create_answer(assignment, self.get_authorized_instructor())
             answer.comparable = True
             self.answers.append(answer)
+
             # add a comparison example
             answer1 = self.create_answer(assignment, self.get_authorized_ta())
             answer2 = self.create_answer(assignment, self.get_authorized_instructor())
@@ -522,6 +613,7 @@ class ComparisonTestData(CriterionTestData):
 
 class TestFixture:
     def __init__(self):
+        self.root_user = DefaultFixture.ROOT_USER
         self.default_criterion = DefaultFixture.DEFAULT_CRITERION
         self.course = self.assignment = None
         self.instructor = self.ta = None
@@ -539,13 +631,16 @@ class TestFixture:
         self.unauthorized_student = UserFactory(system_role=SystemRole.student)
         self.dropped_instructor = UserFactory(system_role=SystemRole.instructor)
         self.draft_student = None
+        self.draft_group = None
         self.answer_comments = []
         self.comparisons = []
         self.self_evaluations = []
         db.session.commit()
 
-    def add_course(self, num_students=5, num_assignments=1, num_additional_criteria=0, num_groups=0, num_answers='#',
-            with_comments=False, with_draft_student=False, with_comparisons=False, with_self_eval=False, num_non_comparable_ans=1):
+    def add_course(self, num_students=5, num_assignments=1, num_group_assignments=0,
+            num_additional_criteria=0, num_groups=0, num_answers='#', num_group_answers='#',
+            with_comments=False, with_draft_student=False, with_comparisons=False, with_self_eval=False,
+            num_non_comparable_ans=1):
         self.course = CourseFactory()
         self.instructor = UserFactory(system_role=SystemRole.instructor)
         self.enrol_user(self.instructor, self.course, CourseRole.instructor)
@@ -556,67 +651,81 @@ class TestFixture:
 
         self.add_students(num_students, num_groups)
 
-        self.add_assignments(num_assignments, num_additional_criteria=num_additional_criteria, with_self_eval=with_self_eval)
+        if num_assignments:
+            self.add_assignments(
+                num_assignments,
+                num_additional_criteria=num_additional_criteria,
+                with_self_eval=with_self_eval
+            )
+
+        if num_group_assignments:
+            self.add_assignments(
+                num_group_assignments,
+                num_additional_criteria=num_additional_criteria,
+                with_self_eval=with_self_eval,
+                with_group_answers=True
+            )
+
         # create a shortcut for first assignment as it is frequently used
         self.assignment = self.assignments[0]
 
-        self.add_answers(num_answers, with_comments=with_comments)
+        self.add_answers(num_answers, num_group_answers, with_comments=with_comments)
         self.add_non_comparable_answers(num_non_comparable_ans)
 
         if with_comparisons:
             self.add_comparisons(with_comments=with_comments, with_self_eval=with_self_eval)
 
         if with_draft_student:
-            self.add_students(1)
-            self.draft_student = self.students[-1]
-            self.add_draft_answers([self.draft_student])
+            self.draft_student = UserFactory(system_role=SystemRole.student)
+            db.session.add(self.draft_student)
+            db.session.commit()
+            self.draft_group = self.add_group(self.course)
+            self.students.append(self.draft_student)
+            self.enrol_user(self.draft_student, self.course, CourseRole.student, self.draft_group)
+            for assignment in self.assignments:
+                answer = AnswerFactory(
+                    assignment=assignment,
+                    draft=True
+                )
+                if assignment.enable_group_answers:
+                    answer.group = self.draft_group
+                    answer.user = None
+                else:
+                    answer.user = self.draft_student
+                    answer.group = None
+                self.draft_answers.append(answer)
+            db.session.add_all(self.draft_answers)
+            db.session.commit()
 
-        for assignment in self.course.assignments:
+        for assignment in self.assignments:
             assignment.calculate_grades()
         self.course.calculate_grades()
 
         return self
 
-    def add_answers(self, num_answers, with_scores=True, with_comments=False):
+    def add_answers(self, num_answers='#', num_group_answers='#', with_scores=True, with_comments=False):
         if num_answers == '#':
-            num_answers = len(self.students) * len(self.assignments)
-        if len(self.students) * len(self.assignments) < num_answers:
-            raise ValueError(
-                "Number of answers({}) must be equal or smaller than number of students({}) "
-                "multiple by number of assignments({})".format(num_answers, len(self.students), len(self.assignments))
-            )
+            num_answers = len(self.students)
+        if num_group_answers == '#':
+            num_group_answers = len(self.groups)
+
         for assignment in self.assignments:
-            # add a scored removed answer for every student
-            # make sure system handles this properly
-            for student in self.students:
-                answer = AnswerFactory(
-                    assignment=assignment,
-                    user=student,
-                    active=False
-                )
-                AnswerScoreFactory(
-                    assignment=assignment,
-                    answer=answer,
-                    score=random.random() * 5
-                )
-                for criterion in assignment.criteria:
-                    AnswerCriterionScoreFactory(
+            if not assignment.active:
+                continue
+
+            if assignment.enable_group_answers:
+                # add a scored removed answer for every group
+                # make sure system handles this properly
+                for group in self.groups:
+                    if not group.active:
+                        continue
+
+                    answer = AnswerFactory(
                         assignment=assignment,
-                        answer=answer,
-                        criterion=criterion,
-                        score=random.random() * 5
+                        group=group,
+                        user=None,
+                        active=False
                     )
-                self.removed_answers.append(answer)
-
-            for i in range(num_answers):
-                student = self.students[i % len(self.students)]
-                answer = AnswerFactory(
-                    assignment=assignment,
-                    user=student
-                )
-                # half of the answers have scores if with_scores is enabled
-                if with_scores and i < num_answers/2:
-
                     AnswerScoreFactory(
                         assignment=assignment,
                         answer=answer,
@@ -629,38 +738,144 @@ class TestFixture:
                             criterion=criterion,
                             score=random.random() * 5
                         )
+                    self.removed_answers.append(answer)
 
-                if with_comments:
-                    other_students = [s for s in self.students if s.id != student.id]
-                    # half of the answers has a public comment
-                    if i < num_answers/2:
-                        random.shuffle(other_students)
-                        answer_comment = AnswerCommentFactory(
-                            user=other_students[0],
+                for i in range(num_group_answers):
+                    group = self.groups[i % len(self.groups)]
+                    answer = AnswerFactory(
+                        assignment=assignment,
+                        group=group,
+                        user=None,
+                    )
+                    # half of the answers have scores if with_scores is enabled
+                    if with_scores and i < num_group_answers/2:
+                        AnswerScoreFactory(
+                            assignment=assignment,
                             answer=answer,
-                            comment_type=AnswerCommentType.public
+                            score=random.random() * 5
                         )
-                        self.answer_comments.append(answer_comment)
+                        for criterion in assignment.criteria:
+                            AnswerCriterionScoreFactory(
+                                assignment=assignment,
+                                answer=answer,
+                                criterion=criterion,
+                                score=random.random() * 5
+                            )
 
-                    # half of the answers has a private comment
-                    # (middle half so there is partial overlap with public comments)
-                    if num_answers/4 < i and i < (num_answers * 3)/4:
-                        random.shuffle(other_students)
-                        answer_comment = AnswerCommentFactory(
-                            user=other_students[0],
+                    if with_comments:
+                        user_courses = UserCourse.query \
+                            .filter_by(course_id=assignment.course_id, group_id=group.id) \
+                            .all()
+                        group_user_ids = [user_course.user_id for user_course in user_courses]
+                        other_group_students = [s for s in self.students if not s.id in group_user_ids]
+                        # half of the answers have a public comment
+                        if i < num_group_answers/2:
+                            random.shuffle(other_group_students)
+                            answer_comment = AnswerCommentFactory(
+                                user=other_group_students[0],
+                                answer=answer,
+                                comment_type=AnswerCommentType.public
+                            )
+                            self.answer_comments.append(answer_comment)
+
+                        # half of the answers have a private comment
+                        # (middle half so there is partial overlap with public comments)
+                        if num_group_answers/4 < i and i < (num_group_answers * 3)/4:
+                            random.shuffle(other_group_students)
+                            answer_comment = AnswerCommentFactory(
+                                user=other_group_students[0],
+                                answer=answer,
+                                comment_type=AnswerCommentType.private
+                            )
+                            self.answer_comments.append(answer_comment)
+
+                    self.answers.append(answer)
+
+                for dropped_student in self.dropped_students:
+                    answer = AnswerFactory(
+                        assignment=assignment,
+                        user=dropped_student,
+                        group=None,
+                    )
+                    self.dropped_answers.append(answer)
+            else:
+                # add a scored removed answer for every student
+                # make sure system handles this properly
+                for student in self.students:
+                    answer = AnswerFactory(
+                        assignment=assignment,
+                        user=student,
+                        group=None,
+                        active=False,
+                    )
+                    AnswerScoreFactory(
+                        assignment=assignment,
+                        answer=answer,
+                        score=random.random() * 5
+                    )
+                    for criterion in assignment.criteria:
+                        AnswerCriterionScoreFactory(
+                            assignment=assignment,
                             answer=answer,
-                            comment_type=AnswerCommentType.private
+                            criterion=criterion,
+                            score=random.random() * 5
                         )
-                        self.answer_comments.append(answer_comment)
+                    self.removed_answers.append(answer)
 
-                self.answers.append(answer)
+                for i in range(num_answers):
+                    student = self.students[i % len(self.students)]
+                    answer = AnswerFactory(
+                        assignment=assignment,
+                        user=student,
+                        group=None
+                    )
+                    # half of the answers have scores if with_scores is enabled
+                    if with_scores and i < num_answers/2:
+                        AnswerScoreFactory(
+                            assignment=assignment,
+                            answer=answer,
+                            score=random.random() * 5
+                        )
+                        for criterion in assignment.criteria:
+                            AnswerCriterionScoreFactory(
+                                assignment=assignment,
+                                answer=answer,
+                                criterion=criterion,
+                                score=random.random() * 5
+                            )
 
-            for dropped_student in self.dropped_students:
-                answer = AnswerFactory(
-                    assignment=assignment,
-                    user=dropped_student
-                )
-                self.dropped_answers.append(answer)
+                    if with_comments:
+                        other_students = [s for s in self.students if s.id != student.id]
+                        # half of the answers has a public comment
+                        if i < num_answers/2:
+                            random.shuffle(other_students)
+                            answer_comment = AnswerCommentFactory(
+                                user=other_students[0],
+                                answer=answer,
+                                comment_type=AnswerCommentType.public
+                            )
+                            self.answer_comments.append(answer_comment)
+
+                        # half of the answers has a private comment
+                        # (middle half so there is partial overlap with public comments)
+                        if num_answers/4 < i and i < (num_answers * 3)/4:
+                            random.shuffle(other_students)
+                            answer_comment = AnswerCommentFactory(
+                                user=other_students[0],
+                                answer=answer,
+                                comment_type=AnswerCommentType.private
+                            )
+                            self.answer_comments.append(answer_comment)
+
+                    self.answers.append(answer)
+
+                for dropped_student in self.dropped_students:
+                    answer = AnswerFactory(
+                        assignment=assignment,
+                        user=dropped_student,
+                        group=None
+                    )
+                    self.dropped_answers.append(answer)
 
         db.session.commit()
 
@@ -672,6 +887,7 @@ class TestFixture:
                 answer = AnswerFactory(
                     assignment=assignment,
                     user=self.instructor,
+                    group=None,
                     comparable=False)
                 self.answers.append(answer)
                 self.non_comparable_answers.append(answer)
@@ -724,33 +940,36 @@ class TestFixture:
         answer = AnswerFactory(
             assignment=assignment,
             user=user,
+            group=None,
             draft=draft
         )
         db.session.commit()
         self.answers.append(answer)
         return self
 
-    def add_draft_answers(self, students):
-        for student in students:
-            for assignment in self.assignments:
-                answer = AnswerFactory(
-                    assignment=assignment,
-                    user=student,
-                    draft=True
-                )
-                db.session.commit()
-                self.draft_answers.append(answer)
-
+    def add_group_answer(self, assignment, group, draft=False):
+        answer = AnswerFactory(
+            assignment=assignment,
+            group=group,
+            user=None,
+            draft=draft
+        )
+        db.session.commit()
+        self.answers.append(answer)
         return self
 
-    def add_assignments(self, num_assignments=1, num_additional_criteria=0, is_answer_period_end=False, with_self_eval=False):
+    def add_assignments(self, num_assignments=1, num_group_assignments=0, num_additional_criteria=0,
+                        is_answer_period_end=False,  with_self_eval=False, with_group_answers=False):
         for _ in range(num_assignments):
             answer_end = datetime.datetime.now() - datetime.timedelta(
                 days=2) if is_answer_period_end else datetime.datetime.now() + datetime.timedelta(days=7)
             assignment = AssignmentFactory(course=self.course, answer_end=answer_end)
 
             if with_self_eval:
-                assignment.self_evaluation_enabled = True
+                assignment.enable_self_evaluation = True
+
+            if with_group_answers:
+                assignment.enable_group_answers = True
 
             # default criterion
             AssignmentCriterionFactory(criterion=DefaultFixture.DEFAULT_CRITERION, assignment=assignment, position=0)
@@ -797,30 +1016,61 @@ class TestFixture:
         if num_groups > 0:
             student_per_group = int(len(self.students) / num_groups) if num_groups is not 0 else 0
             for idx in range(num_groups):
-                group_name = "Group" + str(idx)
-                self.groups.append(group_name)
+                group = self.add_group(self.course)
                 # slice student list and enroll them into groups
-                group_students = self.students[idx * student_per_group:min((idx + 1) * student_per_group, len(self.students))]
+                group_students = students[idx * student_per_group:min((idx + 1) * student_per_group, len(students))]
                 for student in group_students:
-                    self.enrol_user(student, self.course, CourseRole.student, group_name)
+                    self.enrol_user(student, self.course, CourseRole.student, group)
         else:
             for student in students:
                 self.enrol_user(student, self.course, CourseRole.student)
 
         # add dropped student in group
         dropped_student = UserFactory(system_role=SystemRole.student)
-        self.enrol_user(dropped_student, self.course, CourseRole.dropped, "Group Dropped")
+        dropped_group = self.add_group(self.course)
+        self.enrol_user(dropped_student, self.course, CourseRole.dropped, dropped_group)
         self.dropped_students.append(dropped_student)
 
         return self
 
-    def enrol_user(self, user, course, type, group_name=None):
-        user_courses = UserCourseFactory(course=course, user=user,
-                                            course_role=type, group_name=group_name)
+    def enrol_user(self, user, course, course_role, group=None):
+        user_course = UserCourseFactory(
+            course=course, user=user,
+            course_role=course_role, group=group)
         db.session.commit()
-        return user_courses
+        return user_course
+
+    def change_user_group(self, course, user, group):
+        user_course = UserCourse.query \
+            .filter_by(
+                course_id=course.id,
+                user_id=user.id
+            ) \
+            .one()
+        user_course.group = group
+        db.session.commit()
+
+        return user_course
 
     def add_file(self, user, **kwargs):
         db_file = FileFactory(user=user, **kwargs)
         db.session.commit()
         return db_file
+
+    def add_group(self, course, **kwargs):
+        group = GroupFactory(course=course, **kwargs)
+        self.groups.append(group)
+        db.session.commit()
+        return group
+
+    def _get_assignment_group_member_answers(self, assignment, group):
+        user_ids = [uc.user_id for uc in group.user_courses if uc.course_role != CourseRole.dropped]
+        return [a for a in self.answers if a.user_id in user_ids and a.assignment_id == assignment.id and a.active]
+
+    def _get_assignment_group_answers(self, assignment, group):
+        return [a for a in self.answers if a.group_id == group.id and a.assignment_id == assignment.id and a.active]
+
+    def get_assignment_answers_for_group(self, assignment, group):
+        return self._get_assignment_group_answers(assignment, group) + \
+            self._get_assignment_group_member_answers(assignment, group)
+

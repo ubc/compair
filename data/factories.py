@@ -12,7 +12,7 @@ from compair.models import Course, User, CourseRole, SystemRole, Criterion, File
     Answer, AnswerComment, Comparison, ComparisonCriterion, \
     AnswerCommentType, ComparisonExample, EmailNotificationMethod, \
     LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \
-    ThirdPartyUser, ThirdPartyType, PairingAlgorithm
+    ThirdPartyUser, ThirdPartyType, PairingAlgorithm, Group
 
 # suppress factory_boy debug logging (spits out a lot of text)
 # comment out/set log level to debug to see the messages
@@ -54,8 +54,7 @@ class UserCourseFactory(factory.alchemy.SQLAlchemyModelFactory):
     course = factory.SubFactory(CourseFactory)
     user = factory.SubFactory(UserFactory)
     course_role = CourseRole.instructor
-    group_name = None
-
+    #group = None
 
 class CriterionFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
@@ -102,7 +101,8 @@ class AnswerFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session = db.session
 
     assignment = factory.SubFactory(AssignmentFactory)
-    user = factory.SubFactory(UserFactory)
+    #user = factory.SubFactory(UserFactory)
+    #group = factory.SubFactory(GroupFactory)
     content = factory.Sequence(lambda n: 'this is some content for post ü %d' % n)
     draft = False
     # Make sure created dates are unique.
@@ -185,6 +185,15 @@ class FileFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     alias = factory.Sequence(lambda n: 'file ü %d' % n)
     name = factory.Sequence(lambda n: 'file_%d.pdf' % n)
+
+class GroupFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Group
+        sqlalchemy_session = db.session
+
+    course = factory.SubFactory(CourseFactory)
+
+    name = factory.Sequence(lambda n: 'Group ü %d' % n)
 
 class LTIConsumerFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:

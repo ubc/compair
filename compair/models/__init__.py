@@ -20,6 +20,7 @@ from .course_grade import CourseGrade
 from .course import Course
 from .criterion import Criterion
 from .file import File
+from .group import Group
 from .answer_score import AnswerScore
 from .answer_criterion_score import AnswerCriterionScore
 from .user import User

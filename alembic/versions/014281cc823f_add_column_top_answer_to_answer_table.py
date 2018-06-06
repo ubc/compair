@@ -17,7 +17,7 @@ from compair.models import convention
 
 def upgrade():
     with op.batch_alter_table('answer', naming_convention=convention) as batch_op:
-        batch_op.add_column(sa.Column('top_answer', sa.Boolean(), default='0', server_default='0', nullable=False))
+        batch_op.add_column(sa.Column('top_answer', sa.Boolean(), default=False, server_default='0', nullable=False))
     op.create_index(op.f('ix_answer_top_answer'), 'answer', ['top_answer'], unique=False)
 
 def downgrade():

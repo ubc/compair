@@ -30,6 +30,7 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
             if(cache) {
                 var url = response.config.url.match(/\/api\/courses\/[A-Za-z0-9_-]{22}/g);
                 cache.remove(url[0] + '/groups');
+                cache.remove(url[0] + '/groups/user');
             }
             return response.data;
         }
@@ -60,25 +61,6 @@ module.service('Interceptors', ['$q', '$cacheFactory', 'AnswerResource', functio
                 var courseId = response.config.url.match(/[A-Za-z0-9_-]{22}/g)[0];
                 cache.remove('/api/courses/' + courseId);
             }
-            return response.data;
-        }
-    };
-
-    this.groupSessionInterceptor = {
-        response: function(response) {
-            // store all course group names until javascript memory wiped (page refreshed,closed,etc)
-            // helps in case instructors make mistakes while editing groups on class list screen
-            var courseId = response.config.url.match(/[A-Za-z0-9_-]{22}/g)[0];
-            if (temporaryGroupStore[courseId] == undefined) {
-                temporaryGroupStore[courseId] = [];
-            }
-            temporaryGroupStore[courseId] = _.sortBy(
-                _.union(temporaryGroupStore[courseId], response.data.objects),
-                function(value) { return value; }
-            );
-
-            response.data.objects = temporaryGroupStore[courseId];
-
             return response.data;
         }
     };

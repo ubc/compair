@@ -136,12 +136,12 @@ myApp.factory('ResolveDeferredRouteData',
 myApp.factory('RouteResolves',
     ["$q", "$route", "Toaster", "Authorize", "Session", "LTI",
      "CourseResource", "AssignmentResource", "ClassListResource", "GroupResource",
-     "UserResource", "ComparisonExampleResource", "CriterionResource",
+     "UserResource", "ComparisonExampleResource", "CriterionResource", "GroupUserResource",
      "AnswerResource", "TimerResource", "GradebookResource", "LTIConsumerResource",
      "UserLTIUsersResource", "UserThirdPartyUsersResource", "AuthTypesEnabled",
     function($q, $route, Toaster, Authorize, Session, LTI,
              CourseResource, AssignmentResource, ClassListResource, GroupResource,
-             UserResource, ComparisonExampleResource, CriterionResource,
+             UserResource, ComparisonExampleResource, CriterionResource, GroupUserResource,
              AnswerResource, TimerResource, GradebookResource, LTIConsumerResource,
              UserLTIUsersResource, UserThirdPartyUsersResource, AuthTypesEnabled)
 {
@@ -204,7 +204,11 @@ myApp.factory('RouteResolves',
         },
         groups: function() {
             var courseId = $route.current.params.courseId;
-            return GroupResource.getAllFromSession({'courseId': courseId}).$promise;
+            return GroupResource.get({'courseId': courseId}).$promise;
+        },
+        currentUserGroup: function() {
+            var courseId = $route.current.params.courseId;
+            return GroupUserResource.getCurrentUserGroup({'courseId': courseId}).$promise;
         },
         students: function() {
             var courseId = $route.current.params.courseId;
@@ -444,6 +448,7 @@ myApp.config(
                         return ResolveDeferredRouteData({
                             course: RouteResolves.course(),
                             criteria: RouteResolves.criteria(),
+                            groups: RouteResolves.groups(),
                             loggedInUser: RouteResolves.loggedInUser(),
                             canManageAssignment: RouteResolves.canManageAssignment(),
                         }, ['course', 'criteria']);
@@ -463,9 +468,10 @@ myApp.config(
                             assignment: RouteResolves.assignment(),
                             students: RouteResolves.students(),
                             instructors: RouteResolves.instructors(),
+                            currentUserGroup: RouteResolves.currentUserGroup(),
                             loggedInUser: RouteResolves.loggedInUser(),
                             canManageAssignment: RouteResolves.canManageAssignment(),
-                        }, ['course', 'assignment', 'students', 'instructors']);
+                        }, ['course', 'assignment', 'students', 'instructors', 'currentUserGroup']);
                     }
                 },
                 reloadOnSearch: false,
@@ -483,9 +489,10 @@ myApp.config(
                             assignment: RouteResolves.assignment(),
                             assignmentComparisonExamples: RouteResolves.assignmentComparisonExamples(),
                             criteria: RouteResolves.criteria(),
+                            groups: RouteResolves.groups(),
                             loggedInUser: RouteResolves.loggedInUser(),
                             canManageAssignment: RouteResolves.canManageAssignment(),
-                        }, ['course', 'assignment', 'assignmentComparisonExamples', 'criteria']);
+                        }, ['course', 'assignment', 'assignmentComparisonExamples', 'criteria', 'groups']);
                     }
                 }
             })
@@ -503,6 +510,7 @@ myApp.config(
                             assignment: RouteResolves.assignment(),
                             assignmentComparisonExamples: RouteResolves.assignmentComparisonExamples(),
                             criteria: RouteResolves.criteria(),
+                            groups: RouteResolves.groups(),
                             loggedInUser: RouteResolves.loggedInUser(),
                             canManageAssignment: RouteResolves.canManageAssignment(),
                         }, ['course', 'assignment', 'assignmentComparisonExamples', 'criteria']);

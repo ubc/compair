@@ -332,6 +332,7 @@ describe('user-module', function () {
             it('should handle pre-loading errors', function() {
                 $httpBackend.expectGET('/api/courses/'+mockCourseId).respond(404, '');
                 $httpBackend.expectGET('/api/criteria').respond({});
+                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/groups').respond({});
                 $httpBackend.expectGET('modules/assignment/assignment-form-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();
@@ -352,6 +353,7 @@ describe('user-module', function () {
             it('should load correctly', function() {
                 $httpBackend.expectGET('/api/courses/'+mockCourseId).respond({});
                 $httpBackend.expectGET('/api/criteria').respond({});
+                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/groups').respond({});
                 $httpBackend.expectGET('modules/assignment/assignment-form-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();
@@ -377,6 +379,7 @@ describe('user-module', function () {
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId).respond({});
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/users/students').respond({});
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/users/instructors').respond({});
+                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/groups/user').respond({});
                 $httpBackend.expectGET('modules/assignment/assignment-view-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();
@@ -399,6 +402,7 @@ describe('user-module', function () {
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId).respond({});
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/users/students').respond({});
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/users/instructors').respond({});
+                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/groups/user').respond({});
                 $httpBackend.expectGET('modules/assignment/assignment-view-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();
@@ -424,6 +428,7 @@ describe('user-module', function () {
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId).respond({});
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId+'/comparisons/examples').respond({});
                 $httpBackend.expectGET('/api/criteria').respond({});
+                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/groups').respond({});
                 $httpBackend.expectGET('modules/assignment/assignment-form-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();
@@ -446,6 +451,7 @@ describe('user-module', function () {
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId).respond({});
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId+'/comparisons/examples').respond({});
                 $httpBackend.expectGET('/api/criteria').respond({});
+                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/groups').respond({});
                 $httpBackend.expectGET('modules/assignment/assignment-form-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();
@@ -471,6 +477,7 @@ describe('user-module', function () {
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId).respond({});
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId+'/comparisons/examples').respond({});
                 $httpBackend.expectGET('/api/criteria').respond({});
+                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/groups').respond({});
                 $httpBackend.expectGET('modules/assignment/assignment-form-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();
@@ -494,6 +501,7 @@ describe('user-module', function () {
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId).respond({});
                 $httpBackend.expectGET('/api/courses/'+mockCourseId+'/assignments/'+mockAssignmentId+'/comparisons/examples').respond({});
                 $httpBackend.expectGET('/api/criteria').respond({});
+                $httpBackend.expectGET('/api/courses/'+mockCourseId+'/groups').respond({});
                 $httpBackend.expectGET('modules/assignment/assignment-form-partial.html').respond('');
 
                 expect($route.current).toBeUndefined();

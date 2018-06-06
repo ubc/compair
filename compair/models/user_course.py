@@ -16,16 +16,18 @@ class UserCourse(DefaultTableMixin, WriteTrackingMixin):
     # table columns
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"),
         nullable=False)
-    course_id = db.Column(db.Integer,  db.ForeignKey("course.id", ondelete="CASCADE"),
+    course_id = db.Column(db.Integer, db.ForeignKey("course.id", ondelete="CASCADE"),
         nullable=False)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id', ondelete="SET NULL"),
+        nullable=True)
     course_role = db.Column(EnumType(CourseRole),
         nullable=False, index=True)
-    group_name = db.Column(db.String(255), nullable=True, index=True)
 
     # relationships
     # user many-to-many course with association user_course
     user = db.relationship("User", foreign_keys=[user_id], back_populates="user_courses")
     course = db.relationship("Course", back_populates="user_courses")
+    group = db.relationship("Group", back_populates="user_courses")
 
     # hybrid and other functions
     user_uuid = association_proxy('user', 'uuid')
