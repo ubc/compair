@@ -338,8 +338,8 @@ def saml_single_logout():
         current_app.logger.debug("Error when processing Single Loggout: %s" % (', '.join(errors)))
     else:
         current_app.logger.debug("SAML Single Loggout Sucessfull")
-        if url != None:
-            return redirect(url)
+
+    return redirect(url) if url != None else redirect('/')
 
 def _saml_single_signout_callback():
     if current_user:

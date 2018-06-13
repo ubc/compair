@@ -132,6 +132,7 @@
             },
 
             destroy: function() {
+                var isImpersonating = session_exports.isImpersonating();
                 // delete properties in user but keep user object
                 for (var prop in this._user) {
                     delete this._user[prop];
@@ -139,7 +140,9 @@
                 this._permissions = null;
                 this._impersonation = null;
                 localStorageService.remove('user', 'permissions', 'lti_status', 'impersonation');
-                $rootScope.$broadcast(IMPERSONATE_END_EVENT);
+                if (isImpersonating) {
+                    $rootScope.$broadcast(IMPERSONATE_END_EVENT);
+                }
             },
             refresh: function(use_cache) {
                 use_cache = typeof use_cache !== 'undefined' ? use_cache : true;

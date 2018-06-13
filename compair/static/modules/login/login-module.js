@@ -238,16 +238,17 @@ module.controller(
 
 module.controller(
     "LogoutController",
-    [ "$scope", "$location", "$log", "$route", "LoginResource", "AuthenticationService", "Toaster",
-    function LogoutController($scope, $location, $log, $route, LoginResource, AuthenticationService, Toaster) {
+    [ "$scope", "$location", "$log", "$route", "LoginResource", "AuthenticationService", "Session",
+    function LogoutController($scope, $location, $log, $route, LoginResource, AuthenticationService, Session) {
         $scope.logout = function() {
             return LoginResource.logout().$promise.then(
                 function(data) {
                     $log.debug("Logging out user successful.");
-                    AuthenticationService.logout();
                     if ("redirect" in data) {
+                        Session.destroy();
                         window.location = data.redirect;
                     } else {
+                        AuthenticationService.logout();
                         $location.path("/"); //redirect user to home screen
                         $route.reload();
                     }
