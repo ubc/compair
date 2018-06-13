@@ -1,0 +1,142 @@
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang=""> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>FAQ | ComPAIR Learning Application</title>
+        <meta name="description" content="Explore frequently asked questions about UBC's ComPAIR learning application from instructor, student, and technical perspectives.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="index, follow" />
+
+        <link rel="icon" type="image/png" href="img/green-favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="img/green-favicon-16x16.png" sizes="16x16" />
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="css/custom.css">
+
+        <script src="js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+        <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                  </button>
+                  <a class="navbar-brand" href="index.html"><img src="img/compair-logo-small.png" alt="ComPAIR Home"></a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                  <ul class="nav navbar-nav navbar-right">
+                      <li><a href="index.html">Home</a></li>
+                      <li><a href="workflow.html">Workflow</a></li>
+                      <li><a href="examples.html">Examples</a></li>
+                      <li><a href="best-practices.html">Best Practices</a></li>
+                      <li class="active"><a href="faq.html">FAQ</a></li>
+                      <li><a href="get-started.html">Get Started</a></li>
+                  </ul>
+                </div>
+              </div>
+        </nav>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <h1 class="main-heading">Frequently Asked Questions <img src="img/compair-logo-scale.png" alt="ComPAIR Home" class="pull-right"></h1>
+
+                    <p>ComPAIR is a flexible learning application that may be used in a variety of ways across disciplines to encourage richer peer feedback and deeper critical thinking. Based on its use so far, here are common questions (with answers) from instructors, students, and support staff.</p>
+
+                    <h3 class="text-center highlight-heading">To answer the #1 question: YES! ComPAIR is <span class="green-text">open source</span>, meaning the code is available for anyone to use <span class="green-text">free of charge</span></h3>
+
+                    <h2>Instructor questions</h2>
+                    <dl>
+                        <dt>How do I make assignments anonymous?</dt>
+                        <dd>ComPAIR by default encourages anonymity by providing students with anonymous display names when they register. Additionally, comparisons never show any identifying information (including display names). You can reinforce anonymity by reminding students <em>not</em> to put identifying information in their display names or in their answer submissions (especially if these are file uploads).</dd>
+                        <dt>How do I enable scoring in ComPAIR? / Why don't I see scores for answers in ComPAIR?</dt>
+                        <dd>To enable the tracking of answer scores, you must choose the "Adaptive" answer pair selection option (the default) in the "Comparison Settings" when creating or editing an assignment. Note that this cannot be changed once comparing has begun.</dd>
+                        </dl>
+                        <dl>
+                        <dt>Can I use scores for expedited / crowd-sourced grading of answers?</dt>
+                        <dd>Instructors have chosen to use ComPAIR's scoring/ranking of answers for grading, primarily by chunking the answers into rough top, middle, and bottom groups and assigning a grade to each. However, we caution against relying on ComPAIR scores for grading without any additional validation. The algorithm behind the scores has not yet been thoroughly vetted for this purpose and ultimately relies on the skills and training of novice users (students) to provide accurate, well-informed rankings of their peers.</dd>
+                    </dl>
+
+                    <h2>Student questions</h2>
+                    <dl>
+                        <dt>Why can't I log in?</dt>
+                        <dd>First, confirm your registration in the course using ComPAIR. For UBC students, see if you have access to the course in Canvas; if you can't access the course in Canvas, contact <a href="https://it.ubc.ca/got-question-about-it-products-and-support#helpdesk" target="_blank">UBC IT support</a>. Second, if your course uses an external site (like Canvas), make sure you enter the application initially by clicking the ComPAIR link from that external site. This activates your ComPAIR account for the course.</dd>
+                        <dt>Why can't I answer / compare / self-evaluate?</dt>
+                        <dd>Each phase of a ComPAIR assignment may have a set start and end date. If you missed the period to answer, compare, or self-evaluate, you will be unable to complete that phase, although instructors may agree to upload an answer on your behalf. Additionally, if you missed answering, you will be unable to self-evaluate, since ComPAIR will think you have nothing to evaluate.</dd>
+                        <dt>Where can I find my peer feedback?</dt>
+                        <dd>Once you click into any assignment, you should see a tab called "Your Answer + Its Feedback". Peer feedback will appear underneath your answer, with private feedback visible only to you (and the instructors/TAs) and public feedback visible to everyone. If you don't see much (or any) feedback, your answer was likely submitted later and couldn't be included in many (or any) comparisons for feedback.</dd>
+                    </dl>
+
+                    <h2>Technical questions</h2>
+                    <dl>
+                        <dt>How do I get ComPAIR working at my school/university?</dt>
+                        <dd>ComPAIR is a self-hosted application, meaning it does not run from one central location for everyone; the code needs to be downloaded and installed locally. Technical support staff should first look at our <a href="get-started.html">get started documentation</a> for installation options.</dd>
+                        <dt>Can you help with setup at my school/university?</dt>
+                        <dd>If you have specific questions about setup not answered in our documentation or <a href="https://github.com/ubc/compair/blob/master/README.md" target="_blank">Github README <i class="glyphicon glyphicon-new-window"></i></a>, please post them on our <a href="https://groups.google.com/forum/#!forum/compair" target="_blank">ComPAIR Google group <i class="glyphicon glyphicon-new-window"></i></a>, which is actively monitored by the UBC ComPAIR team and community.</dd>
+                        <dt>Where is the student data stored?</dt>
+                        <dd>At UBC, the ComPAIR student data is stored on servers located on campus, making this application FIPPA-compliant. If you're external to UBC, please contact technical support staff for information about your local storage situation.</dd>
+                        <dt>What browsers does this application support?</dt>
+                        <dd>Supported browsers include Firefox, Chrome, Safari, and IE9+.</dd>
+                    </dl>
+                    <p class="text-center"><a href="https://compairdemo.ctlt.ubc.ca" target="_blank" class="btn btn-success btn-lg" role="button">Try the demo <i class="glyphicon glyphicon-new-window"></i></a> &nbsp; <a href="https://github.com/ubc/compair" target="_blank" class="btn btn-success btn-lg" role="button">Download our code <i class="glyphicon glyphicon-new-window"></i></a></p>
+                </div>
+                <div class="col-md-4">
+                    <div class="fixed-position">
+                        <h2 class="intro-list-heading">Get to know ComPAIR</h2>
+                        <ul class="intro-list">
+                            <li><span>Understand the <a href="workflow.html">assignment workflow</a> in the application from instructor and student perspectives.</span></li>
+                            <li><span>Read about <a href="examples.html">real-life examples &raquo;</a> from English, Physics, and Math courses at the University of British Columbia.</span></li>
+                            <li><span>Learn about the recommended <a href="best-practices.html">best practices &raquo;</a> based on experience and research so far.</span></li>
+                            <li class="side-selected"><i class="glyphicon glyphicon-menu-right pull-left"></i> <span>Explore <strong>frequently asked questions</strong> from instructor, student, and technical perspectives.</span></li>
+                            <li><span>Get started with <a href="get-started.html">basic documentation &raquo;</a> for using ComPAIR as a standalone application or as an integration.</span></li>
+                            <li><a href="https://compairdemo.ctlt.ubc.ca" target="_blank" class="btn btn-primary">Try Demo <i class="glyphicon glyphicon-new-window"></i></a> &nbsp; <a href="https://github.com/ubc/compair" target="_blank" class="btn btn-primary">Download Code <i class="glyphicon glyphicon-new-window"></i></a></li>
+                        </ul>
+                        <h3>Additional resources</h3>
+                        <ul>
+                            <li><a href="http://tlijournal.com/tli/index.php/TLI/article/view/156/191" target="_blank">ComPAIR Article - <em>Teaching &amp; Learning Inquiry</em> - September 2017 <i class="glyphicon glyphicon-new-window"></i></a></li>
+                            <li><a href="https://docs.google.com/presentation/d/1zmRi7n-i83AcSpuLeL-s7kUET52F4kczew577OtTeng/edit?usp=sharing" target="_blank">ComPAIR Presentation Slides - BCNet Conference 2017 <i class="glyphicon glyphicon-new-window"></i></a></li>
+                            <li><a href="https://isit.arts.ubc.ca/compair/" target="_blank">ComPAIR Overview - UBC Arts Instructional Support and Information Technology <i class="glyphicon glyphicon-new-window"></i></a></li>
+                            <li><a href="http://www.tandfonline.com/doi/full/10.1080/0969594X.2012.665354?scroll=top&needAccess=true#aHR0cDovL3d3dy50YW5kZm9ubGluZS5jb20vZG9pL3BkZi8xMC4xMDgwLzA5Njk1OTRYLjIwMTIuNjY1MzU0P25lZWRBY2Nlc3M9dHJ1ZUBAQDA=" target="_blank">Related Article - "The method of Adaptive Comparative Judgement" (Pollitt, 2012) <i class="glyphicon glyphicon-new-window"></i></a></li>
+                        </ul>
+                    </div>
+               </div>
+            </div>
+
+            <hr>
+
+            <footer>
+                <p>&copy; University of British Columbia | <a href="http://ctlt.ubc.ca/" target="_blank">Centre for Teaching, Learning and Technology <i class="glyphicon glyphicon-new-window"></i></a></p>
+            </footer>
+
+        </div> <!-- /container -->
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.min.js"><\/script>')</script>
+
+        <script src="js/vendor/bootstrap.min.js"></script>
+
+        <script src="js/main.js"></script>
+
+        <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+        <script>
+            (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+            function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+            e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+            e.src='//www.google-analytics.com/analytics.js';
+            r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+            ga('create','UA-XXXXX-X','auto');ga('send','pageview');
+        </script>
+    </body>
+</html>

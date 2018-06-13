@@ -14,6 +14,12 @@
             h3 {
                 line-height: 1.4em;
             }
+            dt {
+                font-size: 1.1em;
+            }
+            dd {
+                margin-bottom: 1.4em;
+            }
             img {
                 max-width: 100%;
             }

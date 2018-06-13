@@ -6,7 +6,7 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <title>Documentation | ComPAIR Learning Application</title>
+        <title>Get Started | ComPAIR Learning Application</title>
         <meta name="description" content="Get started with basic documentation for using UBC's ComPAIR learning application as a standalone tool or as an integration.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="index, follow" />
@@ -41,7 +41,8 @@
                       <li><a href="workflow.html">Workflow</a></li>
                       <li><a href="examples.html">Examples</a></li>
                       <li><a href="best-practices.html">Best Practices</a></li>
-                      <li class="active"><a href="documentation.html">Documentation</a></li>
+                      <li><a href="faq.html">FAQ</a></li>
+                      <li class="active"><a href="get-started.html">Get Started</a></li>
                   </ul>
                 </div>
               </div>
@@ -50,59 +51,52 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-8">
-                    <h1 class="main-heading">Documentation <img src="img/compair-logo-scale.png" alt="ComPAIR Home" class="pull-right"></h1>
+                    <h1 class="main-heading">Get Started <img src="img/compair-logo-scale.png" alt="ComPAIR Home" class="pull-right"></h1>
 
-                    <p>ComPAIR is an open-source learning application being developed by the University of British Columbia's Centre for Teaching, Learning & Technology (<a href="http://ctlt.ubc.ca/" target="_blank">CTLT</a>) using a <a href="https://github.com/ubc/compair/blob/master/LICENSE.txt" target="_blank">GPL-3.0</a> license. ComPAIR is an <a href="http://lthub.ubc.ca/guides/compair/" target="_blank">official university tool</a> available for all internal faculty and staff to use (with full support) in live courses. Other educational institutions are welcome to download, deploy, and add to the code.</p>
+                    <p>ComPAIR is an open-source learning application being developed by the University of British Columbia's <a href="http://ctlt.ubc.ca/" target="_blank">Centre for Teaching, Learning & Technology <i class="glyphicon glyphicon-new-window"></i></a> using a <a href="https://github.com/ubc/compair/blob/master/LICENSE.txt" target="_blank">GPL-3.0 <i class="glyphicon glyphicon-new-window"></i></a> license. ComPAIR is an official UBC tool available for all internal faculty and staff to use (with full support) in live courses. Other educational institutions are welcome to download, deploy, and add to the code.</p>
 
-                    <h3 class="text-center highlight-heading">ComPAIR is available <span class="green-text">internally</span> at UBC via Connect and Canvas as well as <span class="green-text">externally</span> to other institutions via GitHub</h3>
+                    <h3 class="text-center highlight-heading">ComPAIR is available <span class="green-text">internally</span> at UBC via Canvas as well as <span class="green-text">externally</span> to other institutions via GitHub</h3>
 
                     <h2>UBC faculty and staff</h2>
-                    <p>Faculty and staff at UBC can get started with ComPAIR by using either of the learning management systems (LMS): Connect or Canvas. Through the LMS, you can set up a course in ComPAIR that will automatically be populated with your class list.</p>
+                    <p>Faculty and staff at UBC can get started with ComPAIR by using Canvas. Through Canvas, you can set up a course in ComPAIR that will automatically be populated with your class list.</p>
 
                     <ul class="list-group">
-                        <li class="list-group-item">
-                            <strong>Use ComPAIR in your Connect course by:</strong>
-                            <ul>
-                                <li>Adding ComPAIR as an <i>LTI tool</i> in Connect.</li>
-                                <li>Or contacting the <a href="http://lthub.ubc.ca/support/lt-hub/">LT Hub</a> for assistance with this process.</li>
-                            </ul>
-                        </li>
                         <li class="list-group-item">
                             <strong>Use ComPAIR in your Canvas course by:</strong>
                             <ul>
                                 <li>Adding ComPAIR to the course's sidebar by editing the course's navigation settings in Canvas.</li>
                                 <li>Adding a ComPAIR assignment to your course as an <i>external tool</i> in Canvas.</li>
-                                <li>Or contacting the <a href="http://lthub.ubc.ca/support/lt-hub/">LT Hub</a> for assistance with this process.</li>
+                                <li>Or contacting the <a href="http://lthub.ubc.ca/support/lt-hub/" target="_blank">LT Hub <i class="glyphicon glyphicon-new-window"></i></a> for assistance with this process.</li>
                             </ul>
                         </li>
                     </ul>
-                    <p>After the LTI link is set up, create your ComPAIR account and course by following the LTI link from within your LMS course.</p>
-                    <p>Visit <a href="http://lthub.ubc.ca/guides/compair/" target="_blank">ComPAIR's tool guide</a> for additional setup instuctions.
+                    <p>After the LTI link is set up, create your ComPAIR account and course by following the LTI link from within your Canvas course.</p>
+                    <p>Visit <a href="http://lthub.ubc.ca/guides/compair/" target="_blank">ComPAIR's UBC tool guide <i class="glyphicon glyphicon-new-window"></i></a> for additional setup instuctions.
 
                     <h2>Outside UBC</h2>
-                    <p>Outside of UBC, you will need to set up your own instance of the application. A ComPAIR instance requires a minimum of a web server running Python 2.7 or 3 and a MySQL or MariaDB database. We also recommend running Redis and a Celery daemon to reduce server load for certain tasks.</p>
+                    <p>Outside of UBC, you will need to set up your own instance of the application. A ComPAIR instance requires a minimum of a web server running Python 2.7 or 3 and a MySQL or MariaDB database. We also recommend running Redis and a Celery daemon to reduce server load for certain tasks. The following is a list of options for installing ComPAIR locally.</p>
 
                     <ul class="list-group">
                         <li class="list-group-item">
-                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/linux_server#deploying-compair-on-a-centos-7-server" target="_blank">CentOS 7 Server (Standalone Linux)</a>:</strong>
-                            Set up an all-in-one ComPAIR server. Useful for piloting ComPAIR or small scale production environments.
+                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/linux_server#deploying-compair-on-a-centos-7-server" target="_blank">CentOS 7 Server (Standalone Linux) <i class="glyphicon glyphicon-new-window"></i></a >:</strong>
+                            &nbsp;Set up an all-in-one ComPAIR server. Useful for piloting ComPAIR or small scale production environments.
                         </li>
                         <li class="list-group-item">
-                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/aws#deploying-compair-on-amamzon-web-services" target="_blank">Amazon Web Services (AWS)</a>:</strong>
-                            Set up ComPAIR on Amazon Web Services. Useful for larger scale production environments.
+                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/aws#deploying-compair-on-amamzon-web-services" target="_blank">Amazon Web Services (AWS) <i class="glyphicon glyphicon-new-window"></i></a> :</strong>
+                            &nbsp;Set up ComPAIR on Amazon Web Services. Useful for larger scale production environments.
                         </li>
                         <li class="list-group-item">
-                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/gce_kube#deploying-compair-on-google-container-enginekubernetes" target="_blank">Google Container Engine / Kubernetes</a>:</strong>
-                            Set up ComPAIR on Google Container Engine or Kubernetes. Useful for larger scale production environments.
+                            <strong><a href="https://github.com/ubc/compair/tree/master/deploy/gce_kube#deploying-compair-on-google-container-enginekubernetes" target="_blank">Google Container Engine / Kubernetes <i class="glyphicon glyphicon-new-window"></i></a> :</strong>
+                            &nbsp;Set up ComPAIR on Google Container Engine or Kubernetes. Useful for larger scale production environments.
                         </li>
                         <li class="list-group-item">
-                            <strong><a href="https://github.com/ubc/compair/tree/master/#developer-installation---docker" target="_blank">Development Instance via Docker</a>:</strong>
-                            Set up a development environment for ComPAIR. Useful for contributing to ComPAIR or customizing code. Not recommended for use in a production environment. (Instead, follow the Kubernetes guide above.)
+                            <strong><a href="https://github.com/ubc/compair/tree/master/#developer-installation---docker" target="_blank">Development Instance via Docker <i class="glyphicon glyphicon-new-window"></i></a> :</strong>
+                            &nbsp;Set up a development environment for ComPAIR. Useful for contributing to ComPAIR or customizing code. Not recommended for use in a production environment. (Instead, follow the Kubernetes guide above.)
                         </li>
                     </ul>
 
-                    <h2>Style guide</h2>
-                    <p>ComPAIR has a basic <a href="style-guide.html">style guide</a> available for anyone who plans to contribute to the code.</p>
+                    <h2>Developers</h2>
+                    <p>ComPAIR has basic <a href="https://github.com/ubc/compair/blob/master/docs/dev.md" target="_blank">developer documentation <i class="glyphicon glyphicon-new-window"></i></a> and a <a href="style-guide.html">style guide</a> available for anyone who plans to contribute to the code.</p>
 
                     <p class="text-center"><a href="https://compairdemo.ctlt.ubc.ca" target="_blank" class="btn btn-success btn-lg" role="button">Try the demo <i class="glyphicon glyphicon-new-window"></i></a> &nbsp; <a href="https://github.com/ubc/compair" target="_blank" class="btn btn-success btn-lg" role="button">Download our code <i class="glyphicon glyphicon-new-window"></i></a></p>
                 </div>
@@ -112,7 +106,8 @@
                         <ul class="intro-list">
                             <li><span>Understand the <a href="workflow.html">assignment workflow</a> in the application from instructor and student perspectives.</span></li>
                             <li><span>Read about <a href="examples.html">real-life examples &raquo;</a> from English, Physics, and Math courses at the University of British Columbia.</span></li>
-                            <li><span>Learn about the recommended <a href="best-practices.html">best practices &raquo;</a> based on the pilot courses who have used the application.</span></li>
+                            <li><span>Learn about the recommended <a href="best-practices.html">best practices &raquo;</a> based on experiences and research so far.</span></li>
+                            <li><span>Explore <a href="faq.html">frequently asked questions &raquo;</a> from instructor, student, and technical perspectives.</span></li>
                             <li class="side-selected"><i class="glyphicon glyphicon-menu-right pull-left"></i> <span>Get started with <strong>basic documentation</strong> for using ComPAIR as a standalone application or as an integration.</span></li>
                             <li><a href="https://compairdemo.ctlt.ubc.ca" target="_blank" class="btn btn-primary">Try Demo <i class="glyphicon glyphicon-new-window"></i></a> &nbsp; <a href="https://github.com/ubc/compair" target="_blank" class="btn btn-primary">Download Code <i class="glyphicon glyphicon-new-window"></i></a></li>
                         </ul>
@@ -120,6 +115,7 @@
                         <ul>
                             <li><a href="http://tlijournal.com/tli/index.php/TLI/article/view/156/191" target="_blank">ComPAIR Article - <em>Teaching &amp; Learning Inquiry</em> - September 2017 <i class="glyphicon glyphicon-new-window"></i></a></li>
                             <li><a href="https://docs.google.com/presentation/d/1zmRi7n-i83AcSpuLeL-s7kUET52F4kczew577OtTeng/edit?usp=sharing" target="_blank">ComPAIR Presentation Slides - BCNet Conference 2017 <i class="glyphicon glyphicon-new-window"></i></a></li>
+                            <li><a href="https://isit.arts.ubc.ca/compair/" target="_blank">ComPAIR Overview - UBC Arts Instructional Support and Information Technology <i class="glyphicon glyphicon-new-window"></i></a></li>
                             <li><a href="http://www.tandfonline.com/doi/full/10.1080/0969594X.2012.665354?scroll=top&needAccess=true#aHR0cDovL3d3dy50YW5kZm9ubGluZS5jb20vZG9pL3BkZi8xMC4xMDgwLzA5Njk1OTRYLjIwMTIuNjY1MzU0P25lZWRBY2Nlc3M9dHJ1ZUBAQDA=" target="_blank">Related Article - "The method of Adaptive Comparative Judgement" (Pollitt, 2012) <i class="glyphicon glyphicon-new-window"></i></a></li>
                         </ul>
                     </div>
@@ -129,7 +125,7 @@
             <hr>
 
             <footer>
-                <p>&copy; University of British Columbia | <a href="http://ctlt.ubc.ca/" target="_blank">CTLT</a></p>
+                <p>&copy; University of British Columbia | <a href="http://ctlt.ubc.ca/" target="_blank">Centre for Teaching, Learning and Technology <i class="glyphicon glyphicon-new-window"></i></a></p>
             </footer>
 
         </div> <!-- /container -->
