@@ -6,7 +6,7 @@
 
     /* set page margins */
     @page {
-        margin: .5in .5in .8in .5in;
+        margin: .5in;
     }
 
     /* use black font */
@@ -17,7 +17,7 @@
     /* for readability */
     body {
         font-family:  'Clarendon Std', 'Century Old Style Std', 'Century Schoolbook', Georgia, serif;
-        line-height: 1.3;
+        line-height: 1.25;
         background: #fff;
     }
 
@@ -31,16 +31,22 @@
     .btn-reply,
     .btn-default,
     #comments-tab .btn-primary,
+    .btn-info,
     .read-more,
     .score-display,
     .filter,
     .evaluations-screen .form-group,
     .below-button-text,
-    .each-header img {
+    .each-header img,
+    .answer a > img,
+    .intro-text,
+    .assignment-screen .assignment-metadata-list,
+    .h4 img,
+    .each-attachment-content p {
         display: none;
     }
 
-    /* shrink titles */
+    /* shrink titles, text */
     h1,
     h2 {
         font-size: 150%;
@@ -49,8 +55,17 @@
         font-size: 130%;
     }
     h4,
+    .h4,
     h5 {
         font-size: 120%;
+    }
+    .h4,
+    h5 {
+        font-weight: normal;
+    }
+    .content,
+    .reply-heading {
+        font-size: 90% !important;
     }
 
     /* change blue backgrounds to gray */
@@ -66,16 +81,16 @@
         max-width: 100%;
     }
 
-    /* overwrite Bootstrap default for URLs */
-    a[href]:after {
-        content: none !important;
+    /* remove Bootstrap () after some links */    
+    a[href=""]:after {
+        content: "";
     }
 
     /* metadata headers for answers and comparisons */
     .each-header {
         padding: .5em;
         font-weight: bold;
-        border: 1px solid #000;
+        border: 2px solid @border-gray;
     }
 
     /* soften labels */
@@ -83,10 +98,38 @@
         background: transparent !important;
         border: 1px solid @border-gray;
     }
+    
+    /* decrease spacing */
+    .tab-header h2,
+    .standalone-assignment,
+    .evaluations-screen .evaluator-heading {
+        margin: 0;
+    }
+    .evaluations-screen .evaluator-heading {
+        padding: 0;
+    }
+    .assignment-screen .tab-content .tab-header {
+        padding-bottom: 0;
+    }
+    .assignment-screen .tab-content .content {
+        margin-bottom: 1em;
+    }
+    .assignment-screen .tab-content .each-evaluation {
+        padding-bottom: 1em;
+    }
+    
+    /* remove border */
+    .assignment-screen .tab-content .tab-header,
+    .assignment-screen .tab-content .each-answer,
+    .evaluations-screen .evaluations {
+        border-left: none;
+        border-right: none;
+    }
 
     /* more blue to black */
     .standalone-assignment,
-    fieldset {
+    fieldset,
+    .pagination > .active > a {
         background: #fff;
         border: 2px solid #000;
     }
@@ -102,20 +145,13 @@
     .rich-content-embed {
         display: none;
     }
-    .each-attachment-content .heading a {
-        display: transparent;
-        border: none;
+    .rich-content a {
+        text-decoration: underline;
     }
-    .each-attachment-content .heading a:after {
-        content: ' [Log in to the application to see and download this file]';
-    }
-
-    /* add space for writing next to answers */
-    .assignment-screen .tab-content .each-answer > .content,
-    .assignment-screen .tab-content .each-comment > .content,
-    .evaluations-screen .each-evaluation .content {
-        max-height: none;
-        width: 80%;
+    .rich-content a[href]:after {
+        content: ' [see: ' attr(href) '] ';
+        font-size: 80%;
+        overflow-wrap: break-word;
     }
 
 }//closes @media
