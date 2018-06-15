@@ -81,6 +81,11 @@
         max-width: 100%;
     }
 
+    /* remove Bootstrap () after some links */    
+    a[href=""]:after {
+        content: "";
+    }
+
     /* metadata headers for answers and comparisons */
     .each-header {
         padding: .5em;
