@@ -59,12 +59,16 @@
         <script type="text/javascript">
             (function() {
                 angular.module('ubc.ctlt.compair.login')
-                .run( ['AuthTypesEnabled', function(AuthTypesEnabled) {
+                .run( ['AuthTypesEnabled', 'LoginConfigurableHTML', function(AuthTypesEnabled, LoginConfigurableHTML) {
                     AuthTypesEnabled.app = {{ 'true' if app_login_enabled else 'false' }};
                     AuthTypesEnabled.cas = {{ 'true' if cas_login_enabled else 'false' }};
                     AuthTypesEnabled.saml = {{ 'true' if saml_login_enabled else 'false' }};
                     AuthTypesEnabled.lti = {{ 'true' if lti_login_enabled else 'false' }};
                     AuthTypesEnabled.demo = {{ 'true' if demo else 'false' }};
+
+                    LoginConfigurableHTML.addition_instructions = {{ login_addition_instructions_html|tojson|safe }};
+                    LoginConfigurableHTML.cas = {{ cas_login_html|tojson|safe }};
+                    LoginConfigurableHTML.saml = {{ saml_login_html|tojson|safe }};
                 }]);
                 angular.module('ubc.ctlt.compair.attachment')
                 .run( ['UploadSettings', function(UploadSettings) {

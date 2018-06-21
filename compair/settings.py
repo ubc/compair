@@ -94,6 +94,21 @@ SAML_LOGIN_ENABLED = False
 # if true requires record with oauth_consumer_key and oauth_consumer_secret in lti_consumer table
 LTI_LOGIN_ENABLED = True
 
+LOGIN_ADDITIONAL_INSTRUCTIONS_HTML = """
+<h3>If you can't log in, please check:</h3>
+<dl>
+    <dt>Are you registered in the course that is using this application?</dt>
+        <dd>See if you have access to the course in Canvas. If you can't access the course in Canvas, contact <a href="https://it.ubc.ca/got-question-about-it-products-and-support#helpdesk" target="_blank">UBC IT support</a>.</dd>
+    <dt>Did you click the ComPAIR link from Canvas at least once?</dt>
+        <dd>You must enter the application initially by clicking the ComPAIR link in the course's Canvas site. This activates your ComPAIR account for the course.</dd>
+    <dt>Are you using a modern browser?</dt>
+        <dd>Supported browsers for this application include <a href="https://www.mozilla.org/en-US/firefox/new/" target="_blank">Firefox</a>, <a href="http://www.google.com/chrome/" target="_blank">Chrome</a>, <a href="https://www.apple.com/ca/safari/" target="_blank">Safari</a>, and <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie" target="_blank">IE9+</a>.</dd>
+    <dt>Did you answer 'yes' to all the troubleshooting questions above?</dt>
+        <dd>Contact <a href="mailto:compair.support@ubc.ca" target="_self">ComPAIR technical support</a> for help.</dd>
+</dl>
+"""
+
+CAS_LOGIN_HTML = """<img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0">"""
 CAS_SERVER = 'http://localhost:8088'
 CAS_AUTH_PREFIX = '/cas'
 CAS_USE_SAML = False
@@ -105,6 +120,7 @@ CAS_ATTRIBUTE_LAST_NAME = None
 CAS_ATTRIBUTE_STUDENT_NUMBER = None
 CAS_ATTRIBUTE_EMAIL = None
 
+SAML_LOGIN_HTML = """<img class="center-block" src="https://www.auth.cwl.ubc.ca/CWL_login_button.gif" width="76" height="25" alt="CWL Login" border="0">"""
 SAML_UNIQUE_IDENTIFIER = 'uid'
 SAML_METADATA_URL = None
 SAML_METADATA_ENTITY_ID = None

@@ -305,6 +305,17 @@ Global unique identifers allow ComPAIR to:
 
 System admins can manage global unique identifiers for each LTI consumer from the 'Manage LTI' screen. Setting the `global_unique_identifier_param` field will use that param to unique identify an account across third party logins and LTI.
 
+Login Screen Customization
+---------------------------
+
+Note all html content used for login screen will be [sanitized](https://docs.angularjs.org/api/ngSanitize/service/$sanitize) by AngularJS.
+
+`LOGIN_ADDITIONAL_INSTRUCTIONS_HTML`: Set the text or HTML displayed to users beside the login prompt. By default it will display UBC specific login troubleshooting information (it is recommended to change this value). If left blank, the instruction area will not appear.
+
+`CAS_LOGIN_HTML`: Set the text or HTML displayed to users for selecting to login with CAS (default will be a UBC CWL login button).
+
+`SAML_LOGIN_HTML`: Set the text or HTML displayed to users for selecting to login with SAML (default will be a UBC CWL login button).
+
 (Optional) Email Notification Settings
 -----------------------------
 
