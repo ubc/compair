@@ -167,6 +167,11 @@ systemctl start worker
 systemctl enable worker
 ```
 
+Default admin login
+-------------
+
+Once setup is finished, ComPAIR should be accessible with the default admin using username `root` and password `password`.
+
 Maintaining ComPAIR Server
 =======================================
 

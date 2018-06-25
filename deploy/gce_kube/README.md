@@ -111,6 +111,10 @@ The public IP is listed under `LoadBalancer Ingress` field. You may need to wait
 kubectl exec -it $(kubectl get pods -l app=compair,tier=frontend --no-headers | cut -d " " -f 1) -- ./manage.py database create
 ```
 
+### Default admin login
+
+Once setup is finished, ComPAIR should be accessible with the default admin using username `root` and password `password`.
+
 Operating ComPAIR Cluster
 -----------------------
 
