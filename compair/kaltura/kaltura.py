@@ -14,12 +14,16 @@ class KalturaAPI(object):
 
     @classmethod
     def generate_new_upload_token(cls):
-        with KalturaSession.generate_api_session() as ks:
+        kaltura_user_id = KalturaCore.user_id()
+        if current_app.config.get('KALTURA_USE_GLOBAL_UNIQUE_IDENTIFIER', False) and current_user and current_user.global_unique_identifier:
+            kaltura_user_id = current_user.global_unique_identifier
+
+        with KalturaSession.generate_api_session(kaltura_user_id) as ks:
             upload_token = UploadToken.generate_upload_token(ks)
             upload_token_id = upload_token.get('id')
 
         # generate an upload ks
-        upload_ks = KalturaSession.generate_upload_ks(upload_token_id)
+        upload_ks = KalturaSession.generate_upload_ks(kaltura_user_id, upload_token_id)
 
         media = KalturaMedia(
             user=current_user,
@@ -36,6 +40,10 @@ class KalturaAPI(object):
 
     @classmethod
     def complete_upload_for_token(cls, upload_token_id):
+        kaltura_user_id = KalturaCore.user_id()
+        if current_app.config.get('KALTURA_USE_GLOBAL_UNIQUE_IDENTIFIER', False) and current_user and current_user.global_unique_identifier:
+            kaltura_user_id = current_user.global_unique_identifier
+
         kaltura_media = KalturaMedia.query \
             .filter_by(
                 upload_token_id=upload_token_id,
@@ -48,7 +56,7 @@ class KalturaAPI(object):
             abort(400, title="File Not Uploaded",
                 message="The upload token does not exist or is already used. Please contact support for assistance.")
 
-        with KalturaSession.generate_api_session() as ks:
+        with KalturaSession.generate_api_session(kaltura_user_id) as ks:
             # fetch upload, and update kaltura_media filename
             upload_token = UploadToken.get_upload_token(ks, upload_token_id)
             kaltura_media.file_name = upload_token.get('fileName')

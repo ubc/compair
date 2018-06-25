@@ -364,7 +364,9 @@ Restart server after making any changes to settings
 
 You may optionally enable Kaltura uploads to support more media file attachment types with better cross browser playback compatibility.
 
-It is highly recommended to create a separate account for ComPAIR so it does not interfere with other content. ComPAIR treats the account provided as a bucket account to store all video/audio uploads. You should have a Kaltura player setup and configured for the account.
+It is highly recommended to create a separate account for ComPAIR so it does not interfere with other content. You should have a Kaltura player setup and configured for the account.
+
+By Default, ComPAIR treats the account provided as a bucket account to store all video/audio uploads. If global unique identifers are setup, you may alternatively allow users to control their media by turning `KALTURA_USE_GLOBAL_UNIQUE_IDENTIFIER` on. This requires that Kaltura user ids use the same global unique identifer.
 
 Currently only version 3 of the Kaltura api is supported.
 
@@ -385,6 +387,8 @@ Currently only version 3 of the Kaltura api is supported.
 `KALTURA_VIDEO_EXTENSIONS`: Set of video file extensions that will be uploaded to the Kaltura instead of ComPAIR (default: mp4, mov, and webm). Separate values by a space (ex: `mp4 mov webm`).
 
 `KALTURA_AUDIO_EXTENSIONS`: Set of audio file extensions that will be uploaded to the Kaltura instead of ComPAIR (default: mp3). Separate values by a space (ex: `mp3`).
+
+`KALTURA_USE_GLOBAL_UNIQUE_IDENTIFIER`: Optionally use a user's global unique identifer if available for the Kaltura upload's user_id (off by default). Doing so will allow the user to control their media with Kaltura. Note that it is possible for them to remove the media and it to no longer be available in ComPAIR for comparisons or review.
 
 Restart server after making any changes to settings
 
