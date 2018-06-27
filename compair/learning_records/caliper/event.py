@@ -18,27 +18,19 @@ class CaliperEvent(object):
             caliper_actor = CaliperActor.generate_actor(impersonation.get_impersonation_original_user())
 
         defaults = {
-            'context': CaliperSensor._version,
+            'context': CaliperSensor._core_context,
             'eventTime': LearningRecord.generate_timestamp(),
             'actor': caliper_actor,
-            'edApp': ResourceIRI.compair()
+            'edApp': CaliperEntities.compair_app()
         }
 
-        session = CaliperEntities.session(caliper_actor)
-        if request:
-            session.setdefault("extensions", {}).setdefault("browser-info", {})
-
-            if request.environ.get('HTTP_USER_AGENT'):
-                session["extensions"]["browser-info"]["userAgent"] = request.environ.get('HTTP_USER_AGENT')
-
-            if request.environ.get('HTTP_REFERER'):
-                session["extensions"]["browser-info"]["referer"] = request.environ.get('HTTP_REFERER')
-
-            if impersonation.is_impersonating() and user.id == current_user.id:
-                session["extensions"]["impersonating-as"] = CaliperActor.generate_actor(user)
-        defaults['session'] = session
+        session_extensions = {}
+        if impersonation.is_impersonating() and user.id == current_user.id:
+            session_extensions["impersonating-as"] = CaliperActor.generate_actor(user)
+        defaults['session'] = CaliperEntities.session(caliper_actor, request, session_extensions)
 
         if course:
+            #todo add 'Group' which is the course or the group within the course
             defaults['membership'] = CaliperEntities.membership(course, user)
 
         return defaults

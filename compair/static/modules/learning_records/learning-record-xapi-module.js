@@ -17,17 +17,6 @@ var module = angular.module('ubc.ctlt.compair.learning_records.xapi', [
 
 
 /***** Providers *****/
-module.factory('xAPIStatementResource', ["$resource", function($resource)
-{
-    var ret = $resource('/api/learning_records/xapi/statements', {},
-        {
-            'save': { method: 'POST', ignoreLoadingBar: true, bypassErrorsInterceptor: true }
-        }
-    );
-    return ret;
-}]);
-
-
 module.constant('xAPIVerb', {
     'viewed': {
         id: 'http://id.tincanapi.com/verb/viewed',
@@ -41,9 +30,13 @@ module.constant('xAPIVerb', {
         id: 'http://activitystrea.ms/schema/1.0/author',
         display: { 'en-US': 'authored' }
     },
-    'deleted': {
-        id: 'http://activitystrea.ms/schema/1.0/delete',
-        display: { 'en-US': 'deleted' }
+    'removed': {
+        id: 'https://w3id.org/xapi/dod-isd/verbs/removed',
+        display: { 'en-US': 'removed' }
+    },
+    'archived': {
+        id: 'https://w3id.org/xapi/dod-isd/verbs/archived',
+        display: { 'en-US': 'archived' }
     },
     'updated': {
         id: 'http://activitystrea.ms/schema/1.0/update',
@@ -140,10 +133,8 @@ module.constant('xAPIActivityType', {
 });
 
 module.service('xAPI',
-    [ "xAPIStatementResource", "LearningRecord", "ResourceIRI", "Session", "WinningAnswer",
-      "LearningRecordSettings", "xAPIVerb", "xAPIActivityType",
-    function(xAPIStatementResource, LearningRecord, ResourceIRI, Session, WinningAnswer,
-             LearningRecordSettings, xAPIVerb, xAPIActivityType) {
+    [ "LearningRecord", "ResourceIRI", "Session", "LearningRecordSettings", "xAPIVerb", "xAPIActivityType",
+    function(LearningRecord, ResourceIRI, Session, LearningRecordSettings, xAPIVerb, xAPIActivityType) {
         var _this = this;
 
         this.verb = xAPIVerb;
@@ -161,11 +152,12 @@ module.service('xAPI',
 
         this.save_statement = function(course_id, statement) {
             if (LearningRecordSettings.xapi_enabled && Session.isLoggedIn()) {
-                statement_json = statement.asVersion('1.0.1');
+                statementParams = statement.asVersion('1.0.3');
                 if (course_id) {
-                    statement_json['course_id'] = course_id;
+                    statementParams['course_id'] = course_id;
                 }
-                xAPIStatementResource.save(statement_json);
+                var statementJson = JSON.stringify(statementParams);
+                navigator.sendBeacon('/api/learning_records/xapi/statements', statementJson);
             }
         };
 

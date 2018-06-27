@@ -139,15 +139,6 @@ ComPAIR uses the Experience API (xAPI) and/or Caliper for collecting learning an
 
 `LRS_USER_INPUT_FIELD_SIZE_LIMIT`: Set the character limit on statement fields containing user input. Set this in order to prevent sending large statements to the LRS that it can't handle (default: 10,000 characters)
 
-`LRS_SIS_COURSE_ID_URI_TEMPLATE`: Template for setting SIS course ids (default '{base_url}/course/{sis_course_id}'). Uses string format function with access to:
-- `{base_url}`: Value of `LRS_APP_BASE_URL`
-- `{sis_course_id}`: SIS course ID from LTI context lis_course_offering_sourcedid
-
-`LRS_SIS_SECTION_ID_URI_TEMPLATE`: Template for setting SIS course ids (default '{base_url}/course/{sis_course_id}/section/{sis_section_id}'). Uses string format function with access to:
-- `{base_url}`: Value of `LRS_APP_BASE_URL`
-- `{sis_course_id}`: SIS course ID from LTI context lis_course_offering_sourcedid
-- `{sis_section_id}`: SIS section ID from LTI context lis_course_section_sourcedid
-
 Restart server after making any changes to settings
 
 Statements require an actor (currently logged in user) account information. The ComPAIR account information will be used by default unless the following settings are changed.

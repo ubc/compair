@@ -29,19 +29,21 @@ class CourseLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         self.expected_caliper_course = {
             'academicSession': self.course.term,
-            'dateCreated': self.course.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.course.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.course.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.course.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'id': "https://localhost:8888/app/course/"+self.course.uuid,
             'name': self.course.name,
             'type': 'CourseOffering',
-            'extensions': {
-                'ltiContexts': [{
-                    'context_id': self.lti_context.context_id,
+            'otherIdentifiers': [{
+                'identifier': self.lti_context.context_id,
+                'identifierType': 'LtiContextId',
+                'type': 'SystemIdentifier',
+                'extensions': {
+                    'lis_course_offering_sourcedid': 'sis_course_id',
+                    'lis_course_section_sourcedid': 'sis_section_id',
                     'oauth_consumer_key': self.lti_data.lti_consumer.oauth_consumer_key,
-                    'lis_course_offering_sourcedid': "sis_course_id",
-                    'lis_course_section_sourcedid': "sis_section_id",
-                }]
-            }
+                },
+            }]
         }
 
         self.expected_xapi_course = {
@@ -50,16 +52,6 @@ class CourseLearningRecordTests(ComPAIRLearningRecordTestCase):
                 'type': 'http://adlnet.gov/expapi/activities/course',
                 'name': {'en-US': self.course.name}
             },
-            'objectType': 'Activity'
-        }
-
-        self.expected_xapi_sis_course = {
-            'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid,
-            'objectType': 'Activity'
-        }
-
-        self.expected_xapi_sis_section = {
-            'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid+'/section/'+self.lti_context.lis_course_section_sourcedid,
             'objectType': 'Activity'
         }
 
@@ -74,6 +66,7 @@ class CourseLearningRecordTests(ComPAIRLearningRecordTestCase):
         events = self.get_and_clear_caliper_event_log()
         expected_caliper_event = {
             'action': 'Created',
+            'profile': 'GeneralProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
             'object': self.expected_caliper_course,
@@ -116,6 +109,7 @@ class CourseLearningRecordTests(ComPAIRLearningRecordTestCase):
         events = self.get_and_clear_caliper_event_log()
         expected_caliper_event = {
             'action': 'Modified',
+            'profile': 'GeneralProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
             'object': self.expected_caliper_course,
@@ -156,7 +150,8 @@ class CourseLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         events = self.get_and_clear_caliper_event_log()
         expected_caliper_event = {
-            'action': 'Deleted',
+            'action': 'Archived',
+            'profile': 'GeneralProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
             'object': self.expected_caliper_course,
@@ -172,8 +167,8 @@ class CourseLearningRecordTests(ComPAIRLearningRecordTestCase):
         expected_xapi_statement = {
             "actor": self.get_compair_xapi_actor(self.user),
             "verb": {
-                'id': 'http://activitystrea.ms/schema/1.0/delete',
-                'display': {'en-US': 'deleted'}
+                'id': 'https://w3id.org/xapi/dod-isd/verbs/archived',
+                'display': {'en-US': 'archived'}
             },
             "object": self.expected_xapi_course,
             "context": {

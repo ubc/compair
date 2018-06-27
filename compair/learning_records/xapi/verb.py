@@ -5,7 +5,8 @@ class XAPIVerb(object):
         'viewed': 'http://id.tincanapi.com/verb/viewed',
         'commented': 'http://adlnet.gov/expapi/verbs/commented',
         'authored': 'http://activitystrea.ms/schema/1.0/author',
-        'deleted': 'http://activitystrea.ms/schema/1.0/delete',
+        'removed': 'https://w3id.org/xapi/dod-isd/verbs/removed',
+        'archived': 'https://w3id.org/xapi/dod-isd/verbs/archived',
         'updated': 'http://activitystrea.ms/schema/1.0/update',
 
         'initialized': 'http://adlnet.gov/expapi/verbs/initialized',

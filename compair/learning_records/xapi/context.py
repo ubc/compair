@@ -15,16 +15,13 @@ class XAPIContext(object):
                 context.context_activities.grouping = ActivityList()
 
             sis_data = course.lti_sis_data
+            context.extensions = Extensions() if not context.extensions else context.extensions
+            context.extensions['sis_courses'] = []
             for sis_course_id, sis_section_ids in sis_data.items():
-                context.context_activities.grouping.append({
-                    "id": ResourceIRI.sis_course(sis_course_id),
-                    "objectType": "Activity"
+                context.extensions['sis_courses'].append({
+                    'id': sis_course_id,
+                    'section_ids': sis_section_ids
                 })
-                for sis_section_id in sis_section_ids:
-                    context.context_activities.grouping.append({
-                        "id": ResourceIRI.sis_section(sis_course_id, sis_section_id),
-                        "objectType": "Activity"
-                    })
 
     @classmethod
     def basic(cls, **kwargs):
@@ -105,6 +102,9 @@ class XAPIContext(object):
 
         if answer.attempt_uuid:
             context.context_activities.parent.append(XAPIObject.answer_attempt(answer))
+
+        if answer.group_id != None:
+            context.context_activities.parent.append(XAPIObject.group(answer.group))
 
         cls._add_sis_data(context, answer.assignment.course)
         return context

@@ -17,10 +17,10 @@ class XAPIObject(object):
             ret["duration"] = attempt_mixin_object.attempt_duration
 
         if attempt_mixin_object.attempt_started:
-            ret["startedAtTime"] = attempt_mixin_object.attempt_started.replace(tzinfo=pytz.utc).isoformat()
+            ret["startedAtTime"] = attempt_mixin_object.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
         if attempt_mixin_object.attempt_ended:
-            ret["endedAtTime"] = attempt_mixin_object.attempt_ended.replace(tzinfo=pytz.utc).isoformat()
+            ret["endedAtTime"] = attempt_mixin_object.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
         return ret
 
@@ -64,6 +64,22 @@ class XAPIObject(object):
                 name=LanguageMap({ 'en-US': LearningRecord.trim_text_to_size_limit(course.name) })
             )
         )
+
+        return activity
+
+    @classmethod
+    def group(cls, group):
+        activity = Activity(
+            id=ResourceIRI.group(group.course_uuid, group.uuid),
+            definition=ActivityDefinition(
+                type=XAPIActivity.activity_types.get('group'),
+                name=LanguageMap({ 'en-US': LearningRecord.trim_text_to_size_limit(group.name) }),
+                extensions=Extensions()
+            )
+        )
+        activity.definition.extensions['http://id.tincanapi.com/extension/members'] = [
+            XAPIActor.generate_actor(uc.user) for uc in group.user_courses.all()
+        ]
 
         return activity
 

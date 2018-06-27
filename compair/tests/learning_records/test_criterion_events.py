@@ -21,12 +21,12 @@ class CriterionLearningRecordTests(ComPAIRLearningRecordTestCase):
         self.criterion = self.data.create_criterion(self.user)
 
         self.expected_caliper_criterion = {
-            'dateCreated': self.criterion.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.criterion.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.criterion.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.criterion.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'id': "https://localhost:8888/app/criterion/"+self.criterion.uuid,
             'name': self.criterion.name,
             'description': self.criterion.description,
-            'type': 'Entity'
+            'type': 'DigitalResource'
         }
 
         self.expected_xapi_criterion = {
@@ -50,10 +50,11 @@ class CriterionLearningRecordTests(ComPAIRLearningRecordTestCase):
         events = self.get_and_clear_caliper_event_log()
         expected_caliper_event = {
             'action': 'Created',
+            'profile': 'ResourceManagementProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'object': self.expected_caliper_criterion,
             'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
-            'type': 'Event'
+            'type': 'ResourceManagementEvent'
         }
 
         self.assertEqual(len(events), 1)
@@ -91,10 +92,11 @@ class CriterionLearningRecordTests(ComPAIRLearningRecordTestCase):
         events = self.get_and_clear_caliper_event_log()
         expected_caliper_event = {
             'action': 'Modified',
+            'profile': 'ResourceManagementProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'object': self.expected_caliper_criterion,
             'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
-            'type': 'Event'
+            'type': 'ResourceManagementEvent'
         }
 
         self.assertEqual(len(events), 1)

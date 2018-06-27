@@ -7,6 +7,7 @@ class XAPIActivity(object):
 
         'attempt': 'http://adlnet.gov/expapi/activities/attempt',
         'course': 'http://adlnet.gov/expapi/activities/course',
+        'group': 'http://activitystrea.ms/schema/1.0/group',
         'assessment': 'http://adlnet.gov/expapi/activities/assessment',
         'question': 'http://adlnet.gov/expapi/activities/question',
         'solution': 'http://id.tincanapi.com/activitytype/solution',

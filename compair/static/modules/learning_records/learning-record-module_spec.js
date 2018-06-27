@@ -303,6 +303,7 @@ describe('learning-record-module', function () {
             LearningRecordSettings.caliper_enabled = true;
             LearningRecordSettings.baseUrl = "https://localhost:8888/";
 
+            spyOn(navigator, 'sendBeacon').and.returnValue(true);
             spyOn(TinCan.Utils, 'getUUID').and.returnValue(mockStatementId);
             spyOn(window, 'Date').and.returnValue({ toISOString: function() { return mockTimestamp; } });
             spyOn(Session, 'isLoggedIn').and.returnValue(true);
@@ -316,11 +317,12 @@ describe('learning-record-module', function () {
                 var invalid = angular.copy(mockAssignment);
                 invalid.id = null;
                 LearningRecordStatementHelper.initialize_assignment_question(invalid, mockTracking);
+                expect(navigator.sendBeacon).not.toHaveBeenCalled();
             });
 
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
-                    "course_id":"1abcABC123-abcABC123_Z",
+                LearningRecordStatementHelper.initialize_assignment_question(mockAssignment, mockTracking);
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -355,9 +357,9 @@ describe('learning-record-module', function () {
                             }
                         }
                     },
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -388,12 +390,13 @@ describe('learning-record-module', function () {
                                 }
                             }
                         }
-                    }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    },
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"AssessmentItemEvent",
                     "action":"Started",
+                    "profile":"AssessmentProfile",
                     "object":{
                         "id":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/question",
                         "type":"AssessmentItem"
@@ -404,12 +407,13 @@ describe('learning-record-module', function () {
                         "assignable":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/question",
                         "startedAtTime": mockStarted
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    "eventTime": mockTimestamp,
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type": "AssessmentEvent",
                     "action": "Started",
+                    "profile": "AssessmentProfile",
                     "object": {
                         "id": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
                         "type": "Assessment"
@@ -420,10 +424,9 @@ describe('learning-record-module', function () {
                         "assignable": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
                         "startedAtTime": mockStarted
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.initialize_assignment_question(mockAssignment, mockTracking);
-                $httpBackend.flush();
+                    "eventTime": mockTimestamp,
+                    "course_id":"1abcABC123-abcABC123_Z",
+                }));
             });
         });
 
@@ -435,8 +438,8 @@ describe('learning-record-module', function () {
             });
 
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
-                    "course_id":"1abcABC123-abcABC123_Z",
+                LearningRecordStatementHelper.exited_assignment_question(mockAssignment, mockTracking);
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -473,28 +476,28 @@ describe('learning-record-module', function () {
                                 }
                             }
                         }
-                    }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                    "course_id":"1abcABC123-abcABC123_Z",
-                    "type": "AssessmentEvent",
-                    "action": "Paused",
-                    "object": {
-                      "id": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
-                      "type": "Assessment"
                     },
-                    "generated": {
-                      "id": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/attempt/"+mockUUID,
-                      "type": "Attempt",
-                      "assignable": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
-                      "startedAtTime": mockStarted,
-                      "duration": mockDuration,
-                      "endedAtTime": mockEnded
+                    "course_id": "1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                    "type":"AssessmentEvent",
+                    "action":"Paused",
+                    "profile":"AssessmentProfile",
+                    "object":{
+                       "id":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
+                       "type":"Assessment"
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.exited_assignment_question(mockAssignment, mockTracking);
-                $httpBackend.flush();
+                    "generated":{
+                       "id":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/attempt/caece01c-ea5c-472d-9f9c-be864a3442d5",
+                       "type":"Attempt",
+                       "assignable":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
+                       "startedAtTime":mockStarted,
+                       "duration":mockDuration,
+                       "endedAtTime":mockEnded
+                    },
+                    "eventTime":mockTimestamp,
+                    "course_id":"1abcABC123-abcABC123_Z"
+                 }));
             });
         });
 
@@ -510,9 +513,9 @@ describe('learning-record-module', function () {
                 var comparisonNumber = 5;
                 var evaluation1 = 9;
                 var evaluation2 = 10;
+                LearningRecordStatementHelper.initialize_comparison_question(mockAssignment, comparisonNumber, mockTracking);
 
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
-                    "course_id":"1abcABC123-abcABC123_Z",
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -546,10 +549,10 @@ describe('learning-record-module', function () {
                                 }
                             }
                         }
-                    }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    },
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -583,10 +586,10 @@ describe('learning-record-module', function () {
                                 }
                             }
                         }
-                    }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    },
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -620,10 +623,10 @@ describe('learning-record-module', function () {
                                 }
                             }
                         }
-                    }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    },
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -654,12 +657,13 @@ describe('learning-record-module', function () {
                                 }
                             }
                         }
-                    }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    },
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"AssessmentItemEvent",
                     "action":"Started",
+                    "profile":"AssessmentProfile",
                     "object":{
                         "id":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/comparison/question/"+comparisonNumber,
                         "type":"AssessmentItem"
@@ -670,12 +674,13 @@ describe('learning-record-module', function () {
                         "assignable":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/comparison/question/"+comparisonNumber,
                         "startedAtTime": mockStarted
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    "eventTime": mockTimestamp,
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"AssessmentItemEvent",
                     "action":"Started",
+                    "profile":"AssessmentProfile",
                     "object":{
                         "id":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/evaluation/question/"+evaluation1,
                         "type":"AssessmentItem"
@@ -686,12 +691,13 @@ describe('learning-record-module', function () {
                         "assignable":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/evaluation/question/"+evaluation1,
                         "startedAtTime": mockStarted
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    "eventTime": mockTimestamp,
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"AssessmentItemEvent",
                     "action":"Started",
+                    "profile":"AssessmentProfile",
                     "object":{
                         "id":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/evaluation/question/"+evaluation2,
                         "type":"AssessmentItem"
@@ -702,12 +708,13 @@ describe('learning-record-module', function () {
                         "assignable":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/evaluation/question/"+evaluation2,
                         "startedAtTime": mockStarted
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    "eventTime": mockTimestamp,
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type": "AssessmentEvent",
                     "action": "Started",
+                    "profile": "AssessmentProfile",
                     "object": {
                         "id": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
                         "type": "Assessment"
@@ -718,10 +725,9 @@ describe('learning-record-module', function () {
                         "assignable": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
                         "startedAtTime": mockStarted
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.initialize_comparison_question(mockAssignment, comparisonNumber, mockTracking);
-                $httpBackend.flush();
+                    "eventTime": mockTimestamp,
+                    "course_id":"1abcABC123-abcABC123_Z",
+                }));
             });
         });
 
@@ -733,8 +739,9 @@ describe('learning-record-module', function () {
             });
 
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
-                    "course_id":"1abcABC123-abcABC123_Z",
+                LearningRecordStatementHelper.exited_comparison_question(mockAssignment, mockTracking);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -771,12 +778,13 @@ describe('learning-record-module', function () {
                                 }
                             }
                         }
-                    }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    },
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type": "AssessmentEvent",
                     "action": "Paused",
+                    "profile": "AssessmentProfile",
                     "object": {
                       "id": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
                       "type": "Assessment"
@@ -789,10 +797,9 @@ describe('learning-record-module', function () {
                       "duration": mockDuration,
                       "endedAtTime": mockEnded
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.exited_comparison_question(mockAssignment, mockTracking);
-                $httpBackend.flush();
+                    "eventTime": mockTimestamp,
+                    "course_id":"1abcABC123-abcABC123_Z",
+                }));
             });
         });
 
@@ -805,8 +812,9 @@ describe('learning-record-module', function () {
             });
 
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
-                    "course_id":"1abcABC123-abcABC123_Z",
+                LearningRecordStatementHelper.initialize_self_evaluation_question(mockAssignment, mockTracking);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -840,10 +848,10 @@ describe('learning-record-module', function () {
                                 }
                             }
                         }
-                    }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    },
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -874,12 +882,13 @@ describe('learning-record-module', function () {
                                 }
                             }
                         }
-                    }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    },
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"AssessmentItemEvent",
                     "action":"Started",
+                    "profile":"AssessmentProfile",
                     "object":{
                         "id":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/self-evaluation/question",
                         "type":"AssessmentItem"
@@ -890,12 +899,13 @@ describe('learning-record-module', function () {
                         "assignable":"https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z/self-evaluation/question",
                         "startedAtTime": mockStarted
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    "eventTime": mockTimestamp,
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type": "AssessmentEvent",
                     "action": "Started",
+                    "profile":"AssessmentProfile",
                     "object": {
                         "id": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
                         "type": "Assessment"
@@ -906,12 +916,12 @@ describe('learning-record-module', function () {
                         "assignable": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
                         "startedAtTime": mockStarted
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.initialize_self_evaluation_question(mockAssignment, mockTracking);
-                $httpBackend.flush();
+                    "eventTime": mockTimestamp,
+                    "course_id":"1abcABC123-abcABC123_Z",
+                }));
             });
         });
+
 
         describe('exited_self_evaluation_question:', function() {
             it('should do nothing when no assignment id provided', function() {
@@ -921,8 +931,9 @@ describe('learning-record-module', function () {
             });
 
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
-                    "course_id":"1abcABC123-abcABC123_Z",
+                LearningRecordStatementHelper.exited_self_evaluation_question(mockAssignment, mockTracking);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -959,12 +970,13 @@ describe('learning-record-module', function () {
                                 }
                             }
                         }
-                    }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    },
                     "course_id":"1abcABC123-abcABC123_Z",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type": "AssessmentEvent",
                     "action": "Paused",
+                    "profile": "AssessmentProfile",
                     "object": {
                       "id": "https://localhost:8888/app/course/1abcABC123-abcABC123_Z/assignment/9abcABC123-abcABC123_Z",
                       "type": "Assessment"
@@ -977,18 +989,17 @@ describe('learning-record-module', function () {
                       "duration": mockDuration,
                       "endedAtTime": mockEnded
                     },
-                    "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.exited_self_evaluation_question(mockAssignment, mockTracking);
-                $httpBackend.flush();
+                    "eventTime": mockTimestamp,
+                    "course_id":"1abcABC123-abcABC123_Z",
+                }));
             });
         });
 
-
-
         describe('viewed_page:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.viewed_page();
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -1010,10 +1021,11 @@ describe('learning-record-module', function () {
                             "type":"http://activitystrea.ms/schema/1.0/page"
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"NavigationEvent",
                     "action":"NavigatedTo",
+                    "profile":"ReadingProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -1022,9 +1034,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.viewed_page();
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -1036,7 +1046,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.viewed_page();
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -1058,10 +1070,11 @@ describe('learning-record-module', function () {
                                 "type":"http://activitystrea.ms/schema/1.0/page"
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"NavigationEvent",
                         "action":"NavigatedTo",
+                        "profile":"ReadingProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -1070,16 +1083,16 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.viewed_page();
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('filtered_page:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.filtered_page(mockFilters);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -1104,10 +1117,11 @@ describe('learning-record-module', function () {
                             "type":"http://activitystrea.ms/schema/1.0/page"
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                    "type":"Event",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                    "type":"SearchEvent",
                     "action":"Searched",
+                    "profile":"SearchProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -1117,9 +1131,7 @@ describe('learning-record-module', function () {
                         "filters": mockFilters
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.filtered_page(mockFilters);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -1131,7 +1143,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.filtered_page(mockFilters);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -1156,10 +1170,11 @@ describe('learning-record-module', function () {
                                 "type":"http://activitystrea.ms/schema/1.0/page"
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                        "type":"Event",
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                        "type":"SearchEvent",
                         "action":"Searched",
+                        "profile":"SearchProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -1169,16 +1184,16 @@ describe('learning-record-module', function () {
                             "filters": mockFilters
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.filtered_page(mockFilters);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('sorted_page:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.sorted_page(mockSortOrder);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -1203,10 +1218,11 @@ describe('learning-record-module', function () {
                             "type":"http://activitystrea.ms/schema/1.0/page"
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                    "type":"Event",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                    "type":"SearchEvent",
                     "action":"Searched",
+                    "profile":"SearchProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -1216,9 +1232,7 @@ describe('learning-record-module', function () {
                         "sortOrder": mockSortOrder
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.sorted_page(mockSortOrder);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -1230,7 +1244,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.sorted_page(mockSortOrder);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -1255,10 +1271,11 @@ describe('learning-record-module', function () {
                                 "type":"http://activitystrea.ms/schema/1.0/page"
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                        "type":"Event",
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                        "type":"SearchEvent",
                         "action":"Searched",
+                        "profile":"SearchProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -1268,16 +1285,16 @@ describe('learning-record-module', function () {
                             "sortOrder": mockSortOrder
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.sorted_page(mockSortOrder);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('opened_page_section:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.opened_page_section(sectionName);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -1304,10 +1321,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": sectionName }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Showed",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -1321,9 +1339,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.opened_page_section(sectionName);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -1335,7 +1351,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.opened_page_section(sectionName);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -1362,10 +1380,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": sectionName }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Showed",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -1379,16 +1398,16 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.opened_page_section(sectionName);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('closed_page_section:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.closed_page_section(sectionName);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -1415,10 +1434,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": sectionName }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Hid",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -1432,9 +1452,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.closed_page_section(sectionName);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -1446,7 +1464,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.closed_page_section(sectionName);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -1473,10 +1493,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": sectionName }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Hid",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -1490,16 +1511,16 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.closed_page_section(sectionName);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('filtered_page_section:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.filtered_page_section(sectionName, mockFilters);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -1529,10 +1550,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": sectionName }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                    "type":"Event",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                    "type":"SearchEvent",
                     "action":"Searched",
+                    "profile":"SearchProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -1547,9 +1569,7 @@ describe('learning-record-module', function () {
                         "filters": mockFilters
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.filtered_page_section(sectionName, mockFilters);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -1561,7 +1581,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.filtered_page_section(sectionName, mockFilters);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -1591,10 +1613,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": sectionName }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                        "type":"Event",
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                        "type":"SearchEvent",
                         "action":"Searched",
+                        "profile":"SearchProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -1609,16 +1632,16 @@ describe('learning-record-module', function () {
                             "filters": mockFilters
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.filtered_page_section(sectionName, mockFilters);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('sorted_page_section:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.sorted_page_section(sectionName, mockSortOrder);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -1648,10 +1671,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": sectionName }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                    "type":"Event",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                    "type":"SearchEvent",
                     "action":"Searched",
+                    "profile":"SearchProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -1666,9 +1690,7 @@ describe('learning-record-module', function () {
                         "sortOrder": mockSortOrder
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.sorted_page_section(sectionName, mockSortOrder);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -1680,7 +1702,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.sorted_page_section(sectionName, mockSortOrder);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -1710,10 +1734,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": sectionName }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                        "type":"Event",
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                        "type":"SearchEvent",
                         "action":"Searched",
+                        "profile":"SearchProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -1728,16 +1753,16 @@ describe('learning-record-module', function () {
                             "sortOrder": mockSortOrder
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.sorted_page_section(sectionName, mockSortOrder);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('opened_modal:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.opened_modal(modalName);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -1764,10 +1789,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": modalName }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Showed",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -1781,9 +1807,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.opened_modal(modalName);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -1795,7 +1819,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.opened_modal(modalName);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -1822,10 +1848,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": modalName }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Showed",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -1839,16 +1866,16 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.opened_modal(modalName);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('closed_modal:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.closed_modal(modalName);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -1875,10 +1902,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": modalName }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Hid",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -1892,9 +1920,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.closed_modal(modalName);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -1906,7 +1932,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.closed_modal(modalName);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -1933,10 +1961,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": modalName }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Hid",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -1950,16 +1979,16 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.closed_modal(modalName);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('filtered_modal:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.filtered_modal(modalName, mockFilters);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -1989,10 +2018,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": modalName }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                    "type":"Event",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                    "type":"SearchEvent",
                     "action":"Searched",
+                    "profile":"SearchProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -2007,9 +2037,7 @@ describe('learning-record-module', function () {
                         "filters": mockFilters
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.filtered_modal(modalName, mockFilters);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -2021,7 +2049,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.filtered_modal(modalName, mockFilters);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -2051,10 +2081,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": modalName }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                        "type":"Event",
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                        "type":"SearchEvent",
                         "action":"Searched",
+                        "profile":"SearchProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -2069,16 +2100,16 @@ describe('learning-record-module', function () {
                             "filters": mockFilters
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.filtered_modal(modalName, mockFilters);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('sorted_modal:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.sorted_modal(modalName, mockSortOrder);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -2108,10 +2139,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": modalName }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                    "type":"Event",
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                    "type":"SearchEvent",
                     "action":"Searched",
+                    "profile":"SearchProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -2126,9 +2158,7 @@ describe('learning-record-module', function () {
                         "sortOrder": mockSortOrder
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.sorted_modal(modalName, mockSortOrder);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -2140,7 +2170,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.sorted_modal(modalName, mockSortOrder);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -2170,10 +2202,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": modalName }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
-                        "type":"Event",
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
+                        "type":"SearchEvent",
                         "action":"Searched",
+                        "profile":"SearchProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -2188,16 +2221,16 @@ describe('learning-record-module', function () {
                             "sortOrder": mockSortOrder
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.sorted_modal(modalName, mockSortOrder);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('opened_inline_kaltura_media:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.opened_inline_kaltura_media(mockFile.name);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -2227,10 +2260,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": mockFile.name }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Showed",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -2244,9 +2278,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.opened_inline_kaltura_media(mockFile.name);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -2258,7 +2290,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.opened_inline_kaltura_media(mockFile.name);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -2288,10 +2322,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": mockFile.name }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Showed",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -2305,16 +2340,16 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.opened_inline_kaltura_media(mockFile.name);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('closed_inline_kaltura_media:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.closed_inline_kaltura_media(mockFile.name);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -2344,10 +2379,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": mockFile.name }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Hid",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -2361,9 +2397,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.closed_inline_kaltura_media(mockFile.name);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -2375,7 +2409,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.closed_inline_kaltura_media(mockFile.name);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -2405,10 +2441,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": mockFile.name }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Hid",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -2422,16 +2459,16 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.closed_inline_kaltura_media(mockFile.name);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('opened_attachment_modal:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.opened_attachment_modal(mockFile.name);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -2461,10 +2498,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": mockFile.name }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Showed",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -2478,9 +2516,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.opened_attachment_modal(mockFile.name);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -2492,7 +2528,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.opened_attachment_modal(mockFile.name);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -2522,10 +2560,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": mockFile.name }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Showed",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -2539,16 +2578,17 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.opened_attachment_modal(mockFile.name);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
+
         describe('closed_attachment_modal:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.closed_attachment_modal(mockFile.name);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -2578,10 +2618,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": mockFile.name }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Hid",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -2595,9 +2636,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.closed_attachment_modal(mockFile.name);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -2609,7 +2648,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.closed_attachment_modal(mockFile.name);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -2639,10 +2680,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": mockFile.name }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Hid",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -2656,16 +2698,16 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.closed_attachment_modal(mockFile.name);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('opened_embeddable_content_modal:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.opened_embeddable_content_modal("https://mock.com/url");
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -2695,10 +2737,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": "https://mock.com/url" }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Showed",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -2712,9 +2755,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.opened_embeddable_content_modal("https://mock.com/url");
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -2726,7 +2767,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.opened_embeddable_content_modal("https://mock.com/url");
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -2756,10 +2799,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": "https://mock.com/url" }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Showed",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -2773,16 +2817,16 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.opened_embeddable_content_modal("https://mock.com/url");
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
 
         describe('closed_embeddable_content_modal:', function() {
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.closed_embeddable_content_modal("https://mock.com/url");
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -2812,10 +2856,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": "https://mock.com/url" }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Hid",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -2829,9 +2874,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.closed_embeddable_content_modal("https://mock.com/url");
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -2843,7 +2886,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.closed_embeddable_content_modal("https://mock.com/url");
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -2873,10 +2918,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": "https://mock.com/url" }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Hid",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -2890,9 +2936,7 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.closed_embeddable_content_modal("https://mock.com/url");
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
@@ -2905,7 +2949,9 @@ describe('learning-record-module', function () {
             });
 
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.opened_answer_replies_section(mockAnswer1);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -2935,10 +2981,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": "answer/407cABC123-abcABC123_Z/replies" }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Showed",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -2952,9 +2999,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.opened_answer_replies_section(mockAnswer1);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -2966,7 +3011,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.opened_answer_replies_section(mockAnswer1);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -2996,10 +3043,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": "answer/407cABC123-abcABC123_Z/replies" }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Showed",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -3013,9 +3061,7 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.opened_answer_replies_section(mockAnswer1);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });
@@ -3028,7 +3074,9 @@ describe('learning-record-module', function () {
             });
 
             it('should generate a valid statement', function() {
-                $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                LearningRecordStatementHelper.closed_answer_replies_section(mockAnswer1);
+
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                     "id": mockStatementId,
                     "timestamp": mockTimestamp,
                     "verb":{
@@ -3058,10 +3106,11 @@ describe('learning-record-module', function () {
                             "name": { "en-US": "answer/407cABC123-abcABC123_Z/replies" }
                         }
                     }
-                }).respond({});
-                $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                }));
+                expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                     "type":"Event",
                     "action":"Hid",
+                    "profile":"GeneralProfile",
                     "object":{
                         "id":"https://localhost:8888/app/#"+mockLocationPath,
                         "type":"WebPage"
@@ -3075,9 +3124,7 @@ describe('learning-record-module', function () {
                         "absoluteUrl": mockLocationAbsUrl
                     },
                     "eventTime": mockTimestamp
-                }).respond({});
-                LearningRecordStatementHelper.closed_answer_replies_section(mockAnswer1);
-                $httpBackend.flush();
+                }));
             });
 
             describe('with additional pound "#":', function() {
@@ -3089,7 +3136,9 @@ describe('learning-record-module', function () {
                 it('should generate a valid statement', function() {
                     expectedLocationPath  = mockLocationPath+"%23answer"
                     expectedLocationAbsUrl = mockLocationAbsUrl+"%23answer"
-                    $httpBackend.expectPOST(/\/api\/learning_records\/xapi\/statements$/, {
+                    LearningRecordStatementHelper.closed_answer_replies_section(mockAnswer1);
+
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/xapi/statements', JSON.stringify({
                         "id": mockStatementId,
                         "timestamp": mockTimestamp,
                         "verb":{
@@ -3119,10 +3168,11 @@ describe('learning-record-module', function () {
                                 "name": { "en-US": "answer/407cABC123-abcABC123_Z/replies" }
                             }
                         }
-                    }).respond({});
-                    $httpBackend.expectPOST(/\/api\/learning_records\/caliper\/events$/, {
+                    }));
+                    expect(navigator.sendBeacon).toHaveBeenCalledWith('/api/learning_records/caliper/events', JSON.stringify({
                         "type":"Event",
                         "action":"Hid",
+                        "profile":"GeneralProfile",
                         "object":{
                             "id":"https://localhost:8888/app/#"+expectedLocationPath,
                             "type":"WebPage"
@@ -3136,9 +3186,7 @@ describe('learning-record-module', function () {
                             "absoluteUrl": expectedLocationAbsUrl
                         },
                         "eventTime": mockTimestamp
-                    }).respond({});
-                    LearningRecordStatementHelper.closed_answer_replies_section(mockAnswer1);
-                    $httpBackend.flush();
+                    }));
                 });
             });
         });

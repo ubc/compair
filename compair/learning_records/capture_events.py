@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
 #
 from __future__ import (absolute_import, division, print_function, unicode_literals)
-from future.standard_library import install_aliases
-install_aliases()
 
 import mimetypes
 import caliper
 
-from .resource_iri import ResourceIRI
-from .learning_record import LearningRecord
+from compair.learning_records.resource_iri import ResourceIRI
+from compair.learning_records.learning_record import LearningRecord
 
-from .xapi import XAPIActivity, XAPIActor, XAPIContext, \
+from compair.learning_records.xapi import XAPIActivity, XAPIActor, XAPIContext, \
     XAPIObject, XAPIResult, XAPIStatement, XAPIVerb, XAPI
-from .caliper import CaliperSensor, CaliperEntities, CaliperEvent, \
+from compair.learning_records.caliper import CaliperSensor, CaliperEntities, CaliperEvent, \
     CaliperActor
 
 from compair.models import AnswerCommentType, File
@@ -82,7 +80,8 @@ def learning_record_on_login_with_method(sender, user, **extra):
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.SessionEvent(
-            action=caliper.constants.SESSION_EVENT_ACTIONS["LOGGED_IN"],
+            action=caliper.constants.CALIPER_ACTIONS["LOGGED_IN"],
+            profile=caliper.constants.CALIPER_PROFILES['SESSION'],
             object=CaliperEntities.compair_app(),
             **CaliperEvent._defaults(user)
         ))
@@ -99,7 +98,8 @@ def learning_record_on_logout(sender, user, **extra):
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.SessionEvent(
-            action=caliper.constants.SESSION_EVENT_ACTIONS["LOGGED_OUT"],
+            action=caliper.constants.CALIPER_ACTIONS["LOGGED_OUT"],
+            profile=caliper.constants.CALIPER_PROFILES['SESSION'],
             object=CaliperEntities.compair_app(),
             **CaliperEvent._defaults(user)
         ))
@@ -123,8 +123,9 @@ def learning_record_on_get_file(sender, user, **extra):
             ))
 
         if CaliperSensor.enabled():
-            CaliperSensor.emit(caliper.events.ViewEvent(
-                action=caliper.constants.VIEW_EVENT_ACTIONS["VIEWED"],
+            CaliperSensor.emit(caliper.events.ResourceManagementEvent(
+                action=caliper.constants.CALIPER_ACTIONS["DOWNLOADED"],
+                profile=caliper.constants.CALIPER_PROFILES['RESOURCE_MANAGEMENT'],
                 object=CaliperEntities.report(file_name, mimetype),
                 **CaliperEvent._defaults(user)
             ))
@@ -145,8 +146,9 @@ def learning_record_on_get_file(sender, user, **extra):
                     ))
 
                 if CaliperSensor.enabled():
-                    CaliperSensor.emit(caliper.events.ViewEvent(
-                        action=caliper.constants.VIEW_EVENT_ACTIONS["VIEWED"],
+                    CaliperSensor.emit(caliper.events.ResourceManagementEvent(
+                        action=caliper.constants.CALIPER_ACTIONS["DOWNLOADED"],
+                        profile=caliper.constants.CALIPER_PROFILES['RESOURCE_MANAGEMENT'],
                         object=CaliperEntities.assignment_attachment(assignment, file_record, mimetype),
                         **CaliperEvent._defaults(user, course=assignment.course)
                     ))
@@ -161,10 +163,10 @@ def learning_record_on_get_file(sender, user, **extra):
                     ))
 
                 if CaliperSensor.enabled():
-                    CaliperSensor.emit(caliper.events.ViewEvent(
-                        action=caliper.constants.VIEW_EVENT_ACTIONS["VIEWED"],
+                    CaliperSensor.emit(caliper.events.ResourceManagementEvent(
+                        action=caliper.constants.CALIPER_ACTIONS["DOWNLOADED"],
+                        profile=caliper.constants.CALIPER_PROFILES['RESOURCE_MANAGEMENT'],
                         object=CaliperEntities.answer_attachment(answer, file_record, mimetype),
-
                         **CaliperEvent._defaults(user, course=answer.assignment.course)
                     ))
 
@@ -189,7 +191,8 @@ def learning_record_on_attach_file(sender, user, **extra):
 
         if CaliperSensor.enabled():
             CaliperSensor.emit(caliper.events.Event(
-                action=caliper.constants.BASIC_EVENT_ACTIONS["ATTACHED"],
+                action=caliper.constants.CALIPER_ACTIONS["ATTACHED"],
+                profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
                 object=CaliperEntities.assignment_attachment(assignment, file_record, mimetype),
                 **CaliperEvent._defaults(user, course=assignment.course)
             ))
@@ -205,7 +208,8 @@ def learning_record_on_attach_file(sender, user, **extra):
 
         if CaliperSensor.enabled():
             CaliperSensor.emit(caliper.events.Event(
-                action=caliper.constants.BASIC_EVENT_ACTIONS["ATTACHED"],
+                action=caliper.constants.CALIPER_ACTIONS["ATTACHED"],
+                profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
                 object=CaliperEntities.answer_attachment(answer, file_record, mimetype),
                 **CaliperEvent._defaults(user, course=answer.assignment.course)
             ))
@@ -225,14 +229,15 @@ def learning_record_on_detach_file(sender, user, **extra):
         if XAPI.enabled():
             XAPI.emit(XAPIStatement.generate(
                 user=user,
-                verb=XAPIVerb.generate('deleted'),
+                verb=XAPIVerb.generate('removed'),
                 object=XAPIObject.assignment_attachment(file_record, mimetype),
                 context=XAPIContext.assignment_attachment(assignment)
             ))
 
         if CaliperSensor.enabled():
             CaliperSensor.emit(caliper.events.Event(
-                action=caliper.constants.BASIC_EVENT_ACTIONS["REMOVED"],
+                action=caliper.constants.CALIPER_ACTIONS["REMOVED"],
+                profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
                 object=CaliperEntities.assignment_attachment(assignment, file_record, mimetype),
                 **CaliperEvent._defaults(user, course=assignment.course)
             ))
@@ -241,14 +246,15 @@ def learning_record_on_detach_file(sender, user, **extra):
         if XAPI.enabled():
             XAPI.emit(XAPIStatement.generate(
                 user=user,
-                verb=XAPIVerb.generate('deleted'),
+                verb=XAPIVerb.generate('removed'),
                 object=XAPIObject.answer_attachment(file_record, mimetype),
                 context=XAPIContext.answer_attachment(answer)
             ))
 
         if CaliperSensor.enabled():
             CaliperSensor.emit(caliper.events.Event(
-                action=caliper.constants.BASIC_EVENT_ACTIONS["REMOVED"],
+                action=caliper.constants.CALIPER_ACTIONS["REMOVED"],
+                profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
                 object=CaliperEntities.answer_attachment(answer, file_record, mimetype),
                 **CaliperEvent._defaults(user, course=answer.assignment.course)
             ))
@@ -268,7 +274,8 @@ def learning_record_on_user_modified(sender, user, **extra):
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["MODIFIED"],
+            action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+            profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
             object=CaliperActor.generate_actor(user),
             extensions={
                 "changes": changes
@@ -305,15 +312,17 @@ def learning_record_on_answer_comment_create(sender, user, **extra):
 
         if CaliperSensor.enabled():
             if not answer_comment.draft:
-                CaliperSensor.emit(caliper.events.Event(
-                    action=caliper.constants.BASIC_EVENT_ACTIONS["COMMENTED"],
+                CaliperSensor.emit(caliper.events.FeedbackEvent(
+                    action=caliper.constants.CALIPER_ACTIONS["COMMENTED"],
+                    profile=caliper.constants.CALIPER_PROFILES['FEEDBACK'],
                     object=CaliperEntities.answer(answer_comment.answer),
                     generated=CaliperEntities.answer_comment(answer_comment),
                     **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
                 ))
 
             CaliperSensor.emit(caliper.events.AssessmentItemEvent(
-                action=caliper.constants.ASSESSMENT_ITEM_EVENT_ACTIONS["COMPLETED"],
+                action=caliper.constants.CALIPER_ACTIONS["COMPLETED"],
+                profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
                 object=CaliperEntities.evaluation_question(answer_comment.answer.assignment, evaluation_number),
                 generated=CaliperEntities.evaluation_response(answer_comment, evaluation_number),
                 **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
@@ -348,24 +357,34 @@ def learning_record_on_answer_comment_create(sender, user, **extra):
 
         if CaliperSensor.enabled():
             if not answer_comment.draft:
-                CaliperSensor.emit(caliper.events.Event(
-                    action=caliper.constants.BASIC_EVENT_ACTIONS["COMMENTED"],
+                CaliperSensor.emit(caliper.events.FeedbackEvent(
+                    action=caliper.constants.CALIPER_ACTIONS["COMMENTED"],
+                    profile=caliper.constants.CALIPER_PROFILES['FEEDBACK'],
                     object=CaliperEntities.answer(answer_comment.answer),
                     generated=CaliperEntities.answer_comment(answer_comment),
                     **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
                 ))
 
             CaliperSensor.emit(caliper.events.AssessmentItemEvent(
-                action=caliper.constants.ASSESSMENT_ITEM_EVENT_ACTIONS["COMPLETED"],
+                action=caliper.constants.CALIPER_ACTIONS["COMPLETED"],
+                profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
                 object=CaliperEntities.self_evaluation_question(answer_comment.answer.assignment),
                 generated=CaliperEntities.self_evaluation_response(answer_comment),
                 **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
             ))
 
             CaliperSensor.emit(caliper.events.AssessmentEvent(
-                action=caliper.constants.ASSESSMENT_EVENT_ACTIONS["SUBMITTED"],
+                action=caliper.constants.CALIPER_ACTIONS["SUBMITTED"],
+                profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
                 object=CaliperEntities.assignment(answer_comment.answer.assignment),
                 generated=CaliperEntities.assignment_attempt(answer_comment.answer.assignment, answer_comment, answer_comment.user),
+                **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
+            ))
+
+            CaliperSensor.emit(caliper.events.ToolUseEvent(
+                action=caliper.constants.CALIPER_ACTIONS["USED"],
+                profile=caliper.constants.CALIPER_PROFILES['TOOL_USE'],
+                object=CaliperEntities.compair_app(),
                 **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
             ))
 
@@ -382,8 +401,9 @@ def learning_record_on_answer_comment_create(sender, user, **extra):
             ))
 
         if CaliperSensor.enabled():
-            CaliperSensor.emit(caliper.events.Event(
-                action=caliper.constants.BASIC_EVENT_ACTIONS["COMMENTED"],
+            CaliperSensor.emit(caliper.events.FeedbackEvent(
+                action=caliper.constants.CALIPER_ACTIONS["COMMENTED"],
+                profile=caliper.constants.CALIPER_PROFILES['FEEDBACK'],
                 object=CaliperEntities.answer(answer_comment.answer),
                 generated=CaliperEntities.answer_comment(answer_comment),
                 **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
@@ -424,15 +444,25 @@ def learning_record_on_answer_comment_modified(sender, user, **extra):
 
         if CaliperSensor.enabled():
             if not answer_comment.draft:
-                CaliperSensor.emit(caliper.events.Event(
-                    action=caliper.constants.BASIC_EVENT_ACTIONS["COMMENTED" if was_draft else "MODIFIED"],
-                    object=CaliperEntities.answer(answer_comment.answer),
-                    generated=CaliperEntities.answer_comment(answer_comment),
-                    **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
-                ))
+                if was_draft:
+                    CaliperSensor.emit(caliper.events.FeedbackEvent(
+                        action=caliper.constants.CALIPER_ACTIONS["COMMENTED"],
+                        profile=caliper.constants.CALIPER_PROFILES['FEEDBACK'],
+                        object=CaliperEntities.answer(answer_comment.answer),
+                        generated=CaliperEntities.answer_comment(answer_comment),
+                        **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
+                    ))
+                else:
+                    CaliperSensor.emit(caliper.events.Event(
+                        action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+                        profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
+                        object=CaliperEntities.answer_comment(answer_comment),
+                        **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
+                    ))
 
             CaliperSensor.emit(caliper.events.AssessmentItemEvent(
-                action=caliper.constants.ASSESSMENT_ITEM_EVENT_ACTIONS["COMPLETED"],
+                action=caliper.constants.CALIPER_ACTIONS["COMPLETED"],
+                profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
                 object=CaliperEntities.evaluation_question(answer_comment.answer.assignment, evaluation_number),
                 generated=CaliperEntities.evaluation_response(answer_comment, evaluation_number),
                 **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
@@ -467,24 +497,43 @@ def learning_record_on_answer_comment_modified(sender, user, **extra):
 
         if CaliperSensor.enabled():
             if not answer_comment.draft:
-                CaliperSensor.emit(caliper.events.Event(
-                    action=caliper.constants.BASIC_EVENT_ACTIONS["COMMENTED" if was_draft else "MODIFIED"],
-                    object=CaliperEntities.answer(answer_comment.answer),
-                    generated=CaliperEntities.answer_comment(answer_comment),
-                    **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
-                ))
+                if was_draft:
+                    CaliperSensor.emit(caliper.events.FeedbackEvent(
+                        action=caliper.constants.CALIPER_ACTIONS["COMMENTED"],
+                        profile=caliper.constants.CALIPER_PROFILES['FEEDBACK'],
+                        object=CaliperEntities.answer(answer_comment.answer),
+                        generated=CaliperEntities.answer_comment(answer_comment),
+                        **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
+                    ))
+                else:
+                    CaliperSensor.emit(caliper.events.Event(
+                        action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+                        profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
+                        object=CaliperEntities.answer_comment(answer_comment),
+                        **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
+                    ))
+
 
             CaliperSensor.emit(caliper.events.AssessmentItemEvent(
-                action=caliper.constants.ASSESSMENT_ITEM_EVENT_ACTIONS["COMPLETED"],
+                action=caliper.constants.CALIPER_ACTIONS["COMPLETED"],
+                profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
                 object=CaliperEntities.self_evaluation_question(answer_comment.answer.assignment),
                 generated=CaliperEntities.self_evaluation_response(answer_comment),
                 **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
             ))
 
             CaliperSensor.emit(caliper.events.AssessmentEvent(
-                action=caliper.constants.ASSESSMENT_EVENT_ACTIONS["SUBMITTED"],
+                action=caliper.constants.CALIPER_ACTIONS["SUBMITTED"],
+                profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
                 object=CaliperEntities.assignment(answer_comment.answer.assignment),
                 generated=CaliperEntities.assignment_attempt(answer_comment.answer.assignment, answer_comment, answer_comment.user),
+                **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
+            ))
+
+            CaliperSensor.emit(caliper.events.ToolUseEvent(
+                action=caliper.constants.CALIPER_ACTIONS["USED"],
+                profile=caliper.constants.CALIPER_PROFILES['TOOL_USE'],
+                object=CaliperEntities.compair_app(),
                 **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
             ))
 
@@ -502,9 +551,9 @@ def learning_record_on_answer_comment_modified(sender, user, **extra):
 
         if CaliperSensor.enabled():
             CaliperSensor.emit(caliper.events.Event(
-                action=caliper.constants.BASIC_EVENT_ACTIONS["MODIFIED"],
-                object=CaliperEntities.answer(answer_comment.answer),
-                generated=CaliperEntities.answer_comment(answer_comment),
+                action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+                profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
+                object=CaliperEntities.answer_comment(answer_comment),
                 **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
             ))
 
@@ -519,14 +568,15 @@ def learning_record_on_answer_comment_delete(sender, user, **extra):
     if XAPI.enabled():
         XAPI.emit(XAPIStatement.generate(
             user=user,
-            verb=XAPIVerb.generate('deleted'),
+            verb=XAPIVerb.generate('archived'),
             object=XAPIObject.answer_comment(answer_comment),
             context=XAPIContext.answer_comment(answer_comment)
         ))
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["DELETED"],
+            action=caliper.constants.CALIPER_ACTIONS["ARCHIVED"],
+            profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
             object=CaliperEntities.answer_comment(answer_comment),
             **CaliperEvent._defaults(user, course=answer_comment.answer.assignment.course)
         ))
@@ -557,16 +607,25 @@ def learning_record_on_answer_create(sender, user, **extra):
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.AssessmentItemEvent(
-            action=caliper.constants.ASSESSMENT_ITEM_EVENT_ACTIONS["COMPLETED"],
+            action=caliper.constants.CALIPER_ACTIONS["COMPLETED"],
+            profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
             object=CaliperEntities.assignment_question(answer.assignment),
             generated=CaliperEntities.answer(answer),
             **CaliperEvent._defaults(user, course=answer.assignment.course)
         ))
 
         CaliperSensor.emit(caliper.events.AssessmentEvent(
-            action=caliper.constants.ASSESSMENT_EVENT_ACTIONS["SUBMITTED"],
+            action=caliper.constants.CALIPER_ACTIONS["SUBMITTED"],
+            profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
             object=CaliperEntities.assignment(answer.assignment),
             generated=CaliperEntities.assignment_attempt(answer.assignment, answer, user),
+            **CaliperEvent._defaults(user, course=answer.assignment.course)
+        ))
+
+        CaliperSensor.emit(caliper.events.ToolUseEvent(
+            action=caliper.constants.CALIPER_ACTIONS["USED"],
+            profile=caliper.constants.CALIPER_PROFILES['TOOL_USE'],
+            object=CaliperEntities.compair_app(),
             **CaliperEvent._defaults(user, course=answer.assignment.course)
         ))
 
@@ -595,16 +654,25 @@ def learning_record_on_answer_modified(sender, user, **extra):
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.AssessmentItemEvent(
-            action=caliper.constants.ASSESSMENT_ITEM_EVENT_ACTIONS["COMPLETED"],
+            action=caliper.constants.CALIPER_ACTIONS["COMPLETED"],
+            profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
             object=CaliperEntities.assignment_question(answer.assignment),
             generated=CaliperEntities.answer(answer),
             **CaliperEvent._defaults(user, course=answer.assignment.course)
         ))
 
         CaliperSensor.emit(caliper.events.AssessmentEvent(
-            action=caliper.constants.ASSESSMENT_EVENT_ACTIONS["SUBMITTED"],
+            action=caliper.constants.CALIPER_ACTIONS["SUBMITTED"],
+            profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
             object=CaliperEntities.assignment(answer.assignment),
             generated=CaliperEntities.assignment_attempt(answer.assignment, answer, user),
+            **CaliperEvent._defaults(user, course=answer.assignment.course)
+        ))
+
+        CaliperSensor.emit(caliper.events.ToolUseEvent(
+            action=caliper.constants.CALIPER_ACTIONS["USED"],
+            profile=caliper.constants.CALIPER_PROFILES['TOOL_USE'],
+            object=CaliperEntities.compair_app(),
             **CaliperEvent._defaults(user, course=answer.assignment.course)
         ))
 
@@ -617,14 +685,15 @@ def learning_record_on_answer_delete(sender, user, **extra):
     if XAPI.enabled():
         XAPI.emit(XAPIStatement.generate(
             user=user,
-            verb=XAPIVerb.generate('deleted'),
+            verb=XAPIVerb.generate('archived'),
             object=XAPIObject.answer(answer),
             context=XAPIContext.answer(answer)
         ))
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["DELETED"],
+            action=caliper.constants.CALIPER_ACTIONS["ARCHIVED"],
+            profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
             object=CaliperEntities.answer(answer),
             **CaliperEvent._defaults(user, course=answer.assignment.course)
         ))
@@ -644,8 +713,9 @@ def learning_record_on_assignment_create(sender, user, **extra):
         ))
 
     if CaliperSensor.enabled():
-        CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["CREATED"],
+        CaliperSensor.emit(caliper.events.ResourceManagementEvent(
+            action=caliper.constants.CALIPER_ACTIONS["CREATED"],
+            profile=caliper.constants.CALIPER_PROFILES['RESOURCE_MANAGEMENT'],
             object=CaliperEntities.assignment(assignment),
             **CaliperEvent._defaults(user, course=assignment.course)
         ))
@@ -665,8 +735,9 @@ def learning_record_on_assignment_modified(sender, user, **extra):
         ))
 
     if CaliperSensor.enabled():
-        CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["MODIFIED"],
+        CaliperSensor.emit(caliper.events.ResourceManagementEvent(
+            action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+            profile=caliper.constants.CALIPER_PROFILES['RESOURCE_MANAGEMENT'],
             object=CaliperEntities.assignment(assignment),
             **CaliperEvent._defaults(user, course=assignment.course)
         ))
@@ -680,14 +751,15 @@ def learning_record_on_assignment_delete(sender, user, **extra):
     if XAPI.enabled():
         XAPI.emit(XAPIStatement.generate(
             user=user,
-            verb=XAPIVerb.generate('deleted'),
+            verb=XAPIVerb.generate('archived'),
             object=XAPIObject.assignment(assignment),
             context=XAPIContext.assignment(assignment)
         ))
 
     if CaliperSensor.enabled():
-        CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["DELETED"],
+        CaliperSensor.emit(caliper.events.ResourceManagementEvent(
+            action=caliper.constants.CALIPER_ACTIONS["ARCHIVED"],
+            profile=caliper.constants.CALIPER_PROFILES['RESOURCE_MANAGEMENT'],
             object=CaliperEntities.assignment(assignment),
             **CaliperEvent._defaults(user, course=assignment.course)
         ))
@@ -724,16 +796,25 @@ def learning_record_on_comparison_update(sender, user, **extra):
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.AssessmentItemEvent(
-            action=caliper.constants.ASSESSMENT_ITEM_EVENT_ACTIONS["COMPLETED"],
+            action=caliper.constants.CALIPER_ACTIONS["COMPLETED"],
+            profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
             object=CaliperEntities.comparison_question(comparison.assignment, current_comparison),
             generated=CaliperEntities.comparison(comparison, current_comparison),
             **CaliperEvent._defaults(user, course=comparison.assignment.course)
         ))
 
         CaliperSensor.emit(caliper.events.AssessmentEvent(
-            action=caliper.constants.ASSESSMENT_EVENT_ACTIONS["SUBMITTED"],
+            action=caliper.constants.CALIPER_ACTIONS["SUBMITTED"],
+            profile=caliper.constants.CALIPER_PROFILES['ASSESSMENT'],
             object=CaliperEntities.assignment(comparison.assignment),
             generated=CaliperEntities.assignment_attempt(comparison.assignment, comparison, user),
+            **CaliperEvent._defaults(user, course=comparison.assignment.course)
+        ))
+
+        CaliperSensor.emit(caliper.events.ToolUseEvent(
+            action=caliper.constants.CALIPER_ACTIONS["USED"],
+            profile=caliper.constants.CALIPER_PROFILES['TOOL_USE'],
+            object=CaliperEntities.compair_app(),
             **CaliperEvent._defaults(user, course=comparison.assignment.course)
         ))
 
@@ -757,12 +838,14 @@ def learning_record_on_comparison_update(sender, user, **extra):
 
         if CaliperSensor.enabled():
             CaliperSensor.emit(caliper.events.Event(
-                action=caliper.constants.BASIC_EVENT_ACTIONS["RANKED"],
+                action=caliper.constants.CALIPER_ACTIONS["RANKED"],
+                profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
                 object=CaliperEntities.answer(comparison.answer1),
                 **CaliperEvent._defaults(user, course=comparison.assignment.course)
             ))
             CaliperSensor.emit(caliper.events.Event(
-                action=caliper.constants.BASIC_EVENT_ACTIONS["RANKED"],
+                action=caliper.constants.CALIPER_ACTIONS["RANKED"],
+                profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
                 object=CaliperEntities.answer(comparison.answer2),
                 **CaliperEvent._defaults(user, course=comparison.assignment.course)
             ))
@@ -784,7 +867,8 @@ def learning_record_on_course_create(sender, user, **extra):
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["CREATED"],
+            action=caliper.constants.CALIPER_ACTIONS["CREATED"],
+            profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
             object=CaliperEntities.course(course),
             **CaliperEvent._defaults(user, course=course)
         ))
@@ -803,7 +887,8 @@ def learning_record_on_course_modified(sender, user, **extra):
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["MODIFIED"],
+            action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+            profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
             object=CaliperEntities.course(course),
             **CaliperEvent._defaults(user, course=course)
         ))
@@ -817,13 +902,14 @@ def learning_record_on_course_delete(sender, user, **extra):
     if XAPI.enabled():
         XAPI.emit(XAPIStatement.generate(
             user=user,
-            verb=XAPIVerb.generate('deleted'),
+            verb=XAPIVerb.generate('archived'),
             object=XAPIObject.course(course)
         ))
 
     if CaliperSensor.enabled():
         CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["DELETED"],
+            action=caliper.constants.CALIPER_ACTIONS["ARCHIVED"],
+            profile=caliper.constants.CALIPER_PROFILES['GENERAL'],
             object=CaliperEntities.course(course),
             **CaliperEvent._defaults(user, course=course)
         ))
@@ -842,8 +928,9 @@ def learning_record_on_criterion_create(sender, user, **extra):
         ))
 
     if CaliperSensor.enabled():
-        CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["CREATED"],
+        CaliperSensor.emit(caliper.events.ResourceManagementEvent(
+            action=caliper.constants.CALIPER_ACTIONS["CREATED"],
+            profile=caliper.constants.CALIPER_PROFILES['RESOURCE_MANAGEMENT'],
             object=CaliperEntities.criterion(criterion),
             **CaliperEvent._defaults(user)
         ))
@@ -862,8 +949,9 @@ def learning_record_on_criterion_update(sender, user, **extra):
         ))
 
     if CaliperSensor.enabled():
-        CaliperSensor.emit(caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["MODIFIED"],
+        CaliperSensor.emit(caliper.events.ResourceManagementEvent(
+            action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+            profile=caliper.constants.CALIPER_PROFILES['RESOURCE_MANAGEMENT'],
             object=CaliperEntities.criterion(criterion),
             **CaliperEvent._defaults(user)
         ))

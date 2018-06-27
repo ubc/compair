@@ -1,4 +1,3 @@
-from future.utils import native
 from flask import current_app, url_for, session as sess
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.settings import OneLogin_Saml2_Settings

@@ -65,7 +65,7 @@ def login():
 class Logout(Resource):
     @login_required
     def delete(self):
-        sess['end_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+        sess['end_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         on_logout.send(
             current_app._get_current_object(),
             event=on_logout.name,
@@ -366,7 +366,7 @@ def authenticate(user, login_method=None, skip_event_tracking=False):
         current_app.logger.debug("Login successful for: user_id = " + str(user.id))
 
     sess['session_id'] = md5(sess['session_token'].encode('UTF-8')).hexdigest()
-    sess['start_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+    sess['start_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
     sess['login_method'] = login_method
 
     if not skip_event_tracking:
