@@ -136,31 +136,24 @@ Run `gulp prod` to generate production assets. This currently just:
 Setting up Learning Analytics
 ---------------------------
 
-ComPAIR uses the Experience API (xAPI) for collecting learning analytics. xAPI requires a [Learning Record Store (LRS)](http://tincanapi.com/learning-record-store/) to use.
-ComPAIR currently only supports basic OAuth1 authentication connections to the LRS. Authentication can be set with either `LRS_USERNAME`+`LRS_PASSWORD` or `LRS_AUTH`.
+ComPAIR uses the Experience API (xAPI) and/or Caliper for collecting learning analytics. Both requires a [Learning Record Store (LRS)](http://tincanapi.com/learning-record-store/) to use.
 
-For development, you can set `LRS_STATEMENT_ENDPOINT` to either the 'local' setting (to dump statements into the `xapi_log` table) or to an account on [https://lrs.adlnet.gov/](https://lrs.adlnet.gov/) for your LRS.
-Note that [https://lrs.adlnet.gov/](https://lrs.adlnet.gov/) is set up for testing purposes only and they can clear their data at any time (do not use in production).
+`LRS_APP_BASE_URL` Optionally set a base url to use for all statements. This is useful to help keep statement urls consistent if the url of your instance changes over time or is accessible though different routes (ex http+https or multiple sub-domains). (Uses base url of request by default)
 
-### Settings
+`LRS_USER_INPUT_FIELD_SIZE_LIMIT`: Set the byte limit on statement fields containing user input. Set this in order to prevent sending large statements to the LRS that it can't handle (1048576 by default or 1MB)
 
-`XAPI_ENABLED`: Set to 1 to enable collecting learning analytics (disabled by default)
+`LRS_SIS_COURSE_ID_URI_TEMPLATE`: Template for setting SIS course ids (default '{base_url}/course/{sis_course_id}'). Uses string format function with access to:
+- `{base_url}`: Value of `LRS_APP_BASE_URL`
+- `{sis_course_id}`: SIS course ID from LTI context lis_course_offering_sourcedid
 
-`LRS_STATEMENT_ENDPOINT`: Set the url LRS. Use 'local' for dumping statements into `xapi_log` table ('local' by default)
-
-`LRS_USERNAME`: The username for the OAuth1 account.
-
-`LRS_PASSWORD`: The password for the OAuth1 account.
-
-`LRS_AUTH`: Must be in the format `Basic LRS_USERNAME:LRS_PASSWORD` where `LRS_USERNAME:LRS_PASSWORD` has been base64 encoded.
-
-`XAPI_APP_BASE_URL` Optionally set a base url to use for all statements. This is useful to help keep statement urls consistent if the url of your instance changes over time or is accessible though different routes (ex http+https or multiple sub-domains). (Uses base url of request by default)
-
-xAPI statements require an actor (currently logged in user) account information. The ComPAIR account information will be used by default unless the following settings are changed.
-
-`LRS_USER_INPUT_FIELD_SIZE_LIMIT`: Set the byte limit on xAPI statement fields containing user input. Set this in order to prevent sending large statements to the LRS that it can't handle (1048576 by default or 1MB)
+`LRS_SIS_SECTION_ID_URI_TEMPLATE`: Template for setting SIS course ids (default '{base_url}/course/{sis_course_id}/section/{sis_section_id}'). Uses string format function with access to:
+- `{base_url}`: Value of `LRS_APP_BASE_URL`
+- `{sis_course_id}`: SIS course ID from LTI context lis_course_offering_sourcedid
+- `{sis_section_id}`: SIS section ID from LTI context lis_course_section_sourcedid
 
 Restart server after making any changes to settings
+
+Statements require an actor (currently logged in user) account information. The ComPAIR account information will be used by default unless the following settings are changed.
 
 ### Actor Account settings
 
@@ -171,6 +164,35 @@ Use these settings to control the actor information sent to the LRS. This requir
 `LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE`: Set the actor's homepage when using `global_unique_identifier`.
 
 Note: Both `LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER` and `LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE` need to be configured and the user must have a `global_unique_identifier` or else the default ComPAIR actor will be sent.
+
+##XAPI Setup
+
+ComPAIR currently only supports basic OAuth1 authentication connections to the LRS. Authentication can be set with either `LRS_XAPI_USERNAME`+`LRS_XAPI_PASSWORD` or `LRS_XAPI_AUTH`.
+
+For development, you can set `LRS_XAPI_STATEMENT_ENDPOINT` to either the 'local' setting (to dump statements into the `xapi_log` table) or to an account on [https://lrs.adlnet.gov/](https://lrs.adlnet.gov/) for your LRS.
+Note that [https://lrs.adlnet.gov/](https://lrs.adlnet.gov/) is set up for testing purposes only and they can clear their data at any time (do not use in production).
+
+### Settings
+
+`XAPI_ENABLED`: Set to 1 to enable collecting learning analytics (disabled by default)
+
+`LRS_XAPI_STATEMENT_ENDPOINT`: Set the url LRS. Use 'local' for dumping statements into `xapi_log` table ('local' by default)
+
+`LRS_XAPI_USERNAME`: The username for the OAuth1 account.
+
+`LRS_XAPI_PASSWORD`: The password for the OAuth1 account.
+
+`LRS_XAPI_AUTH`: Must be in the format `Basic LRS_XAPI_USERNAME:LRS_XAPI_PASSWORD` where `LRS_XAPI_USERNAME:LRS_XAPI_PASSWORD` has been base64 encoded.
+
+##Caliper Setup
+
+### Settings
+
+`CALIPER_ENABLED`: Set to 1 to enable collecting learning analytics (disabled by default)
+
+`LRS_CALIPER_HOST`: Set the url LRS. Use 'local' for dumping statements into `xapi_log` table ('local' by default)
+
+`LRS_CALIPER_API_KEY`: API key for sending Caliper statements to the LRS.
 
 (Optional) Setting up Background Tasks
 ---------------------------

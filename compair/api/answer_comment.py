@@ -20,12 +20,13 @@ new_answer_comment_parser.add_argument('user_id', default=None)
 new_answer_comment_parser.add_argument('content')
 new_answer_comment_parser.add_argument('comment_type', required=True, nullable=False)
 new_answer_comment_parser.add_argument('draft', type=bool, default=False)
+new_answer_comment_parser.add_argument('evaluation_number', type=int, default=None)
+new_answer_comment_parser.add_argument('attempt_uuid', default=None)
+new_answer_comment_parser.add_argument('attempt_started', default=None)
+new_answer_comment_parser.add_argument('attempt_ended', default=None)
 
-existing_answer_comment_parser = RequestParser()
-existing_answer_comment_parser.add_argument('id', required=True, nullable=False, help="Comment id is required.")
-existing_answer_comment_parser.add_argument('content')
-existing_answer_comment_parser.add_argument('comment_type', required=True, nullable=False)
-existing_answer_comment_parser.add_argument('draft', type=bool, default=False)
+existing_answer_comment_parser = new_answer_comment_parser.copy()
+existing_answer_comment_parser.add_argument('id', required=True, help="Comment id is required.")
 
 answer_comment_list_parser = pagination_parser.copy()
 answer_comment_list_parser.add_argument('self_evaluation', required=False, default='true')
@@ -223,6 +224,12 @@ class AnswerCommentListAPI(Resource):
         if answer_comment.comment_type == AnswerCommentType.self_evaluation and not assignment.self_eval_grace and not allow(MANAGE, assignment):
             abort(403, title="Self-Evaluation Not Saved", message="Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.")
 
+        answer_comment.update_attempt(
+            params.get('attempt_uuid'),
+            params.get('attempt_started', None),
+            params.get('attempt_ended', None)
+        )
+
         db.session.add(answer_comment)
         db.session.commit()
 
@@ -237,6 +244,7 @@ class AnswerCommentListAPI(Resource):
             user=current_user,
             course_id=course.id,
             answer_comment=answer_comment,
+            evaluation_number=params.get("evaluation_number"),
             data=marshal(answer_comment, dataformat.get_answer_comment(restrict_user)))
 
         return marshal(answer_comment, dataformat.get_answer_comment(restrict_user))
@@ -334,6 +342,12 @@ class AnswerCommentAPI(Resource):
         if not answer_comment.content and not answer_comment.draft:
             abort(400, title="Feedback Not Saved", message="Please provide content in the text editor and try saving again.")
 
+        answer_comment.update_attempt(
+            params.get('attempt_uuid'),
+            params.get('attempt_started', None),
+            params.get('attempt_ended', None)
+        )
+
         model_changes = get_model_changes(answer_comment)
         db.session.add(answer_comment)
         db.session.commit()
@@ -344,6 +358,7 @@ class AnswerCommentAPI(Resource):
             user=current_user,
             course_id=course.id,
             answer_comment=answer_comment,
+            evaluation_number=params.get("evaluation_number"),
             was_draft=was_draft,
             data=model_changes)
 

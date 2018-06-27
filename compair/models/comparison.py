@@ -15,7 +15,7 @@ from compair.algorithms.pair import generate_pair
 from compair.algorithms.score import calculate_score, calculate_score_1vs1
 
 
-class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
+class Comparison(DefaultTableMixin, UUIDMixin, AttemptMixin, WriteTrackingMixin):
     __tablename__ = 'comparison'
 
     # table columns

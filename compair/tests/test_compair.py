@@ -9,7 +9,11 @@ import uuid
 import sys
 import os
 import factory.fuzzy
+import pytz
+import datetime
+from hashlib import md5
 
+from flask import session as sess
 from flask_testing import TestCase
 from os.path import dirname
 from flask.testing import FlaskClient
@@ -18,7 +22,7 @@ from six import wraps
 from compair import create_app
 from compair.manage.database import populate
 from compair.core import db
-from compair.models import User, XAPILog
+from compair.models import User, XAPILog, CaliperLog
 from compair.tests import test_app_settings
 from lti import ToolConsumer
 from lti.utils import parse_qs
@@ -97,75 +101,6 @@ class ComPAIRTestCase(TestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
-
-class ComPAIRXAPITestCase(ComPAIRTestCase):
-    compair_source_category = {
-        'id': 'http://xapi.learninganalytics.ubc.ca/category/compair',
-        'definition': {'type': 'http://id.tincanapi.com/activitytype/source'},
-        'objectType': 'Activity'
-    }
-
-    def create_app(self):
-        settings = test_app_settings.copy()
-        settings['XAPI_ENABLED'] = True
-        app = create_app(settings_override=settings)
-        return app
-
-    def generate_tracking(self, with_duration=False, **kargs):
-        tracking = {
-            'registration': str(uuid.uuid4())
-        }
-        if with_duration:
-            tracking['duration'] = "PT02.475S"
-
-        if kargs:
-            tracking.update(kargs)
-
-        return tracking
-
-    def _validate_and_cleanup_statement(self, statement):
-        # check categories
-        categories = statement['context']['contextActivities']['category']
-        self.assertIn(self.compair_source_category, categories)
-        categories.remove(self.compair_source_category)
-
-        self.assertEqual(statement['context']['platform'], 'https://localhost:8888/')
-        del statement['context']['platform']
-
-        if len(categories) == 0:
-            del statement['context']['contextActivities']['category']
-        if len(statement['context']['contextActivities']) == 0:
-            del statement['context']['contextActivities']
-        if len(statement['context']) == 0:
-            del statement['context']
-
-        # check timestamp
-        self.assertIsNotNone(statement['timestamp'])
-
-    def get_and_clear_statement_log(self, has_request=False):
-        statements = []
-        for xapi_log in XAPILog.query.all():
-            statement = json.loads(xapi_log.statement)
-
-            self._validate_and_cleanup_statement(statement)
-
-            statements.append(statement)
-        XAPILog.query.delete()
-        return statements
-
-    def get_third_party_actor(self, user, homepage, identifier):
-        return {
-            'account': {'homePage': homepage, 'name': identifier },
-            'name': user.fullname,
-            'objectType': 'Agent'
-        }
-
-    def get_compair_actor(self, user):
-        return {
-            'account': {'homePage': 'https://localhost:8888/', 'name': user.uuid },
-            'name': user.fullname,
-            'objectType': 'Agent'
-        }
 
 class ComPAIRAPITestCase(ComPAIRTestCase):
     api = None
@@ -288,6 +223,239 @@ class ComPAIRAPIDemoTestCase(ComPAIRAPITestCase):
             populate(default_data=True, sample_data=True)
         self.app.config['DEMO_INSTALLATION'] = True
 
+
+class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
+    xapi_compair_source_category = {
+        'id': 'http://xapi.learninganalytics.ubc.ca/category/compair',
+        'definition': {'type': 'http://id.tincanapi.com/activitytype/source'},
+        'objectType': 'Activity'
+    }
+    app_base_url = 'https://localhost:8888/'
+    caliper_context = 'http://purl.imsglobal.org/ctx/caliper/v1p1'
+
+    def create_app(self):
+        settings = test_app_settings.copy()
+        settings['XAPI_ENABLED'] = True
+        settings['LRS_XAPI_STATEMENT_ENDPOINT'] = 'local'
+        settings['CALIPER_ENABLED'] = True
+        settings['LRS_CALIPER_HOST'] = 'local'
+        settings['LRS_APP_BASE_URL'] = self.app_base_url
+        app = create_app(settings_override=settings)
+        return app
+
+    @contextmanager
+    def setup_session_data(self, user):
+        sess['user_id'] = user.id
+        sess['session_token'] = user.generate_session_token()
+        sess['session_id'] = md5(sess['session_token'].encode('UTF-8')).hexdigest()
+        sess['start_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+
+    def generate_tracking(self, **kargs):
+        tracking = {
+            'registration': str(uuid.uuid4()),
+            'started': datetime.datetime.now() - datetime.timedelta(minutes=7),
+            'ended': datetime.datetime.now() - datetime.timedelta(minutes=6),
+            'duration': "PT02.475S"
+        }
+
+        if kargs:
+            tracking.update(kargs)
+
+        return tracking
+
+    def _validate_and_cleanup_xapi_statement(self, statement):
+        # check categories
+        categories = statement['context']['contextActivities']['category']
+        self.assertIn(self.xapi_compair_source_category, categories)
+        categories.remove(self.xapi_compair_source_category)
+
+        self.assertEqual(statement['context']['platform'], 'https://localhost:8888')
+        del statement['context']['platform']
+
+        if len(categories) == 0:
+            del statement['context']['contextActivities']['category']
+        if len(statement['context']['contextActivities']) == 0:
+            del statement['context']['contextActivities']
+        if len(statement['context']) == 0:
+            del statement['context']
+
+        # check timestamp
+        self.assertEqual(statement['version'], '1.0.1')
+        del statement['version']
+
+        self.assertIsNotNone(statement['timestamp'])
+        del statement['timestamp']
+
+    def get_and_clear_xapi_statement_log(self):
+        statements = []
+        for xapi_log in XAPILog.query.all():
+            statement = json.loads(xapi_log.statement)
+
+            self._validate_and_cleanup_xapi_statement(statement)
+
+            statements.append(statement)
+        XAPILog.query.delete()
+        return statements
+
+    def get_unique_identifier_xapi_actor(self, user, homepage, identifier):
+        return {
+            'account': {'homePage': homepage, 'name': identifier },
+            'name': user.fullname,
+            'objectType': 'Agent'
+        }
+
+    def get_compair_xapi_actor(self, user):
+        return {
+            'account': {'homePage': 'https://localhost:8888/', 'name': user.uuid },
+            'name': user.fullname,
+            'objectType': 'Agent'
+        }
+
+    def get_xapi_session_info(self):
+        session_info = {
+            'id': 'https://localhost:8888/session/'+sess.get("session_id"),
+            'start_at': sess.get('start_at'),
+            'login_method': sess.get('login_method')
+        }
+        if sess.get('end_at'):
+            session_info['end_at'] = sess.get('end_at')
+
+        return session_info
+
+    def _del_empty_caliper_field(self, event_dict):
+        # this is done in order to trim down all the empty fields that Caliper will through in
+        # makes testing events manageable
+        keys_to_delete = []
+        for k, v in event_dict.items():
+            if k == '@context':
+                self.assertEqual(v, self.caliper_context)
+                keys_to_delete.append(k)
+            elif isinstance(v, dict):
+                # recursively remove empty fields
+                self._del_empty_caliper_field(v)
+
+                if len(v.keys()) == 0:
+                    keys_to_delete.append(k)
+            elif isinstance(v, list):
+                list_index_to_remove = []
+                # remove empty fields from list objects
+                for index, v2 in enumerate(v):
+                    if isinstance(v2, dict):
+                        self._del_empty_caliper_field(v2)
+                        if len(v2.keys()) == 0:
+                            list_index_to_remove.append(index)
+
+                for index in reversed(list_index_to_remove):
+                    del v[index]
+
+                # remove empty lists
+                if len(v) == 0:
+                    keys_to_delete.append(k)
+            elif v == None:
+                keys_to_delete.append(k)
+
+        for k in keys_to_delete:
+            del event_dict[k]
+
+    def _validate_and_cleanup_caliper_event(self, event):
+        self.assertEqual(event['@context'], self.caliper_context)
+
+        self.assertEqual(event['edApp'], self.app_base_url.rstrip("/"))
+        del event['edApp']
+
+        self.assertIsNotNone(event['eventTime'])
+        del event['eventTime']
+
+        self.assertIsNotNone(event['id'])
+        del event['id']
+
+        self.assertIsNotNone(event['type'])
+        self.assertIsNotNone(event['object'])
+        self.assertIsNotNone(event['actor'])
+        self.assertIsNotNone(event['session'])
+
+        self._del_empty_caliper_field(event)
+
+        return event
+
+    def get_and_clear_caliper_event_log(self):
+        events = []
+        for caliper_log in CaliperLog.query.all():
+            event = json.loads(caliper_log.event)
+
+            self._validate_and_cleanup_caliper_event(event)
+
+            events.append(event)
+        CaliperLog.query.delete()
+        return events
+
+    def get_caliper_session(self, caliper_actor):
+        caliper_session = {
+            'id': 'https://localhost:8888/session/'+sess.get("session_id"),
+            'type': 'Session',
+            'user': caliper_actor,
+            'dateCreated': sess.get('start_at'),
+            'startedAtTime': sess.get('start_at')
+        }
+
+        if sess.get('login_method') != None:
+            caliper_session["extensions"] = {
+                "login_method": sess.get('login_method')
+            }
+
+        if sess.get('end_at'):
+            caliper_session['endedAtTime'] = sess.get('end_at')
+
+        return caliper_session
+
+    def get_unique_identifier_caliper_actor(self, user, homepage, identifier):
+        if not homepage.endswith('/'):
+            homepage += '/'
+        return {
+            'dateCreated': user.created.replace(tzinfo=pytz.utc).isoformat(),
+            'dateModified': user.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'id': homepage+identifier,
+            'type': "Person",
+            'name': user.fullname,
+            'extensions': {
+                'externalUserId': identifier,
+                'edAppUserId': user.uuid
+            }
+        }
+
+    def get_caliper_membership(self, course, user, lti_context=None):
+        membership = {
+            'id': "https://localhost:8888/app/course/"+course.uuid+"/user/"+user.uuid,
+            'type': "Membership",
+            'member': self.get_compair_caliper_actor(user),
+            'organization': "https://localhost:8888/app/course/"+course.uuid,
+            'roles': ['Learner'],
+            'status': 'Active'
+        }
+        if lti_context:
+            membership['organization'] = {
+                'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid+'/section/'+self.lti_context.lis_course_section_sourcedid,
+                'type': 'CourseSection',
+                'subOrganizationOf': {
+                    'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid,
+                    'type': 'CourseOffering'
+                }
+            }
+            membership['extensions'] = {
+                'sis_courses': ['https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid],
+                'sis_sections': ['https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid+'/section/'+self.lti_context.lis_course_section_sourcedid]
+            }
+
+        return membership
+
+    def get_compair_caliper_actor(self, user):
+        return {
+            'id': "https://localhost:8888/"+user.uuid,
+            'dateCreated': user.created.replace(tzinfo=pytz.utc).isoformat(),
+            'dateModified': user.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'type': "Person",
+            'name': user.fullname
+        }
 
 class SessionTests(ComPAIRAPITestCase):
     def test_loggedin_user_session(self):

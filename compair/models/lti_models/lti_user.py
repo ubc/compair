@@ -25,6 +25,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         nullable=True)
     system_role = db.Column(EnumType(SystemRole), nullable=False)
     student_number = db.Column(db.String(255), nullable=True)
+    lis_person_sourcedid = db.Column(db.String(255), nullable=True)
 
     # relationships
     # compair_user via User Model
@@ -108,6 +109,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         lti_user.lis_person_name_full = tool_provider.lis_person_name_full
         lti_user.handle_fullname_with_missing_first_and_last_name()
         lti_user.lis_person_contact_email_primary = tool_provider.lis_person_contact_email_primary
+        lti_user.lis_person_sourcedid = tool_provider.lis_person_sourcedid
 
         if lti_consumer.global_unique_identifier_param and lti_consumer.global_unique_identifier_param in tool_provider.launch_params:
             lti_user.global_unique_identifier = tool_provider.launch_params[lti_consumer.global_unique_identifier_param]

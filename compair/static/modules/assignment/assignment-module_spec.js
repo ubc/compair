@@ -756,7 +756,10 @@ describe('assignment-module', function () {
         $httpBackend = $injector.get('$httpBackend');
         sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
         $httpBackend.when('GET', '/api/users/' + id).respond(mockUser);
-        $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/learning_records\/xapi\/statements$/).respond(function(method, url, data, headers) {
+            return [200, { 'success':true }, {}];
+        });
+        $httpBackend.whenPOST(/\/api\/learning_records\/caliper\/events$/).respond(function(method, url, data, headers) {
             return [200, { 'success':true }, {}];
         });
     }));
@@ -770,9 +773,9 @@ describe('assignment-module', function () {
         var $rootScope, createController, $uibModal, $q, $route;
         var controller;
         var toaster;
-        var xAPISettings;
+        var LearningRecordSettings;
 
-        beforeEach(inject(function ($controller, _$rootScope_, _$uibModal_, _$q_, _Toaster_, _xAPISettings_) {
+        beforeEach(inject(function ($controller, _$rootScope_, _$uibModal_, _$q_, _Toaster_, _LearningRecordSettings_) {
             $rootScope = _$rootScope_;
             $uibModal = _$uibModal_;
             $q = _$q_;
@@ -784,9 +787,10 @@ describe('assignment-module', function () {
                     resolvedData: resolvedData || {}
                 });
             }
-            xAPISettings = _xAPISettings_;
-            xAPISettings.enabled = true;
-            xAPISettings.baseUrl = "https://localhost:8888/";
+            LearningRecordSettings = _LearningRecordSettings_;
+            LearningRecordSettings.xapi_enabled = true;
+            LearningRecordSettings.caliper_enabled = true;
+            LearningRecordSettings.baseUrl = "https://localhost:8888/";
         }));
 
         describe('view:', function() {

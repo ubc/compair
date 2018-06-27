@@ -27,10 +27,12 @@ module.controller(
     "NavbarController",
     ["$scope", "$log", "$routeParams", "breadcrumbs", "AuthTypesEnabled",
         "Session", "AuthenticationService", "Authorize", "CourseResource", "UserResource",
-        "AssignmentResource", "$rootScope", "$uibModal", "ImpersonationSettings", "xAPIStatementHelper", "Toaster",
+        "AssignmentResource", "$rootScope", "$uibModal", "ImpersonationSettings",
+        "LearningRecordStatementHelper", "Toaster",
     function NavbarController($scope, $log, $routeParams, breadcrumbs, AuthTypesEnabled,
         Session, AuthenticationService, Authorize, CourseResource, UserResource,
-        AssignmentResource, $rootScope, $uibModal, ImpersonationSettings, xAPIStatementHelper, Toaster)
+        AssignmentResource, $rootScope, $uibModal, ImpersonationSettings,
+        LearningRecordStatementHelper, Toaster)
     {
         $scope.breadcrumbs = breadcrumbs;
         $scope.isCollapsed = true;
@@ -152,10 +154,10 @@ module.controller(
                 scope: modalScope
             });
             $scope.modalInstance.opened.then(function() {
-                xAPIStatementHelper.opened_modal("Student View");
+                LearningRecordStatementHelper.opened_modal("Student View");
             });
             $scope.modalInstance.result.finally(function () {
-                xAPIStatementHelper.closed_modal("Student View");
+                LearningRecordStatementHelper.closed_modal("Student View");
             });
         }
     }

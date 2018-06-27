@@ -10,7 +10,7 @@ var module = angular.module('ubc.ctlt.compair.answer',
         'ui.bootstrap',
         'localytics.directives',
         'ubc.ctlt.compair.classlist',
-        'ubc.ctlt.compair.common.xapi',
+        'ubc.ctlt.compair.learning_records.learning_record',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.interceptor',
         'ubc.ctlt.compair.common.timer',
@@ -84,8 +84,7 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
                 url: '/api/courses/:courseId/assignments/:assignmentId/answers/:answerId/top',
                 interceptor: cacheInterceptor
             },
-            user: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user'},
-            userUnsaved: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user', params:{draft: true, unsaved: true}, cache: false}
+            user: {url: '/api/courses/:courseId/assignments/:assignmentId/answers/user'}
         }
     );
     ret.MODEL = "Answer";
@@ -98,11 +97,11 @@ module.controller(
     "AnswerWriteModalController",
     ["$scope", "$location", "AnswerResource", "ClassListResource", "$route", "TimerResource",
         "AssignmentResource", "Toaster", "$timeout", "UploadValidator", "CourseRole", "$uibModalInstance",
-        "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper", "$q", "Session",
+        "answerAttachService", "EditorOptions", "LearningRecord", "LearningRecordStatementHelper", "$q", "Session",
         "CourseResource", "GroupResource",
     function ($scope, $location, AnswerResource, ClassListResource, $route, TimerResource,
         AssignmentResource, Toaster, $timeout, UploadValidator, CourseRole, $uibModalInstance,
-        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, $q, Session,
+        answerAttachService, EditorOptions, LearningRecord, LearningRecordStatementHelper, $q, Session,
         CourseResource, GroupResource)
     {
         if ($scope.answer.file) {
@@ -112,12 +111,7 @@ module.controller(
         $scope.preventExit = true; // user should be warned before leaving page by default
         $scope.refreshOnExit = false; // when set to true, the page refreshes when modal is closed (when data in view needs to be updated)
         $scope.UploadValidator = UploadValidator;
-        $scope.tracking = xAPI.generateTracking();
-        $scope.editorOptions = xAPI.ckeditorContentTracking(EditorOptions.basic, function(duration) {
-            xAPIStatementHelper.interacted_answer_solution(
-                $scope.answer, $scope.tracking.getRegistration(), duration
-            );
-        });
+        $scope.tracking = LearningRecord.generateAttemptTracking();
         $scope.showAssignment = ($scope.answer.id == undefined);
         // since the "submit as" dropdown (if enabled) is default to current user (or empty if sys admin),
         // the default value of submitAsInstructorOrTA is based on canManageAssignment
@@ -135,27 +129,6 @@ module.controller(
             if ($scope.canManageAssignment) {
                 // preset the user_id if instructors creating new answers
                 $scope.answer.user_id = $scope.loggedInUserId;
-            } else {
-                // TODO review suppression logic. For now, avoid saving the answer when impersonating.
-                // logic will probably be revised when xapi handling be changed in the future.
-                if  (!$scope.isImpersonating) {
-                    AnswerResource.userUnsaved({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
-                        function(answerUnsaved) {
-                            if (!answerUnsaved.objects.length) {
-                                    // if no answers found, create a new draft answer
-                                    AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, {draft: true}).$promise.then(
-                                        function (ret) {
-                                            // set answer id to new answer id
-                                            $scope.answer.id = ret.id;
-                                        }
-                                    );
-                            } else {
-                                // draft found for user, use it
-                                $scope.answer.id = answerUnsaved.objects[0].id;
-                            }
-                        }
-                    )
-                }
             }
         }
         if ($scope.canManageAssignment) {
@@ -170,15 +143,9 @@ module.controller(
             });
         }
 
-        if ($scope.method == "create" || !$scope.answer.draft) {
-            xAPIStatementHelper.initialize_assignment_question(
-                $scope.assignment, $scope.tracking.getRegistration()
-            );
-        } else {
-            xAPIStatementHelper.resume_assignment_question(
-                $scope.assignment, $scope.tracking.getRegistration()
-            );
-        }
+        LearningRecordStatementHelper.initialize_assignment_question(
+            $scope.assignment, $scope.tracking
+        );
 
         var due_date = new Date($scope.assignment.answer_end);
         if (!$scope.canManageAssignment) {
@@ -194,20 +161,7 @@ module.controller(
         }
 
         $scope.uploader = answerAttachService.getUploader();
-        $scope.resetFileUploader = function() {
-            var file = answerAttachService.getFile();
-            if (file) {
-                xAPIStatementHelper.deleted_answer_attachment(
-                    file, $scope.answer, $scope.tracking.getRegistration()
-                );
-            }
-            answerAttachService.reset();
-        };
-        answerAttachService.setUploadedCallback(function(file) {
-            xAPIStatementHelper.attached_answer_attachment(
-                file, $scope.answer, $scope.tracking.getRegistration()
-            );
-        });
+        $scope.resetFileUploader = answerAttachService.reset;
         $scope.canSupportPreview = answerAttachService.canSupportPreview;
         if ($scope.answer.file && $scope.canSupportPreview($scope.answer.file)) {
             answerAttachService.reuploadFile($scope.answer.file, $scope.uploader);
@@ -216,23 +170,17 @@ module.controller(
         $scope.deleteFile = function(file) {
             $scope.answer.file = null;
             $scope.answer.uploadedFile = false;
-
-            if (file) {
-                xAPIStatementHelper.deleted_answer_attachment(
-                    file, $scope.answer, $scope.tracking.getRegistration()
-                );
-            }
         };
 
-        $scope.modalInstance.result.then(function (answerUpdated) {
+        $uibModalInstance.result.then(function (answerUpdated) {
             // closed
             if ($scope.refreshOnExit) {
                 $route.reload();
             }
         }, function() {
             // dismissed
-            xAPIStatementHelper.exited_assignment_question(
-                $scope.assignment, $scope.tracking.getRegistration(), $scope.tracking.getDuration()
+            LearningRecordStatementHelper.exited_assignment_question(
+                $scope.assignment, $scope.tracking
             );
             if ($scope.refreshOnExit) {
                 $route.reload();
@@ -272,9 +220,11 @@ module.controller(
                 }
 
                 // copy answer so we don't lose draft state on failed submit
-                var answer = angular.copy($scope.answer);
+                var answer = angular.merge(
+                    angular.copy($scope.answer),
+                    $scope.tracking.toParams()
+                );
                 answer.draft = !!saveDraft;
-                answer.tracking = $scope.tracking.toParams();
 
                 AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, answer).$promise.then(
                     function (ret) {
@@ -282,6 +232,7 @@ module.controller(
                         $scope.preventExit = false; // user has saved answer, does not need warning when leaving page
                         $scope.refreshOnExit = ret.draft; // if draft was saved, we need to refresh to show updated data when modal is closed
 
+                        $uibModalInstance.close($scope.answer);
                         if (ret.draft) {
                             Toaster.success("Answer Draft Saved", "Remember to submit your answer before the deadline.");
                         } else {

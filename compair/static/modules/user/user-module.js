@@ -213,9 +213,9 @@ module.controller("UserViewController",
 
 module.controller("UserListController",
     ['$scope', '$location', 'UserResource', 'Toaster', 'breadcrumbs', 'SystemRole',
-     'xAPIStatementHelper', 'resolvedData',
+     'LearningRecordStatementHelper', 'resolvedData',
     function($scope, $location, UserResource, Toaster, breadcrumbs, SystemRole,
-             xAPIStatementHelper, resolvedData)
+             LearningRecordStatementHelper, resolvedData)
     {
         $scope.loggedInUserId = resolvedData.loggedInUser.id;
         $scope.canManageUsers = resolvedData.canManageUsers;
@@ -274,7 +274,7 @@ module.controller("UserListController",
             if(newValue.search === "") {
                 $scope.userFilters.search = null;
             }
-            xAPIStatementHelper.filtered_page($scope.userFilters);
+            LearningRecordStatementHelper.filtered_page($scope.userFilters);
             $scope.updateUserList();
         };
         $scope.$watchCollection('userFilters', filterWatcher);
@@ -284,10 +284,10 @@ module.controller("UserListController",
 module.controller("UserManageController",
     ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'CourseResource', 'GroupResource',
      'UserLTIUsersResource', 'UserThirdPartyUsersResource', 'ClassListResource', 'Toaster', 'breadcrumbs',
-     'CourseRole', 'AuthTypesEnabled', 'xAPIStatementHelper', "moment", "resolvedData", 'GroupUserResource',
+     'CourseRole', 'AuthTypesEnabled', 'LearningRecordStatementHelper', "moment", "resolvedData", 'GroupUserResource',
     function($scope, $location, $route, $routeParams, UserResource, CourseResource, GroupResource,
              UserLTIUsersResource, UserThirdPartyUsersResource, ClassListResource, Toaster, breadcrumbs,
-             CourseRole, AuthTypesEnabled, xAPIStatementHelper, moment, resolvedData, GroupUserResource)
+             CourseRole, AuthTypesEnabled, LearningRecordStatementHelper, moment, resolvedData, GroupUserResource)
     {
         $scope.userId = $routeParams.userId;
 
@@ -415,7 +415,7 @@ module.controller("UserManageController",
             if(newValue.search === "") {
                 $scope.courseFilters.search = null;
             }
-            xAPIStatementHelper.filtered_page($scope.courseFilters);
+            LearningRecordStatementHelper.filtered_page($scope.courseFilters);
             $scope.updateCourseList();
         };
         $scope.$watchCollection('courseFilters', filterWatcher);

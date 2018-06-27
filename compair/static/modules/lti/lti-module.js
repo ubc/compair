@@ -85,10 +85,10 @@ module.factory('LTI',
 module.controller("LTIController",
     ['$rootScope', '$scope', '$location', '$route', "$uibModal", 'breadcrumbs',
      'CourseRole', 'Toaster', 'AuthenticationService', 'LTI', 'LTIContextLinkResource', 'Session',
-     'xAPIStatementHelper', 'resolvedData',
+     'LearningRecordStatementHelper', 'resolvedData',
     function($rootScope, $scope, $location, $route, $uibModal, breadcrumbs,
              CourseRole, Toaster, AuthenticationService, LTI, LTIContextLinkResource, Session,
-             xAPIStatementHelper, resolvedData)
+             LearningRecordStatementHelper, resolvedData)
     {
         $scope.status = resolvedData.ltiStatus;
 
@@ -116,7 +116,7 @@ module.controller("LTIController",
                     scope: modalScope
                 });
                 modalInstance.opened.then(function() {
-                    xAPIStatementHelper.opened_modal("Select Course");
+                    LearningRecordStatementHelper.opened_modal("Select Course");
                 });
                 modalInstance.result.then(function (selectedCourseId) {
                     LTIContextLinkResource.linkCourse({course_id: selectedCourseId}, {},
@@ -128,11 +128,11 @@ module.controller("LTIController",
                             $route.reload();
                         }
                     );
-                    xAPIStatementHelper.closed_modal("Select Course");
+                    LearningRecordStatementHelper.closed_modal("Select Course");
                 }, function () {
                     // modal dismissed, reload page to update status
                     $route.reload();
-                    xAPIStatementHelper.closed_modal("Select Course");
+                    LearningRecordStatementHelper.closed_modal("Select Course");
                 });
             } else {
                 // student can't setup course, get out of here

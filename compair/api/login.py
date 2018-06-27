@@ -1,4 +1,7 @@
 import os
+import datetime
+import pytz
+from hashlib import md5
 
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask
 from flask_login import current_user, login_required, login_user, logout_user
@@ -62,6 +65,7 @@ def login():
 class Logout(Resource):
     @login_required
     def delete(self):
+        sess['end_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
         on_logout.send(
             current_app._get_current_object(),
             event=on_logout.name,
@@ -350,7 +354,7 @@ def _saml_single_signout_callback():
     logout_user()
     sess.clear()
 
-def authenticate(user, login_method=None):
+def authenticate(user, login_method=None, skip_event_tracking=False):
     # username valid, password valid, login successful
     # "remember me" functionality is available, do we want to implement?
     user.update_last_online()
@@ -361,12 +365,16 @@ def authenticate(user, login_method=None):
     else:
         current_app.logger.debug("Login successful for: user_id = " + str(user.id))
 
-    on_login_with_method.send(
-        current_app._get_current_object(),
-        event=on_login_with_method.name,
-        user=user,
-        login_method=login_method
-    )
+    sess['session_id'] = md5(sess['session_token'].encode('UTF-8')).hexdigest()
+    sess['start_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+    sess['login_method'] = login_method
+
+    if not skip_event_tracking:
+        on_login_with_method.send(
+            current_app._get_current_object(),
+            event=on_login_with_method.name,
+            user=user
+        )
     return get_logged_in_user_permissions()
 
 def _checkImpersonation():

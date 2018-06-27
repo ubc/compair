@@ -144,6 +144,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             lti_user.handle_fullname_with_missing_first_and_last_name()
 
             lti_user.lis_person_contact_email_primary = member.get('person_contact_email_primary')
+            lti_user.lis_person_sourcedid = member.get('lis_person_sourcedid')
 
             if member.get('global_unique_identifier'):
                 lti_user.global_unique_identifier = member.get('global_unique_identifier')
@@ -363,6 +364,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 member = {
                     'user_id': record['member'].get('userId'),
                     'roles': record.get('role'),
+                    'lis_person_sourcedid': record['member'].get('sourcedId'),
                     'global_unique_identifier': None,
                     'student_number': None,
                     'person_contact_email_primary': record['member'].get('email'),

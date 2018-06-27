@@ -1,10 +1,11 @@
 # mixins
-from .mixins import ActiveMixin, DefaultTableMixin, WriteTrackingMixin, UUIDMixin
+from .mixins import ActiveMixin, AttemptMixin, DefaultTableMixin, \
+    WriteTrackingMixin, UUIDMixin
 
 # enums
-from .custom_types import AnswerCommentType, CourseRole, \
-    PairingAlgorithm, ScoringAlgorithm, SystemRole, \
-    ThirdPartyType, WinningAnswer, EmailNotificationMethod
+from .custom_types import AnswerCommentType, CourseRole, PairingAlgorithm, \
+    ScoringAlgorithm, SystemRole, ThirdPartyType, WinningAnswer, \
+    EmailNotificationMethod
 
 # models
 from .activity_log import ActivityLog
@@ -26,7 +27,9 @@ from .answer_criterion_score import AnswerCriterionScore
 from .user import User
 from .user_course import UserCourse
 from .third_party_user import ThirdPartyUser
-from .xapi_log import XAPILog
+
+# learning record models
+from .learning_records import CaliperLog, XAPILog
 
 # LTI models
 from .lti_models import LTIConsumer, LTIContext, LTIMembership, \

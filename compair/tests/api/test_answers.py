@@ -1170,38 +1170,6 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
                 self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
 
-                # test unsaved query. 'draft' is default to be False.
-                # hence no result will be retrived
-                rv = self.client.get(url, query_string={'unsaved': True})
-                self.assert200(rv)
-                self.assertEqual(0, len(rv.json['objects']))
-
-                # test draft + unsaved query
-                rv = self.client.get(url, query_string={'draft': True, 'unsaved': True})
-                self.assert200(rv)
-                self.assertEqual(1, len(rv.json['objects']))
-                self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
-                self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
-                self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
-
-                # update the answer so it is no longer in unsaved state (but still in draft)
-                draft_answer.content = draft_answer.content+"123"
-                db.session.commit()
-
-                rv = self.client.get(url, query_string={'draft': True})
-                self.assert200(rv)
-                self.assertEqual(1, len(rv.json['objects']))
-                self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
-                self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
-                self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
-                rv = self.client.get(url, query_string={'unsaved': True, 'draft': True})
-                self.assert200(rv)
-                self.assertEqual(0, len(rv.json['objects']))
-                # not draft and not unsaved. nothing will be retrieved
-                rv = self.client.get(url)
-                self.assert200(rv)
-                self.assertEqual(0, len(rv.json['objects']))
-
             with self.login(self.fixtures.instructor.username):
                 rv = self.client.get(url)
                 self.assert200(rv)
@@ -1209,11 +1177,6 @@ class AnswersAPITests(ComPAIRAPITestCase):
 
                 # test draft query
                 rv = self.client.get(url, query_string={'draft': True})
-                self.assert200(rv)
-                self.assertEqual(0, len(rv.json['objects']))
-
-                # test unsaved query
-                rv = self.client.get(url, query_string={'unsaved': True, 'draft': True})
                 self.assert200(rv)
                 self.assertEqual(0, len(rv.json['objects']))
 
@@ -1239,38 +1202,6 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
                 self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
                 self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
-
-                # test unsaved query. 'draft' is default to be False.
-                # hence no result will be retrived
-                rv = self.client.get(url, query_string={'unsaved': True})
-                self.assert200(rv)
-                self.assertEqual(0, len(rv.json['objects']))
-
-                # test draft + unsaved query
-                rv = self.client.get(url, query_string={'draft': True, 'unsaved': True})
-                self.assert200(rv)
-                self.assertEqual(1, len(rv.json['objects']))
-                self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
-                self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
-                self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
-
-                # update the answer so it is no longer in unsaved state (but still in draft)
-                draft_answer.content = draft_answer.content+"123"
-                db.session.commit()
-
-                rv = self.client.get(url, query_string={'draft': True})
-                self.assert200(rv)
-                self.assertEqual(1, len(rv.json['objects']))
-                self.assertEqual(draft_answer.uuid, rv.json['objects'][0]['id'])
-                self.assertEqual(draft_answer.content, rv.json['objects'][0]['content'])
-                self.assertEqual(draft_answer.draft, rv.json['objects'][0]['draft'])
-                rv = self.client.get(url, query_string={'unsaved': True, 'draft': True})
-                self.assert200(rv)
-                self.assertEqual(0, len(rv.json['objects']))
-                # not draft and not unsaved. nothing will be retrieved
-                rv = self.client.get(url)
-                self.assert200(rv)
-                self.assertEqual(0, len(rv.json['objects']))
 
     def test_top_answer(self):
         for assignment in [self.assignment, self.group_assignment]:

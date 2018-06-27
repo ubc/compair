@@ -8,7 +8,7 @@ var module = angular.module('ubc.ctlt.compair.gradebook',
         'ngResource',
         'ngRoute',
         'localytics.directives',
-        'ubc.ctlt.compair.common.xapi',
+        'ubc.ctlt.compair.learning_records.learning_record',
         'ubc.ctlt.compair.course',
         'ubc.ctlt.compair.group',
         'ubc.ctlt.compair.toaster'
@@ -30,10 +30,10 @@ module.factory(
 module.controller("GradebookController",
     ["$scope", "$window", "$routeParams", "CourseResource", "GradebookResource",
         "GroupResource", "GroupUserResource", "AssignmentResource", "Authorize",
-        "xAPIStatementHelper",
+        "LearningRecordStatementHelper",
     function($scope, $window, $routeParams, CourseResource, GradebookResource,
         GroupResource, GroupUserResource, AssignmentResource, Authorize,
-        xAPIStatementHelper)
+        LearningRecordStatementHelper)
     {
         $scope.users = [];
         $scope.gradebookFilters = {
@@ -125,7 +125,7 @@ module.controller("GradebookController",
                     userIds[$scope.gradebookFilters.student] = 1;
                 }
             }
-            xAPIStatementHelper.filtered_page_section("participation tab", $scope.gradebookFilters);
+            LearningRecordStatementHelper.filtered_page_section("participation tab", $scope.gradebookFilters);
 
             $scope.updateAnswerList();
         };
@@ -135,7 +135,7 @@ module.controller("GradebookController",
             $scope.reverse = $scope.predicate == predicate && !$scope.reverse;
             $scope.predicate = predicate;
             var orderBy = $scope.predicate + " " + ($scope.reverse ? "desc" : "asc");
-            xAPIStatementHelper.sorted_page_section("participation tab", orderBy);
+            LearningRecordStatementHelper.sorted_page_section("participation tab", orderBy);
         }
     }
 ]);

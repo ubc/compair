@@ -283,7 +283,6 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                             seen_answer_uuids.add(answer1_uuid)
                             seen_answer_uuids.add(answer2_uuid)
 
-                        self.assertTrue(rv.json['new_pair'])
                         self.assertEqual(rv.json['current'], current)
                         # no user info should be included in the answer
                         self.assertFalse('user' in rv.json['comparison']['answer1'] or
@@ -309,7 +308,6 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                         expected_comparison = rv.json['comparison']
                         self.assertEqual(answer1_uuid, rv.json['comparison']['answer1_id'])
                         self.assertEqual(answer2_uuid, rv.json['comparison']['answer2_id'])
-                        self.assertFalse(rv.json['new_pair'])
                         self.assertEqual(rv.json['current'], current)
                         for expected, actual in [(answer1_comment, answer1_feedback), (answer2_comment, answer2_feedback)]:
                             if expected:
@@ -431,7 +429,6 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 self.assertIn(answer2_uuid, valid_answer_uuids)
                 self.assertNotEqual(answer1_uuid, answer2_uuid)
 
-                self.assertTrue(rv.json['new_pair'])
                 self.assertEqual(rv.json['current'], 1)
                 # no user info should be included in the answer
                 self.assertFalse('user' in rv.json['comparison']['answer1'] or
@@ -457,7 +454,6 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 expected_comparison = rv.json['comparison']
                 self.assertEqual(answer1_uuid, rv.json['comparison']['answer1_id'])
                 self.assertEqual(answer2_uuid, rv.json['comparison']['answer2_id'])
-                self.assertFalse(rv.json['new_pair'])
                 self.assertEqual(rv.json['current'], 1)
                 for expected, actual in [(answer1_comment, answer1_feedback), (answer2_comment, answer2_feedback)]:
                     if expected:

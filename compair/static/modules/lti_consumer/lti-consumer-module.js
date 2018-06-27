@@ -32,9 +32,9 @@ module.factory('LTIConsumerResource',
 
 module.controller('LTIConsumerListController',
     ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'LTIConsumerResource',
-     'Toaster', 'breadcrumbs', 'xAPIStatementHelper', 'resolvedData',
+     'Toaster', 'breadcrumbs', 'LearningRecordStatementHelper', 'resolvedData',
     function($scope, $location, $route, $routeParams, UserResource, LTIConsumerResource,
-             Toaster, breadcrumbs, xAPIStatementHelper, resolvedData)
+             Toaster, breadcrumbs, LearningRecordStatementHelper, resolvedData)
     {
         $scope.canManageUsers = resolvedData.canManageUsers;
 
@@ -85,7 +85,7 @@ module.controller('LTIConsumerListController',
             if (oldValue.orderBy != newValue.orderBy) {
                 $scope.consumerFilters.page = 1;
             }
-            xAPIStatementHelper.filtered_page($scope.consumerFilters);
+            LearningRecordStatementHelper.filtered_page($scope.consumerFilters);
             $scope.updateConsumerList();
         };
         $scope.$watchCollection('consumerFilters', filterWatcher);
@@ -94,9 +94,9 @@ module.controller('LTIConsumerListController',
 
 module.controller("LTIConsumerViewController",
     ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'LTIConsumerResource',
-     'Toaster', 'breadcrumbs', 'xAPIStatementHelper', 'resolvedData',
+     'Toaster', 'breadcrumbs', 'LearningRecordStatementHelper', 'resolvedData',
     function($scope, $location, $route, $routeParams, UserResource, LTIConsumerResource,
-             Toaster, breadcrumbs, xAPIStatementHelper, resolvedData)
+             Toaster, breadcrumbs, LearningRecordStatementHelper, resolvedData)
     {
         $scope.consumerId = $routeParams.consumerId;
         $scope.launchUrl = $location.absUrl().replace("app/#"+$location.url(), "") + 'api/lti/auth';
@@ -125,9 +125,9 @@ module.controller("LTIConsumerViewController",
 
 module.controller("LTIConsumerWriteController",
     ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'LTIConsumerResource',
-     'Toaster', 'breadcrumbs', 'xAPIStatementHelper', 'resolvedData',
+     'Toaster', 'breadcrumbs', 'LearningRecordStatementHelper', 'resolvedData',
     function($scope, $location, $route, $routeParams, UserResource, LTIConsumerResource,
-             Toaster, breadcrumbs, xAPIStatementHelper, resolvedData)
+             Toaster, breadcrumbs, LearningRecordStatementHelper, resolvedData)
     {
         $scope.consumerId = $routeParams.consumerId;
 

@@ -61,7 +61,15 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             with mock.patch('compair.api.os.path.exists', return_value=True):
                 with mock.patch('compair.api.send_file', return_value=make_response("OK")) as mock_send_file:
                     # test all attachment types
-                    for extension in ['pdf','mp3','mp4','jpg','jpeg','png']:
+                    extensions = [
+                        ('pdf', 'application/pdf'),
+                        ('mp3', 'audio/mpeg'),
+                        ('mp4', 'video/mp4'),
+                        ('jpg', 'image/jpeg'),
+                        ('jpeg', 'image/jpeg'),
+                        ('png', 'image/png')
+                    ]
+                    for (extension, mimetype) in extensions:
                         db_file = self.fixtures.add_file(self.fixtures.instructor, name="file_name."+extension)
                         filename = db_file.name
                         url = self.base_url + '/attachment/' + filename
@@ -70,16 +78,16 @@ class FileRetrieveTests(ComPAIRAPITestCase):
                         if extension == 'pdf':
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                mimetype=db_file.mimetype,
                                 attachment_filename=None,
-                                as_attachment=False
+                                as_attachment=False,
+                                mimetype=mimetype
                             )
                         else:
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                mimetype=db_file.mimetype,
                                 attachment_filename=None,
-                                as_attachment=True
+                                as_attachment=True,
+                                mimetype=mimetype
                             )
                         mock_send_file.reset_mock()
 
@@ -90,16 +98,16 @@ class FileRetrieveTests(ComPAIRAPITestCase):
                         if extension == 'pdf':
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                mimetype=db_file.mimetype,
                                 attachment_filename=None,
-                                as_attachment=False
+                                as_attachment=False,
+                                mimetype=mimetype
                             )
                         else:
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                mimetype=db_file.mimetype,
                                 attachment_filename=override_name,
-                                as_attachment=True
+                                as_attachment=True,
+                                mimetype=mimetype
                             )
                         mock_send_file.reset_mock()
 

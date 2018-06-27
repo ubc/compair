@@ -59,7 +59,10 @@ describe('user-module', function () {
 
     beforeEach(inject(function ($injector) {
         $httpBackend = $injector.get('$httpBackend');
-        $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/learning_records\/xapi\/statements$/).respond(function(method, url, data, headers) {
+            return [200, { 'success':true }, {}];
+        });
+        $httpBackend.whenPOST(/\/api\/learning_records\/caliper\/events$/).respond(function(method, url, data, headers) {
             return [200, { 'success':true }, {}];
         });
     }));

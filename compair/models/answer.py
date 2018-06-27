@@ -10,7 +10,7 @@ from importlib import import_module
 
 from compair.core import db
 
-class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
+class Answer(DefaultTableMixin, UUIDMixin, AttemptMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'answer'
 
     # table columns
@@ -62,14 +62,6 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     @hybrid_property
     def private_comment_count(self):
         return self.comment_count - self.public_comment_count
-
-    @hybrid_property
-    def saved(self):
-        return self.modified != self.created or not self.draft
-
-    @saved.expression
-    def saved(cls):
-        return or_(cls.modified != cls.created, cls.draft == False)
 
     @hybrid_property
     def group_answer(self):

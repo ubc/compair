@@ -12,6 +12,7 @@ from sqlalchemy.orm import joinedload
 from werkzeug.routing import BaseConverter
 from werkzeug.exceptions import Unauthorized
 from lxml.html.clean import clean_html
+from celery.schedules import crontab
 
 from .authorization import define_authorization
 from .core import login_manager, bouncer, db, celery, abort, mail, impersonation
@@ -20,8 +21,8 @@ from .models import User, File
 from .activity import log
 from .api import register_api_blueprints, log_events, \
     register_demo_api_blueprints, log_demo_events, \
-    register_statement_api_blueprints, impersonation as impersonation_api
-from compair.xapi import capture_xapi_events
+    register_learning_record_api_blueprints, impersonation as impersonation_api
+from compair.learning_records import capture_events
 from compair.notifications import capture_notification_events
 
 class RegexConverter(BaseConverter):
@@ -82,7 +83,7 @@ def _populate_impersonation_url_whitelist():
         re.compile('^' + re.escape(impersonation_api.IMPERSONATION_API_BASE_URL)),  # allow ending impersonation
     ]
     _impersonation_url_whitelist['POST'] = [
-        re.compile('^' + re.escape('/api/statements')),   # allow XAPI
+        re.compile('^' + re.escape('/api/learning_records')),   # allow XAPI/Caliper
     ]
 
 def is_allowed_during_impersonation(request):
@@ -128,13 +129,19 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
 
     # setup celery scheduled tasks
     if app.config.get('DEMO_INSTALLATION', False):
-        from celery.schedules import crontab
-
-        app.config['CELERYBEAT_SCHEDULE'] = {}
-        app.config['CELERYBEAT_SCHEDULE']['reset-demo-data-daily'] = {
+        #each day at 3am
+        app.config.setdefault('CELERYBEAT_SCHEDULE', {})['reset-demo-data-daily'] = {
             'task': "compair.tasks.demo.reset_demo",
             'schedule': crontab(hour=3, minute=0)
         }
+    if (app.config.get('XAPI_ENABLED') and app.config.get('LRS_XAPI_STATEMENT_ENDPOINT') != 'local') or \
+            (app.config.get('CALIPER_ENABLED') and app.config.get('LRS_CALIPER_HOST') != 'local'):
+        # every 6 hours
+        app.config.setdefault('CELERYBEAT_SCHEDULE', {})['retry-sending-failed-learning-records'] = {
+            'task': "compair.tasks.emit_learning_record.resend_learning_records",
+            'schedule': crontab(hour='*/6', minute=0)
+        }
+
 
     db.init_app(app)
 
@@ -237,9 +244,9 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
             log_demo_events(log)
             app = register_demo_api_blueprints(app)
 
-        if app.config.get('XAPI_ENABLED', False):
-            capture_xapi_events()
-            app = register_statement_api_blueprints(app)
+        if app.config.get('XAPI_ENABLED', False) or app.config.get('CALIPER_ENABLED', False) :
+            capture_events()
+            app = register_learning_record_api_blueprints(app)
 
     return app
 

@@ -1179,8 +1179,13 @@ module.exports.httpbackendMock = function(storageFixtures) {
 
         // END LTI Consumers
 
-        // Statements
-        $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {
+        // xAPI Statements
+        $httpBackend.whenPOST(/\/api\/learning_records\/xapi\/statements$/).respond(function(method, url, data, headers) {
+            return [200, { 'success':true }, {}];
+        });
+
+        // Caliper Events
+        $httpBackend.whenPOST(/\/api\/learning_records\/caliper\/events$/).respond(function(method, url, data, headers) {
             return [200, { 'success':true }, {}];
         });
 
@@ -1189,9 +1194,10 @@ module.exports.httpbackendMock = function(storageFixtures) {
         $httpBackend.whenGET(/.*/).passThrough();
     }]);
 
-    angular.module('ubc.ctlt.compair.common.xapi')
-    .run( ['$location', 'xAPISettings', function($location, xAPISettings) {
-        xAPISettings.enabled = true;
-        xAPISettings.baseUrl = 'https://localhost:8888/';
+    angular.module('ubc.ctlt.compair.learning_records.learning_record')
+    .run( ['$location', 'LearningRecordSettings', function($location, LearningRecordSettings) {
+        LearningRecordSettings.xapi_enabled = true;
+        LearningRecordSettings.caliper_enabled = true;
+        LearningRecordSettings.baseUrl = 'https://localhost:8888/';
     }]);
 };

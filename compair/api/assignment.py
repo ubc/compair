@@ -1,6 +1,6 @@
 import datetime
-
 import dateutil.parser
+
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint
 from flask_login import login_required, current_user, current_app
@@ -70,6 +70,8 @@ on_assignment_get_status = event.signal('ASSIGNMENT_GET_STATUS')
 on_assignment_user_comparisons_get = event.signal('ASSIGNMENT_USER_COMPARISONS_GET')
 on_assignment_users_comparisons_get = event.signal('ASSIGNMENT_USERS_COMPARISONS_GET')
 
+from compair.api.file import on_attach_file, on_detach_file
+
 def check_valid_pairing_algorithm(pairing_algorithm):
     pairing_algorithms = [
         PairingAlgorithm.adaptive.value,
@@ -123,8 +125,11 @@ class AssignmentIdAPI(Resource):
         if params['id'] != assignment_uuid:
             abort(400, title="Assignment Not Saved", message="The assignment's ID does not match the URL, which is required in order to update the assignment.")
 
+        old_file = assignment.file
+
         # make sure that file attachment exists
         file_uuid = params.get('file_id')
+        attachment = None
         if file_uuid:
             attachment = File.get_by_uuid_or_404(file_uuid)
             assignment.file_id = attachment.id
@@ -257,6 +262,8 @@ class AssignmentIdAPI(Resource):
 
         model_changes = get_model_changes(assignment)
 
+        db.session.commit()
+
         on_assignment_modified.send(
             self,
             event_name=on_assignment_modified.name,
@@ -265,7 +272,24 @@ class AssignmentIdAPI(Resource):
             assignment=assignment,
             data=model_changes)
 
-        db.session.commit()
+        if old_file and (not attachment or old_file.id != attachment.id):
+            on_detach_file.send(
+                self,
+                event_name=on_detach_file.name,
+                user=current_user,
+                course_id=course.id,
+                file=old_file,
+                assignment=assignment,
+                data={'assignment_id': assignment.id, 'file_id': old_file.id})
+
+        if attachment and (not old_file or old_file.id != attachment.id):
+            on_attach_file.send(
+                self,
+                event_name=on_attach_file.name,
+                user=current_user,
+                course_id=course.id,
+                file=attachment,
+                data={'assignment_id': assignment.id, 'file_id': attachment.id})
 
         # need to reorder after update
         assignment_criteria.reorder()
@@ -384,6 +408,7 @@ class AssignmentRootAPI(Resource):
 
         # make sure that file attachment exists
         file_uuid = params.get('file_id')
+        attachment = None
         if file_uuid:
             attachment = File.get_by_uuid_or_404(file_uuid)
             new_assignment.file_id = attachment.id
@@ -465,6 +490,15 @@ class AssignmentRootAPI(Resource):
             assignment=new_assignment,
             data=marshal(new_assignment, dataformat.get_assignment(False)))
 
+        if new_assignment.file_id:
+            on_attach_file.send(
+                self,
+                event_name=on_attach_file.name,
+                user=current_user,
+                course_id=course.id,
+                file=attachment,
+                data={'assignment_id': new_assignment.id, 'file_id': new_assignment.file_id})
+
         return marshal(new_assignment, dataformat.get_assignment())
 
 api.add_resource(AssignmentRootAPI, '')
@@ -519,8 +553,7 @@ class AssignmentIdStatusAPI(Resource):
                 assignment_id=assignment.id,
                 active=True,
                 practice=False,
-                draft=True,
-                saved=True
+                draft=True
             ) \
             .filter(or_(
                 Answer.user_id == current_user.id,
@@ -701,8 +734,7 @@ class AssignmentRootStatusAPI(Resource):
             .filter_by(
                 active=True,
                 practice=False,
-                draft=True,
-                saved=True
+                draft=True
             ) \
             .filter(or_(
                 and_(Answer.group_id == group_id, Answer.group_id != None),

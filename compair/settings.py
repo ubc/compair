@@ -4,6 +4,8 @@ import os
     Default settings, if no other settings is specified, values here are used.
 """
 
+COMPAIR_VERSION = "1.2.1"
+
 DATABASE = {
     'drivername': 'mysql+pymysql',
     'host': 'localhost',
@@ -55,14 +57,21 @@ BROKER_TRANSPORT_OPTIONS = {
 
 # xAPI & Learning Record Stores (LRS)
 XAPI_ENABLED = False
-XAPI_APP_BASE_URL = None
+CALIPER_ENABLED = False
+LRS_APP_BASE_URL = None
 
-LRS_STATEMENT_ENDPOINT = 'local' #url for LRS xAPI statements
-LRS_AUTH = None
-LRS_USERNAME = None
-LRS_PASSWORD = None
+LRS_XAPI_STATEMENT_ENDPOINT = 'local' #url for LRS xAPI statements
+LRS_XAPI_AUTH = None
+LRS_XAPI_USERNAME = None
+LRS_XAPI_PASSWORD = None
+
+LRS_CALIPER_HOST = 'local' #url for LRS Caliper statements
+LRS_CALIPER_API_KEY = None
+
 # limit user generated content field text size limit
-LRS_USER_INPUT_FIELD_SIZE_LIMIT = 1048576 #1024 * 1024 -> max 1MB
+LRS_USER_INPUT_FIELD_SIZE_LIMIT = 524288 #512 * 1024 -> max 512KB
+LRS_SIS_COURSE_ID_URI_TEMPLATE = '{base_url}/course/{sis_course_id}'
+LRS_SIS_SECTION_ID_URI_TEMPLATE = '{base_url}/course/{sis_course_id}/section/{sis_section_id}'
 
 LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER = False # set to True to use user's global_unique_identifier if available
 LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE = None # set to the url for the global unique identifer homepage
