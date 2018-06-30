@@ -230,8 +230,8 @@ app.directive('dynamicRichContent',
 
 //
 module.directive('richContent',
-    ["$filter", "xAPIStatementHelper", "$uibModal", "embeddableRichContent", "$sanitize",
-    function ($filter, xAPIStatementHelper, $uibModal, embeddableRichContent, $sanitize)
+    ["xAPIStatementHelper", "$uibModal", "embeddableRichContent", "$sanitize",
+    function (xAPIStatementHelper, $uibModal, embeddableRichContent, $sanitize)
     {
         return {
             restrict: 'E',
@@ -260,10 +260,10 @@ module.directive('richContent',
                         scope: modalScope
                     });
                     modalScope.modalInstance.opened.then(function() {
-                        xAPIStatementHelper.opened_attachment_modal(content.title);
+                        xAPIStatementHelper.opened_attachment_modal(content.url);
                     });
                     modalScope.modalInstance.result.finally(function() {
-                        xAPIStatementHelper.closed_attachment_modal(content.title);
+                        xAPIStatementHelper.closed_attachment_modal(content.url);
                     });
                 };
 
