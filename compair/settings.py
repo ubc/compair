@@ -97,7 +97,7 @@ LTI_LOGIN_ENABLED = True
 LOGIN_ADDITIONAL_INSTRUCTIONS_HTML = """
 <h3>If you can't log in, please check:</h3>
 <dl>
-    <dt>Are you registered in the course that is using this application?</dt>
+    <dt>If you are a student: Are you registered in the course that is using this application?</dt>
         <dd>See if you have access to the course in Canvas. If you can't access the course in Canvas, contact <a href="https://it.ubc.ca/got-question-about-it-products-and-support#helpdesk" target="_blank">UBC IT support</a>.</dd>
     <dt>Did you click the ComPAIR link from Canvas at least once?</dt>
         <dd>You must enter the application initially by clicking the ComPAIR link in the course's Canvas site. This activates your ComPAIR account for the course.</dd>
