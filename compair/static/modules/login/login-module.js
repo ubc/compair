@@ -49,6 +49,12 @@ module.constant('AuthTypesEnabled', {
     demo: false
 });
 
+module.constant('LoginConfigurableHTML', {
+    addition_instructions: "",
+    cas: "",
+    saml: ""
+});
+
 /***** Directives *****/
 // TODO this might be useful elsewhere, if we need to autofocus something
 // html5 property autofocus behaves differently on Firefox than in Chrome, in Firefox
@@ -69,10 +75,8 @@ module.directive('autoFocus', ["$timeout", function($timeout) {
 /***** Listeners *****/
 // display the login page if user is not logged in
 module.run(
-    ["$rootScope", "$route", "$log", "$uibModal", "$cacheFactory", "AuthenticationService",
-     "Toaster", "$http",
-    function ($rootScope, $route, $log, $uibModal, $cacheFactory, AuthenticationService,
-              Toaster, $http) {
+    ["$rootScope", "$uibModal", "$cacheFactory", "AuthenticationService", "Toaster",
+    function ($rootScope, $uibModal, $cacheFactory, AuthenticationService, Toaster) {
     // Create a modal dialog box for containing the login form
     var loginBox;
     var modalScope = $rootScope.$new();
@@ -139,13 +143,14 @@ module.controller(
     "LoginController",
     [ "$rootScope", "$scope", "$location", "$log", "$route", "AuthTypesEnabled",
       "LoginResource", "AuthenticationService", "LTI", "LTIResource", "SystemRole",
-      "DemoResource",
+      "DemoResource", "LoginConfigurableHTML",
     function ($rootScope, $scope, $location, $log, $route, AuthTypesEnabled,
               LoginResource, AuthenticationService, LTI, LTIResource, SystemRole,
-              DemoResource)
+              DemoResource, LoginConfigurableHTML)
     {
         $scope.submitted = false;
         $scope.SystemRole = SystemRole;
+        $scope.LoginConfigurableHTML = LoginConfigurableHTML;
 
         // update allowCreateUser if needed
         $rootScope.$on(AuthenticationService.LTI_LOGIN_REQUIRED_EVENT, function() {
