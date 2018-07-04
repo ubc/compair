@@ -3,7 +3,7 @@ from bouncer.constants import MANAGE, EDIT, CREATE, READ
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from flask_login import login_required, current_user
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, joinedload
 from sqlalchemy import exc, asc, or_, and_, func, desc, asc
 from six import text_type
 
@@ -423,11 +423,14 @@ class UserCourseListAPI(Resource):
         params = user_id_course_list_parser.parse_args()
 
         query = Course.query \
-            .join(UserCourse) \
-            .add_columns(UserCourse.course_role, UserCourse.group_name) \
+            .with_entities(Course, UserCourse) \
+            .options(joinedload(UserCourse.group)) \
+            .join(UserCourse, and_(
+                UserCourse.course_id == Course.id,
+                UserCourse.user_id == user.id,
+            )) \
             .filter(and_(
                 Course.active == True,
-                UserCourse.user_id == user.id,
                 UserCourse.course_role != CourseRole.dropped
             ))
 
@@ -458,9 +461,10 @@ class UserCourseListAPI(Resource):
 
         # fix results
         courses = []
-        for (_course, _course_role, _group_name) in page.items:
-            _course.course_role = _course_role
-            _course.group_name = _group_name
+        for (_course, _user_course) in page.items:
+            _course.course_role = _user_course.course_role
+            _course.group = _user_course.group
+            _course.group_uuid = _course.group.uuid if _course.group else None
             courses.append(_course)
         page.items = courses
 
@@ -488,7 +492,7 @@ class UserCourseStatusListAPI(Resource):
                 Course.uuid.in_(course_uuids),
                 Course.active == True,
             )) \
-            .add_columns(UserCourse.course_role) \
+            .add_columns(UserCourse.course_role, UserCourse.group_id) \
 
         if not allow(MANAGE, Course):
             query = query.join(UserCourse, and_(
@@ -510,17 +514,20 @@ class UserCourseStatusListAPI(Resource):
 
         statuses = {}
 
-        for course, course_role in results:
+        for course, course_role, group_id in results:
             incomplete_assignment_ids = set()
-            answer_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.answer_period]
-            compare_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.compare_period]
-
             if not allow(MANAGE, Course) and course_role == CourseRole.student:
+                answer_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.answer_period]
+                compare_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.compare_period]
+
                 if len(answer_period_assignments) > 0:
                     answer_period_assignment_ids = [assignment.id for assignment in answer_period_assignments]
                     answers = Answer.query \
                         .filter(and_(
-                            Answer.user_id == current_user.id,
+                            or_(
+                                and_(Answer.group_id == group_id, Answer.group_id != None),
+                                Answer.user_id == current_user.id,
+                            ),
                             Answer.assignment_id.in_(answer_period_assignment_ids),
                             Answer.active == True,
                             Answer.practice == False,
@@ -550,7 +557,10 @@ class UserCourseStatusListAPI(Resource):
                             func.count(Answer.assignment_id).label('self_evaluation_count')
                         ) \
                         .filter(and_(
-                            AnswerComment.user_id == current_user.id,
+                            or_(
+                                and_(Answer.group_id == group_id, Answer.group_id != None),
+                                Answer.user_id == current_user.id,
+                            ),
                             AnswerComment.active == True,
                             AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                             AnswerComment.draft == False,

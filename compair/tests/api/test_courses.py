@@ -584,7 +584,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
             original_assignments = original_course.assignments.all()
             duplicate_assignments = duplicate_course.assignments.all()
 
-            self.assertEqual(len(original_assignments), 3)
+            self.assertEqual(len(original_assignments), 5)
             self.assertEqual(len(original_assignments), len(duplicate_assignments))
 
             for index, original_assignment in enumerate(original_assignments):
@@ -599,6 +599,14 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
                 self.assertEqual(original_assignment.students_can_reply, duplicate_assignment.students_can_reply)
                 self.assertEqual(original_assignment.enable_self_evaluation, duplicate_assignment.enable_self_evaluation)
                 self.assertEqual(original_assignment.pairing_algorithm, duplicate_assignment.pairing_algorithm)
+                self.assertEqual(original_assignment.answer_grade_weight, duplicate_assignment.answer_grade_weight)
+                self.assertEqual(original_assignment.comparison_grade_weight, duplicate_assignment.comparison_grade_weight)
+                self.assertEqual(original_assignment.self_evaluation_grade_weight, duplicate_assignment.self_evaluation_grade_weight)
+                self.assertEqual(original_assignment.enable_group_answers, duplicate_assignment.enable_group_answers)
+                self.assertEqual(original_assignment.scoring_algorithm, duplicate_assignment.scoring_algorithm)
+                self.assertEqual(original_assignment.peer_feedback_prompt, duplicate_assignment.peer_feedback_prompt)
+                self.assertEqual(original_assignment.educators_can_compare, duplicate_assignment.educators_can_compare)
+                self.assertEqual(original_assignment.rank_display_limit, duplicate_assignment.rank_display_limit)
 
                 self.assertEqual(original_assignment.answer_start,
                     (duplicate_assignment.answer_start - self.date_delta))
@@ -628,7 +636,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
                 original_comparison_examples = original_assignment.comparison_examples.all()
                 duplicate_comparison_examples = duplicate_assignment.comparison_examples.all()
 
-                if original_assignment.id in [1,2]:
+                if original_assignment.id in [1,2,3,4]:
                     self.assertEqual(len(original_comparison_examples), 1)
                 else:
                     self.assertEqual(len(original_comparison_examples), 0)

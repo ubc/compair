@@ -10,11 +10,11 @@
                 <span class="filter" ng-if="canManageAssignment">
                     <label>Show: &nbsp;</label>
                     <select ng-if="groups.length > 0" ng-model="gradebookFilters.group" class="nullable" chosen
-                            ng-options="g as g for g in groups | orderBy: 'toString()'">
+                            ng-options="group.id as group.name for group in groups">
                         <option value="">All groups</option>
                     </select>
                     <select ng-model="gradebookFilters.student" class="nullable" chosen
-                            ng-options="u as u.name for u in users | orderBy: 'name'">
+                            ng-options="user.id as user.name for user in users | orderBy: 'name'">
                         <option value="">All students</option>
                     </select>
                 </span>

@@ -58,7 +58,11 @@ class LTIOutcome(object):
             update_lti_assignment_grades.delay(lti_consumer.id, resource_link_grades)
 
     @classmethod
-    def update_user_assignment_grade(cls, compair_assignment, compair_user):
+    def update_assignment_user_grade(cls, compair_assignment, compair_user_id):
+        cls.update_assignment_users_grades(compair_assignment, [compair_user_id])
+
+    @classmethod
+    def update_assignment_users_grades(cls, compair_assignment, compair_user_ids):
         from compair.models import CourseRole, AssignmentGrade, LTIUser
         from compair.tasks import update_lti_assignment_grades
 
@@ -68,15 +72,22 @@ class LTIOutcome(object):
         if len(lti_resource_links) == 0:
             return
 
-        assignment_grade = AssignmentGrade.query \
-            .filter_by(
-                user_id=compair_user.id,
-                assignment_id=compair_assignment.id
-            ) \
-            .one_or_none()
-
-        if assignment_grade == None:
+        if len(compair_user_ids) == 0:
             return
+
+        assignment_grades = AssignmentGrade.query \
+            .filter_by(assignment_id=compair_assignment.id) \
+            .filter(AssignmentGrade.user_id.in_(compair_user_ids)) \
+            .all()
+
+        # nothing to update if assignment doesn't have any grades
+        if len(assignment_grades) == 0:
+            return
+
+        user_grades = {
+            assignment_grade.user_id: assignment_grade.id \
+                for assignment_grade in assignment_grades
+        }
 
         # generate requests
         for lti_resource_link in lti_resource_links:
@@ -87,7 +98,7 @@ class LTIOutcome(object):
 
             lti_user_resource_links = lti_resource_link.lti_user_resource_links \
                 .join("lti_user") \
-                .filter(LTIUser.compair_user_id == compair_user.id) \
+                .filter(LTIUser.compair_user_id.in_(compair_user_ids)) \
                 .all()
 
             for lti_user_resource_link in lti_user_resource_links:
@@ -96,7 +107,7 @@ class LTIOutcome(object):
                     continue
 
                 lis_result_sourcedid = lti_user_resource_link.lis_result_sourcedid
-                assignment_grade_id = assignment_grade.id
+                assignment_grade_id = user_grades.get(lti_user_resource_link.compair_user_id)
 
                 resource_link_grades.append((lis_result_sourcedid, assignment_grade_id))
 
@@ -161,7 +172,11 @@ class LTIOutcome(object):
             update_lti_course_grades.delay(lti_consumer.id, lti_context_grades)
 
     @classmethod
-    def update_user_course_grade(cls, compair_course, compair_user):
+    def update_course_user_grade(cls, compair_course, compair_user_id):
+        cls.update_course_users_grade(compair_course, [compair_user_id])
+
+    @classmethod
+    def update_course_users_grade(cls, compair_course, compair_user_ids):
         from compair.models import CourseRole, CourseGrade, \
             LTIResourceLink, LTIUserResourceLink
         from compair.tasks import update_lti_course_grades
@@ -172,15 +187,21 @@ class LTIOutcome(object):
         if len(lti_contexts) == 0:
             return
 
-        course_grade = CourseGrade.query \
-            .filter_by(
-                user_id=compair_user.id,
-                course_id=compair_course.id
-            ) \
-            .one_or_none()
-
-        if course_grade == None:
+        if len(compair_user_ids) == 0:
             return
+
+        course_grades = CourseGrade.query \
+            .filter_by(course_id=compair_course.id) \
+            .filter(CourseGrade.user_id.in_(compair_user_ids)) \
+            .all()
+
+        # nothing to update if course doesn't have any grades
+        if len(course_grades) == 0:
+            return
+
+        user_grades = {
+            course_grade.user_id: course_grade.id for course_grade in course_grades
+        }
 
         # generate requests
         for lti_context in lti_contexts:
@@ -193,7 +214,7 @@ class LTIOutcome(object):
                 .join("lti_resource_link") \
                 .join("lti_user") \
                 .filter(
-                    LTIUser.compair_user_id == compair_user.id,
+                    LTIUser.compair_user_id.in_(compair_user_ids),
                     LTIResourceLink.lti_context_id == lti_context.id,
                     LTIResourceLink.compair_assignment_id == None
                 ) \
@@ -205,7 +226,7 @@ class LTIOutcome(object):
                     continue
 
                 lis_result_sourcedid = lti_user_resource_link.lis_result_sourcedid
-                course_grade_id = course_grade.id
+                course_grade_id = user_grades.get(lti_user_resource_link.compair_user_id)
 
                 lti_context_grades.append((lis_result_sourcedid, course_grade_id))
 

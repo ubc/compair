@@ -14,7 +14,8 @@ from . import dataformat
 from compair.core import db, event, abort
 from compair.authorization import allow, require, is_user_access_restricted
 from compair.models import Assignment, Course, Criterion, AssignmentCriterion, Answer, Comparison, \
-    AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File, User, UserCourse, CourseRole
+    AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File, User, UserCourse, \
+    CourseRole, Group
 from .util import new_restful_api, get_model_changes, pagination_parser
 
 assignment_api = Blueprint('assignment_api', __name__)
@@ -37,7 +38,8 @@ new_assignment_parser.add_argument('compare_end', default=None)
 new_assignment_parser.add_argument('file_id', default=None)
 new_assignment_parser.add_argument('students_can_reply', type=bool, default=False)
 new_assignment_parser.add_argument('number_of_comparisons', type=int, required=True)
-new_assignment_parser.add_argument('enable_self_evaluation', type=int, default=None)
+new_assignment_parser.add_argument('enable_self_evaluation', type=bool, default=False)
+new_assignment_parser.add_argument('enable_group_answers', type=bool, default=False)
 new_assignment_parser.add_argument('pairing_algorithm', default=None)
 new_assignment_parser.add_argument('rank_display_limit', type=int, default=None)
 new_assignment_parser.add_argument('educators_can_compare', type=bool, default=False)
@@ -155,10 +157,14 @@ class AssignmentIdAPI(Resource):
             abort(400, title="Assignment Not Saved", message=error_message)
 
         assignment.students_can_reply = params.get('students_can_reply', False)
-        assignment.number_of_comparisons = params.get(
-            'number_of_comparisons', assignment.number_of_comparisons)
-        assignment.enable_self_evaluation = params.get(
-            'enable_self_evaluation', assignment.enable_self_evaluation)
+        assignment.number_of_comparisons = params.get('number_of_comparisons', assignment.number_of_comparisons)
+        assignment.enable_self_evaluation = params.get('enable_self_evaluation', assignment.enable_self_evaluation)
+
+        if assignment.student_answer_count == 0:
+            assignment.enable_group_answers = params.get('enable_group_answers')
+        elif assignment.enable_group_answers != params.get('enable_group_answers'):
+            abort(400, title="Assignment Not Saved",
+                message='Group answer settings selection cannot be changed for this assignment because there are already submitted answers.')
 
         assignment.answer_grade_weight = params.get(
             'answer_grade_weight', assignment.answer_grade_weight)
@@ -172,9 +178,8 @@ class AssignmentIdAPI(Resource):
         if not assignment.compared:
             assignment.pairing_algorithm = PairingAlgorithm(pairing_algorithm)
         elif assignment.pairing_algorithm != PairingAlgorithm(pairing_algorithm):
-            msg = 'The answer pair selection algorithm cannot be changed for this assignment ' + \
-                    'because it has already been used in one or more comparisons.'
-            abort(403, title="Assignment Not Saved", message=msg)
+            abort(400, title="Assignment Not Saved",
+                message='The answer pair selection algorithm cannot be changed for this assignment because it has already been used in one or more comparisons.')
 
         assignment.educators_can_compare = params.get("educators_can_compare")
 
@@ -190,18 +195,18 @@ class AssignmentIdAPI(Resource):
             if set(criterion_uuids) != set(active_uuids):
                 msg = 'The criteria cannot be changed for this assignment ' + \
                       'because they have already been used in one or more comparisons.'
-                abort(403, title="Assignment Not Saved", message=msg)
+                abort(400, title="Assignment Not Saved", message=msg)
 
             for criterion in assignment.criteria:
                 if criterion_data.get(criterion.uuid) != criterion.weight:
                     msg = 'The criteria weights cannot be changed for this assignment ' + \
                         'because they have already been used in one or more comparisons.'
-                    abort(403, title="Assignment Not Saved", message=msg)
+                    abort(400, title="Assignment Not Saved", message=msg)
         else:
             # assignment not compared yet, can change criteria
             if len(criterion_uuids) == 0:
                 msg = "Please add at least one criterion to the assignment and save again."
-                abort(403, title="Assignment Not Saved", message=msg)
+                abort(400, title="Assignment Not Saved", message=msg)
 
             existing_uuids = [c.criterion_uuid for c in assignment_criteria]
             # disable old ones
@@ -250,9 +255,10 @@ class AssignmentIdAPI(Resource):
 
         # update assignment and course grades if needed
         if model_changes and (model_changes.get('answer_grade_weight') or
-                 model_changes.get('comparison_grade_weight') or
-                 model_changes.get('self_evaluation_grade_weight') or
-                 model_changes.get('enable_self_evaluation')):
+                model_changes.get('comparison_grade_weight') or
+                model_changes.get('self_evaluation_grade_weight') or
+                model_changes.get('enable_self_evaluation') or
+                model_changes.get('enable_group_answers')):
             assignment.calculate_grades()
             course.calculate_grades()
 
@@ -385,6 +391,7 @@ class AssignmentRootAPI(Resource):
         new_assignment.students_can_reply = params.get('students_can_reply', False)
         new_assignment.number_of_comparisons = params.get('number_of_comparisons')
         new_assignment.enable_self_evaluation = params.get('enable_self_evaluation')
+        new_assignment.enable_group_answers = params.get('enable_group_answers')
 
         new_assignment.answer_grade_weight = params.get('answer_grade_weight')
         new_assignment.comparison_grade_weight = params.get('comparison_grade_weight')
@@ -405,7 +412,7 @@ class AssignmentRootAPI(Resource):
             .all()
 
         if len(criterion_uuids) != len(criteria):
-            abort(400, title="Assignment Not Saved", message="Please double-check the criteria you selected and save agaiin.")
+            abort(400, title="Assignment Not Saved", message="Please double-check the criteria you selected and save again.")
 
         # add criteria to assignment in order
         for criterion_uuid in criterion_uuids:
@@ -447,15 +454,21 @@ class AssignmentIdStatusAPI(Resource):
             title="Assignment Status Unavailable",
             message="Assignment status can be seen only by those enrolled in the course. Please double-check your enrollment in this course.")
 
+        group = current_user.get_course_group(course.id)
+        group_id = group.id if group else None
+
         answer_count = Answer.query \
             .filter_by(
-                user_id=current_user.id,
                 assignment_id=assignment.id,
                 comparable=True,
                 active=True,
                 practice=False,
                 draft=False
             ) \
+            .filter(or_(
+                Answer.user_id == current_user.id,
+                and_(Answer.group_id == group_id, Answer.group_id != None)
+            )) \
             .count()
 
         feedback_count = AnswerComment.query \
@@ -463,24 +476,30 @@ class AssignmentIdStatusAPI(Resource):
             .filter(and_(
                 AnswerComment.active == True,
                 AnswerComment.draft == False,
-                Answer.user_id == current_user.id,
                 Answer.assignment_id == assignment.id,
                 Answer.active == True,
                 Answer.practice == False,
                 Answer.draft == False
+            )) \
+            .filter(or_(
+                Answer.user_id == current_user.id,
+                and_(Answer.group_id == group_id, Answer.group_id != None)
             )) \
             .count()
 
         drafts = Answer.query \
             .options(load_only('id')) \
             .filter_by(
-                user_id=current_user.id,
                 assignment_id=assignment.id,
                 active=True,
                 practice=False,
                 draft=True,
                 saved=True
             ) \
+            .filter(or_(
+                Answer.user_id == current_user.id,
+                and_(Answer.group_id == group_id, Answer.group_id != None)
+            )) \
             .all()
 
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
@@ -563,6 +582,9 @@ class AssignmentRootStatusAPI(Resource):
             title="Assignment Status Unavailable",
             message="Assignment status can be seen only by those enrolled in the course. Please double-check your enrollment in this course.")
 
+        group = current_user.get_course_group(course.id)
+        group_id = group.id if group else None
+
         assignments = course.assignments \
             .filter_by(active=True) \
             .all()
@@ -574,12 +596,15 @@ class AssignmentRootStatusAPI(Resource):
                 func.count(Answer.assignment_id).label('answer_count')
             ) \
             .filter_by(
-                user_id=current_user.id,
                 comparable=True,
                 active=True,
                 practice=False,
                 draft=False
             ) \
+            .filter(or_(
+                Answer.user_id == current_user.id,
+                and_(Answer.group_id == group_id, Answer.group_answer == True)
+            )) \
             .filter(Answer.assignment_id.in_(assignment_ids)) \
             .group_by(Answer.assignment_id) \
             .all()
@@ -594,11 +619,14 @@ class AssignmentRootStatusAPI(Resource):
             .filter(and_(
                 AnswerComment.active == True,
                 AnswerComment.draft == False,
-                Answer.user_id == current_user.id,
                 Answer.active == True,
                 Answer.practice == False,
                 Answer.draft == False,
                 Answer.assignment_id.in_(assignment_ids)
+            )) \
+            .filter(or_(
+                Answer.user_id == current_user.id,
+                and_(Answer.group_id == group_id, Answer.group_id != None)
             )) \
             .group_by(Answer.assignment_id) \
             .all()
@@ -642,17 +670,20 @@ class AssignmentRootStatusAPI(Resource):
             .group_by(Answer.assignment_id) \
             .all()
 
-        drafts = Answer.query \
+        query = Answer.query \
             .options(load_only('id', 'assignment_id', 'uuid')) \
             .filter_by(
-                user_id=current_user.id,
                 active=True,
                 practice=False,
                 draft=True,
                 saved=True
             ) \
-            .filter(Answer.assignment_id.in_(assignment_ids)) \
-            .all()
+            .filter(or_(
+                and_(Answer.group_id == group_id, Answer.group_id != None),
+                Answer.user_id == current_user.id
+            )) \
+            .filter(Answer.assignment_id.in_(assignment_ids))
+        drafts = query.all()
 
         statuses = {}
         for assignment in assignments:
@@ -669,7 +700,7 @@ class AssignmentRootStatusAPI(Resource):
             comparison_draft_count = assignment.draft_comparison_count_for_user(current_user.id)
             other_comparable_answers = assignment.comparable_answer_count - answer_count
 
-            # students can only begin comparing there there are enough answers submitted that they can do
+            # students can only begin comparing when there there are enough answers submitted that they can do
             # comparisons without seeing the same answer more than once
             comparison_available = other_comparable_answers >= assignment.number_of_comparisons * 2
             # instructors and tas can compare as long as there are new possible comparisons
@@ -849,21 +880,22 @@ class AssignmentUsersComparisonsAPI(Resource):
             self_evaluation_total = self_evaluation_total.filter(AnswerComment.user_id == user.id)
             comparison_total = comparison_total.filter(Comparison.user_id == user.id)
         elif params['group']:
-            user_query = user_query.filter(UserCourse.group_name == params['group'])
+            group = Group.get_active_by_uuid_or_404(params['group'])
+            user_query = user_query.filter(UserCourse.group_id == group.id)
 
             self_evaluation_total = self_evaluation_total \
                 .join(UserCourse, and_(
                     AnswerComment.user_id == UserCourse.user_id,
                     UserCourse.course_id == course.id
                 )) \
-                .filter(UserCourse.group_name == params['group'])
+                .filter(UserCourse.group_id == group.id)
 
             comparison_total = comparison_total \
                 .join(UserCourse, and_(
                     Comparison.user_id == UserCourse.user_id,
                     UserCourse.course_id == course.id
                 )) \
-                .filter(UserCourse.group_name == params['group'])
+                .filter(UserCourse.group_id == group.id)
 
         page = user_query.paginate(params['page'], params['perPage'])
         self_evaluation_total = self_evaluation_total.scalar()

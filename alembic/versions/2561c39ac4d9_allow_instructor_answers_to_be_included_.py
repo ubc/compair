@@ -19,7 +19,7 @@ from compair.models import convention
 def upgrade():
     # add a new "comparable" column. default as true
     with op.batch_alter_table('answer', naming_convention=convention) as batch_op:
-        batch_op.add_column(sa.Column('comparable', sa.Integer(), nullable=False, default='1', server_default='1'))
+        batch_op.add_column(sa.Column('comparable', sa.Integer(), nullable=False, default=True, server_default='1'))
 
     # Patch existing answers from instructors and TAs as non-comparable.
     # Note that existing answers from sys admin are considered comparable (i.e. no need to patch).

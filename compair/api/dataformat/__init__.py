@@ -63,30 +63,43 @@ def get_full_user():
     full.update(unrestricted)
     return full
 
+def _get_user_course():
+    return {
+        'group_id': fields.String(attribute="group_uuid"),
+        'group_name': fields.String(attribute="group_name"),
+        'group': fields.Nested(get_group(), allow_null=True),
+        'course_role': UnwrapEnum(attribute='course_role')
+    }
+
+def _get_third_party_logins():
+    third_party_logins = {}
+    if current_app.config.get('CAS_LOGIN_ENABLED'):
+        third_party_logins['cas_username'] = fields.String
+    if current_app.config.get('SAML_LOGIN_ENABLED'):
+        third_party_logins['saml_username'] = fields.String
+    return third_party_logins
+
 def get_full_users_in_course():
     users = get_user(False)
-    users['group_name'] = fields.String
-    users['course_role'] = UnwrapEnum(attribute='course_role')
-    if current_app.config.get('CAS_LOGIN_ENABLED'):
-        users['cas_username'] = fields.String
-    if current_app.config.get('SAML_LOGIN_ENABLED'):
-        users['saml_username'] = fields.String
-
+    users.update(_get_user_course())
+    users.update(_get_third_party_logins())
     return users
 
 def get_users_in_course(restrict_user=True):
     users = get_user(restrict_user)
-    users['group_name'] = fields.String
+    if restrict_user:
+        return users
 
-    if not restrict_user:
-        users['course_role'] = UnwrapEnum(attribute='course_role')
-        if current_app.config.get('EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR', False):
-            if current_app.config.get('CAS_LOGIN_ENABLED'):
-                users['cas_username'] = fields.String
-            if current_app.config.get('SAML_LOGIN_ENABLED'):
-                users['saml_username'] = fields.String
+    users.update(_get_user_course())
+    if current_app.config.get('EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR', False):
+        users.update(_get_third_party_logins())
 
     return users
+
+def get_user_courses():
+    courses = get_course()
+    courses.update(_get_user_course())
+    return courses
 
 def get_lti_user():
     return {
@@ -106,6 +119,24 @@ def get_third_party_user():
         'user_id': fields.String(attribute="user_uuid")
     }
 
+
+def get_partial_group():
+    return {
+        'id': fields.String(attribute="group_uuid"),
+        'name': fields.String(attribute="group_name"),
+        'avatar': fields.String(attribute="group_avatar"),
+    }
+
+def get_group():
+    return {
+        'id': fields.String(attribute="uuid"),
+        'course_id': fields.String(attribute="course_uuid"),
+        'name': fields.String,
+        'avatar': fields.String,
+        'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
+        'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
+    }
+
 def get_course():
     return {
         'id': fields.String(attribute="uuid"),
@@ -117,19 +148,13 @@ def get_course():
         'end_date': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.end_date)),
         'available': fields.Boolean,
         'lti_linked': fields.Boolean,
+        'groups_locked': fields.Boolean,
         'assignment_count': fields.Integer,
         'student_assignment_count': fields.Integer,
         'student_count': fields.Integer,
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
-
-
-def get_user_courses():
-    courses = get_course()
-    courses['group_name'] = fields.String
-    courses['course_role'] = UnwrapEnum(attribute='course_role')
-    return courses
 
 def get_criterion(with_weight=False):
     ret = {
@@ -174,6 +199,7 @@ def get_assignment(restrict_user=True):
 
         'students_can_reply': fields.Boolean,
         'enable_self_evaluation': fields.Boolean,
+        'enable_group_answers': fields.Boolean,
         'pairing_algorithm': UnwrapEnum(attribute='pairing_algorithm'),
         'educators_can_compare': fields.Boolean,
         'rank_display_limit': fields.Integer(default=None),
@@ -188,7 +214,6 @@ def get_assignment(restrict_user=True):
         'after_comparing': fields.Boolean,
         'evaluation_count': fields.Integer,
         'answer_count': fields.Integer,
-        'top_answer_count': fields.Integer,
         'self_evaluation_count': fields.Integer,
 
         'user': get_partial_user(restrict_user),
@@ -201,7 +226,7 @@ def get_assignment(restrict_user=True):
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
 
-def get_answer(restrict_user=True, include_answer_user=True, include_score=True):
+def get_answer(restrict_user=True, include_answer_author=True, include_score=True):
     ret = {
         'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
@@ -211,6 +236,7 @@ def get_answer(restrict_user=True, include_answer_user=True, include_score=True)
         'file': fields.Nested(get_file(), allow_null=True),
         'draft': fields.Boolean,
         'top_answer': fields.Boolean,
+        'group_answer': fields.Boolean,
 
         'comment_count': fields.Integer,
         'private_comment_count': fields.Integer,
@@ -223,9 +249,11 @@ def get_answer(restrict_user=True, include_answer_user=True, include_score=True)
     if include_score:
         ret['score'] = fields.Nested(get_score(restrict_user), allow_null=True)
 
-    if include_answer_user:
+    if include_answer_author:
         ret['user_id'] = fields.String(attribute="user_uuid")
         ret['user'] = get_partial_user(restrict_user)
+        ret['group_id'] = fields.String(attribute="group_uuid")
+        ret['group'] = get_partial_group()
 
     return ret
 
@@ -268,7 +296,7 @@ def get_kaltura_media():
     }
 
 
-def get_comparison(restrict_user=True, with_answers=True, with_feedback=False, include_answer_user=True, include_score=True):
+def get_comparison(restrict_user=True, with_answers=True, with_feedback=False, include_answer_author=True, include_score=True):
     ret = {
         'id': fields.String(attribute="uuid"),
         'course_id': fields.String(attribute="course_uuid"),
@@ -284,8 +312,8 @@ def get_comparison(restrict_user=True, with_answers=True, with_feedback=False, i
     }
 
     if with_answers:
-        ret['answer1'] = fields.Nested(get_answer(restrict_user, include_answer_user, include_score))
-        ret['answer2'] = fields.Nested(get_answer(restrict_user, include_answer_user, include_score))
+        ret['answer1'] = fields.Nested(get_answer(restrict_user, include_answer_author, include_score))
+        ret['answer2'] = fields.Nested(get_answer(restrict_user, include_answer_author, include_score))
 
     if with_feedback:
         ret['answer1_feedback'] = fields.List(fields.Nested(get_answer_comment(restrict_user)))

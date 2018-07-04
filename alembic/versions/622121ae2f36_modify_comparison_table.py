@@ -166,7 +166,7 @@ def upgrade():
                     )
                 )
                 comparison_data = {
-                    'comparison_id': result.inserted_primary_key,
+                    'comparison_id': result.lastrowid,
                     'completed': comparison.completed
                 }
                 if comparison.completed:

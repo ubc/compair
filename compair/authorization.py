@@ -8,7 +8,7 @@ from .core import abort, impersonation
 
 from .models import Course, User, UserCourse, CourseRole, SystemRole, \
     Assignment, Answer, AnswerComment, Comparison, Criterion, \
-    AssignmentCriterion, ComparisonExample, File
+    AssignmentCriterion, ComparisonExample, File, Group
 
 USER_IDENTITY = 'permission_user_identity'
 
@@ -95,6 +95,8 @@ def define_authorization(user, they, impersonation_original_user=None):
         they.can(READ, Answer, course_id=entry.course_id, draft=False)
         they.can(CREATE, Answer, course_id=entry.course_id)
         they.can((EDIT, DELETE, READ), Answer, user_id=user.id)
+        if entry.group_id:
+            they.can((EDIT, DELETE, READ), Answer, group_id=entry.group_id)
         they.can(DELETE, File, if_can_delete_attachment_reference)
         # only owner/Instructors/TAs can read answer comment drafts
         they.can(READ, AnswerComment, course_id=entry.course_id, draft=False)
@@ -103,10 +105,11 @@ def define_authorization(user, they, impersonation_original_user=None):
         they.can((EDIT, DELETE, READ), AnswerComment, user_id=user.id)
         # students, instructor and ta can submit comparisons
         they.can((CREATE, EDIT), Comparison, course_id=entry.course_id)
-        # instructors can modify the course and enrolment
+        # instructors can modify the course, enrolment, and groups
         if entry.course_role == CourseRole.instructor:
             they.can((EDIT, DELETE), Course, id=entry.course_id)
             they.can(EDIT, UserCourse, course_id=entry.course_id)
+            they.can((EDIT, DELETE, CREATE), Group, course_id=entry.course_id)
         # instructors and ta can do anything they want to assignments
         if entry.course_role == CourseRole.instructor or \
                 entry.course_role == CourseRole.teaching_assistant:
@@ -116,6 +119,7 @@ def define_authorization(user, they, impersonation_original_user=None):
             they.can(MANAGE, ComparisonExample, course_id=entry.course_id)
             they.can(READ, Comparison, course_id=entry.course_id)
             they.can(READ, UserCourse, course_id=entry.course_id)
+            they.can(READ, Group, course_id=entry.course_id)
             they.can((CREATE, DELETE), AssignmentCriterion, course_id=entry.course_id)
             they.can(READ, USER_IDENTITY)
             # TA can create criteria

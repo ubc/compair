@@ -39,7 +39,7 @@ module.controller(
         $scope.groups = [];
 
         var all = {'id': 'all', 'name': 'All Assignments'};
-        var allGroups = {'name': 'All Groups', 'value': 'all'};
+        var allGroups = {'name': 'All Groups', 'id': 'all'};
         $scope.types = [
             {'id': 'participation', 'name': 'Basic Participation Report'},
             {'id': 'participation_stat', 'name': 'Participation Report for Research Teams'},
@@ -58,15 +58,9 @@ module.controller(
             }
             GroupResource.get({'courseId': $scope.report.course_id}).$promise.then(
                 function (ret) {
-                    $scope.report.group_name = 'all';
-                    $scope.groups = [];
-                    _.each(ret.objects, function(value) {
-                        $scope.groups.push({
-                            'name': value,
-                            'value': value
-                        })
-                    });
-                    if ($scope.groups.length > 0) {
+                    $scope.report.group_id = 'all';
+                    $scope.groups = ret.objects;
+                    if ($scope.groups && $scope.groups.length > 0) {
                         $scope.groups.push(allGroups);
                     }
                 }
@@ -89,8 +83,8 @@ module.controller(
             if (report.assignment == 'all') {
                 delete report.assignment;
             }
-            if (report.group_name == 'all') {
-                delete report.group_name;
+            if (report.group_id == 'all') {
+                delete report.group_id;
             }
 
             ReportResource.save({'id': report.course_id}, report).$promise.then(

@@ -19,10 +19,10 @@ def upgrade():
     with op.batch_alter_table('lti_consumer', naming_convention=convention) as batch_op:
         batch_op.drop_column('canvas_api_token')
         batch_op.drop_column('canvas_consumer')
-        batch_op.add_column(sa.Column('user_id_override', sa.String(length=255), nullable=True))
+        batch_op.add_column(sa.Column('user_id_override', sa.String(255), nullable=True))
 
 def downgrade():
     with op.batch_alter_table('lti_consumer', naming_convention=convention) as batch_op:
-        batch_op.add_column(sa.Column('canvas_consumer', sa.Boolean(), nullable=False, default='0', server_default='0'))
+        batch_op.add_column(sa.Column('canvas_consumer', sa.Boolean(), nullable=False, default=False, server_default='0'))
         batch_op.add_column(sa.Column('canvas_api_token', sa.String(255), nullable=True))
         batch_op.drop_column('user_id_override')

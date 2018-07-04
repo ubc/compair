@@ -6,13 +6,14 @@ from bouncer.constants import MANAGE
 from flask import Blueprint, jsonify
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal_with, marshal, reqparse
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import undefer, joinedload
 
 from . import dataformat
 from compair.authorization import require
 from compair.models import Course, Assignment, CourseRole, User, UserCourse, Comparison, \
-    AnswerComment, Answer, File, AnswerScore, AnswerCommentType, PairingAlgorithm, AssignmentGrade
+    AnswerComment, Answer, File, AnswerScore, AnswerCommentType, PairingAlgorithm, \
+    AssignmentGrade, Group
 from .util import new_restful_api
 from compair.core import event, abort
 
@@ -38,7 +39,7 @@ class GradebookAPI(Resource):
 
         # get all students in this course
         students = User.query \
-            .with_entities(User, AssignmentGrade.grade) \
+            .with_entities(User, UserCourse, AssignmentGrade.grade) \
             .join(UserCourse, UserCourse.user_id == User.id) \
             .outerjoin(AssignmentGrade, and_(
                  AssignmentGrade.user_id == User.id,
@@ -49,7 +50,20 @@ class GradebookAPI(Resource):
                 UserCourse.course_role == CourseRole.student
             )) \
             .all()
-        student_ids = [student.id for (student, grade) in students]
+
+        student_ids = []
+        group_ids = set()
+        group_users = {}
+        for (student, user_course, grade) in students:
+            user_id = student.id
+            student_ids.append(user_id)
+
+            group_id = user_course.group_id
+            if group_id != None:
+                group_ids.add(group_id)
+                group_users.setdefault(group_id, [])
+                group_users[group_id].append(user_id)
+        group_ids = list(group_ids)
 
         # get students comparisons counts for this assignment
         comparisons = User.query \
@@ -68,7 +82,7 @@ class GradebookAPI(Resource):
 
         # find out the scores that students get
         answer_scores = Answer.query \
-            .with_entities(Answer.user_id, File, AnswerScore.normalized_score) \
+            .with_entities(Answer.user_id, Answer.group_id, File, AnswerScore.normalized_score) \
             .outerjoin(File, and_(
                  Answer.file_id == File.id
             )) \
@@ -79,7 +93,10 @@ class GradebookAPI(Resource):
                 Answer.assignment_id == assignment.id,
                 Answer.draft == False,
                 Answer.practice == False,
-                Answer.user_id.in_(student_ids)
+                or_(
+                    and_(Answer.group_id.in_(group_ids), Answer.group_id != None),
+                    Answer.user_id.in_(student_ids)
+                ),
             )) \
             .all()
 
@@ -89,12 +106,19 @@ class GradebookAPI(Resource):
         num_answers_per_student = {}
         file_by_user_id = {}
 
-        for (user_id, file_attachment, score) in answer_scores:
-            num_answers_per_student[user_id] = 1
-            if include_scores:
-                scores_by_user_id[user_id] = round(score, 3) if score != None else 'Not Evaluated'
-            if file_attachment != None:
-                file_by_user_id[user_id] = file_attachment
+        for (user_id, group_id, file_attachment, score) in answer_scores:
+            user_ids = []
+            if user_id != None:
+                user_ids = [user_id]
+            elif group_id != None:
+                user_ids = group_users.get(group_id, [])
+
+            for user_id in user_ids:
+                num_answers_per_student[user_id] = 1
+                if include_scores:
+                    scores_by_user_id[user_id] = round(score, 3) if score != None else 'Not Evaluated'
+                if file_attachment != None:
+                    file_by_user_id[user_id] = file_attachment
 
         include_self_evaluation = False
         num_self_evaluation_per_student = {}
@@ -122,7 +146,7 @@ class GradebookAPI(Resource):
         # {'gradebook':[{user1}. {user2}, ...]}
         # user id, username, first name, last name, answer submitted, comparisons submitted
         gradebook = []
-        for (student, grade) in students:
+        for (student, user_course, grade) in students:
             entry = {
                 'user': student,
                 'num_answers': num_answers_per_student.get(student.id, 0),

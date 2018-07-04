@@ -58,14 +58,20 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
         from . import Answer, Comparison, CourseRole, \
             AnswerComment, AnswerCommentType, LTIOutcome
 
-        student_ids = [course_user.user_id
-            for course_user in assignment.course.user_courses
-            if course_user.course_role == CourseRole.student]
+        user_is_student = False
+        group_id = None
 
-        if user.id not in student_ids:
+        for course_user in assignment.course.user_courses:
+            if course_user.user_id != user.id:
+                continue
+            user_is_student = course_user.course_role == CourseRole.student
+            group_id = course_user.group_id
+            break
+
+        if not user_is_student:
             return
 
-        answer_count = Answer.query \
+        user_answer_count = Answer.query \
             .filter_by(
                 assignment_id=assignment.id,
                 user_id=user.id,
@@ -74,6 +80,18 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
                 draft=False
             ) \
             .count()
+
+        group_answer_counts = 0
+        if group_id:
+            group_answer_counts = Answer.query \
+                .filter_by(
+                    assignment_id=assignment.id,
+                    active=True,
+                    practice=False,
+                    draft=False,
+                    group_id=group_id
+                ) \
+                .count()
 
         comparison_count = Comparison.query \
             .filter_by(
@@ -97,6 +115,8 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
             )) \
             .count()
 
+        answer_count = user_answer_count + group_answer_counts
+
         grade = _calculate_assignment_grade(assignment,
             answer_count, comparison_count, self_evaluation_count)
 
@@ -111,26 +131,23 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
         db.session.add(assignment_grade)
         db.session.commit()
 
-        LTIOutcome.update_user_assignment_grade(assignment, user)
+        LTIOutcome.update_assignment_user_grade(assignment, user.id)
 
     @classmethod
-    def calculate_grades(cls, assignment):
-        from . import Answer, CourseRole, Comparison, \
+    def calculate_group_grade(cls, assignment, group):
+        from . import Answer, Comparison, CourseRole, \
             AnswerComment, AnswerCommentType, LTIOutcome
 
         student_ids = [course_user.user_id
             for course_user in assignment.course.user_courses
-            if course_user.course_role == CourseRole.student]
+            if course_user.course_role == CourseRole.student and \
+            course_user.group_id == group.id]
 
         # skip if there aren't any students
         if len(student_ids) == 0:
-            AssignmentGrade.query \
-                .filter_by(assignment_id=assignment.id) \
-                .delete()
-            LTIOutcome.update_assignment_grades(assignment)
             return
 
-        answer_counts = Answer.query \
+        user_answer_counts = Answer.query \
             .with_entities(
                 Answer.user_id,
                 func.count(Answer.user_id).label('answer_count')
@@ -145,6 +162,21 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
                 Answer.user_id.in_(student_ids)
             ) \
             .group_by(Answer.user_id) \
+            .all()
+
+        group_answer_counts = Answer.query \
+            .with_entities(
+                Answer.group_id,
+                func.count(Answer.group_id).label('answer_count')
+            ) \
+            .filter_by(
+                assignment_id=assignment.id,
+                active=True,
+                practice=False,
+                draft=False,
+                group_id=group.id
+            ) \
+            .group_by(Answer.group_id) \
             .all()
 
         comparison_counts = Comparison.query \
@@ -184,9 +216,155 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
         assignment_grades = AssignmentGrade.get_assignment_grades(assignment)
         new_assignment_grades = []
         for student_id in student_ids:
-            answer_count = next((result.answer_count for result in answer_counts
+            user_answer_count = next((result.answer_count for result in user_answer_counts
                 if result.user_id == student_id
             ), 0)
+
+            group_answer_count = next((result.answer_count for result in group_answer_counts
+                if result.group_id == group.id
+            ), 0)
+
+            answer_count = user_answer_count + group_answer_count
+
+            comparison_count = next((result.comparison_count for result in comparison_counts
+                if result.user_id == student_id
+            ), 0)
+
+            self_evaluation_count = next((result.self_evaluation_count for result in self_evaluation_counts
+                if result.user_id == student_id
+            ), 0)
+
+            grade = _calculate_assignment_grade(assignment,
+                answer_count, comparison_count, self_evaluation_count)
+
+            assignment_grade = next((assignment_grade for assignment_grade in assignment_grades
+                if assignment_grade.user_id == student_id
+            ), None)
+
+            if assignment_grade == None:
+                assignment_grade = AssignmentGrade(
+                    user_id=student_id,
+                    assignment_id=assignment.id
+                )
+                new_assignment_grades.append(assignment_grade)
+
+            assignment_grade.grade = grade
+
+        db.session.add_all(assignment_grades + new_assignment_grades)
+        db.session.commit()
+
+        LTIOutcome.update_assignment_users_grades(assignment, student_ids)
+
+    @classmethod
+    def calculate_grades(cls, assignment):
+        from . import Answer, CourseRole, Comparison, \
+            AnswerComment, AnswerCommentType, LTIOutcome
+
+        student_ids = []
+        group_ids = set()
+
+        user_groups = {}
+        for course_user in assignment.course.user_courses:
+            if course_user.course_role == CourseRole.student:
+                student_ids.append(course_user.user_id)
+                if course_user.group_id:
+                    group_ids.add(course_user.group_id)
+                    user_groups[course_user.user_id] = course_user.group_id
+        group_ids = list(group_ids)
+
+        # skip if there aren't any students
+        if len(student_ids) == 0:
+            AssignmentGrade.query \
+                .filter_by(assignment_id=assignment.id) \
+                .delete()
+            LTIOutcome.update_assignment_grades(assignment)
+            return
+
+        user_answer_counts = Answer.query \
+            .with_entities(
+                Answer.user_id,
+                func.count(Answer.user_id).label('answer_count')
+            ) \
+            .filter_by(
+                assignment_id=assignment.id,
+                active=True,
+                practice=False,
+                draft=False
+            ) \
+            .filter(
+                Answer.user_id.in_(student_ids)
+            ) \
+            .group_by(Answer.user_id) \
+            .all()
+
+        group_answer_counts = []
+        if len(group_ids) > 0:
+            group_answer_counts = Answer.query \
+                .with_entities(
+                    Answer.group_id,
+                    func.count(Answer.group_id).label('answer_count')
+                ) \
+                .filter_by(
+                    assignment_id=assignment.id,
+                    active=True,
+                    practice=False,
+                    draft=False
+                ) \
+                .filter(
+                    Answer.group_id.in_(group_ids)
+                ) \
+                .group_by(Answer.group_id) \
+                .all()
+
+        comparison_counts = Comparison.query \
+            .with_entities(
+                Comparison.user_id,
+                func.count(Comparison.user_id).label('comparison_count')
+            ) \
+            .filter_by(
+                assignment_id=assignment.id,
+                completed=True
+            ) \
+            .filter(
+                Comparison.user_id.in_(student_ids)
+            ) \
+            .group_by(Comparison.user_id) \
+            .all()
+
+        self_evaluation_counts = AnswerComment.query \
+            .with_entities(
+                AnswerComment.user_id,
+                func.count(AnswerComment.user_id).label('self_evaluation_count')
+            ) \
+            .join("answer") \
+            .filter(and_(
+                AnswerComment.active == True,
+                AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                AnswerComment.draft == False,
+                Answer.assignment_id == assignment.id,
+                Answer.active == True,
+                Answer.practice == False,
+                Answer.draft == False,
+                AnswerComment.user_id.in_(student_ids)
+            )) \
+            .group_by(AnswerComment.user_id) \
+            .all()
+
+        assignment_grades = AssignmentGrade.get_assignment_grades(assignment)
+        new_assignment_grades = []
+        for student_id in student_ids:
+            user_answer_count = next((result.answer_count for result in user_answer_counts
+                if result.user_id == student_id
+            ), 0)
+
+            group_id = user_groups.get(student_id)
+            group_answer_count = 0
+            if group_id:
+                group_answer_count = next((result.answer_count for result in group_answer_counts
+                    if result.group_id == group_id
+                ), 0)
+
+            answer_count = user_answer_count + group_answer_count
 
             comparison_count = next((result.comparison_count for result in comparison_counts
                 if result.user_id == student_id

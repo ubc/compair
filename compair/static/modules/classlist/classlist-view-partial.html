@@ -44,6 +44,10 @@
         <i class="glyphicon glyphicon-info-sign"></i> There may be users pending registration (registered in your external course but not yet in ComPAIR). To register, <strong>each student must follow the link from your external course</strong> the first time they access ComPAIR. Once they have followed this link and registered, they may log in through the link or directly at this site.
     </p>
 
+    <p class="alert alert-info" ng-show="course.groups_locked">
+        <i class="glyphicon glyphicon-info-sign"></i> One or more group assignments have started or completed their comparison period. You may <strong>no longer remove users from the group they are assigned to</strong>.
+    </p>
+
     <hr />
 
     <div class="row" ng-show="classlist.length > 0">
@@ -64,7 +68,7 @@
             </div>
             <div class="form-group col-sm-4">
                 <select id="select-group" class="form-control" ng-model="selectedGroup"
-                    ng-options="g as g for g in groups" ng-disabled="!groups.length">
+                    ng-options="group.id as group.name for group in groups" ng-disabled="!groups.length">
                     <option value="">- Select existing group -</option>
                 </select>
             </div>
@@ -142,8 +146,8 @@
                         <span ng-if="loggedInUserId == user.id && !canManageUsers">{{ user.course_role }}</span>
                     </td>
                     <td ng-if="groups.length > 0">
-                        <select ng-model="user.group_name" ng-options="g as g for g in groups"
-                                ng-change="update(user.id, user.group_name)">
+                        <select ng-model="user.group_id" ng-options="group.id as group.name for group in groups"
+                                ng-change="updateGroup(user)">
                             <option value="">- None -</option>
                         </select>
                     </td>

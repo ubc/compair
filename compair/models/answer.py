@@ -3,6 +3,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy_enum34 import EnumType
 
 from . import *
 from importlib import import_module
@@ -16,7 +17,9 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id', ondelete="CASCADE"),
         nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
-        nullable=False)
+        nullable=True)
+    group_id = db.Column(db.Integer, db.ForeignKey('group.id', ondelete="CASCADE"),
+        nullable=True)
     file_id = db.Column(db.Integer, db.ForeignKey('file.id', ondelete="SET NULL"),
         nullable=True)
     content = db.Column(db.Text)
@@ -29,6 +32,7 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     # relationships
     # assignment via Assignment Model
     # user via User Model
+    # group via Group Model
     # file via File Model
 
     comments = db.relationship("AnswerComment", backref="answer")
@@ -50,6 +54,10 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     user_fullname_sortable = association_proxy('user', 'fullname_sortable')
     user_system_role = association_proxy('user', 'system_role')
 
+    group_uuid = association_proxy('group', 'uuid')
+    group_avatar = association_proxy('group', 'avatar')
+    group_name = association_proxy('group', 'name')
+
     @hybrid_property
     def private_comment_count(self):
         return self.comment_count - self.public_comment_count
@@ -61,6 +69,14 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     @saved.expression
     def saved(cls):
         return or_(cls.modified != cls.created, cls.draft == False)
+
+    @hybrid_property
+    def group_answer(self):
+        return self.group_id != None
+
+    @group_answer.expression
+    def group_answer(cls):
+        return cls.group_id != None
 
     @classmethod
     def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):

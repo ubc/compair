@@ -104,38 +104,44 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         )
 
     @classmethod
-    def _get_new_comparison_pair(cls, course_id, assignment_id, user_id, pairing_algorithm, comparisons):
+    def _get_new_comparison_pair(cls, course_id, assignment_id, user_id, group_id,
+                                pairing_algorithm, comparisons):
         from . import Assignment, UserCourse, CourseRole, Answer, AnswerScore, \
-            PairingAlgorithm, AnswerCriterionScore, AssignmentCriterion
+            PairingAlgorithm, AnswerCriterionScore, AssignmentCriterion, Group
 
-        # exclude current user and those not with proper role.
+        # exclude current user and those without a proper role.
         # note that sys admin (not enrolled in the course and thus no course role) can create answers.
         # they are considered eligible
         ineligibles = UserCourse.query \
             .with_entities(UserCourse.user_id) \
             .filter(and_(
                 UserCourse.course_id == course_id,
-                UserCourse.course_role.notin_(
-                    [ CourseRole.student, CourseRole.instructor, \
-                        CourseRole.teaching_assistant ]
-                )
-            ))
-        ineligible_user_ids = [ineligible.user_id \
-            for ineligible in ineligibles]
+                UserCourse.course_role == CourseRole.dropped
+            )) \
+            .all()
+
+        ineligible_user_ids = [ineligible.user_id for ineligible in ineligibles]
         ineligible_user_ids.append(user_id)
 
-        answers_with_score = Answer.query \
-            .with_entities(Answer, AnswerScore.score ) \
-            .outerjoin(AnswerScore) \
+        query = Answer.query \
+            .with_entities(Answer, AnswerScore.score) \
+            .outerjoin(AnswerScore, AnswerScore.answer_id == Answer.id) \
             .filter(and_(
-                Answer.user_id.notin_(ineligible_user_ids),
+                or_(
+                    ~Answer.user_id.in_(ineligible_user_ids),
+                    Answer.user_id == None # don't filter out group answers
+                ),
                 Answer.assignment_id == assignment_id,
                 Answer.active == True,
                 Answer.practice == False,
                 Answer.draft == False,
                 Answer.comparable == True
-            )) \
-            .all()
+            ))
+
+        if group_id:
+            query = query.filter(Answer.group_id != group_id)
+
+        answers_with_score = query.all()
 
         scored_objects = []
         for answer_with_score in answers_with_score:
@@ -203,7 +209,8 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     @classmethod
     def create_new_comparison(cls, assignment_id, user_id, skip_comparison_examples):
-        from . import Assignment, ComparisonExample, ComparisonCriterion
+        from . import Assignment, ComparisonExample, ComparisonCriterion, \
+            UserCourse, CourseRole
 
         # get all comparisons for the user
         comparisons = Comparison.query \
@@ -223,6 +230,20 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         pairing_algorithm = assignment.pairing_algorithm
         if pairing_algorithm == None:
             pairing_algorithm = PairingAlgorithm.random
+
+        # set user group restriction if
+        # - enable_group_answers, user part of a group, and user is student
+        group_id = None
+        if assignment.enable_group_answers:
+            user_course = UserCourse.query \
+                .filter_by(
+                    user_id=user_id,
+                    course_id=assignment.course_id,
+                    course_role=CourseRole.student
+                ) \
+                .first()
+            if user_course and user_course.group_id:
+                group_id = user_course.group_id
 
         if not skip_comparison_examples:
             # check comparison examples first
@@ -248,7 +269,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
         if not is_comparison_example_set:
             comparison_pair = Comparison._get_new_comparison_pair(assignment.course_id,
-                assignment_id, user_id, pairing_algorithm, comparisons)
+                assignment_id, user_id, group_id, pairing_algorithm, comparisons)
             answer1 = Answer.query.get(comparison_pair.key1)
             answer2 = Answer.query.get(comparison_pair.key2)
             round_compared = min(answer1.round+1, answer2.round+1)

@@ -5,7 +5,7 @@ import time
 from six import text_type
 
 # sqlalchemy
-from sqlalchemy.orm import synonym
+from sqlalchemy.orm import synonym, joinedload
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
@@ -129,7 +129,6 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
             1.Trim leading and trailing whitespace from an email address
             2.Force all characters to lower-case
             3.md5 hash the final string
-        Defaults to a hash of the user's username if no email is available
         """
         hash_input = None
         if self.system_role != SystemRole.student and self.email:
@@ -171,12 +170,45 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     #     s = Serializer(current_app.config['SECRET_KEY'], expires_in=expiration)
     #     return s.dumps({'id': self.id})
 
+    @classmethod
+    def get_user_course_role(cls, user_id, course_id):
+        from . import UserCourse
+        user_course = UserCourse.query \
+            .filter_by(
+                course_id=course_id,
+                user_id=user_id
+            ) \
+            .one_or_none()
+        return user_course.course_role if user_course else None
+
     def get_course_role(self, course_id):
         """ Return user's course role by course id """
 
         for user_course in self.user_courses:
             if user_course.course_id == course_id:
                 return user_course.course_role
+
+        return None
+
+    @classmethod
+    def get_user_course_group(cls, user_id, course_id):
+        from . import UserCourse
+        user_course = UserCourse.query \
+            .options(joinedload('group')) \
+            .filter_by(
+                course_id=course_id,
+                user_id=user_id
+            ) \
+            .one_or_none()
+
+        return user_course.group if user_course else None
+
+    def get_course_group(self, course_id):
+        """ Return user's course group by course id """
+
+        for user_course in self.user_courses:
+            if user_course.course_id == course_id:
+                return user_course.group
 
         return None
 

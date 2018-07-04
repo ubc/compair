@@ -80,6 +80,16 @@
                 ng-model="assignment.description" class="form-control" id="assignmentDescription">
             </textarea>
         </div>
+        <hr>
+        <p><strong>Group Functionality</strong></p>
+        <input id="enable_group_answers" type="checkbox" name="enable_group_answers" ng-model="assignment.enable_group_answers">
+        <label class="not-bold" for="enable_group_answers">Enable answers and comparisons at the group level (each group answers once, but each group member compares)</label>
+        <p class="alert alert-info" ng-if="assignment.enable_group_answers">
+            With this setting, <strong>you must ensure each student is assigned to a group</strong> for everyone to participate (students not in a group cannot answer).
+            Currently, <strong>you have {{groups.length}} group<span ng-if="groups.length != 1">s</span> set in this course.</strong>
+            Visit the <a target="_blank" ng-href="#/course/{{course.id}}/user">Manage Users</a> screen to view and modify the groups before comparing begins.
+        </p>
+        <br><br ng-if="!assignment.enable_group_answers">
     </fieldset>
 
     <fieldset>
@@ -266,6 +276,13 @@
                 <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" required placeholder="number of comparisons required from each student">
             </compair-field-with-feedback>
         </div>
+
+        <p class="alert alert-info" ng-if="assignment.enable_group_answers && groups.length < (assignment.number_of_comparisons*2) + 1">
+            You have enabled group answers and comparisons with {{groups.length}} group<span ng-if="groups.length != 1">s</span>.
+            This will result in {{possible_group_comparisons}} answer pair<span ng-if="possible_group_comparisons != 1">s</span> for each student to compare (since students can't compare their own group's answer).
+            <strong>You need {{ (assignment.number_of_comparisons*2) + 1 - groups.length}} additional group<span ng-if="(assignment.number_of_comparisons*2) + 1 - groups.length != 1">s</span> or {{ (assignment.number_of_comparisons*2) + 1 - groups.length}} instructor/TA-created answer<span ng-if="(assignment.number_of_comparisons*2) + 1 - groups.length != 1">s</span></strong> to use this number of comparisons.
+            Visit the <a target="_blank" ng-href="#/course/{{course.id}}/user">Manage Users</a> screen to view and modify the groups before comparing begins.
+        </p>
 
         <hr />
 

@@ -16,6 +16,9 @@ var assignmentStatusFactory = new AssignmentStatusFactory();
 var CriterionFactory = require('../../factories/criterion_factory.js');
 var criterionFactory = new CriterionFactory();
 
+var GroupFactory = require('../../factories/group_factory.js');
+var groupFactory = new GroupFactory();
+
 var LTIConsumerFactory = require('../../factories/lti_consumer_factory.js');
 var ltiConsumerFactory = new LTIConsumerFactory();
 
@@ -33,7 +36,7 @@ var storage = {
     users: {},
     courses: {},
     user_courses: {},
-    groups: [],
+    groups: {},
     assignments: {},
     assignment_status: {},
     course_assignments: {},
@@ -105,13 +108,20 @@ var course2 = courseFactory.generateCourse("2abcABC123-abcABC123_Z", {
 });
 storage.courses[course2.id] = course2;
 
-var group1 = "First Group";
-storage.groups.push(group1);
-var group2 = "Second Group";
-storage.groups.push(group2);
-var group3 = "Third Group";
-storage.groups.push(group3);
+var group1 = groupFactory.generateGroup("1abcABC123-abcABC123_Z", course.id, {
+    name: "First Group",
+});
+storage.groups[group1.id] = group1;
 
+var group2 = groupFactory.generateGroup("2abcABC123-abcABC123_Z", course.id, {
+    name: "Second Group",
+});
+storage.groups[group2.id] = group2;
+
+var group3 = groupFactory.generateGroup("3abcABC123-abcABC123_Z", course.id, {
+    name: "Second Group",
+});
+storage.groups[group3.id] = group2;
 
 var defaultCriterion = criterionFactory.getDefaultCriterion();
 storage.criteria[defaultCriterion.id] = defaultCriterion;
@@ -133,12 +143,12 @@ storage.criteria[criterion3.id] = criterion3;
 
 // user_courses
 storage.user_courses[admin.id] = [
-    { courseId: course.id, courseRole: "Instructor", groupName: group1 },
-    { courseId: course2.id, courseRole: "Instructor", groupName: null }
+    { courseId: course.id, courseRole: "Instructor", group_id: group1.id },
+    { courseId: course2.id, courseRole: "Instructor", group_id: null }
 ];
 
 storage.user_courses[student1.id] = [
-    { courseId: course.id, courseRole: "Student", groupName: group1 }
+    { courseId: course.id, courseRole: "Student", group_id: group1.id }
 ];
 
 storage.course_assignments[course.id] = [];

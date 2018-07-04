@@ -99,9 +99,11 @@ module.controller(
     ["$scope", "$location", "AnswerResource", "ClassListResource", "$route", "TimerResource",
         "AssignmentResource", "Toaster", "$timeout", "UploadValidator", "CourseRole", "$uibModalInstance",
         "answerAttachService", "EditorOptions", "xAPI", "xAPIStatementHelper", "$q", "Session",
+        "CourseResource", "GroupResource",
     function ($scope, $location, AnswerResource, ClassListResource, $route, TimerResource,
         AssignmentResource, Toaster, $timeout, UploadValidator, CourseRole, $uibModalInstance,
-        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, $q, Session)
+        answerAttachService, EditorOptions, xAPI, xAPIStatementHelper, $q, Session,
+        CourseResource, GroupResource)
     {
         if ($scope.answer.file) {
             $scope.answer.uploadedFile = true;
@@ -119,7 +121,7 @@ module.controller(
         $scope.showAssignment = ($scope.answer.id == undefined);
         // since the "submit as" dropdown (if enabled) is default to current user (or empty if sys admin),
         // the default value of submitAsInstructorOrTA is based on canManageAssignment
-        $scope.submitAsInstructorOrTA = $scope.canManageAssignment;
+        $scope.selectedIsStudent = false;
         $scope.isImpersonating = Session.isImpersonating();
 
         if ($scope.method == "create") {
@@ -130,39 +132,42 @@ module.controller(
                 comparable: true
             };
 
-            AnswerResource.userUnsaved({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
-                function(answerUnsaved) {
-                    if (!answerUnsaved.objects.length) {
-                        // TODO review suppression logic. For now, avoid saving the answer when impersonating.
-                        // logic will probably be revised when xapi handling be changed in the future.
-                        if  (!$scope.isImpersonating) {
-                            // if no answers found, create a new draft answer
-                            AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, {draft: true}).$promise.then(
-                                function (ret) {
-                                    // set answer id to new answer id
-                                    $scope.answer.id = ret.id;
-                                }
-                            );
-                        }
-                    } else {
-                        // draft found for user, use it
-                        $scope.answer.id = answerUnsaved.objects[0].id;
-                    }
-                }
-            )
-
             if ($scope.canManageAssignment) {
                 // preset the user_id if instructors creating new answers
                 $scope.answer.user_id = $scope.loggedInUserId;
+            } else {
+                // TODO review suppression logic. For now, avoid saving the answer when impersonating.
+                // logic will probably be revised when xapi handling be changed in the future.
+                if  (!$scope.isImpersonating) {
+                    AnswerResource.userUnsaved({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}).$promise.then(
+                        function(answerUnsaved) {
+                            if (!answerUnsaved.objects.length) {
+                                    // if no answers found, create a new draft answer
+                                    AnswerResource.save({'courseId': $scope.courseId, 'assignmentId': $scope.assignmentId}, {draft: true}).$promise.then(
+                                        function (ret) {
+                                            // set answer id to new answer id
+                                            $scope.answer.id = ret.id;
+                                        }
+                                    );
+                            } else {
+                                // draft found for user, use it
+                                $scope.answer.id = answerUnsaved.objects[0].id;
+                            }
+                        }
+                    )
+                }
             }
         }
         if ($scope.canManageAssignment) {
-            // get list of users in the course
-            ClassListResource.get({'courseId': $scope.courseId}).$promise.then(
-                function (ret) {
-                    $scope.classlist = ret.objects;
-                }
-            );
+            ClassListResource.get({'courseId': $scope.courseId}, function (ret) {
+                $scope.classlist = ret.objects;
+            });
+            GroupResource.get({'courseId': $scope.courseId}, function (ret) {
+                $scope.groups = ret.objects;
+            });
+            CourseResource.getInstructors({'id': $scope.courseId}, function (ret) {
+                $scope.instructors = ret.objects;
+            });
         }
 
         if ($scope.method == "create" || !$scope.answer.draft) {
@@ -234,18 +239,20 @@ module.controller(
             }
         });
 
-        $scope.onSubmitAsChanged = function(selectedUserId) {
-            var instructorOrTA = selectedUserId != null &&
-                $scope.classlist.filter(function (el) {
-                    return el.id == selectedUserId &&
-                        (el.course_role == CourseRole.instructor ||
-                         el.course_role == CourseRole.teaching_assistant)
-                }).length > 0;
-
-            $scope.submitAsInstructorOrTA = selectedUserId == null || instructorOrTA;
-            if (!instructorOrTA) {
+        $scope.submitAsUserChanged = function(selectedUserId) {
+            $scope.selectedIsStudent = $scope.instructors.filter(function (el) {
+                return el.id == selectedUserId
+            }).length == 0;
+            if ($scope.selectedIsStudent) {
                 $scope.answer.comparable = true;
             }
+            $scope.answer.group_id = null;
+        }
+
+        $scope.submitAsGroupChanged = function() {
+            $scope.selectedIsStudent = true;
+            $scope.answer.comparable = true;
+            $scope.answer.user_id = null;
         }
 
         $scope.answerSubmit = function (saveDraft) {

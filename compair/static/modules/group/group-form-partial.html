@@ -3,13 +3,14 @@
 <ng-form name="groupForm" class="form">
     <fieldset>
         <legend>Group Details</legend>
-        <compair-field-with-feedback form-control="groupForm.groupName">
+        <compair-field-with-feedback form-control="groupForm.name">
             <label class="required-star" for="criterionName">Group Name</label>
-            <input type="text" maxlength="255" ng-model="group.name" id="groupName" name="groupName" class="form-control" required/>
+            <input type="text" maxlength="255" ng-model="group.name" id="name" name="name" class="form-control" required/>
         </compair-field-with-feedback>
     </fieldset>
     <div class="text-center">
-        <input type="submit" ng-click="groupSubmit()" class="btn btn-success btn-lg" value="Save" ng-disabled="groupForm.$invalid" />
+        <input type="submit" ng-click="groupSubmit()" class="btn btn-success btn-lg"
+               value="Save" ng-disabled="groupForm.$invalid || submitted" />
     </div>
     <br />
 </ng-form>

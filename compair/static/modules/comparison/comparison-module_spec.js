@@ -113,7 +113,6 @@ describe('comparison-module', function () {
             "answer_period": false,
             "answer_start": "Mon, 23 Feb 2015 21:50:00 -0000",
             "answer_count": 115,
-            "top_answer_count": 0,
             "available": true,
             "students_can_reply": false,
             "criteria": [
@@ -161,6 +160,7 @@ describe('comparison-module', function () {
                 "id": "50bcABC123-abcABC123_Z"
             },
             "enable_self_evaluation": true,
+            "enable_group_answers": false,
             "pairing_algorithm": "random",
             "educators_can_compare": false,
             "rank_display_limit": 10,
@@ -187,7 +187,9 @@ describe('comparison-module', function () {
                 "avatar": "63a9f0ea7bb98050796b649e85481845",
                 "displayname": "root"
             },
-            "user_id": "1abcABC123-abcABC123_Z"
+            "user_id": "1abcABC123-abcABC123_Z",
+            "group": null,
+            "group_id": null
         };
 
         var mockAnswer2 = {
@@ -210,7 +212,9 @@ describe('comparison-module', function () {
                 "avatar": "25242646dab1876796ab95f036a8fc82",
                 "displayname": "student_95322345"
             },
-            "user_id": "162cABC123-abcABC123_Z"
+            "user_id": "162cABC123-abcABC123_Z",
+            "group": null,
+            "group_id": null
         };
 
         var mockAnswer2Comments = [{
@@ -286,6 +290,7 @@ describe('comparison-module', function () {
                 'displayname': "root",
                 'fullname': "John Smith",
                 'fullname_sortable': "Smith, John",
+                "student_number": null,
                 'id': id
             },
             'created': "Fri, 09 Jan 2015 18:35:58 -0000",
