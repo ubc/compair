@@ -2,7 +2,7 @@ import os
 
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask
 from flask_login import current_user, login_required, login_user, logout_user
-from flask_restful import marshal
+from flask_restful import marshal, Resource
 
 from compair.core import db, event, abort, impersonation
 from compair.authorization import get_logged_in_user_permissions
@@ -11,6 +11,7 @@ from compair.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, 
 from compair.cas import get_cas_login_url, validate_cas_ticket, get_cas_logout_url
 from compair.saml import get_saml_login_url, get_saml_auth_response, get_saml_logout_url, _get_auth
 from . import dataformat
+from .util import new_restful_api
 
 login_api = Blueprint("login_api", __name__, url_prefix='/api')
 
@@ -58,33 +59,35 @@ def login():
     # login unsuccessful
     abort(400, title="Log In Failed", message="Sorry, the username or password was not recognized. Please double-check both fields and try again.")
 
-@login_api.route('/logout', methods=['DELETE'])
-@login_required
-def logout():
-    on_logout.send(
-        current_app._get_current_object(),
-        event=on_logout.name,
-        user=current_user
-    )
-    current_user.update_last_online()
-    logout_user()  # flask-login delete user info
-    url = ""
+class Logout(Resource):
+    @login_required
+    def delete(self):
+        on_logout.send(
+            current_app._get_current_object(),
+            event=on_logout.name,
+            user=current_user
+        )
+        current_user.update_last_online()
+        logout_user()  # flask-login delete user info
+        url = ""
 
-    if sess.get('LTI'):
-        lti_resource_link = LTIResourceLink.query.get(sess['lti_resource_link'])
-        if lti_resource_link:
-            return_url = lti_resource_link.launch_presentation_return_url
-            if return_url != None and return_url.strip() != "":
-                url = jsonify({'redirect': return_url})
+        if sess.get('LTI'):
+            lti_resource_link = LTIResourceLink.query.get(sess['lti_resource_link'])
+            if lti_resource_link:
+                return_url = lti_resource_link.launch_presentation_return_url
+                if return_url != None and return_url.strip() != "":
+                    url = jsonify({'redirect': return_url})
 
-    elif sess.get('CAS_LOGIN'):
-        url = jsonify({'redirect': url_for('login_api.cas_logout')})
-    elif sess.get('SAML_LOGIN'):
-        url = jsonify({'redirect': url_for('login_api.saml_logout')})
+        elif sess.get('CAS_LOGIN'):
+            url = jsonify({'redirect': url_for('login_api.cas_logout')})
+        elif sess.get('SAML_LOGIN'):
+            url = jsonify({'redirect': url_for('login_api.saml_logout')})
 
-    sess.clear()
-    return url
+        sess.clear()
+        return url
 
+restful_logout_api = new_restful_api(login_api)
+restful_logout_api.add_resource(Logout, '/logout')
 
 @login_api.route('/session', methods=['GET'])
 @login_required
