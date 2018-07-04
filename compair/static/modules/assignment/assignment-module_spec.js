@@ -97,7 +97,6 @@ describe('assignment-module', function () {
     var mockAssignment = {
         "after_comparing": false,
         "answer_count": 12,
-        "top_answer_count": 0,
         "answer_end": "Wed, 15 Jun 2016 06:59:00 -0000",
         "answer_period": true,
         "answer_start": "Thu, 02 Jun 2016 07:00:00 -0000",
@@ -137,6 +136,7 @@ describe('assignment-module', function () {
         "description": "<p>This is the description</p>\n",
         "peer_feedback_prompt": null,
         "enable_self_evaluation": true,
+        "enable_group_answers": false,
         "evaluation_count": 17,
         "file": null,
         "id": "1abcABC123-abcABC123_Z",
@@ -163,52 +163,107 @@ describe('assignment-module', function () {
     var mockStudents = {
         "objects": [
             {
-                "group_name": "Group 1",
+                "group_id": "10bcABC123-abcABC123_Z",
+                "group": {
+                    "id": "10bcABC123-abcABC123_Z",
+                    "name": "Group 1",
+                    "created": "Mon, 06 Jun 2016 19:52:27 -0000",
+                    "modified": "Tue, 07 Jun 2016 22:00:38 -0000",
+                },
                 "id": "3abcABC123-abcABC123_Z",
                 "name": "Student One"
             },
             {
-                "group_name": "Group 1",
+                "group_id": "10bcABC123-abcABC123_Z",
+                "group": {
+                    "id": "10bcABC123-abcABC123_Z",
+                    "name": "Group 1",
+                    "created": "Mon, 06 Jun 2016 19:52:27 -0000",
+                    "modified": "Tue, 07 Jun 2016 22:00:38 -0000",
+                },
                 "id": "4abcABC123-abcABC123_Z",
                 "name": "Student Two"
             },
             {
-                "group_name": "Group 1",
+                "group_id": "10bcABC123-abcABC123_Z",
+                "group": {
+                    "id": "10bcABC123-abcABC123_Z",
+                    "name": "Group 1",
+                    "created": "Mon, 06 Jun 2016 19:52:27 -0000",
+                    "modified": "Tue, 07 Jun 2016 22:00:38 -0000",
+                },
                 "id": "5abcABC123-abcABC123_Z",
                 "name": "Student Three"
             },
             {
-                "group_name": "Group 1",
+                "group_id": "10bcABC123-abcABC123_Z",
+                "group": {
+                    "id": "10bcABC123-abcABC123_Z",
+                    "name": "Group 1",
+                    "created": "Mon, 06 Jun 2016 19:52:27 -0000",
+                    "modified": "Tue, 07 Jun 2016 22:00:38 -0000",
+                },
                 "id": "6abcABC123-abcABC123_Z",
                 "name": "Student Four"
             },
             {
-                "group_name": "Group 2",
+                "group_id": "20bcABC123-abcABC123_Z",
+                "group": {
+                    "id": "20bcABC123-abcABC123_Z",
+                    "name": "Group 2",
+                    "created": "Mon, 06 Jun 2016 19:52:27 -0000",
+                    "modified": "Tue, 07 Jun 2016 22:00:38 -0000",
+                },
                 "id": "7abcABC123-abcABC123_Z",
                 "name": "Student Five"
             },
             {
-                "group_name": "Group 2",
+                "group_id": "20bcABC123-abcABC123_Z",
+                "group": {
+                    "id": "20bcABC123-abcABC123_Z",
+                    "name": "Group 2",
+                    "created": "Mon, 06 Jun 2016 19:52:27 -0000",
+                    "modified": "Tue, 07 Jun 2016 22:00:38 -0000",
+                },
                 "id": "8abcABC123-abcABC123_Z",
                 "name": "Student Sx"
             },
             {
-                "group_name": "Group 2",
+                "group_id": "20bcABC123-abcABC123_Z",
+                "group": {
+                    "id": "20bcABC123-abcABC123_Z",
+                    "name": "Group 2",
+                    "created": "Mon, 06 Jun 2016 19:52:27 -0000",
+                    "modified": "Tue, 07 Jun 2016 22:00:38 -0000",
+                },
                 "id": "9abcABC123-abcABC123_Z",
                 "name": "Student Seven"
             },
             {
-                "group_name": "Group 2",
+                "group_id": "20bcABC123-abcABC123_Z",
+                "group": {
+                    "id": "20bcABC123-abcABC123_Z",
+                    "name": "Group 2",
+                    "created": "Mon, 06 Jun 2016 19:52:27 -0000",
+                    "modified": "Tue, 07 Jun 2016 22:00:38 -0000",
+                },
                 "id": "10bcABC123-abcABC123_Z",
                 "name": "Student Eight"
             },
             {
-                "group_name": "Group 3",
+                "group_id": "30bcABC123-abcABC123_Z",
+                "group": {
+                    "id": "30bcABC123-abcABC123_Z",
+                    "name": "Group 3",
+                    "created": "Mon, 06 Jun 2016 19:52:27 -0000",
+                    "modified": "Tue, 07 Jun 2016 22:00:38 -0000",
+                },
                 "id": "11bcABC123-abcABC123_Z",
                 "name": "Student Nine"
             },
             {
-                "group_name": null,
+                "group_id": null,
+                "group": null,
                 "id": "12bcABC123-abcABC123_Z",
                 "name": "Student Ten"
             }
@@ -217,7 +272,8 @@ describe('assignment-module', function () {
 
     var mockInstructors = {
         "objects": {
-            "group_name": null,
+            "group_id": null,
+            "group": null,
             "name": "UeNV, thkx",
             "id": "1abcABC123-abcABC123_Z"
         }
@@ -244,7 +300,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "UeNV, thkx",
                     "id": "1abcABC123-abcABC123_Z"
                 },
-                "user_id": "1abcABC123-abcABC123_Z"
+                "user_id": "1abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -266,7 +324,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "UeNV, thkx",
                     "id": "1abcABC123-abcABC123_Z"
                 },
-                "user_id": "1abcABC123-abcABC123_Z"
+                "user_id": "1abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -288,7 +348,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "UeNV, thkx",
                     "id": "1abcABC123-abcABC123_Z"
                 },
-                "user_id": "1abcABC123-abcABC123_Z"
+                "user_id": "1abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -310,7 +372,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "One, Instructor",
                     "id": "2abcABC123-abcABC123_Z"
                 },
-                "user_id": "2abcABC123-abcABC123_Z"
+                "user_id": "2abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -335,7 +399,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "Nine, Student (123456789)",
                     "id": "11bcABC123-abcABC123_Z"
                 },
-                "user_id": "11bcABC123-abcABC123_Z"
+                "user_id": "11bcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -360,7 +426,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "Sx, Student (123456)",
                     "id": "8abcABC123-abcABC123_Z"
                 },
-                "user_id": "8abcABC123-abcABC123_Z"
+                "user_id": "8abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -385,7 +453,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "Ten, Student (1234567890)",
                     "id": "12bcABC123-abcABC123_Z"
                 },
-                "user_id": "12abcABC123-abcABC123_Z"
+                "user_id": "12abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -410,7 +480,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "Eight, Student (12345678)",
                     "id": "10bcABC123-abcABC123_Z"
                 },
-                "user_id": "10bcABC123-abcABC123_Z"
+                "user_id": "10bcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -435,7 +507,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "Five, Student (12345)",
                     "id": "7abcABC123-abcABC123_Z"
                 },
-                "user_id": "7abcABC123-abcABC123_Z"
+                "user_id": "7abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -460,7 +534,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "Two, Student (12)",
                     "id": "4abcABC123-abcABC123_Z"
                 },
-                "user_id": "4abcABC123-abcABC123_Z"
+                "user_id": "4abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -485,7 +561,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "Three, Student (123)",
                     "id": "5abcABC123-abcABC123_Z"
                 },
-                "user_id": "5abcABC123-abcABC123_Z"
+                "user_id": "5abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -511,6 +589,8 @@ describe('assignment-module', function () {
                     "id": "9abcABC123-abcABC123_Z",
                 },
                 "user_id": "9abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -535,7 +615,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "One, Student (1)",
                     "id": "3abcABC123-abcABC123_Z"
                 },
-                "user_id": "3abcABC123-abcABC123_Z"
+                "user_id": "3abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             },
             {
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -560,7 +642,9 @@ describe('assignment-module', function () {
                     "fullname_sortable": "Four, Student (1234)",
                     "id": "6abcABC123-abcABC123_Z"
                 },
-                "user_id": "6abcABC123-abcABC123_Z"
+                "user_id": "6abcABC123-abcABC123_Z",
+                "group": null,
+                "group_id": null
             }
         ],
         "page": 1,
@@ -624,7 +708,9 @@ describe('assignment-module', function () {
                         "fullname_sortable": "UeNV, thkx",
                         "id": "1abcABC123-abcABC123_Z"
                     },
-                    "user_id": "1abcABC123-abcABC123_Z"
+                    "user_id": "1abcABC123-abcABC123_Z",
+                    "group": null,
+                    "group_id": null
                 },
                 "answer1_id": "100cABC123-abcABC123_Z",
                 "answer2": {
@@ -647,7 +733,9 @@ describe('assignment-module', function () {
                         "fullname_sortable": "UeNV, thkx",
                         "id": "1abcABC123-abcABC123_Z"
                     },
-                    "user_id": "1abcABC123-abcABC123_Z"
+                    "user_id": "1abcABC123-abcABC123_Z",
+                    "group": null,
+                    "group_id": null
                 },
                 "answer2_id": "101cABC123-abcABC123_Z",
                 "assignment_id": "1abcABC123-abcABC123_Z",
@@ -919,6 +1007,7 @@ describe('assignment-module', function () {
                     course: angular.copy(mockCourse),
                     criteria: angular.copy(mockCritiera),
                     loggedInUser: angular.copy(mockUser),
+                    groups: angular.copy(mockGroups),
                     canManageAssignment: true,
                 });
 
@@ -1275,6 +1364,7 @@ describe('assignment-module', function () {
                     assignmentComparisonExamples: angular.copy(mockComparisonExamples),
                     criteria: angular.copy(mockCritiera),
                     loggedInUser: angular.copy(mockUser),
+                    groups: angular.copy(mockGroups),
                     canManageAssignment: true,
                 });
 
@@ -1527,6 +1617,7 @@ describe('assignment-module', function () {
                     assignmentComparisonExamples: angular.copy(mockComparisonExamples),
                     criteria: angular.copy(mockCritiera),
                     loggedInUser: angular.copy(mockUser),
+                    groups: angular.copy(mockGroups),
                     canManageAssignment: true,
                 });
 

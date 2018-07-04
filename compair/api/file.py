@@ -13,8 +13,7 @@ from compair.core import allowed_file, random_generator
 from compair.authorization import allow, require
 from . import dataformat
 from compair.core import db, event, abort
-from compair.models import File, Assignment, Answer, \
-    KalturaMedia
+from compair.models import File, Assignment, KalturaMedia
 from compair.kaltura import KalturaAPI
 from .util import new_restful_api
 

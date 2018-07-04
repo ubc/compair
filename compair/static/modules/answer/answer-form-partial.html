@@ -41,17 +41,37 @@
                 <p>Allowed file types for attachments include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}, with a maximum file size of <strong>{{UploadValidator.getAttachmentUploadLimit() | filesize }}</strong>. Any files you upload will be attached when you <strong>save or submit this answer</strong> but not before.</p>
         </div>
 
-        <div class="form-group" ng-if="canManageAssignment && answer.draft && comparison_example !== true">
+        <div class="form-group" ng-if="!assignment.enable_group_answers && canManageAssignment && answer.draft && comparison_example !== true">
             <label class="required-star" for="user_id">Submit As</label>
             <select id="user_id" name="user_id" required
                     ng-model="answer.user_id" class="form-control" chosen width="'100%'"
-                    ng-options="u.id as u.fullname_sortable for u in classlist"
-                    ng-change="onSubmitAsChanged(answer.user_id)">
+                    ng-options="user.id as user.fullname_sortable for user in classlist"
+                    ng-change="submitAsUserChanged(answer.user_id)">
                 <option value="">- Select a user -</option>
             </select>
         </div>
 
-        <div class="form-group" ng-if="canManageAssignment && submitAsInstructorOrTA && comparison_example !== true">
+        <div class="form-group" ng-if="assignment.enable_group_answers && canManageAssignment && answer.draft && comparison_example !== true">
+            <label class="required-star" for="user_id">Submit As Instructor/Teaching Assistant</label>
+            <select id="user_id" name="user_id" required-if="!answer.group_id"
+                    ng-model="answer.user_id" class="form-control" chosen width="'100%'"
+                    ng-options="user.id as user.name for user in instructors"
+                    ng-change="submitAsUserChanged(answer.user_id)">
+                <option value="">- Select a user -</option>
+            </select>
+        </div>
+
+        <div class="form-group" ng-if="assignment.enable_group_answers && groups.length > 0 && canManageAssignment && answer.draft && comparison_example !== true">
+            <label class="required-star" for="group_id">Or As Group</label>
+            <select id="group_id" name="group_id" required-if="!answer.user_id"
+                    ng-model="answer.group_id" class="form-control" chosen width="'100%'"
+                    ng-options="group.id as group.name for group in groups"
+                    ng-change="submitAsGroupChanged()">
+                <option value="">- Select a group -</option>
+            </select>
+        </div>
+
+        <div class="form-group" ng-if="canManageAssignment && !selectedIsStudent && comparison_example !== true">
             <label for="comparable" ng-class="!answer.draft ? 'text-muted not-bold' : ''">
                 <input type="checkbox" id="comparable" name="comparable"
                     ng-model="answer.comparable"

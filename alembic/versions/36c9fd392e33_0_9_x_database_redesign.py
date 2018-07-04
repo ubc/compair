@@ -1313,7 +1313,7 @@ def downgrade():
                 posts_id=posts_id
             )
         )
-        return result.inserted_primary_key
+        return result.lastrowid
 
     def create_post(users_id, courses_id, content, modified=datetime.utcnow(), created=datetime.utcnow()):
         result = connection.execute(
@@ -1322,7 +1322,7 @@ def downgrade():
                 modified=modified, created=created
             )
         )
-        return result.inserted_primary_key
+        return result.lastrowid
 
     def create_file_for_post(file_id, posts_id):
         files = connection.execute(new_file_table.select().where(new_file_table.c.id == file_id))
@@ -1354,7 +1354,7 @@ def downgrade():
                 modified=datetime.utcnow(), created=datetime.utcnow()
             )
         )
-        return result.inserted_primary_key
+        return result.lastrowid
 
     op.bulk_insert(old_user_system_types,
         [
@@ -1433,7 +1433,7 @@ def downgrade():
         if assignment.enable_self_evaluation:
             connection.execute(
                 old_assignment_self_eval_types.insert().values(
-                    questions_id=result.inserted_primary_key, selfevaltypes_id=1
+                    questions_id=result.lastrowid, selfevaltypes_id=1
                 )
             )
 
@@ -1463,7 +1463,7 @@ def downgrade():
                     modified=datetime.utcnow(), created=datetime.utcnow()
                 )
             )
-            group_id = result.inserted_primary_key
+            group_id = result.lastrowid
 
             for user_id in user_set:
                 connection.execute(
@@ -1595,7 +1595,7 @@ def downgrade():
             )
         )
 
-        comparison_id = result.inserted_primary_key
+        comparison_id = result.lastrowid
 
         connection.execute(
             old_comparisons_comment_table.insert().values(

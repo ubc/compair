@@ -360,10 +360,10 @@ module.controller(
 
 module.controller(
     "ComparisonViewController",
-    ['$scope', '$routeParams', 'breadcrumbs', 'CourseResource', 'AssignmentResource', "WinningAnswer",
-        'AnswerResource', 'AnswerCommentResource', 'GroupResource', 'Toaster', "xAPIStatementHelper",
-    function ($scope, $routeParams, breadcrumbs, CourseResource, AssignmentResource, WinningAnswer,
-        AnswerResource, AnswerCommentResource, GroupResource, Toaster, xAPIStatementHelper)
+    ['$scope', '$routeParams', 'breadcrumbs', 'AssignmentResource', "WinningAnswer",
+        'AnswerResource', 'GroupUserResource', "xAPIStatementHelper",
+    function ($scope, $routeParams, breadcrumbs, AssignmentResource, WinningAnswer,
+        AnswerResource, GroupUserResource, xAPIStatementHelper)
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId;
@@ -407,7 +407,7 @@ module.controller(
                 if ($scope.comparisonFilters.group == null) {
                     $scope.resetUsers($scope.allInstructors, $scope.allStudents);
                 } else {
-                    GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.comparisonFilters.group}).$promise.then(
+                    GroupUserResource.get({'courseId': $scope.courseId, 'groupId': $scope.comparisonFilters.group}).$promise.then(
                         function (ret) {
                             $scope.resetUsers([], ret.objects);
                         }

@@ -4,7 +4,7 @@ import pytz
 
 # sqlalchemy
 from sqlalchemy.orm import column_property
-from sqlalchemy import func, select, and_, or_, case
+from sqlalchemy import func, select, and_, or_, case, exists
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from . import *
@@ -27,6 +27,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     user_courses = db.relationship("UserCourse", back_populates="course", lazy="dynamic")
     assignments = db.relationship("Assignment", backref="course", lazy="dynamic")
     grades = db.relationship("CourseGrade", backref="course", lazy='dynamic')
+    groups = db.relationship("Group", backref="course", lazy='dynamic')
 
     # lti
     lti_contexts = db.relationship("LTIContext", backref="compair_course", lazy='dynamic')
@@ -70,6 +71,10 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         from . import CourseGrade
         CourseGrade.calculate_grade(self, user)
 
+    def calculate_group_grade(self, group):
+        from . import CourseGrade
+        CourseGrade.calculate_group_grade(self, group)
+
     def calculate_grades(self):
         from . import CourseGrade
         CourseGrade.calculate_grades(self)
@@ -101,6 +106,21 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         from .lti_models import LTIContext, Assignment, \
             UserCourse, CourseRole
         super(cls, cls).__declare_last__()
+
+        cls.groups_locked = column_property(
+            exists([1]).
+            where(and_(
+                Assignment.course_id == cls.id,
+                Assignment.active == True,
+                Assignment.enable_group_answers == True,
+                or_(
+                    and_(Assignment.compare_start == None, Assignment.answer_end <= datetime.datetime.utcnow()),
+                    and_(Assignment.compare_start != None, Assignment.compare_start <= datetime.datetime.utcnow())
+                )
+            )),
+            deferred=True,
+            group="group_associates"
+        )
 
         cls.min_assignment_answer_start = column_property(
             select([func.min(Assignment.answer_start)]).

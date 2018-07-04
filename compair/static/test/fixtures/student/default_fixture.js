@@ -103,13 +103,13 @@ storage.criteria[criterion3.id] = criterion3;
 
 // user_courses
 storage.user_courses[instructor.id] = [
-    { courseId: course.id, courseRole: "Instructor", groupName: null },
-    { courseId: course2.id, courseRole: "Instructor", groupName: null }
+    { courseId: course.id, courseRole: "Instructor", group_id: null },
+    { courseId: course2.id, courseRole: "Instructor", group_id: null }
 ];
 
 storage.user_courses[student.id] = [
-    { courseId: course.id, courseRole: "Student", groupName: null },
-    { courseId: course2.id, courseRole: "Student", groupName: null }
+    { courseId: course.id, courseRole: "Student", group_id: null },
+    { courseId: course2.id, courseRole: "Student", group_id: null }
 ];
 
 storage.course_assignments[course.id] = [];

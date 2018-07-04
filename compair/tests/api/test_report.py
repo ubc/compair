@@ -17,7 +17,9 @@ from flask import current_app
 class ReportAPITest(ComPAIRAPITestCase):
     def setUp(self):
         super(ReportAPITest, self).setUp()
-        self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2, num_additional_criteria=1, num_groups=2, num_answers=25,
+        self.fixtures = TestFixture().add_course(num_students=30, num_assignments=2,
+            num_additional_criteria=1, num_groups=10, num_answers=25,
+            num_group_assignments=2, num_group_answers=8,
             with_draft_student=True, with_comments=True, with_comparisons=True)
         self.url = "/api/courses/" + self.fixtures.course.uuid + "/report"
         self.files_to_cleanup = []
@@ -53,52 +55,52 @@ class ReportAPITest(ComPAIRAPITestCase):
                     rv = self.client.post(self.url)
                     self.assert403(rv)
 
-        # valid instructor with invalid input
+        # valid instructor with invalid params
         with self.login(self.fixtures.instructor.username):
-            input = {
-                'group_name': None,
+            params = {
+                'group_id': None,
                 'type': "participation",
                 'assignment': None
             }
 
             # test invalid course id
-            rv = self.client.post('/api/courses/999/report', data=json.dumps(input), content_type='application/json')
+            rv = self.client.post('/api/courses/999/report', data=json.dumps(params), content_type='application/json')
             self.assert404(rv)
 
             # test missing report type
-            invalid_input = input.copy()
-            invalid_input['type'] = None
-            rv = self.client.post(self.url, data=json.dumps(invalid_input), content_type='application/json')
+            invalid_params = params.copy()
+            invalid_params['type'] = None
+            rv = self.client.post(self.url, data=json.dumps(invalid_params), content_type='application/json')
             self.assert400(rv)
 
             # test invalid  report type
-            invalid_input = input.copy()
-            invalid_input['type'] = "invalid_type"
-            rv = self.client.post(self.url, data=json.dumps(invalid_input), content_type='application/json')
+            invalid_params = params.copy()
+            invalid_params['type'] = "invalid_type"
+            rv = self.client.post(self.url, data=json.dumps(invalid_params), content_type='application/json')
             self.assert400(rv)
 
             # test invalid assignment id
-            invalid_input = input.copy()
-            invalid_input['assignment'] = "999"
-            rv = self.client.post(self.url, data=json.dumps(invalid_input), content_type='application/json')
+            invalid_params = params.copy()
+            invalid_params['assignment'] = "999"
+            rv = self.client.post(self.url, data=json.dumps(invalid_params), content_type='application/json')
             self.assert404(rv)
 
             # test invalid group name
-            invalid_input = input.copy()
-            invalid_input['group_name'] = "invalid_group_name"
-            rv = self.client.post(self.url, data=json.dumps(invalid_input), content_type='application/json')
-            self.assert400(rv)
+            invalid_params = params.copy()
+            invalid_params['group_id'] = "999"
+            rv = self.client.post(self.url, data=json.dumps(invalid_params), content_type='application/json')
+            self.assert404(rv)
 
         # participation with valid instructor
         with self.login(self.fixtures.instructor.username):
-            input = {
-                'group_name': None,
+            params = {
+                'group_id': None,
                 'type': "participation",
                 'assignment': None
             }
 
             # test authorized user entire course
-            rv = self.client.post(self.url, data=json.dumps(input), content_type='application/json')
+            rv = self.client.post(self.url, data=json.dumps(params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -113,7 +115,10 @@ class ReportAPITest(ComPAIRAPITestCase):
                 assignments = self.fixtures.assignments
                 self._check_participation_report_heading_rows(assignments, heading1, heading2)
 
-                for student in self.fixtures.students:
+                sorted_students = sorted(self.fixtures.students,
+                    key=lambda student: (student.lastname, student.firstname, student.id)
+                )
+                for student in sorted_students:
                     next_row = next(reader)
                     self._check_participation_report_user_row(assignments, student, next_row)
 
@@ -131,7 +136,7 @@ class ReportAPITest(ComPAIRAPITestCase):
                 db.session.commit()
                 assignment.assignment_criteria.reorder()
 
-            rv = self.client.post(self.url, data=json.dumps(input), content_type='application/json')
+            rv = self.client.post(self.url, data=json.dumps(params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -146,14 +151,17 @@ class ReportAPITest(ComPAIRAPITestCase):
                 assignments = self.fixtures.assignments
                 self._check_participation_report_heading_rows(assignments, heading1, heading2)
 
-                for student in self.fixtures.students:
+                sorted_students = sorted(self.fixtures.students,
+                    key=lambda student: (student.lastname, student.firstname, student.id)
+                )
+                for student in sorted_students:
                     next_row = next(reader)
                     self._check_participation_report_user_row(assignments, student, next_row)
 
             # test authorized user one assignment
-            single_assignment_input = input.copy()
-            single_assignment_input['assignment'] = self.fixtures.assignments[0].uuid
-            rv = self.client.post(self.url, data=json.dumps(single_assignment_input), content_type='application/json')
+            single_assignment_params = params.copy()
+            single_assignment_params['assignment'] = self.fixtures.assignments[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(single_assignment_params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -168,14 +176,17 @@ class ReportAPITest(ComPAIRAPITestCase):
                 assignments = [self.fixtures.assignments[0]]
                 self._check_participation_report_heading_rows(assignments, heading1, heading2)
 
-                for student in self.fixtures.students:
+                sorted_students = sorted(self.fixtures.students,
+                    key=lambda student: (student.lastname, student.firstname, student.id)
+                )
+                for student in sorted_students:
                     next_row = next(reader)
                     self._check_participation_report_user_row(assignments, student, next_row)
 
             # test authorized user entire course with group name filter
-            group_name_input = input.copy()
-            group_name_input['group_name'] = self.fixtures.groups[0]
-            rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
+            group_params = params.copy()
+            group_params['group_id'] = self.fixtures.groups[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(group_params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -190,18 +201,21 @@ class ReportAPITest(ComPAIRAPITestCase):
                 assignments = self.fixtures.assignments
                 self._check_participation_report_heading_rows(assignments, heading1, heading2)
 
-                for student in self.fixtures.students:
-                    if student.user_courses[0].group_name != self.fixtures.groups[0]:
+                sorted_students = sorted(self.fixtures.students,
+                    key=lambda student: (student.lastname, student.firstname, student.id)
+                )
+                for student in sorted_students:
+                    if student.user_courses[0].group_id != self.fixtures.groups[0].id:
                         continue
 
                     next_row = next(reader)
                     self._check_participation_report_user_row(assignments, student, next_row)
 
-            # test authorized single assignment with group name filter
-            group_name_input = input.copy()
-            group_name_input['assignment'] = self.fixtures.assignments[0].uuid
-            group_name_input['group_name'] = self.fixtures.groups[0]
-            rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
+            # test authorized single assignment with group filter
+            group_params = params.copy()
+            group_params['assignment'] = self.fixtures.assignments[0].uuid
+            group_params['group_id'] = self.fixtures.groups[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(group_params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -216,8 +230,11 @@ class ReportAPITest(ComPAIRAPITestCase):
                 assignments = [self.fixtures.assignments[0]]
                 self._check_participation_report_heading_rows(assignments, heading1, heading2)
 
-                for student in self.fixtures.students:
-                    if student.user_courses[0].group_name != self.fixtures.groups[0]:
+                sorted_students = sorted(self.fixtures.students,
+                    key=lambda student: (student.lastname, student.firstname, student.id)
+                )
+                for student in sorted_students:
+                    if student.user_courses[0].group_id != self.fixtures.groups[0].id:
                         continue
 
                     next_row = next(reader)
@@ -225,14 +242,14 @@ class ReportAPITest(ComPAIRAPITestCase):
 
         # participation_stat with valid instructor
         with self.login(self.fixtures.instructor.username):
-            input = {
-                'group_name': None,
+            params = {
+                'group_id': None,
                 'type': "participation_stat",
                 'assignment': None
             }
 
             # test authorized user entire course
-            rv = self.client.post(self.url, data=json.dumps(input), content_type='application/json')
+            rv = self.client.post(self.url, data=json.dumps(params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -261,9 +278,9 @@ class ReportAPITest(ComPAIRAPITestCase):
                     self._check_participation_stat_report_user_overall_row(user, next_row, overall_stats)
 
             # test authorized user one assignment
-            single_assignment_input = input.copy()
-            single_assignment_input['assignment'] = self.fixtures.assignments[0].uuid
-            rv = self.client.post(self.url, data=json.dumps(single_assignment_input), content_type='application/json')
+            single_assignment_params = params.copy()
+            single_assignment_params['assignment'] = self.fixtures.assignments[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(single_assignment_params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -285,10 +302,10 @@ class ReportAPITest(ComPAIRAPITestCase):
                     next_row = next(reader)
                     user_stats = self._check_participation_stat_report_user_row(self.fixtures.assignments[0], user, next_row, overall_stats)
 
-            # test authorized user entire course with group_name filter
-            group_name_input = input.copy()
-            group_name_input['group_name'] = self.fixtures.groups[0]
-            rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
+            # test authorized user entire course with group_id filter
+            group_params = params.copy()
+            group_params['group_id'] = self.fixtures.groups[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(group_params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -304,7 +321,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
                 overall_stats = {}
 
-                group_members = [u for u in self.fixtures.students if u.user_courses[0].group_name == self.fixtures.groups[0]]
+                group_members = [u for u in self.fixtures.students if u.user_courses[0].group_id == self.fixtures.groups[0].id]
                 group_members = sorted(group_members, key=lambda m: (m.lastname, m.firstname, m.id))
 
                 for assignment in assignments:
@@ -318,10 +335,10 @@ class ReportAPITest(ComPAIRAPITestCase):
                     self._check_participation_stat_report_user_overall_row(member, next_row, overall_stats)
 
             # test authorized user one assignment
-            group_name_input = input.copy()
-            group_name_input['group_name'] = self.fixtures.groups[0]
-            group_name_input['assignment'] = self.fixtures.assignments[0].uuid
-            rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
+            group_params = params.copy()
+            group_params['group_id'] = self.fixtures.groups[0].uuid
+            group_params['assignment'] = self.fixtures.assignments[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(group_params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -336,7 +353,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
                 overall_stats = {}
 
-                group_members = [u for u in self.fixtures.students if u.user_courses[0].group_name == self.fixtures.groups[0]]
+                group_members = [u for u in self.fixtures.students if u.user_courses[0].group_id == self.fixtures.groups[0].id]
                 group_members = sorted(group_members, key=lambda m: (m.lastname, m.firstname, m.id))
 
                 for member in group_members:
@@ -345,14 +362,14 @@ class ReportAPITest(ComPAIRAPITestCase):
 
         # peer_feedback with valid instructor
         with self.login(self.fixtures.instructor.username):
-            input = {
-                'group_name': None,
+            params = {
+                'group_id': None,
                 'type': "peer_feedback",
                 'assignment': None
             }
 
             # test authorized user entire course
-            rv = self.client.post(self.url, data=json.dumps(input), content_type='application/json')
+            rv = self.client.post(self.url, data=json.dumps(params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -375,9 +392,9 @@ class ReportAPITest(ComPAIRAPITestCase):
                         self._check_peer_feedback_report_user_rows(assignment, student, reader)
 
             # test authorized user one assignment
-            single_assignment_input = input.copy()
-            single_assignment_input['assignment'] = self.fixtures.assignments[0].uuid
-            rv = self.client.post(self.url, data=json.dumps(single_assignment_input), content_type='application/json')
+            single_assignment_params = params.copy()
+            single_assignment_params['assignment'] = self.fixtures.assignments[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(single_assignment_params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -398,10 +415,10 @@ class ReportAPITest(ComPAIRAPITestCase):
                 for student in sorted_students:
                     self._check_peer_feedback_report_user_rows(self.fixtures.assignments[0], student, reader)
 
-            # test authorized user entire course with group_name filter
-            group_name_input = input.copy()
-            group_name_input['group_name'] = self.fixtures.groups[0]
-            rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
+            # test authorized user entire course with group_id filter
+            group_params = params.copy()
+            group_params['group_id'] = self.fixtures.groups[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(group_params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -421,15 +438,15 @@ class ReportAPITest(ComPAIRAPITestCase):
 
                 for assignment in self.fixtures.assignments:
                     for student in sorted_students:
-                        if student.user_courses[0].group_name != self.fixtures.groups[0]:
+                        if student.user_courses[0].group_id != self.fixtures.groups[0].uuid:
                             continue
                         self._check_peer_feedback_report_user_rows(assignment, student, reader)
 
             # test authorized user one assignment
-            group_name_input = input.copy()
-            group_name_input['group_name'] = self.fixtures.groups[0]
-            group_name_input['assignment'] = self.fixtures.assignments[0].uuid
-            rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
+            group_params = params.copy()
+            group_params['group_id'] = self.fixtures.groups[0].uuid
+            group_params['assignment'] = self.fixtures.assignments[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(group_params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -448,24 +465,24 @@ class ReportAPITest(ComPAIRAPITestCase):
                 )
 
                 for student in sorted_students:
-                    if student.user_courses[0].group_name != self.fixtures.groups[0]:
+                    if student.user_courses[0].group_id != self.fixtures.groups[0].uuid:
                         continue
                     self._check_peer_feedback_report_user_rows(self.fixtures.assignments[0], student, reader)
 
             # test authorized user one assignment (content's html parsed)
             original_content = {}
             for answer_comment in self.fixtures.answer_comments:
-                if answer_comment.user.user_courses[0].group_name != self.fixtures.groups[0] or \
+                if answer_comment.user.user_courses[0].group_id != self.fixtures.groups[0].id or \
                         answer_comment.assignment_id != self.fixtures.assignments[0].id:
                     continue
                 original_content[answer_comment.id] = answer_comment.content
                 answer_comment.content = '<p id="some_id">&#39;&quot;&gt;&lt;&amp;&nbsp;<\/p>'+answer_comment.content
             db.session.commit()
 
-            group_name_input = input.copy()
-            group_name_input['group_name'] = self.fixtures.groups[0]
-            group_name_input['assignment'] = self.fixtures.assignments[0].uuid
-            rv = self.client.post(self.url, data=json.dumps(group_name_input), content_type='application/json')
+            group_params = params.copy()
+            group_params['group_id'] = self.fixtures.groups[0].uuid
+            group_params['assignment'] = self.fixtures.assignments[0].uuid
+            rv = self.client.post(self.url, data=json.dumps(group_params), content_type='application/json')
             self.assert200(rv)
             self.assertIsNotNone(rv.json['file'])
             file_name = rv.json['file'].split("/")[-1]
@@ -484,7 +501,7 @@ class ReportAPITest(ComPAIRAPITestCase):
                 )
 
                 for student in sorted_students:
-                    if student.user_courses[0].group_name != self.fixtures.groups[0]:
+                    if student.user_courses[0].group_id != self.fixtures.groups[0].id:
                         continue
 
                     answer_comments = sorted(
@@ -505,12 +522,12 @@ class ReportAPITest(ComPAIRAPITestCase):
         with self.login(self.fixtures.instructor.username):
             self.fixtures.course.name = self.fixtures.course.name + " 2016/2017"
             db.session.commit()
-            input = {
-                'group_name': None,
+            params = {
+                'group_id': None,
                 'type': "participation",
                 'assignment': None
             }
-            rv = self.client.post(self.url, data=json.dumps(input), content_type='application/json')
+            rv = self.client.post(self.url, data=json.dumps(params), content_type='application/json')
             self.assert200(rv)
             file_name = rv.json['file'].split("/")[-1]
             self.files_to_cleanup.append(file_name)
@@ -570,16 +587,29 @@ class ReportAPITest(ComPAIRAPITestCase):
         expected_row.append(student.lastname)
         expected_row.append(student.firstname)
 
-        answer = Answer.query \
-            .filter_by(
-                user_id=student.id,
-                assignment_id=assignment.id,
-                draft=False,
-                practice=False,
-                active=True,
-                comparable=True
-            ) \
-            .first()
+        if not assignment.enable_group_answers:
+            answer = Answer.query \
+                .filter_by(
+                    user_id=student.id,
+                    assignment_id=assignment.id,
+                    draft=False,
+                    practice=False,
+                    active=True,
+                    comparable=True
+                ) \
+                .first()
+        else:
+            group = student.get_course_group(self.fixtures.course.id)
+            answer = Answer.query \
+                .filter_by(
+                    group_id=group.id,
+                    assignment_id=assignment.id,
+                    draft=False,
+                    practice=False,
+                    active=True,
+                    comparable=True
+                ) \
+                .first() if group else None
 
         if answer:
             user_stats["answers_submitted"] += 1
@@ -601,6 +631,7 @@ class ReportAPITest(ComPAIRAPITestCase):
 
         comparisons = Comparison.query \
             .filter(
+                Comparison.completed == True,
                 Comparison.user_id == student.id,
                 Comparison.assignment_id == assignment.id
             ) \
@@ -658,14 +689,26 @@ class ReportAPITest(ComPAIRAPITestCase):
 
         index = 3
         for assignment in assignments:
-            answer = Answer.query \
-                .filter(
-                    Answer.user_id == student.id,
-                    Answer.assignment_id == assignment.id,
-                    Answer.draft == False,
-                    Answer.active == True
-                ) \
-                .first()
+            answer = None
+            if not assignment.enable_group_answers:
+                answer = Answer.query \
+                    .filter(
+                        Answer.user_id == student.id,
+                        Answer.assignment_id == assignment.id,
+                        Answer.draft == False,
+                        Answer.active == True
+                    ) \
+                    .first()
+            else:
+                group = student.get_course_group(self.fixtures.course.id)
+                answer = Answer.query \
+                    .filter(
+                        Answer.group_id == group.id,
+                        Answer.assignment_id == assignment.id,
+                        Answer.draft == False,
+                        Answer.active == True
+                    ) \
+                    .first() if group else None
 
             if answer:
                 if answer.score:
@@ -692,21 +735,12 @@ class ReportAPITest(ComPAIRAPITestCase):
                     self.assertEqual(row[index], "No Answer")
                 index += 1
 
-            comparisons = Comparison.query \
+            evaluations_submitted = Comparison.query \
                 .filter(
                     Comparison.user_id == student.id,
                     Comparison.assignment_id == assignment.id
                 ) \
-                .all()
-            evaluations_submitted = len(comparisons)
-
-            comparisons = Comparison.query \
-                .filter(
-                    Comparison.user_id == student.id,
-                    Comparison.assignment_id == assignment.id
-                ) \
-                .all()
-            evaluations_submitted = len(comparisons)
+                .count()
 
             self.assertEqual(row[index], str(evaluations_submitted))
             index += 1
@@ -737,7 +771,6 @@ class ReportAPITest(ComPAIRAPITestCase):
         if len(answer_comments) > 0:
             for answer_comment in answer_comments:
                 row = next(reader)
-                answer_user = answer_comment.answer.user
 
                 feedback_type = ""
                 if answer_comment.comment_type == AnswerCommentType.evaluation:
@@ -749,10 +782,17 @@ class ReportAPITest(ComPAIRAPITestCase):
 
                 excepted_row = [
                     assignment.name,
-                    student.lastname, student.firstname, student.student_number,
-                    answer_user.lastname, answer_user.firstname, answer_user.student_number,
-                    feedback_type, self._strip_html(answer_comment.content)
+                    student.lastname, student.firstname, student.student_number
                 ]
+
+                if answer_comment.answer.group_answer:
+                    answer_group = answer_comment.answer.group
+                    excepted_row += [answer_group.name, "", ""]
+                else:
+                    answer_user = answer_comment.answer.user
+                    excepted_row += [answer_user.lastname, answer_user.firstname, answer_user.student_number]
+
+                excepted_row += [feedback_type, self._strip_html(answer_comment.content)]
 
                 self.assertEqual(row, excepted_row)
         else:

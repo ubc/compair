@@ -61,9 +61,7 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
 
         # test non-owner student of answer access comments
         student = self.data.get_authorized_student()
-        for user_context in [ \
-                self.login(student.username), \
-                self.impersonate(self.data.get_authorized_instructor(), student)]:
+        for user_context in [self.login(student.username), self.impersonate(self.data.get_authorized_instructor(), student)]:
             with user_context:
                 rv = self.client.get(url)
                 self.assert200(rv)
@@ -116,14 +114,12 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
 
             rv = self.client.get(self.get_url(self_evaluation='only', **params))
             self.assert200(rv)
-            # self.assertEqual(1, rv.json['total'])
             self.assertEqual(1, len(rv.json))
             self.assertEqual(comment.uuid, rv.json[0]['id'])
 
             ids = [extra_student2_answer_comment_uuid, comment.uuid]
             rv = self.client.get(self.get_url(ids=','.join(ids), **base_params))
             self.assert200(rv)
-            # self.assertEqual(2, rv.json['total'])
             self.assertEqual(2, len(rv.json))
             six.assertCountEqual(self, ids, [c['id'] for c in rv.json])
 
@@ -149,27 +145,9 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(1, len(rv.json))
 
-            # test assignment_id filter
-            rv = self.client.get(self.get_url(**base_params) + '?assignment_id=' + self.assignment.uuid)
-            self.assert200(rv)
-            self.assertEqual(3, len(rv.json))
-            six.assertCountEqual(
-                self,
-                [comment.uuid] + [c.uuid for c in self.data.get_non_draft_answer_comments_by_assignment(self.assignment)],
-                [c['id'] for c in rv.json])
-
-            rv = self.client.get(self.get_url(**base_params) + '?assignment_id=' + self.assignments[1].uuid)
-            self.assert200(rv)
-            self.assertEqual(2, len(rv.json))
-            six.assertCountEqual(
-                self,
-                [c.uuid for c in self.data.get_non_draft_answer_comments_by_assignment(self.assignments[1])],
-                [c['id'] for c in rv.json])
-
             # test user_ids filter
             user_ids = ','.join([self.data.get_extra_student(0).uuid])
-            rv = self.client.get(
-                self.get_url(user_ids=user_ids, **base_params) + '&assignment_id=' + self.assignment.uuid)
+            rv = self.client.get(self.get_url(user_ids=user_ids, **base_params))
             self.assert200(rv)
             self.assertEqual(2, len(rv.json))
             six.assertCountEqual(
@@ -198,9 +176,7 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
 
         # test drafts
         student = self.data.get_extra_student(0)
-        for user_context in [ \
-                self.login(student.username), \
-                self.impersonate(self.data.get_authorized_instructor(), student)]:
+        for user_context in [self.login(student.username), self.impersonate(self.data.get_authorized_instructor(), student)]:
             with user_context:
                 params = dict(base_params, user_ids=self.data.get_extra_student(0).uuid)
                 rv = self.client.get(self.get_url(draft='only', **params))
@@ -210,11 +186,11 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
 
                 rv = self.client.get(self.get_url(draft='false', **params))
                 self.assert200(rv)
-                self.assertEqual(3, len(rv.json))
+                self.assertEqual(2, len(rv.json))
 
                 rv = self.client.get(self.get_url(draft='true', **params))
                 self.assert200(rv)
-                self.assertEqual(4, len(rv.json))
+                self.assertEqual(3, len(rv.json))
                 self.assertEqual(draft_comment.uuid, rv.json[0]['id'])
 
     @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')

@@ -6,7 +6,7 @@
             <br class="hidden-xs" ng-if="!canManageAssignment" />
         </header>
         <div class="col-sm-6 sub-nav">
-            <span ng-if="canManageAssignment || assignment.user_id == loggedInUserId">
+            <span ng-if="canManageAssignment || assignment.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id)">
                 <a ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/edit" title="Edit this assignment" class="btn btn-primary">
                     <i class="fa fa-edit"></i>
                     Edit Assignment
@@ -90,7 +90,7 @@
                             <span class="filter">
                                 <label>Show: &nbsp;</label>
                                 <select ng-if="groups.length > 0 && canManageAssignment" ng-model="answerFilters.group" class="nullable" chosen
-                                        ng-options="group as group for group in groups | orderBy: 'toString()'">
+                                        ng-options="group.id as group.name for group in groups">
                                     <option value="">All groups</option>
                                 </select>
                                 <select id="answers-filter" ng-model="answerFilters.author" class="nullable" chosen
@@ -172,7 +172,7 @@
 
                     <!-- Instructor Answer Metadata Header -->
                     <div class="each-header clearfix">
-                        <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" main-identifier="answer.user.displayname" secondary-identifier="answer.user.fullname"></compair-avatar>
+                        <compair-answer-avatar answer="answer"></compair-answer-avatar>
                         <span class="label label-default" ng-if="instructors[answer.user_id]">{{instructors[answer.user_id]}}</span>
                         <strong>said</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment">
@@ -208,10 +208,11 @@
 
                 <!-- Student Answers Section -->
                 <div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd | excludeInstr:allInstructors as results" ng-if="(see_answers || canManageAssignment)">
-                <!-- <div class="each-answer clearfix" ng-repeat="(answerKey, answer) in answers" ng-if="!instructors[answer.user_id] && (see_answers || (answer.user_id == loggedInUserId && assignment.answer_period) || canManageAssignment)"> -->
                     <!-- Student Answer Metadata Header -->
                     <div class="each-header clearfix">
-                        <compair-avatar ng-show="!answerFilters.anonymous" user-id="answer.user_id" avatar="answer.user.avatar" main-identifier="answer.user.displayname" secondary-identifier="answer.user.fullname" me="!canManageAssignment && answer.user_id == loggedInUserId"></compair-avatar>
+                        <compair-answer-avatar answer="answer"
+                            me="!canManageAssignment && (answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id))"
+                            ></compair-answer-avatar>
                         <span ng-show="answerFilters.anonymous">Student</span>
                         <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
                         <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
@@ -238,7 +239,7 @@
                                 <em>(not ranked)</em>
                             </span>
 
-                            <span ng-if="(canManageAssignment && !answerFilters.anonymous) || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
+                            <span ng-if="(canManageAssignment && !answerFilters.anonymous) || ((answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id)) && assignment.answer_period && !assignment.compare_period)">
                                 <a href="" ng-if="canManageAssignment && !answerFilters.anonymous && !answer.top_answer" title="Add to instructor's top answers" ng-click="setTopAnswer(answer, true)">
                                     <i class="fa fa-star-o"></i>
                                 </a>
@@ -265,14 +266,14 @@
 
                     <!-- Student Answer Replies Section -->
                     <a href="" ng-click="showReplies = !showReplies; toggleReplies(showReplies, answer)">
-                        <p class="h3 reply-heading" ng-if="!answerFilters.anonymous && ((answer.comment_count && (answer.user_id == loggedInUserId || canManageAssignment)) || (answer.public_comment_count && see_answers))">
+                        <p class="h3 reply-heading" ng-if="!answerFilters.anonymous && ((answer.comment_count && (answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id) || canManageAssignment)) || (answer.public_comment_count && see_answers))">
                             <i class="fa fa-chevron-down" ng-show="showReplies"></i>
                             <i class="fa fa-chevron-right" ng-hide="showReplies"></i>
                             <strong>
                             <ng-pluralize ng-if="answer.public_comment_count && !canManageAssignment && (see_answers && answer.user_id != loggedInUserId)" count="answer.public_comment_count" when="{'1': '{} public feedback comment', 'other': '{} public feedback comments'}"></ng-pluralize>
-                            <ng-pluralize ng-if="answer.comment_count && (answer.user_id == loggedInUserId || canManageAssignment)" count="answer.comment_count" when="{'1': '{} feedback comment', 'other': '{} feedback comments'}"></ng-pluralize>
-                            for <span ng-if="answer.user_id != loggedInUserId">this</span><span ng-if="answer.user_id == loggedInUserId">your</span> answer
-                            <span ng-if="canManageAssignment || answer.user_id == loggedInUserId">({{ answer.private_comment_count }} private, {{ answer.public_comment_count }} public)</span>
+                            <ng-pluralize ng-if="answer.comment_count && (answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id) || canManageAssignment)" count="answer.comment_count" when="{'1': '{} feedback comment', 'other': '{} feedback comments'}"></ng-pluralize>
+                            for <span ng-if="answer.user_id != loggedInUserId">this</span><span ng-if="answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id)">your</span> answer
+                            <span ng-if="canManageAssignment || answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id)">({{ answer.private_comment_count }} private, {{ answer.public_comment_count }} public)</span>
                             </strong>
                         </p>
                     </a>
@@ -285,14 +286,14 @@
 
                             <!-- Student Reply Metadata Header -->
                             <div class="each-header clearfix">
-                                <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" main-identifier="comment.user.displayname" secondary-identifier="comment.user.fullname"></compair-avatar>
+                                <compair-user-avatar user="comment.user"></compair-user-avatar>
                                 <span class="label label-default" ng-if="isInstructor(comment.user_id)">{{instructorLabel(comment.user_id)}}</span>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation"> gave private feedback <span class="glyphicon glyphicon-lock"></span></strong>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"> self-evaluated <span class="glyphicon glyphicon-lock"></span></strong>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.public"> gave public feedback <span class="glyphicon glyphicon-eye-open"></span> </strong>
                                 on {{comment.created | amDateFormat: 'MMM D @ h:mm a'}}:
                                 <div class="manager-actions pull-right"
-                                     ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private))">
+                                     ng-if="canManageAssignment || ((comment.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id)) && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private))">
                                     <a href="" title="Delete this feedback" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="feedback">
                                         <i class="fa fa-trash-o"></i>
                                     </a>
@@ -356,10 +357,10 @@
             <div ng-repeat="answer in user_answers.objects">
                 <div class="each-evaluation clearfix" ng-class="{'highlight-momentarily': highlightAnswer }">
                     <div class="each-header clearfix">
-                        <compair-avatar user-id="answer.user_id" avatar="answer.user.avatar" me="true"></compair-avatar>
+                        <compair-answer-avatar answer="answer" skip-name="true" me="true"></compair-answer-avatar>
                         <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
                         <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
-                        <div class="manager-actions pull-right" ng-if="canManageAssignment || (answer.user_id == loggedInUserId && assignment.answer_period && !assignment.compare_period)">
+                        <div class="manager-actions pull-right" ng-if="canManageAssignment || ((answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id)) && assignment.answer_period && !assignment.compare_period)">
                             <a href="" title="Delete this answer" confirmation-needed="deleteAnswer(answer)" keyword="answer">
                                 <i class="fa fa-trash-o"></i>
                             </a>
@@ -382,7 +383,7 @@
                             <strong>
                             <ng-pluralize count="answer.comment_count" when="{'1': '{} feedback comment', 'other': '{} feedback comments'}"></ng-pluralize>
                             for your answer
-                            <span ng-if="canManageAssignment || answer.user_id == loggedInUserId">({{ answer.private_comment_count }} private, {{ answer.public_comment_count }} public)</span>
+                            <span ng-if="canManageAssignment || answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id)">({{ answer.private_comment_count }} private, {{ answer.public_comment_count }} public)</span>
                             </strong>
                         </p>
                     </a>
@@ -394,7 +395,7 @@
 
                             <!-- Student Reply Metadata Header -->
                             <div class="each-header clearfix">
-                                <compair-avatar user-id="comment.user_id" avatar="comment.user.avatar" main-identifier="comment.user.displayname" secondary-identifier="comment.user.fullname"></compair-avatar>
+                                <compair-user-avatar user="comment.user"></compair-user-avatar>
                                 <span class="label label-default" ng-if="instructors[comment.user_id]">{{instructors[comment.user_id]}}</span>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.evaluation"> gave private feedback <span class="glyphicon glyphicon-lock"></span></strong>
                                 <strong ng-if="comment.comment_type == AnswerCommentType.self_evaluation"> self-evaluated <span class="glyphicon glyphicon-lock"></span></strong>
@@ -440,7 +441,7 @@
 
                 <!-- Comparison Header -->
                 <div class="each-header">
-                    <compair-avatar user-id="comparison.user_id" avatar="comparison.user.avatar" me="true"></compair-avatar>
+                    <compair-user-avatar user="comparison.user" skip-name="true" me="true"></compair-user-avatar>
                     <strong>compared</strong> on {{ comparison.created | amDateFormat: 'MMM D @ h:mm a'}}:
                 </div>
 

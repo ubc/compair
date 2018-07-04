@@ -729,10 +729,12 @@ module.filter("notScoredEnd", function () {
 module.controller("AssignmentViewController",
     ["$scope", "$routeParams", "$location", "AnswerResource", "AssignmentResource", "$anchorScroll",
              "ComparisonResource", "CourseResource", "Toaster", "AnswerCommentResource", "resolvedData", "$route",
-             "GroupResource", "AnswerCommentType", "PairingAlgorithm", "$uibModal", "xAPIStatementHelper", "WinningAnswer",
+             "GroupResource", "GroupUserResource", "AnswerCommentType", "PairingAlgorithm", "$uibModal",
+             "xAPIStatementHelper", "WinningAnswer",
     function($scope, $routeParams, $location, AnswerResource, AssignmentResource, $anchorScroll,
              ComparisonResource, CourseResource, Toaster, AnswerCommentResource, resolvedData, $route,
-             GroupResource, AnswerCommentType, PairingAlgorithm, $uibModal, xAPIStatementHelper, WinningAnswer)
+             GroupResource, GroupUserResource, AnswerCommentType, PairingAlgorithm, $uibModal,
+             xAPIStatementHelper, WinningAnswer)
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId;
@@ -743,6 +745,7 @@ module.controller("AssignmentViewController",
         $scope.canManageAssignment = resolvedData.canManageAssignment;
         $scope.allStudents = resolvedData.students.objects;
         $scope.allInstructors = resolvedData.instructors.objects;
+        $scope.currentUserGroup = resolvedData.currentUserGroup;
         $scope.users = [];
 
         $scope.AnswerCommentType = AnswerCommentType;
@@ -881,6 +884,7 @@ module.controller("AssignmentViewController",
                 // can see if canManageAssignment OR their own answer OR public
                 return $scope.canManageAssignment ||
                     answer.user_id == $scope.loggedInUserId ||
+                    ($scope.currentUserGroup && answer.group_id == $scope.currentUserGroup.id) ||
                     comment.comment_type == AnswerCommentType.public;
             }
         };
@@ -938,8 +942,9 @@ module.controller("AssignmentViewController",
             AnswerResource.delete({'courseId': answer.course_id, 'assignmentId': answer.assignment_id, 'answerId':answer.id},
                 function (ret) {
                     var authorId = answer['user_id'];
+                    var groupId = answer['group_id'];
                     $scope.assignment.answer_count -= 1;
-                    if ($scope.loggedInUserId == authorId) {
+                    if ($scope.loggedInUserId == authorId || ($scope.currentUserGroup && $scope.currentUserGroup.id == groupId)) {
                         $scope.assignment.status.answers.count--;
                         $scope.assignment.status.answers.answered = $scope.assignment.status.answers.count > 0;
                     }
@@ -1152,7 +1157,7 @@ module.controller("AssignmentViewController",
                 if ($scope.answerFilters.group == null) {
                     $scope.resetUsers($scope.allInstructors, $scope.allStudents);
                 } else {
-                    GroupResource.get({'courseId': $scope.courseId, 'groupName': $scope.answerFilters.group},
+                    GroupUserResource.get({'courseId': $scope.courseId, 'groupId': $scope.answerFilters.group},
                         function (ret) {
                             $scope.resetUsers([], ret.objects, false);
                         }
@@ -1210,6 +1215,9 @@ module.controller("AssignmentWriteController",
         $scope.loggedInUserId = resolvedData.loggedInUser.id;
         $scope.canManageAssignment = resolvedData.canManageAssignment;
         $scope.availableCriteria = resolvedData.criteria.objects;
+        $scope.groups = resolvedData.groups.objects;
+        $scope.possible_group_comparisons = $scope.groups.length == 0 ?
+            0 : Math.floor(($scope.groups.length - 1) / 2);
 
         // add default weight of 1 to all criterion
         _.forEach($scope.availableCriteria, function(criterion) {
@@ -1337,7 +1345,9 @@ module.controller("AssignmentWriteController",
                 number_of_comparisons: originalAssignment.number_of_comparisons,
                 students_can_reply: originalAssignment.students_can_reply,
                 enable_self_evaluation: originalAssignment.enable_self_evaluation,
+                enable_group_answers: originalAssignment.enable_group_answers,
                 pairing_algorithm: originalAssignment.pairing_algorithm,
+                scoring_algorithm: originalAssignment.scoring_algorithm,
                 educators_can_compare: originalAssignment.educators_can_compare,
                 answer_grade_weight: originalAssignment.answer_grade_weight,
                 comparison_grade_weight: originalAssignment.comparison_grade_weight,

@@ -16,14 +16,14 @@ from sqlalchemy.orm import joinedload
 from compair.authorization import require
 from compair.core import event, abort
 from compair.models import User, CourseRole, Assignment, UserCourse, Course, Answer, \
-    AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType
+    AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType, Group
 from .util import new_restful_api
 
 report_api = Blueprint('report_api', __name__)
 api = new_restful_api(report_api)
 
 report_parser = reqparse.RequestParser()
-report_parser.add_argument('group_name')
+report_parser.add_argument('group_id')
 # may change 'type' to int
 report_parser.add_argument('type', required=True)
 report_parser.add_argument('assignment')
@@ -32,12 +32,11 @@ report_parser.add_argument('assignment')
 on_export_report = event.signal('EXPORT_REPORT')
 # should we have a different event for each type of report?
 
-
-def name_generator(course, report_name, group_name, file_type="csv"):
+def name_generator(course, report_name, group, file_type="csv"):
     date = time.strftime("%Y-%m-%d--%H-%M-%S")
     group_name_output = ""
-    if group_name:
-        group_name_output = group_name + '-'
+    if group:
+        group_name_output = group.name + '-'
     # from https://gist.github.com/seanh/93666
     # return a file system safe filename
     valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
@@ -55,8 +54,10 @@ class ReportRootAPI(Resource):
             message="Sorry, your system role does not allow you to run reports.")
 
         params = report_parser.parse_args()
-        group_name = params.get('group_name', None)
+        group_uuid = params.get('group_id', None)
         report_type = params.get('type')
+
+        group = Group.get_active_by_uuid_or_404(group_uuid) if group_uuid else None
 
         assignments = []
         assignment_uuid = params.get('assignment', None)
@@ -71,20 +72,8 @@ class ReportRootAPI(Resource):
                 ) \
                 .all()
 
-        if group_name:
-            # ensure that group_name is valid
-            group_exists = UserCourse.query \
-                .filter(
-                    UserCourse.group_name == group_name,
-                    UserCourse.course_id == course.id,
-                    UserCourse.course_role != CourseRole.dropped
-                ) \
-                .first()
-            if group_exists == None:
-                abort(400, title="Report Not Run", message="Please try again with a group from the list of groups provided.")
-
         if report_type == "participation_stat":
-            data = participation_stat_report(course, assignments, group_name, assignment_uuid is None)
+            data = participation_stat_report(course, assignments, group, assignment_uuid is None)
 
             title = [
                 'Assignment', 'User UUID', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
@@ -95,7 +84,7 @@ class ReportRootAPI(Resource):
 
         elif report_type == "participation":
             user_titles = ['Last Name', 'First Name', 'Student No']
-            data = participation_report(course, assignments, group_name)
+            data = participation_report(course, assignments, group)
 
             title_row1 = [""] * len(user_titles)
             title_row2 = user_titles
@@ -132,13 +121,13 @@ class ReportRootAPI(Resource):
                 "Last Name", "First Name", "Student No",
                 "Feedback Type", "Feedback"
             ]
-            data = peer_feedback_report(course, assignments, group_name)
+            data = peer_feedback_report(course, assignments, group)
             titles = [titles1, titles2]
 
         else:
             abort(400, title="Report Not Run", message="Please try again with a report type from the list of report types provided.")
 
-        name = name_generator(course, report_type, group_name)
+        name = name_generator(course, report_type, group)
         tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], name)
 
         with open(tmp_name, 'wb') as report:
@@ -161,26 +150,26 @@ class ReportRootAPI(Resource):
 api.add_resource(ReportRootAPI, '')
 
 
-def participation_stat_report(course, assignments, group_name, overall):
+def participation_stat_report(course, assignments, group, overall):
     report = []
 
-    classlist = UserCourse.query \
+    query = UserCourse.query \
         .join(User, User.id == UserCourse.user_id) \
-        .filter(
-            and_(
-                UserCourse.course_id == course.id,
-                or_(
-                    UserCourse.course_role == CourseRole.teaching_assistant,
-                    UserCourse.course_role == CourseRole.instructor,
-                    UserCourse.course_role == CourseRole.student
-                )
-            )
-        )
-    if group_name:
-        classlist = classlist.filter(group_name == UserCourse.group_name)
-    classlist = classlist.order_by(User.lastname, User.firstname, User.id).all()
+        .filter(and_(
+            UserCourse.course_id == course.id,
+            UserCourse.course_role != CourseRole.dropped
+        ))
+    if group:
+        query = query.filter(group.id == UserCourse.group_id)
+    classlist = query.order_by(User.lastname, User.firstname, User.id).all()
 
     class_ids = [u.user.id for u in classlist]
+
+    group_ids = [g.id for g in course.groups.all() if g.active]
+    group_users = {}
+    for user_course in classlist:
+        if user_course.group_id:
+            group_users.setdefault(user_course.group_id, []).append(user_course.user_id)
 
     total_req = 0
     total = {}
@@ -195,19 +184,27 @@ def participation_stat_report(course, assignments, group_name, overall):
                 Answer.comparable == True,
                 Answer.draft == False,
                 Answer.practice == False,
-                Answer.user_id.in_(class_ids)
+                or_(
+                    Answer.user_id.in_(class_ids),
+                    Answer.group_id.in_(group_ids)
+                )
             )) \
             .order_by(Answer.created) \
             .all()
+
         user_answers = {}   # structure - user_id/[answer list]
         for answer in answers:
-            user_answers_list = user_answers.setdefault(answer.user_id, [])
-            user_answers_list.append(answer)
+            user_ids = group_users.get(answer.group_id, []) if answer.group_answer else [answer.user_id]
+            for user_id in user_ids:
+                user_answers.setdefault(user_id, []).append(answer)
 
         # EVALUATIONS
         evaluations = Comparison.query \
             .with_entities(Comparison.user_id, func.count(Comparison.id)) \
-            .filter_by(assignment_id=assignment.id) \
+            .filter_by(
+                assignment_id=assignment.id,
+                completed=True
+            ) \
             .group_by(Comparison.user_id) \
             .all()
         evaluation_submitted = {user_id: int(count) for (user_id, count) in evaluations}
@@ -292,20 +289,26 @@ def participation_stat_report(course, assignments, group_name, overall):
     return report
 
 
-def participation_report(course, assignments, group_name):
+def participation_report(course, assignments, group):
     report = []
 
-    classlist = UserCourse.query \
-        .filter_by(
-            course_id=course.id,
-            course_role=CourseRole.student
-        )
-    if group_name:
-        classlist = classlist.filter_by(group_name=group_name)
-    classlist = classlist.all()
+    query = UserCourse.query \
+        .join(User, User.id == UserCourse.user_id) \
+        .filter(and_(
+            UserCourse.course_id == course.id,
+            UserCourse.course_role == CourseRole.student
+        ))
+    if group:
+        query = query.filter(UserCourse.group_id == group.id)
+    classlist = query.order_by(User.lastname, User.firstname, User.id).all()
 
     assignment_ids = [assignment.id for assignment in assignments]
-    user_ids = [u.user.id for u in classlist]
+    class_ids = [u.user_id for u in classlist]
+    group_ids = [g.id for g in course.groups.all() if g.active]
+    group_users = {}
+    for user_course in classlist:
+        if user_course.group_id:
+            group_users.setdefault(user_course.group_id, []).append(user_course.user_id)
 
     # ANSWERS - scores
     answers = Answer.query \
@@ -313,37 +316,45 @@ def participation_report(course, assignments, group_name):
         .options(joinedload('criteria_scores')) \
         .filter(and_(
             Answer.assignment_id.in_(assignment_ids),
-            Answer.user_id.in_(user_ids),
             Answer.draft == False,
             Answer.practice == False,
-            Answer.active == True
+            Answer.active == True,
+            or_(
+                Answer.user_id.in_(class_ids),
+                Answer.group_id.in_(group_ids)
+            )
         )) \
         .all()
 
     scores = {} # structure - user_id/assignment_id/normalized_score
-    for answer in answers:
-        user_object = scores.setdefault(answer.user_id, {})
-        user_object.setdefault(answer.assignment_id, answer.score.normalized_score if answer.score else None)
-
     criteria_scores = {} # structure - user_id/assignment_id/criterion_id/normalized_score
     for answer in answers:
-        user_object = criteria_scores.setdefault(answer.user_id, {})
-        assignment_object = user_object.setdefault(answer.assignment_id, {})
-        for s in answer.criteria_scores:
-            assignment_object[s.criterion_id] = s.normalized_score
+        user_ids = group_users.get(answer.group_id, []) if answer.group_answer else [answer.user_id]
+        for user_id in user_ids:
+            # set scores
+            user_object = scores.setdefault(user_id, {})
+            user_object.setdefault(answer.assignment_id, answer.score.normalized_score if answer.score else None)
+
+            # set criteria_scores
+            user_object = criteria_scores.setdefault(user_id, {})
+            assignment_object = user_object.setdefault(answer.assignment_id, {})
+            for s in answer.criteria_scores:
+                assignment_object[s.criterion_id] = s.normalized_score
 
     # COMPARISONS
     comparisons_counts = Comparison.query \
-        .filter(Comparison.user_id.in_(user_ids)) \
-        .filter(Comparison.assignment_id.in_(assignment_ids)) \
+        .filter(and_(
+            Comparison.completed == True,
+            Comparison.user_id.in_(class_ids),
+            Comparison.assignment_id.in_(assignment_ids)
+        )) \
         .with_entities(Comparison.assignment_id, Comparison.user_id, func.count(Comparison.id)) \
         .group_by(Comparison.assignment_id, Comparison.user_id) \
         .all()
 
     comparisons = {}  # structure - user_id/assignment_id/count
     for (assignment_id, user_id, count) in comparisons_counts:
-        comparisons.setdefault(user_id, {}).setdefault(assignment_id, 0)
-        comparisons[user_id][assignment_id] = count
+        comparisons.setdefault(user_id, {}).setdefault(assignment_id, count)
 
     # CRITERIA
     assignment_criteria = AssignmentCriterion.query \
@@ -363,7 +374,7 @@ def participation_report(course, assignments, group_name):
         .filter_by(comment_type=AnswerCommentType.self_evaluation) \
         .join(Answer) \
         .filter(Answer.assignment_id.in_(assignment_ids)) \
-        .filter(AnswerComment.user_id.in_(user_ids)) \
+        .filter(AnswerComment.user_id.in_(class_ids)) \
         .filter(AnswerComment.draft == False) \
         .with_entities(Answer.assignment_id, AnswerComment.user_id, func.count(AnswerComment.id)) \
         .group_by(Answer.assignment_id, AnswerComment.user_id) \
@@ -410,7 +421,7 @@ def participation_report(course, assignments, group_name):
 
     return report
 
-def peer_feedback_report(course, assignments, group_name):
+def peer_feedback_report(course, assignments, group):
     report = []
 
     senders = User.query \
@@ -420,8 +431,8 @@ def peer_feedback_report(course, assignments, group_name):
             UserCourse.course_role == CourseRole.student
         )) \
         .order_by(User.lastname, User.firstname, User.id)
-    if group_name:
-        senders = senders.filter(UserCourse.group_name == group_name)
+    if group:
+        senders = senders.filter(UserCourse.group_id == group.id)
     senders = senders.all()
     sender_user_ids = [u.id for u in senders]
 
@@ -429,9 +440,10 @@ def peer_feedback_report(course, assignments, group_name):
 
     answer_comments = AnswerComment.query \
         .join(Answer, AnswerComment.answer_id == Answer.id) \
-        .join(User, User.id == Answer.user_id) \
+        .outerjoin(User, User.id == Answer.user_id) \
+        .outerjoin(Group, Group.id == Answer.group_id) \
         .with_entities(
-            Answer.user_id.label("receiver_user_id"),
+            Answer.group_answer.label("receiver_is_group_answer"),
             AnswerComment.user_id.label("sender_user_id"),
             Answer.assignment_id.label("assignment_id"),
             AnswerComment.comment_type,
@@ -439,6 +451,7 @@ def peer_feedback_report(course, assignments, group_name):
             User.firstname.label("receiver_firstname"),
             User.lastname.label("receiver_lastname"),
             User.student_number.label("receiver_student_number"),
+            Group.name.label("receiver_group_name")
         ) \
         .filter(Answer.assignment_id.in_(assignment_ids)) \
         .filter(AnswerComment.user_id.in_(sender_user_ids)) \
@@ -467,10 +480,16 @@ def peer_feedback_report(course, assignments, group_name):
 
                     temp = [
                         assignment.name,
-                        user.lastname, user.firstname, user.student_number,
-                        feedback.receiver_lastname, feedback.receiver_firstname, feedback.receiver_student_number,
-                        feedback_type, strip_html(feedback.content)
+                        user.lastname, user.firstname, user.student_number
                     ]
+
+                    if feedback.receiver_is_group_answer:
+                        temp += [feedback.receiver_group_name, "", ""]
+                    else:
+                        temp += [feedback.receiver_lastname, feedback.receiver_firstname, feedback.receiver_student_number]
+
+                    temp += [feedback_type, strip_html(feedback.content)]
+
                     report.append(temp)
 
             else:

@@ -21,16 +21,35 @@ module.factory(
     ["$resource", "Interceptors",
     function ($resource, Interceptors)
     {
-        var url = '/api/courses/:courseId/groups/:groupName';
-        var unenrolUrl = '/api/courses/:courseId/users/:userId/groups';
-        var ret = $resource(url, {groupName: '@groupName'},
+        var url = '/api/courses/:courseId/groups/:groupId';
+        var ret = $resource(url, {groupId: '@id'},
             {
-                get: {cache: true, url: url},
-                getAllFromSession: {url: url, interceptor: Interceptors.groupSessionInterceptor},
-                updateUsersGroup: {method: 'POST', url: '/api/courses/:courseId/users/groups/:groupName', interceptor: Interceptors.enrolCache},
-                removeUsersGroup: {method: 'POST', url: '/api/courses/:courseId/users/groups', interceptor: Interceptors.enrolCache},
-                enrol: {method: 'POST', url: unenrolUrl+'/:groupName', interceptor: Interceptors.enrolCache},
-                unenrol: {method: 'DELETE', url: unenrolUrl, interceptor: Interceptors.enrolCache}
+                get: {url: url, cache: true, interceptor: Interceptors.enrolCache},
+                save: {method: 'POST', url: url, interceptor: Interceptors.enrolCache},
+                delete: {method: 'DELETE', url: url, interceptor: Interceptors.enrolCache},
+            }
+        );
+
+        ret.MODEL = 'Group';
+        return ret;
+    }
+]);
+
+module.factory(
+    "GroupUserResource",
+    ["$resource", "Interceptors",
+    function ($resource, Interceptors)
+    {
+        var url = '/api/courses/:courseId/groups/:groupId/users/:userId';
+        var removeUrl = '/api/courses/:courseId/groups/users/:userId';
+        var getUrl = '/api/courses/:courseId/groups/user';
+        var ret = $resource(url, {groupId: '@groupId'},
+            {
+                getCurrentUserGroup: {url: getUrl, cache: true, interceptor: Interceptors.enrolCache},
+                add: {method: 'POST', url: url, interceptor: Interceptors.enrolCache},
+                remove: {method: 'DELETE', url: removeUrl, interceptor: Interceptors.enrolCache},
+                addUsersToGroup: {method: 'POST', url: url, interceptor: Interceptors.enrolCache},
+                removeUsersFromGroup: {method: 'POST', url: removeUrl, interceptor: Interceptors.enrolCache},
             }
         );
 
@@ -42,14 +61,24 @@ module.factory(
 /***** Controllers *****/
 module.controller(
     'AddGroupModalController',
-    ["$rootScope", "$scope", "$uibModalInstance",
-    function ($rootScope, $scope, $uibModalInstance) {
+    ["$rootScope", "$scope", "$uibModalInstance", "GroupResource",
+    function ($rootScope, $scope, $uibModalInstance, GroupResource) {
         $scope.group = {};
         $scope.modalInstance = $uibModalInstance;
+        $scope.submitted = false;
 
         $scope.groupSubmit = function () {
-            $uibModalInstance.close($scope.group.name);
-        };
+            $scope.submitted = true;
+
+            GroupResource.save({'courseId': $scope.courseId}, $scope.group).$promise.then(
+                function (ret) {
+                    $scope.group = ret;
+                    $uibModalInstance.close($scope.group.id);
+                }
+            ).finally(function() {
+                $scope.submitted = false;
+            });
+        }
     }
 ]);
 

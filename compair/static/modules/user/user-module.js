@@ -284,10 +284,10 @@ module.controller("UserListController",
 module.controller("UserManageController",
     ['$scope', '$location', '$route', '$routeParams', 'UserResource', 'CourseResource', 'GroupResource',
      'UserLTIUsersResource', 'UserThirdPartyUsersResource', 'ClassListResource', 'Toaster', 'breadcrumbs',
-     'CourseRole', 'AuthTypesEnabled', 'xAPIStatementHelper', "moment", "resolvedData",
+     'CourseRole', 'AuthTypesEnabled', 'xAPIStatementHelper', "moment", "resolvedData", 'GroupUserResource',
     function($scope, $location, $route, $routeParams, UserResource, CourseResource, GroupResource,
              UserLTIUsersResource, UserThirdPartyUsersResource, ClassListResource, Toaster, breadcrumbs,
-             CourseRole, AuthTypesEnabled, xAPIStatementHelper, moment, resolvedData)
+             CourseRole, AuthTypesEnabled, xAPIStatementHelper, moment, resolvedData, GroupUserResource)
     {
         $scope.userId = $routeParams.userId;
 
@@ -363,14 +363,14 @@ module.controller("UserManageController",
         };
 
         $scope.updateGroup = function(course) {
-            if (course.group_name && course.group_name != "") {
-                GroupResource.enrol({'courseId': course.id, 'userId': $scope.userId, 'groupName': course.group_name}, {},
+            if (course.group_id && course.group_id != "") {
+                GroupUserResource.add({'courseId': course.id, 'userId': $scope.userId, 'groupId': course.group_id}, {},
                     function (ret) {
-                        Toaster.success("User Saved", "Successfully added the user to group " + ret.group_name+".");
+                        Toaster.success("User Saved", "Successfully added the user to group " + ret.name+".");
                     }
                 );
             } else {
-                GroupResource.unenrol({'courseId': course.id, 'userId': $scope.userId},
+                GroupUserResource.remove({'courseId': course.id, 'userId': $scope.userId},
                     function (ret) {
                         Toaster.success("User Removed From Group");
                     }

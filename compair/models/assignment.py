@@ -18,12 +18,9 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'assignment'
 
     # table columns
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
-        nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('course.id', ondelete="CASCADE"),
-        nullable=False)
-    file_id = db.Column(db.Integer, db.ForeignKey('file.id', ondelete="SET NULL"),
-        nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id', ondelete="CASCADE"), nullable=False)
+    file_id = db.Column(db.Integer, db.ForeignKey('file.id', ondelete="SET NULL"), nullable=True)
     name = db.Column(db.String(255))
     description = db.Column(db.Text)
     answer_start = db.Column(db.DateTime(timezone=True))
@@ -31,16 +28,13 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     compare_start = db.Column(db.DateTime(timezone=True), nullable=True)
     compare_end = db.Column(db.DateTime(timezone=True), nullable=True)
     number_of_comparisons = db.Column(db.Integer, nullable=False)
-    students_can_reply = db.Column(db.Boolean(),
-        default=False, nullable=False)
-    enable_self_evaluation = db.Column(db.Boolean(),
-        default=False, nullable=False)
+    students_can_reply = db.Column(db.Boolean(), default=False, nullable=False)
+    enable_self_evaluation = db.Column(db.Boolean(), default=False, nullable=False)
+    enable_group_answers = db.Column(db.Boolean(), default=False, nullable=False)
     scoring_algorithm = db.Column(EnumType(ScoringAlgorithm), nullable=True, default=ScoringAlgorithm.elo)
-    pairing_algorithm = db.Column(EnumType(PairingAlgorithm),
-        nullable=True, default=PairingAlgorithm.random)
+    pairing_algorithm = db.Column(EnumType(PairingAlgorithm), nullable=True, default=PairingAlgorithm.random)
     rank_display_limit = db.Column(db.Integer, nullable=True)
-    educators_can_compare = db.Column(db.Boolean(),
-        default=False, nullable=False)
+    educators_can_compare = db.Column(db.Boolean(), default=False, nullable=False)
     answer_grade_weight = db.Column(db.Integer, default=1, nullable=False)
     comparison_grade_weight = db.Column(db.Integer, default=1, nullable=False)
     self_evaluation_grade_weight = db.Column(db.Integer, default=1, nullable=False)
@@ -96,6 +90,10 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     @hybrid_property
     def compared(self):
         return self.all_compare_count > 0
+
+    @hybrid_property
+    def answered(self):
+        return self.comparable_answer_count > 0
 
     def completed_comparison_count_for_user(self, user_id):
         return self.comparisons \
@@ -184,6 +182,10 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         from . import AssignmentGrade
         AssignmentGrade.calculate_grade(self, user)
 
+    def calculate_group_grade(self, group):
+        from . import AssignmentGrade
+        AssignmentGrade.calculate_group_grade(self, group)
+
     def calculate_grades(self):
         from . import AssignmentGrade
         AssignmentGrade.calculate_grades(self)
@@ -246,19 +248,32 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @classmethod
     def __declare_last__(cls):
-        from . import UserCourse, CourseRole, LTIResourceLink
+        from . import UserCourse, CourseRole, LTIResourceLink, Group
         super(cls, cls).__declare_last__()
 
         cls.answer_count = column_property(
             select([func.count(Answer.id)]).
-            select_from(join(Answer, UserCourse, UserCourse.user_id == Answer.user_id)).
+            select_from(
+                join(Answer, UserCourse, UserCourse.user_id == Answer.user_id, isouter=True).
+                join(Group, Group.id == Answer.group_id, isouter=True)
+            ).
             where(and_(
                 Answer.assignment_id == cls.id,
                 Answer.active == True,
                 Answer.draft == False,
                 Answer.practice == False,
-                UserCourse.course_id == cls.course_id,
-                UserCourse.course_role != CourseRole.dropped
+                or_(
+                    and_(
+                        UserCourse.course_id == cls.course_id,
+                        UserCourse.course_role != CourseRole.dropped,
+                        UserCourse.id != None
+                    ),
+                    and_(
+                        Group.course_id == cls.course_id,
+                        Group.active == True,
+                        Group.id != None
+                    ),
+                )
             )),
             deferred=True,
             group="counts"
@@ -266,14 +281,27 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
         cls.student_answer_count = column_property(
             select([func.count(Answer.id)]).
-            select_from(join(Answer, UserCourse, UserCourse.user_id == Answer.user_id)).
+            select_from(
+                join(Answer, UserCourse, UserCourse.user_id == Answer.user_id, isouter=True).
+                join(Group, Group.id == Answer.group_id, isouter=True)
+            ).
             where(and_(
                 Answer.assignment_id == cls.id,
                 Answer.active == True,
                 Answer.draft == False,
                 Answer.practice == False,
-                UserCourse.course_id == cls.course_id,
-                UserCourse.course_role == CourseRole.student
+                or_(
+                    and_(
+                        UserCourse.course_id == cls.course_id,
+                        UserCourse.course_role == CourseRole.student,
+                        UserCourse.id != None
+                    ),
+                    and_(
+                        Group.course_id == cls.course_id,
+                        Group.active == True,
+                        Group.id != None
+                    ),
+                )
             )),
             deferred=True,
             group="counts"
@@ -284,34 +312,28 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         # answers from sys admin here
         cls.comparable_answer_count = column_property(
             select([func.count(Answer.id)]).
-            select_from(join(Answer, UserCourse, UserCourse.user_id == Answer.user_id)).
+            select_from(
+                join(Answer, UserCourse, UserCourse.user_id == Answer.user_id, isouter=True).
+                join(Group, Group.id == Answer.group_id, isouter=True)
+            ).
             where(and_(
                 Answer.assignment_id == cls.id,
                 Answer.active == True,
                 Answer.draft == False,
                 Answer.practice == False,
-                UserCourse.course_id == cls.course_id,
-                UserCourse.course_role.in_(
-                    [CourseRole.student, CourseRole.instructor, \
-                        CourseRole.teaching_assistant]
-                ),
-                Answer.comparable == True
-            )),
-            deferred=True,
-            group="counts"
-        )
-
-        cls.top_answer_count = column_property(
-            select([func.count(Answer.id)]).
-            select_from(join(Answer, UserCourse, UserCourse.user_id == Answer.user_id)).
-            where(and_(
-                Answer.assignment_id == cls.id,
-                Answer.active == True,
-                Answer.draft == False,
-                Answer.practice == False,
-                Answer.top_answer == True,
-                UserCourse.course_id == cls.course_id,
-                UserCourse.course_role != CourseRole.dropped
+                Answer.comparable == True,
+                or_(
+                    and_(
+                        UserCourse.course_id == cls.course_id,
+                        UserCourse.course_role != CourseRole.dropped,
+                        UserCourse.id != None
+                    ),
+                    and_(
+                        Group.course_id == cls.course_id,
+                        Group.active == True,
+                        Group.id != None
+                    ),
+                )
             )),
             deferred=True,
             group="counts"
@@ -336,16 +358,6 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             group="counts"
         )
 
-        cls.all_compare_count = column_property(
-            select([func.count(Comparison.id)]).
-            where(and_(
-                Comparison.assignment_id == cls.id,
-                Comparison.completed == True
-            )),
-            deferred=True,
-            group="counts"
-        )
-
         cls.compare_count = column_property(
             select([func.count(Comparison.id)]).
             where(and_(
@@ -358,6 +370,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
         cls.self_evaluation_count = column_property(
             select([func.count(AnswerComment.id)]).
+            select_from(join(AnswerComment, Answer, AnswerComment.answer_id == Answer.id)).
             where(and_(
                 AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                 AnswerComment.active == True,

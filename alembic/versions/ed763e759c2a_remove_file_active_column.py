@@ -32,5 +32,5 @@ def downgrade():
         batch_op.drop_index('ix_answer_draft')
 
     with op.batch_alter_table('file', naming_convention=convention) as batch_op:
-        batch_op.add_column(sa.Column('active', sa.Boolean(), default='1', server_default='1', nullable=False))
+        batch_op.add_column(sa.Column('active', sa.Boolean(), default=True, server_default='1', nullable=False))
     op.create_index(op.f('ix_file_active'), 'file', ['active'], unique=False)

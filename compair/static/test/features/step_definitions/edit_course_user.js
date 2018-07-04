@@ -61,7 +61,7 @@ var editCourseUserStepDefinitionsWrapper = function () {
     this.When("I set the second user's group to '$groupname'", function (groupname) {
         var groupSelect = element.all(by.exactRepeater("user in classlist"))
             .get(1)
-            .element(by.model('user.group_name'));
+            .element(by.model('user.group_id'));
         if (browser.browserName == "firefox") {
             groupSelect.click();
         }

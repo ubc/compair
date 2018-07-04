@@ -17,9 +17,9 @@ from compair.models import convention
 
 def upgrade():
     with op.batch_alter_table('answer', naming_convention=convention) as batch_op:
-        batch_op.add_column(sa.Column('draft', sa.Boolean(), nullable=False, default='0', server_default='0'))
+        batch_op.add_column(sa.Column('draft', sa.Boolean(), nullable=False, default=False, server_default='0'))
     with op.batch_alter_table('answer_comment', naming_convention=convention) as batch_op:
-        batch_op.add_column(sa.Column('draft', sa.Boolean(), nullable=False, default='0', server_default='0'))
+        batch_op.add_column(sa.Column('draft', sa.Boolean(), nullable=False, default=False, server_default='0'))
 
 def downgrade():
     with op.batch_alter_table('answer_comment', naming_convention=convention) as batch_op:

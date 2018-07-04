@@ -63,10 +63,10 @@ module.factory(
 /***** Controllers *****/
 module.controller(
     'ClassViewController',
-    ["$scope", "$routeParams", "$route", "ClassListResource", "CourseResource",
+    ["$scope", "$routeParams", "$route", "ClassListResource", "CourseResource", "GroupUserResource",
              "CourseRole", "GroupResource", "Toaster", "FileSaver", "Blob", "LTIResource",
              "UserResource", "$uibModal", "xAPIStatementHelper", "resolvedData",
-    function($scope, $routeParams, $route, ClassListResource, CourseResource,
+    function($scope, $routeParams, $route, ClassListResource, CourseResource, GroupUserResource,
              CourseRole, GroupResource, Toaster, FileSaver, Blob, LTIResource,
              UserResource, $uibModal, xAPIStatementHelper, resolvedData)
     {
@@ -113,43 +113,48 @@ module.controller(
         };
 
         $scope.addUsersToNewGroup = function() {
+            var modalScope = $scope.$new();
+            modalScope.courseId = $scope.courseId;
+
             var modalInstance = $uibModal.open({
                 animation: true,
                 backdrop: 'static',
                 controller: "AddGroupModalController",
-                templateUrl: 'modules/group/group-modal-partial.html'
-            })
+                templateUrl: 'modules/group/group-modal-partial.html',
+                scope: modalScope
+            });
+
             modalInstance.opened.then(function() {
                 xAPIStatementHelper.opened_modal("Edit Group");
             });
-            modalInstance.result.then(function (groupName) {
-                $scope.addUsersToGroup(groupName);
+            modalInstance.result.then(function (group_id) {
+                $scope.addUsersToGroup(group_id);
                 xAPIStatementHelper.closed_modal("Edit Group");
             }, function () {
                 xAPIStatementHelper.closed_modal("Edit Group");
             });
         };
 
-        $scope.addUsersToGroup = function(groupName) {
+        $scope.addUsersToGroup = function(group_id) {
             var selectedUserIds = $scope.classlist.filter(function(user) {
                 return user.selected;
             }).map(function(user) {
                 return user.id;
             });
 
-            if (groupName == undefined) {
-                groupName = null;
+            if (group_id == undefined) {
+                group_id = null;
             }
 
-            if (groupName) {
-                GroupResource.updateUsersGroup({'courseId': $scope.courseId, 'groupName': groupName}, {ids: selectedUserIds},
+            if (group_id) {
+                GroupUserResource.addUsersToGroup({'courseId': $scope.courseId, 'groupId': group_id}, {ids: selectedUserIds},
                     function (ret) {
-                        Toaster.success("User(s) Saved", "Successfully added the user(s) into " + ret.group_name + ".");
+                        Toaster.success("User(s) Saved", "Successfully added the user(s) into " + ret.name + ".");
                         $route.reload();
                     }
                 );
             } else {
-                GroupResource.removeUsersGroup({'courseId': $scope.courseId}, {ids: selectedUserIds},
+                GroupUserResource.removeUsersFromGroup({'courseId': $scope.courseId}, {ids: selectedUserIds},
                     function (ret) {
                         Toaster.success("User(s) Removed From Group");
                         $route.reload();
@@ -182,17 +187,25 @@ module.controller(
             }
         };
 
-        $scope.update = function(userId, groupName) {
-            if (groupName) {
-                GroupResource.enrol({'courseId': $scope.courseId, 'userId': userId, 'groupName': groupName}, {},
+        $scope.updateGroup = function(user) {
+            if (user.group_id) {
+                GroupUserResource.add({'courseId': $scope.courseId, 'userId': user.id, 'groupId': user.group_id}, {},
                     function (ret) {
-                        Toaster.success("User Saved", "Successfully added the user to group " + ret.group_name + ".");
+                        Toaster.success("User Saved", "Successfully added the user to group " + ret.name + ".");
+                    },
+                    function (ret) {
+                        // will reset the changed group_id in the select
+                        $route.reload();
                     }
                 );
             } else {
-                GroupResource.unenrol({'courseId': $scope.courseId, 'userId': userId},
+                GroupUserResource.remove({'courseId': $scope.courseId, 'userId': user.id},
                     function (ret) {
                         Toaster.success("User Removed From Group");
+                    },
+                    function (ret) {
+                        // will reset the changed group_id in the select
+                        $route.reload();
                     }
                 );
             }

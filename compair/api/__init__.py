@@ -25,15 +25,15 @@ def register_api_blueprints(app):
         classlist_api,
         url_prefix='/api/courses/<course_uuid>/users')
 
-    from .course_group import course_group_api
+    from .group import group_api
     app.register_blueprint(
-        course_group_api,
+        group_api,
         url_prefix='/api/courses/<course_uuid>/groups')
 
-    from .course_group_user import course_group_user_api
+    from .group_user import group_user_api
     app.register_blueprint(
-        course_group_user_api,
-        url_prefix='/api/courses/<course_uuid>/users')
+        group_user_api,
+        url_prefix='/api/courses/<course_uuid>/groups')
 
     from .login import login_api
     app.register_blueprint(login_api)
@@ -348,18 +348,24 @@ def log_events(log):
     on_classlist_student.connect(log)
     on_classlist_update_users_course_roles.connect(log)
 
-    # course group events
-    from .course_group import on_course_group_get, on_course_group_members_get
-    on_course_group_get.connect(log)
-    on_course_group_members_get.connect(log)
+    # group events
+    from .group import on_group_create, on_group_delete, \
+        on_group_edit, on_group_get
+    on_group_create.connect(log)
+    on_group_delete.connect(log)
+    on_group_edit.connect(log)
+    on_group_get.connect(log)
 
     # course user group events
-    from .course_group_user import on_course_group_user_create, on_course_group_user_delete, \
-        on_course_group_user_list_create, on_course_group_user_list_delete
-    on_course_group_user_create.connect(log)
-    on_course_group_user_delete.connect(log)
-    on_course_group_user_list_create.connect(log)
-    on_course_group_user_list_delete.connect(log)
+    from .group_user import on_group_user_create, on_group_user_delete, \
+        on_group_user_list_create, on_group_user_list_delete, \
+        on_group_user_list_get, on_group_user_get
+    on_group_user_create.connect(log)
+    on_group_user_delete.connect(log)
+    on_group_user_list_create.connect(log)
+    on_group_user_list_delete.connect(log)
+    on_group_user_list_get.connect(log)
+    on_group_user_get.connect(log)
 
     # report event
     from .report import on_export_report
