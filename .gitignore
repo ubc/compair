@@ -1,0 +1,74 @@
+*.py[cod]
+
+# C extensions
+*.so
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+nosetests.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+*.swp
+
+tmp/*
+tmpUpload/*
+
+# idea project file
+.idea
+.ropeproject/
+*.db
+*.db-journal
+*.csv
+config.py
+
+# compiled and generated files
+compair/static/compair.css
+bower_components
+node_modules
+compair/static/index.html
+
+.env
+.python-version
+
+# copied fonts
+compair/static/fonts
+
+# uploaded and generated report files
+persistent/attachment/*
+persistent/report/*
+persistent/tmp/*
+
+# google analytics file
+compair/static/tracking.js
+
+# docker generated data
+.data
+
+celerybeat-schedule
+celerybeat.pid

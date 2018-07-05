@@ -1,0 +1,122 @@
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang=""> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Best Practices | ComPAIR Learning Application</title>
+        <meta name="description" content="Learn about the recommended best practices for using UBC's ComPAIR learning application based on the pilot courses who have used ComPAIR.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="index, follow" />
+
+        <link rel="icon" type="image/png" href="img/green-favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" type="image/png" href="img/green-favicon-16x16.png" sizes="16x16" />
+
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="css/custom.css">
+
+        <script src="js/vendor/modernizr-2.8.3-respond-1.4.2.min.js"></script>
+    </head>
+    <body>
+        <!--[if lt IE 8]>
+        <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                  <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                  </button>
+                  <a class="navbar-brand" href="index.html"><img src="img/compair-logo-small.png" alt="ComPAIR Home"></a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                  <ul class="nav navbar-nav navbar-right">
+                      <li><a href="index.html">Home</a></li>
+                      <li><a href="workflow.html">Workflow</a></li>
+                      <li><a href="examples.html">Examples</a></li>
+                      <li class="active"><a href="best-practices.html">Best Practices</a></li>
+                      <li><a href="documentation.html">Documentation</a></li>
+                  </ul>
+                </div>
+              </div>
+        </nav>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <h1 class="main-heading">Best Practices <img src="img/compair-logo-scale.png" alt="ComPAIR Home" class="pull-right"></h1>
+                    <p>To understand the potential usefulness of the ComPAIR learning application, researchers and teaching teams at the University of British Columbia (UBC) sought input from the students, teaching assistants, and instructors in courses that piloted the initial tool at UBC. </p>
+
+                    <h3 class="text-center highlight-heading">Feedback received during pilot phase from: <span class="green-text">168</span> students // <span class="green-text">6</span> teaching assistants // <span class="green-text">3</span> instructors at UBC</h3>
+
+                    <p>Students, teaching assistants, and instructors participated in surveys, focus groups, and/or one-on-one interviews, and these  revealed common practices that resulted in a more positive learning experience for students, regardless of discipline. (More detail on this evaluation process and its outcomes is available in this <em>Teaching &amp; Learning Inquiry</em> <a href="http://tlijournal.com/tli/index.php/TLI/article/view/156/191" target="_blank">article <i class="glyphicon glyphicon-new-window"></i></a>.)</p>
+
+                    <h2>Pilot findings</h2>
+                    <p>As with any learning activity, how assignments were introduced, designed, and integrated in the course significantly impacted the student experience with ComPAIR.</p>
+                    <ul class="list-group">
+                        <li class="list-group-item"><strong>Introduction:</strong> Students who better understood what underlying skill they were practicing in the application felt they learned more from the assignments. It is key for students to know the end goal of using ComPAIR  ("how will this help me in this course?") and not only how to use it to complete the assignments.</li>
+                        <li class="list-group-item"><strong>Design:</strong> Students given more guidance (multiple criteria, additional rubrics) said they learned more from comparing. Helping students understand what to look for during the comparisons can result in stronger learning and also (possibly) richer feedback.</li>
+                        <li class="list-group-item"><strong>Design:</strong> Regardless of low reported confidence in giving peer feedback, many students said they learned simply from practicing feedback writing with anonymous answer pairs. A minimum of three comparisons per assignment is suggested to give students sufficient practice, as this was the number used for the pilot courses.</li>
+                        <li class="list-group-item"><strong>Integration:</strong> Assignments felt more beneficial to students when presented as part of a larger process. It may be more useful for students to use ComPAIR to see what their peers have done and reflect on their own work in the context of a bigger goal, rather than apply this to standalone assignments that are not concretely tied into the course in any other way.</li>
+                    </ul>
+
+                    <h2><a id="scoring"></a>Notes on scoring and grades</h2>
+
+                    <p>When ComPAIR assignments are set up to select answer pairs adaptively&mdash;that is, to pair answers that are closer in quality&mdash;the application tracks a score for each student answer. Every answer starts with a base score and that increases or decreases (based on the <a href="https://en.wikipedia.org/wiki/Elo_rating_system" target="_blank">Elo rating system</a>) to reflect the outcome of the comparisons the answer competes in. Basically, after every comparison, the winning answer takes points from the losing one, with the difference between the answer scores at the time of comparison factoring into the total number of points transferred.</p>
+                    <p>Once answers move beyond the base score, higher-rated answers are expected to win more often. So if a higher-rated answer wins (as expected), fewer points are taken from the lower-rated answer's score. Conversely, if a lower-rated answer wins in an upset (unexpectedly), more points will be transferred to the lower-rated answer's score. At the end of this process, stronger answers should end up with higher scores and weaker answers with lower scores.</p>
+                    <p>Some instructors have used the scores and the ranking they provide to form all or part of a student's grade for the assignments. While anyone is welcome to use the application this way, we caution against relying on ComPAIR without any additional external validation. The algorithm behind the scores has not yet been thoroughly vetted for this purpose and ultimately relies on the skills and training of novice users (students) to provide accurate, well-informed rankings of their peers.</p>
+
+                    <p class="text-center"><a href="documentation.html" class="btn btn-success btn-lg" role="button">Get started &raquo;</a></p>
+                </div>
+                <div class="col-md-4">
+                    <div class="fixed-position">
+                        <h2 class="intro-list-heading">Get to know ComPAIR</h2>
+                        <ul class="intro-list">
+                            <li><span>Understand the <a href="workflow.html">assignment workflow</a> in the application from instructor and student perspectives.</span></li>
+                            <li><span>Read about <a href="examples.html">real-life examples &raquo;</a> from English, Physics, and Math courses at the University of British Columbia.</span></li>
+                            <li class="side-selected"><i class="glyphicon glyphicon-menu-right pull-left"></i> <span>Learn about the recommended <strong>best practices</strong> based on the pilot courses who have used the application.</span></li>
+                            <li><span>Get started with <a href="documentation.html">basic documentation &raquo;</a> for using ComPAIR as a standalone application or as an integration.</span></li>
+                            <li><a href="https://compairdemo.ctlt.ubc.ca" target="_blank" class="btn btn-primary">Try Demo <i class="glyphicon glyphicon-new-window"></i></a> &nbsp; <a href="https://github.com/ubc/compair" target="_blank" class="btn btn-primary">Download Code <i class="glyphicon glyphicon-new-window"></i></a></li>
+                        </ul>
+                        <h3>Additional resources</h3>
+                        <ul>
+                            <li><a href="http://tlijournal.com/tli/index.php/TLI/article/view/156/191" target="_blank">ComPAIR Article - <em>Teaching &amp; Learning Inquiry</em> - September 2017 <i class="glyphicon glyphicon-new-window"></i></a></li>
+                            <li><a href="https://docs.google.com/presentation/d/1zmRi7n-i83AcSpuLeL-s7kUET52F4kczew577OtTeng/edit?usp=sharing" target="_blank">ComPAIR Presentation Slides - BCNet Conference 2017 <i class="glyphicon glyphicon-new-window"></i></a></li>
+                            <li><a href="http://www.tandfonline.com/doi/full/10.1080/0969594X.2012.665354?scroll=top&needAccess=true#aHR0cDovL3d3dy50YW5kZm9ubGluZS5jb20vZG9pL3BkZi8xMC4xMDgwLzA5Njk1OTRYLjIwMTIuNjY1MzU0P25lZWRBY2Nlc3M9dHJ1ZUBAQDA=" target="_blank">Related Article - "The method of Adaptive Comparative Judgement" (Pollitt, 2012) <i class="glyphicon glyphicon-new-window"></i></a></li>
+                        </ul>
+                    </div>
+               </div>
+            </div>
+
+            <hr>
+
+            <footer>
+                <p>&copy; University of British Columbia | <a href="http://ctlt.ubc.ca/" target="_blank">CTLT</a></p>
+            </footer>
+
+        </div> <!-- /container -->
+
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script>window.jQuery || document.write('<script src="js/vendor/jquery-1.11.2.min.js"><\/script>')</script>
+
+        <script src="js/vendor/bootstrap.min.js"></script>
+
+        <script src="js/main.js"></script>
+
+        <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
+        <script>
+            (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+            function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+            e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+            e.src='//www.google-analytics.com/analytics.js';
+            r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+            ga('create','UA-XXXXX-X','auto');ga('send','pageview');
+        </script>
+    </body>
+</html>
