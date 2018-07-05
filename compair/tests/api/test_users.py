@@ -1054,30 +1054,30 @@ class UsersAPITests(ComPAIRAPITestCase):
         lti_user1_2 = lti_data.create_user(lti_consumer, SystemRole.student, student2)
 
         # test login required
-        url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user2.uuid
+        url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user1.uuid
         rv = self.client.delete(url)
         self.assert401(rv)
 
         # test non-admin
         with self.login(self.data.get_authorized_instructor().username):
-            url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user2.uuid
+            url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user1.uuid
             rv = self.client.delete(url)
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_ta().username):
-            url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user2.uuid
+            url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user1.uuid
             rv = self.client.delete(url)
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_student().username):
-            url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user2.uuid
+            url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user1.uuid
             rv = self.client.delete(url)
             self.assert403(rv)
 
         # test with impersonation
         for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
             with self.impersonate(impersonator, student1):
-                url = '/api/users/'+ student1.uuid +'/lti/users'+ lti_user2.uuid
+                url = '/api/users/'+ student1.uuid +'/lti/users/'+ lti_user1.uuid
                 rv = self.client.delete(url)
                 self.assert403(rv)
                 self.assertTrue(rv.json['disabled_by_impersonation'])
@@ -1086,6 +1086,11 @@ class UsersAPITests(ComPAIRAPITestCase):
         with self.login('root'):
             # test invalid user
             url = '/api/users/999/lti/users/'+ lti_user1.uuid
+            rv = self.client.delete(url)
+            self.assert404(rv)
+
+            # test invalid lti user
+            url = '/api/users/'+ student1.uuid +'/lti/users/999'
             rv = self.client.delete(url)
             self.assert404(rv)
 
@@ -1172,30 +1177,30 @@ class UsersAPITests(ComPAIRAPITestCase):
         third_party_user1_2 = auth_data.create_third_party_user(user=student2)
 
         # test login required
-        url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user2.uuid
+        url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user1.uuid
         rv = self.client.delete(url)
         self.assert401(rv)
 
         # test non-admin
         with self.login(self.data.get_authorized_instructor().username):
-            url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user2.uuid
+            url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user1.uuid
             rv = self.client.delete(url)
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_ta().username):
-            url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user2.uuid
+            url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user1.uuid
             rv = self.client.delete(url)
             self.assert403(rv)
 
         with self.login(self.data.get_authorized_student().username):
-            url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user2.uuid
+            url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user1.uuid
             rv = self.client.delete(url)
             self.assert403(rv)
 
         # test with impersonation
         for impersonator in [DefaultFixture.ROOT_USER, self.data.get_authorized_instructor()]:
             with self.impersonate(impersonator, student1):
-                url = '/api/users/'+ student1.uuid +'/third_party/users'+ third_party_user2.uuid
+                url = '/api/users/'+ student1.uuid +'/third_party/users/'+ third_party_user1.uuid
                 rv = self.client.delete(url)
                 self.assert403(rv)
                 self.assertTrue(rv.json['disabled_by_impersonation'])
@@ -1204,6 +1209,11 @@ class UsersAPITests(ComPAIRAPITestCase):
         with self.login('root'):
             # test invalid user
             url = '/api/users/999/third_party/users/'+ third_party_user1.uuid
+            rv = self.client.delete(url)
+            self.assert404(rv)
+
+            # test invalid third party user
+            url = '/api/users/'+ student1.uuid +'/third_party/users/999'
             rv = self.client.delete(url)
             self.assert404(rv)
 
