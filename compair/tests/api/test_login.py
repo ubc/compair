@@ -4,6 +4,7 @@ import json
 import mock
 import six
 
+from data.fixtures import DefaultFixture
 from data.fixtures.test_data import SimpleAssignmentTestData, ThirdPartyAuthTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, UserCourse, \
@@ -30,6 +31,19 @@ class LoginAPITests(ComPAIRAPITestCase):
         self.app.config['APP_LOGIN_ENABLED'] = True
         rv = self.client.post('/api/login', data=json.dumps(params), content_type='application/json', follow_redirects=True)
         self.assert200(rv)
+
+    def test_logout(self):
+        with self.login('root'):
+            url = '/api/logout'
+            rv = self.client.delete(url)
+            self.assert200(rv)
+
+        # can't logout during impersonation
+        with self.impersonate(DefaultFixture.ROOT_USER, self.data.get_authorized_student()):
+            url = '/api/logout'
+            rv = self.client.delete(url)
+            self.assert403(rv)
+            self.assertTrue(rv.json['disabled_by_impersonation'])
 
     def test_cas_login(self):
         auth_data = ThirdPartyAuthTestData()
