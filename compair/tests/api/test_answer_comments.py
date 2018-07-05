@@ -76,7 +76,7 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                 rv = self.client.get(url)
                 self.assert200(rv)
                 self.assertEqual(1, len(rv.json))
-                self.assertNotIn('user_fullname', rv.json[0])
+                self.assertNotIn('fullname', rv.json[0]['user'])
 
     def test_get_list_query_params(self):
         comment = AnswerCommentsTestData.create_answer_comment(
@@ -252,6 +252,7 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                 self.assert200(rv)
                 self.assertEqual(content['content'], rv.json['content'])
                 self.assertFalse(rv.json['draft'])
+                self.assertIn('fullname', rv.json['user'])
 
                 self.assertEqual(len(outbox), 1)
                 self.assertEqual(outbox[0].subject, "New Answer Feedback in "+self.data.get_course().name)
@@ -284,6 +285,7 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                 rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
                 self.assert200(rv)
                 self.assertEqual(len(outbox), 1)
+                self.assertIn('fullname', rv.json['user'])
 
         with self.login(self.data.get_authorized_student().username):
             lti_consumer = self.lti_data.lti_consumer
@@ -303,6 +305,7 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                 self.assert200(rv)
 
                 self.assertEqual(len(outbox), 0)
+                self.assertNotIn('fullname', rv.json['user'])
 
                 # grades should increase
                 new_course_grade = CourseGrade.get_user_course_grade(self.course, self.data.get_authorized_student())
@@ -413,33 +416,33 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
             self.assertEqual(comment.content, rv.json['content'])
+            self.assertIn('fullname', rv.json['user'])
 
             # test draft
             rv = self.client.get(draft_url)
             self.assert200(rv)
             self.assertEqual(draft_comment.content, rv.json['content'])
             self.assertTrue(rv.json['draft'])
+            self.assertIn('fullname', rv.json['user'])
 
         # test author
         student = self.data.get_extra_student(0)
-        for user_context in [ \
-                self.login(student.username), \
-                self.impersonate(self.data.get_authorized_instructor(), student)]:
+        for user_context in [self.login(student.username), self.impersonate(self.data.get_authorized_instructor(), student)]:
             with user_context:
                 rv = self.client.get(url)
                 self.assert200(rv)
                 self.assertEqual(comment.content, rv.json['content'])
+                self.assertNotIn('fullname', rv.json['user'])
 
         # test draft author
         student = self.data.get_extra_student(1)
-        for user_context in [ \
-                self.login(student.username), \
-                self.impersonate(self.data.get_authorized_instructor(), student)]:
+        for user_context in [self.login(student.username), self.impersonate(self.data.get_authorized_instructor(), student)]:
             with user_context:
                 rv = self.client.get(draft_url)
                 self.assert200(rv)
                 self.assertEqual(draft_comment.content, rv.json['content'])
                 self.assertTrue(rv.json['draft'])
+                self.assertNotIn('fullname', rv.json['user'])
 
 
     @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
@@ -527,6 +530,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
                 self.assert200(rv)
                 self.assertEqual(content['content'], rv.json['content'])
+                self.assertIn('fullname', rv.json['user'])
 
                 self.assertEqual(len(outbox), 0)
 
@@ -538,6 +542,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 self.assert200(rv)
                 self.assertEqual(content['content'], rv.json['content'])
                 self.assertFalse(rv.json['draft'])
+                self.assertNotIn('fullname', rv.json['user'])
 
                 self.assertEqual(len(outbox), 0)
 
@@ -548,6 +553,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 self.assert200(rv)
                 self.assertEqual(content['content'], rv.json['content'])
                 self.assertFalse(rv.json['draft'])
+                self.assertNotIn('fullname', rv.json['user'])
 
                 self.assertEqual(len(outbox), 0)
 
@@ -572,6 +578,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 self.assert200(rv)
                 self.assertEqual(draft_content['content'], rv.json['content'])
                 self.assertTrue(rv.json['draft'])
+                self.assertNotIn('fullname', rv.json['user'])
 
                 self.assertEqual(len(outbox), 0)
 
@@ -581,6 +588,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 rv = self.client.post(draft_url, data=json.dumps(draft_content), content_type='application/json')
                 self.assert200(rv)
                 self.assertFalse(rv.json['draft'])
+                self.assertNotIn('fullname', rv.json['user'])
 
                 self.assertEqual(len(outbox), 1)
                 self.assertEqual(outbox[0].subject, "New Answer Feedback in "+self.data.get_course().name)
@@ -626,6 +634,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 self.assert200(rv)
                 self.assertEqual(content['content'], rv.json['content'])
                 self.assertTrue(rv.json['draft'])
+                self.assertNotIn('fullname', rv.json['user'])
 
                 self.assertEqual(len(outbox), 0)
 
@@ -641,6 +650,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 rv = self.client.post(self_evaluation_url, data=json.dumps(content), content_type='application/json')
                 self.assert200(rv)
                 self.assertFalse(rv.json['draft'])
+                self.assertNotIn('fullname', rv.json['user'])
 
                 self.assertEqual(len(outbox), 0)
 
