@@ -310,7 +310,7 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
 
             rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
             self.assert403(rv)
-            self.assertEqual("Self-Evaluation Not Submitted", rv.json['title'])
+            self.assertEqual("Self-Evaluation Not Saved", rv.json['title'])
             self.assertEqual("Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.",
                 rv.json['message'])
 
@@ -529,8 +529,8 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
             invalid['id'] = self.data.get_answer_comments_by_assignment(self.assignment)[1].uuid
             rv = self.client.post(url, data=json.dumps(invalid), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual("Reply Not Saved", rv.json['title'])
-            self.assertEqual("The reply's ID does not match the URL, which is required in order to save the reply.",
+            self.assertEqual("Feedback Not Saved", rv.json['title'])
+            self.assertEqual("The feedback's ID does not match the URL, which is required in order to save the feedback.",
                 rv.json['message'])
 
             # test empty content
@@ -538,8 +538,8 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
             empty['content'] = ''
             rv = self.client.post(url, data=json.dumps(empty), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual("Reply Not Saved", rv.json['title'])
-            self.assertEqual("Please provide content in the text editor to reply and try saving again.", rv.json['message'])
+            self.assertEqual("Feedback Not Saved", rv.json['title'])
+            self.assertEqual("Please provide content in the text editor and try saving again.", rv.json['message'])
 
             # test empty comment_type
             empty = content.copy()
@@ -658,7 +658,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
 
             rv = self.client.post(self_evaluation_url, data=json.dumps(content), content_type='application/json')
             self.assert403(rv)
-            self.assertEqual("Self-Evaluation Not Submitted", rv.json['title'])
+            self.assertEqual("Self-Evaluation Not Saved", rv.json['title'])
             self.assertEqual("Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.",
                 rv.json['message'])
 

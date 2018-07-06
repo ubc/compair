@@ -616,9 +616,9 @@ myApp.config(
             })
         .when('/users',
             {
-                title: "Manage Users",
+                title: "Manage All Users",
                 templateUrl: 'modules/user/user-list-partial.html',
-                label: "Manage Users",
+                label: "Manage All Users",
                 controller: 'UserListController',
                 resolve: {
                     resolvedData: function() {

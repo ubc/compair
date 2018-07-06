@@ -12,7 +12,7 @@ var viewNavbarStepDefinitionsWrapper = function () {
     });
 
     this.Then("I should see the admin navigation items", function () {
-        return expect(element.all(by.css("#logged-in-nav-options li a")).getText()).to.eventually.eql(["Download Reports", "Add Course", "Add User", "Manage Users", "Manage LTI"]);
+        return expect(element.all(by.css("#logged-in-nav-options li a")).getText()).to.eventually.eql(["Download Reports", "Add Course", "Add User", "Manage All Users", "Manage LTI"]);
     });
 
     this.Then("I should see the instructor navigation items", function () {

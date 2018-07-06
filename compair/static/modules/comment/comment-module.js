@@ -106,7 +106,7 @@ module.controller(
                 .$promise.then(
                     function (ret) {
                         if (!ret.students_can_reply) {
-                            Toaster.error("Reply Not Saved", "Sorry, replies are not allowed for answers in this assignment.");
+                            Toaster.error("Feedback Not Saved", "Sorry, feedback is not allowed for answers in this assignment.");
                             $uibModalInstance.dismiss();
                         }
                     }
@@ -138,7 +138,7 @@ module.controller(
             }, $scope.comment).$promise.then(
                 function(ret) {
                     $scope.comment = ret;
-                    Toaster.success("Reply Saved");
+                    Toaster.success("Feedback Saved");
 
                     $uibModalInstance.close($scope.comment);
                 }
