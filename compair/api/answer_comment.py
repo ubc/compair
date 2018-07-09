@@ -214,6 +214,9 @@ class AnswerCommentListAPI(Resource):
             abort(400, title="Reply Not Saved", message="This reply type is not recognized. Please contact support for assistance.")
         answer_comment.comment_type = AnswerCommentType(comment_type)
 
+        if answer_comment.comment_type == AnswerCommentType.self_evaluation and not assignment.self_eval_grace and not allow(MANAGE, assignment):
+            abort(403, title="Self-Evaluation Not Submitted", message="Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.")
+
         db.session.add(answer_comment)
         db.session.commit()
 
@@ -296,6 +299,10 @@ class AnswerCommentAPI(Resource):
             abort(400, title="Reply Not Saved", message="This reply type is not recognized. Please contact support for assistance.")
 
         answer_comment.comment_type = AnswerCommentType(comment_type)
+
+        if answer_comment.comment_type == AnswerCommentType.self_evaluation and not assignment.self_eval_grace and not allow(MANAGE, assignment):
+            abort(403, title="Self-Evaluation Not Submitted", message="Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.")
+
         # only update draft param if currently a draft
         if answer_comment.draft:
             answer_comment.draft = params.get('draft', answer_comment.draft)

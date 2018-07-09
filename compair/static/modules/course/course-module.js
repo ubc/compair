@@ -335,9 +335,7 @@ module.controller(
 
                     // comparison count
                     assignment.comparisons_left = assignment.status.comparisons.left;
-                    assignment.self_evaluation_needed = assignment.enable_self_evaluation ?
-                        !assignment.status.comparisons.self_evaluation_completed : false;
-                    assignment.steps_left = assignment.comparisons_left + (assignment.self_evaluation_needed ? 1 : 0);
+                    assignment.self_evaluation_needed = assignment.enable_self_evaluation && !assignment.status.comparisons.self_evaluation_completed;
 
                     // if evaluation period is set answers can be seen after it ends
                     if (assignment.compare_end) {
@@ -393,7 +391,8 @@ module.controller(
                     // STUDENTS: return all assignments that need to be answered or compared
                     case "My unfinished assignments":
                         return (permissions.canAnswer && permissions.needsAnswer) ||
-                            (permissions.canCompare && permissions.needsCompareOrSelfEval);
+                        (permissions.canCompare && permissions.needsCompare) ||
+                        (permissions.canSelfEval && permissions.needsSelfEval);
                     // STUDENTS: return all assignments that have a saved draft answer, comparison, or self-eval
                     case "Assignments with drafts":
                         return (permissions.canAnswer && permissions.needsAnswer && permissions.hasDraftAnswer) ||

@@ -1,5 +1,5 @@
 <div>
-    <h1>Self-Evaluation <span class="label label-warning pull-right">Round {{total}} / {{total}}</h1>
-    <p class="intro-text">Now reflect on your own answer and <strong>give feedback to yourself</strong>, considering the other answers you've seen. What did you do well? Where might you improve?</p>
+    <h1>Self-Evaluation</h1>
+    <p class="intro-text" ng-bind-html="instructions"></p>
     <ng-include src="'modules/comment/comment-form-partial.html'"></ng-include>
 </div>

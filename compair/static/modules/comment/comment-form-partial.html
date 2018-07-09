@@ -9,13 +9,16 @@
     <rich-content ng-if="parent.name" content="parent.description" attachment="parent.file"></rich-content>
     <h2 ng-if="answerComment"><i class="fa fa-user"></i> {{parent.user.displayname}}'s Answer</h2>
     <rich-content ng-if="answerComment" content="parent.content" attachment="parent.file"></rich-content>
+    <h2 ng-if="selfEvalComment"><i class="fa fa-comments"></i> {{assignment.name}}</h2>
+    <rich-content ng-if="selfEvalComment" content="assignment.description" attachment="assignment.file"></rich-content>
 </div>
 
 <form name="commentForm" class="form" ng-submit="commentSubmit()" confirm-form-exit novalidate form-type="comment">
     <fieldset>
-        <legend><span ng-if="answerComment">Feedback</span><span ng-if="!answerComment">Comment</span> Details</legend>
+        <legend><span ng-if="answerComment || selfEvalComment">Feedback</span><span ng-if="!answerComment && !selfEvalComment">Comment</span><span ng-if="!selfEvalComment"> Details</span></legend>
         <div class="form-group">
-            <label>Text</label>
+            <label ng-if="!selfEvalComment">Text</label>
+            <label ng-if="selfEvalComment" class="required-star">Your private feedback to yourself</label>
             <textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8"
                       ckeditor="editorOptions" required>
             </textarea>

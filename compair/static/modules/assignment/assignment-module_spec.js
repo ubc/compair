@@ -137,6 +137,9 @@ describe('assignment-module', function () {
         "peer_feedback_prompt": null,
         "enable_self_evaluation": true,
         "enable_group_answers": false,
+        "self_eval_start": null,
+        "self_eval_end": null,
+        "self_eval_instructions": null,
         "evaluation_count": 17,
         "file": null,
         "id": "1abcABC123-abcABC123_Z",
@@ -847,7 +850,6 @@ describe('assignment-module', function () {
                     orderBy: null
                 });
 
-                expect($rootScope.self_evaluation_needed).toBe(true);
                 expect($rootScope.loggedInUserId).toEqual(id);
                 expect($rootScope.assignment.status.comparisons.available).toBe(false);
                 expect($rootScope.canManageAssignment).toBe(true);
@@ -1235,6 +1237,91 @@ describe('assignment-module', function () {
                     $rootScope.assignmentSubmit();
                     expect($rootScope.submitted).toBe(false);
                     expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please set comparison end time after comparison start time and save again.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
+                it('should warn when compare dates set and compare start is not before self-eval start', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.availableCheck = true;
+
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
+                    $rootScope.date.cstart.date = new Date();
+                    $rootScope.date.cstart.date.setDate($rootScope.date.cstart.date.getDate()+8);
+                    $rootScope.date.cend.date = new Date();
+                    $rootScope.date.cend.date.setDate($rootScope.date.cend.date.getDate()+10);
+
+                    $rootScope.assignment.selfEvalCheck = true;
+                    $rootScope.date.seend.date = new Date();
+                    $rootScope.date.seend.date.setDate($rootScope.date.seend.date.getDate()+12);
+
+                    $rootScope.date.sestart.date = $rootScope.date.cstart.date;
+                    $rootScope.date.sestart.time = $rootScope.date.cstart.time;
+                    var currentPath = $location.path();
+
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please set self-evaluation start time after compare start time and save again.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
+                it('should warn when compare dates not set and answer end is not before self-eval start', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.availableCheck = false;
+
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
+                    $rootScope.date.cstart.date = undefined;
+                    $rootScope.date.cend.date = undefined;
+
+                    $rootScope.assignment.selfEvalCheck = true;
+                    $rootScope.date.seend.date = new Date();
+                    $rootScope.date.seend.date.setDate($rootScope.date.seend.date.getDate()+9);
+
+                    $rootScope.date.sestart.date = $rootScope.date.aend.date;
+                    $rootScope.date.sestart.time = $rootScope.date.aend.time;
+                    var currentPath = $location.path();
+
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please set self-evaluation start time after answer end time and save again.');
+                    expect($location.path()).toEqual(currentPath);
+                });
+
+                it('should warn when self-eval start is not before self-eval end', function () {
+                    $rootScope.assignment = angular.copy(mockAssignment);
+                    $rootScope.assignment.id = undefined;
+                    $rootScope.assignment.availableCheck = true;
+
+                    // no default dates set. populate with values before proceeding
+                    $rootScope.date.astart.date = new Date();
+                    $rootScope.date.astart.date.setDate($rootScope.date.astart.date.getDate()+1);
+                    $rootScope.date.aend.date = new Date();
+                    $rootScope.date.aend.date.setDate($rootScope.date.aend.date.getDate()+8);
+                    $rootScope.date.cstart.date = new Date();
+                    $rootScope.date.cstart.date.setDate($rootScope.date.cstart.date.getDate()+8);
+                    $rootScope.date.cend.date = new Date();
+                    $rootScope.date.cend.date.setDate($rootScope.date.cend.date.getDate()+10);
+
+                    $rootScope.assignment.selfEvalCheck = true;
+                    $rootScope.date.sestart.date = new Date();
+                    $rootScope.date.sestart.date.setDate($rootScope.date.sestart.date.getDate()+9);
+
+                    $rootScope.date.seend.date = $rootScope.date.sestart.date;
+                    $rootScope.date.seend.time = $rootScope.date.sestart.time;
+                    var currentPath = $location.path();
+
+                    $rootScope.assignmentSubmit();
+                    expect($rootScope.submitted).toBe(false);
+                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Saved', 'Please set self-evaluation end time after self-evaluation start time and save again.');
                     expect($location.path()).toEqual(currentPath);
                 });
 

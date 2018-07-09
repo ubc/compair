@@ -27,6 +27,9 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     answer_end = db.Column(db.DateTime(timezone=True))
     compare_start = db.Column(db.DateTime(timezone=True), nullable=True)
     compare_end = db.Column(db.DateTime(timezone=True), nullable=True)
+    self_eval_start = db.Column(db.DateTime(timezone=True), nullable=True)
+    self_eval_end = db.Column(db.DateTime(timezone=True), nullable=True)
+    self_eval_instructions = db.Column(db.Text, nullable=True)
     number_of_comparisons = db.Column(db.Integer, nullable=False)
     students_can_reply = db.Column(db.Boolean(), default=False, nullable=False)
     enable_self_evaluation = db.Column(db.Boolean(), default=False, nullable=False)
@@ -167,6 +170,33 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             return now >= self.compare_end.replace(tzinfo=pytz.utc)
 
     @hybrid_property
+    def self_eval_period(self):
+        now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+        if not self.enable_self_evaluation:
+            return False
+        elif self.self_eval_start:
+            return self.self_eval_start.replace(tzinfo=pytz.utc) <= now < self.self_eval_end.replace(tzinfo=pytz.utc)
+        else:
+            if self.compare_start:
+                return now >= self.compare_start.replace(tzinfo=pytz.utc)
+            else:
+                return now >= self.answer_end.replace(tzinfo=pytz.utc)
+
+    @hybrid_property
+    def self_eval_grace(self):
+        now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+        if not self.enable_self_evaluation:
+            return False
+        elif self.self_eval_start:
+            grace = self.self_eval_end.replace(tzinfo=pytz.utc) + datetime.timedelta(seconds=60)  # add 60 seconds
+            return self.self_eval_start.replace(tzinfo=pytz.utc) <= now < grace
+        else:
+            if self.compare_start:
+                return now >= self.compare_start.replace(tzinfo=pytz.utc)
+            else:
+                return now >= self.answer_end.replace(tzinfo=pytz.utc)
+
+    @hybrid_property
     def evaluation_count(self):
         return self.compare_count + self.self_evaluation_count
 
@@ -191,7 +221,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         AssignmentGrade.calculate_grades(self)
 
     @classmethod
-    def validate_periods(cls, course_start, course_end, answer_start, answer_end, compare_start, compare_end):
+    def validate_periods(cls, course_start, course_end, answer_start, answer_end, compare_start, compare_end, self_eval_start, self_eval_end):
         # validate answer period
         if answer_start == None:
             return (False, "No answer period start time provided.")
@@ -227,6 +257,28 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                 return (False, "Compare period end time must be after the compare start time.")
             elif course_end and course_end < compare_end:
                 return (False, "Compare period end time must be before the course end time.")
+
+        # validate self-eval period
+        if self_eval_start == None and self_eval_end != None:
+            return (False, "No self-evaluation start time provided.")
+        elif self_eval_start != None and self_eval_end == None:
+            return (False, "No self-evaluation end time provided.")
+        elif self_eval_start != None and self_eval_end != None:
+            self_eval_start = self_eval_start.replace(tzinfo=pytz.utc)
+            self_eval_end = self_eval_end.replace(tzinfo=pytz.utc)
+
+            # self_eval start < self_eval end <= course end
+            if self_eval_start > self_eval_end:
+                return (False, "Self-evaluation end time must be after the self-evaluation start time.")
+            elif course_end and course_end < self_eval_end:
+                return (False, "Self-evaluation end time must be before the course end time.")
+
+            # if comparison period defined: compare start < self_eval start
+            if compare_start != None and compare_start >= self_eval_start:
+                return (False, "Self-evaluation start time must be after the compare start time.")
+            # else: answer end < self_eval start
+            elif compare_start == None and answer_end >= self_eval_start:
+                return (False, "Self-evaluation start time must be after the answer end time.")
 
         return (True, None)
 
