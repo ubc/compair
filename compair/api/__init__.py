@@ -1,10 +1,11 @@
 import mimetypes
 import os
+from functools import wraps
 
 from flask import redirect, render_template, jsonify
 from flask_login import login_required, current_user, current_app
 from flask import make_response
-from flask import send_file, url_for, redirect
+from flask import send_file, url_for, redirect, request
 from flask_restful.reqparse import RequestParser
 
 from bouncer.constants import READ
@@ -204,7 +205,27 @@ def register_api_blueprints(app):
             pdf_lib_folder=prefix + 'pdf.js-viewer'
         )
 
+    def force_ms_office_refresh(f):
+        """
+        Hack for opening ComPAIR attachments from Excel etc tools.
+        MS office doesn't share browser sessions, causing authorization error even
+        when the user has a valid ComPAIR session opened in browser.
+        https://support.microsoft.com/en-us/help/899927/you-are-redirected-to-a-logon-page-or-an-error-page-or-you-are-prompte
+        https://stackoverflow.com/questions/2653626/why-are-cookies-unrecognized-when-a-link-is-clicked-from-an-external-source-i-e
+        """
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if any(agent in request.headers.get('User-Agent', '') for agent in ['ms-office', 'PowerPoint', 'Excel', 'Word']):
+                # Generate an empty response with header telling the actual browser to refresh
+                response = make_response('')
+                response.headers['Refresh'] = '0'
+                return response
+            return f(*args, **kwargs)
+
+        return decorated_function
+
     @app.route('/app/<regex("attachment|report"):file_type>/<file_name>')
+    @force_ms_office_refresh
     @login_required
     def file_retrieve(file_type, file_name):
         file_dirs = {
