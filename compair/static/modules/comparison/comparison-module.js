@@ -244,13 +244,13 @@ module.controller(
                                 } else {
                                     Toaster.success("Comparison Submitted", "Your assignment is now complete. Way to go!");
                                     $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                    $location.path('/course/' + $scope.courseId);
+                                    $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId);
                                 }
                             },
                             function(ret) {
                                 Toaster.success("Comparison Submitted");
                                 $scope.preventExit = false; //user has saved comparison, does not need warning when leaving page
-                                $location.path('/course/' + $scope.courseId);
+                                $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId);
                             }
                         );
                     }
@@ -360,7 +360,7 @@ module.controller(
                         $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId + '/self_evaluation');
                     } else {
                         Toaster.success("Self-Evaluation Submitted", "Your assignment is now complete. Way to go!");
-                        $location.path('/course/' + $scope.courseId);
+                        $location.path('/course/' + $scope.courseId + '/assignment/' + $scope.assignmentId);
                     }
                 }
             ).finally(function() {

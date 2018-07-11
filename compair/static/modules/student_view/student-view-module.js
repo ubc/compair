@@ -13,8 +13,8 @@ var module = angular.module('ubc.ctlt.compair.studentview',
 
 module.controller(
     "StudentViewController",
-    [ "$scope", "UserResource", "ClassListResource", "Session", "$uibModalInstance",
-    function($scope, UserResource, ClassListResource, Session, $uibModalInstance) {
+    [ "$scope", "UserResource", "ClassListResource", "Session", "$uibModalInstance", "Toaster",
+    function($scope, UserResource, ClassListResource, Session, $uibModalInstance, Toaster) {
         $scope.studentView = $scope.studentView || {};
 
         $scope.submitted = false;
@@ -45,6 +45,8 @@ module.controller(
                 }, function() {
                     $scope.submitted = false;
                 });
+
+            Toaster.success("Student View Enabled", 'You are now viewing ComPAIR as a student.');
         };
     }
 ]);

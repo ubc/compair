@@ -74,7 +74,7 @@ class AnswerCommentListAPI(Resource):
             answer_uuids.extend(params['answer_ids'].split(','))
 
         if not answer_uuids and not params['ids'] and not params['assignment_id'] and not params['user_ids']:
-            abort(404, title="Replies Unavailable", message="There was a problem getting the replies for this answer. Please try again.")
+            abort(404, title="Feedback Unavailable", message="There was a problem getting the feedback for this answer. Please try again.")
 
         conditions = []
 
@@ -88,7 +88,7 @@ class AnswerCommentListAPI(Resource):
             .all() if answer_uuids else []
         if answer_uuids and not answers:
             # non-existing answer ids.
-            abort(404, title="Replies Unavailable", message="There was a problem getting the replies for this answer. Please try again.")
+            abort(404, title="Feedback Unavailable", message="There was a problem getting the feedback for this answer. Please try again.")
 
         group = current_user.get_course_group(course.id)
         course_role = current_user.get_course_role(course.id)
@@ -164,8 +164,8 @@ class AnswerCommentListAPI(Resource):
         # checking the permission
         for answer_comment in answer_comments:
             require(READ, answer_comment.answer,
-                title="Replies Unavailable",
-                message="Sorry, your role in this course does not allow you to view replies for this answer.")
+                title="Feedback Unavailable",
+                message="Sorry, your role in this course does not allow you to view feedback for this answer.")
 
         on_answer_comment_list_get.send(
             self,
@@ -184,8 +184,8 @@ class AnswerCommentListAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         require(CREATE, AnswerComment(course_id=course.id),
-            title="Reply Not Saved",
-            message="Sorry, your role in this course does not allow you to save replies for this answer.")
+            title="Feedback Not Saved",
+            message="Sorry, your role in this course does not allow you to save feedback for this answer.")
 
         answer_comment = AnswerComment(answer_id=answer.id)
 
@@ -194,7 +194,7 @@ class AnswerCommentListAPI(Resource):
         answer_comment.content = params.get("content")
         # require content not empty if not a draft
         if not answer_comment.content and not answer_comment.draft:
-            abort(400, title="Reply Not Saved", message="Please provide content in the text editor to reply and try saving again.")
+            abort(400, title="Feedback Not Saved", message="Please provide content in the text editor and try saving again.")
 
         if params.get('user_id') and current_user.system_role == SystemRole.sys_admin:
             user = User.get_by_uuid_or_404(params.get('user_id'))
@@ -211,11 +211,11 @@ class AnswerCommentListAPI(Resource):
 
         comment_type = params.get("comment_type")
         if comment_type not in comment_types:
-            abort(400, title="Reply Not Saved", message="This reply type is not recognized. Please contact support for assistance.")
+            abort(400, title="Feedback Not Saved", message="This feedback type is not recognized. Please contact support for assistance.")
         answer_comment.comment_type = AnswerCommentType(comment_type)
 
         if answer_comment.comment_type == AnswerCommentType.self_evaluation and not assignment.self_eval_grace and not allow(MANAGE, assignment):
-            abort(403, title="Self-Evaluation Not Submitted", message="Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.")
+            abort(403, title="Self-Evaluation Not Saved", message="Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.")
 
         db.session.add(answer_comment)
         db.session.commit()
@@ -252,8 +252,8 @@ class AnswerCommentAPI(Resource):
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
         require(READ, answer_comment,
-            title="Reply Unavailable",
-            message="Sorry, your role in this course does not allow you to view this reply.")
+            title="Feedback Unavailable",
+            message="Sorry, your role in this course does not allow you to view this feedback.")
 
         on_answer_comment_get.send(
             self,
@@ -274,15 +274,15 @@ class AnswerCommentAPI(Resource):
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
         require(EDIT, answer_comment,
-            title="Reply Not Saved",
-            message="Sorry, your role in this course does not allow you to save replies for this answer.")
+            title="Feedback Not Saved",
+            message="Sorry, your role in this course does not allow you to save feedback for this answer.")
 
         was_draft = answer_comment.draft
 
         params = existing_answer_comment_parser.parse_args()
         # make sure the answer comment id in the url and the id matches
         if params['id'] != answer_comment_uuid:
-            abort(400, title="Reply Not Saved", message="The reply's ID does not match the URL, which is required in order to save the reply.")
+            abort(400, title="Feedback Not Saved", message="The feedback's ID does not match the URL, which is required in order to save the feedback.")
 
         # modify answer comment according to new values, preserve original values if values not passed
         answer_comment.content = params.get("content")
@@ -296,12 +296,12 @@ class AnswerCommentAPI(Resource):
 
         comment_type = params.get("comment_type", AnswerCommentType.private.value)
         if comment_type not in comment_types:
-            abort(400, title="Reply Not Saved", message="This reply type is not recognized. Please contact support for assistance.")
+            abort(400, title="Feedback Not Saved", message="This feedback type is not recognized. Please contact support for assistance.")
 
         answer_comment.comment_type = AnswerCommentType(comment_type)
 
         if answer_comment.comment_type == AnswerCommentType.self_evaluation and not assignment.self_eval_grace and not allow(MANAGE, assignment):
-            abort(403, title="Self-Evaluation Not Submitted", message="Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.")
+            abort(403, title="Self-Evaluation Not Saved", message="Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.")
 
         # only update draft param if currently a draft
         if answer_comment.draft:
@@ -309,7 +309,7 @@ class AnswerCommentAPI(Resource):
 
         # require content not empty if not a draft
         if not answer_comment.content and not answer_comment.draft:
-            abort(400, title="Reply Not Saved", message="Please provide content in the text editor to reply and try saving again.")
+            abort(400, title="Feedback Not Saved", message="Please provide content in the text editor and try saving again.")
 
         model_changes = get_model_changes(answer_comment)
         db.session.add(answer_comment)
@@ -340,8 +340,8 @@ class AnswerCommentAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
         require(DELETE, answer_comment,
-            title="Reply Not Deleted",
-            message="Sorry, your role in this course does not allow you to delete replies for this answer.")
+            title="Feedback Not Deleted",
+            message="Sorry, your role in this course does not allow you to delete feedback for this answer.")
 
         data = marshal(answer_comment, dataformat.get_answer_comment(False))
         answer_comment.active = False

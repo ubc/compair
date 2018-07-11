@@ -30,11 +30,12 @@
 
             <div class="form-group sub-step text-center">
                 <input ng-disabled="studentViewForm.$invalid || submitted" type="submit"
-                     value="Submit" class="btn btn-success btn-lg" />
+                     value="Apply" class="btn btn-success btn-lg" />
+                    <p ng-if="submitted">
+                        <i class="fa fa-spin fa-spinner"></i>&nbsp; Enabling view...
+                    </p>
             </div>
-            <p ng-if="submitted">
-                <i class="fa fa-spin fa-spinner"></i>&nbsp; Loading...
-            </p>
+            
         </fieldset>
     </form>
 

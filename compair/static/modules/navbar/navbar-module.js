@@ -27,10 +27,10 @@ module.controller(
     "NavbarController",
     ["$scope", "$log", "$routeParams", "breadcrumbs", "AuthTypesEnabled",
         "Session", "AuthenticationService", "Authorize", "CourseResource", "UserResource",
-        "AssignmentResource", "$rootScope", "$uibModal", "ImpersonationSettings", "xAPIStatementHelper",
+        "AssignmentResource", "$rootScope", "$uibModal", "ImpersonationSettings", "xAPIStatementHelper", "Toaster",
     function NavbarController($scope, $log, $routeParams, breadcrumbs, AuthTypesEnabled,
         Session, AuthenticationService, Authorize, CourseResource, UserResource,
-        AssignmentResource, $rootScope, $uibModal, ImpersonationSettings, xAPIStatementHelper)
+        AssignmentResource, $rootScope, $uibModal, ImpersonationSettings, xAPIStatementHelper, Toaster)
     {
         $scope.breadcrumbs = breadcrumbs;
         $scope.isCollapsed = true;
@@ -138,6 +138,7 @@ module.controller(
             });
 
             Session.stop_impersonate($routeParams.courseId);
+            Toaster.success("Student View Closed", 'You are now viewing ComPAIR as yourself again.');
         };
         $scope.selectStudentView = function() {
             var modalScope = $scope.$new();
