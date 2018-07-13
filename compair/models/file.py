@@ -1,7 +1,7 @@
 import mimetypes
 
 # sqlalchemy
-from sqlalchemy.orm import column_property
+from sqlalchemy.orm import column_property, joinedload
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -17,7 +17,7 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         nullable=False)
     kaltura_media_id = db.Column(db.Integer, db.ForeignKey('kaltura_media.id', ondelete="SET NULL"),
         nullable=True)
-    name = db.Column(db.String(255), nullable=False)
+    name = db.Column(db.String(255), unique=True, nullable=False)
     alias = db.Column(db.String(255), nullable=False)
 
     # relationships
@@ -42,24 +42,15 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         return self.assignment_count + self.answer_count > 0
 
     @classmethod
-    def get_active_or_404(cls, model_id, joinedloads=[], title=None, message=None):
+    def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         if not title:
             title = "Attachment Unavailable"
         if not message:
             message = "Sorry, this attachment was deleted or is no longer accessible."
-
-        query = cls.query
-        # load relationships if needed
-        for load_string in joinedloads:
-            query.options(joinedload(load_string))
-
-        model = query.get_or_404(model_id)
-        if model is None or not model.active:
-            abort(404, title=title, message=message)
-        return model
+        return super(cls, cls).get_by_uuid_or_404(model_uuid, joinedloads, title, message)
 
     @classmethod
-    def get_active_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
+    def get_by_file_name_or_404(cls, filename, joinedloads=[], title=None, message=None):
         if not title:
             title = "Attachment Unavailable"
         if not message:
@@ -70,8 +61,8 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         for load_string in joinedloads:
             query.options(joinedload(load_string))
 
-        model = query.filter_by(uuid=model_uuid).one_or_none()
-        if model is None or not model.active:
+        model = query.filter_by(name=filename).one_or_none()
+        if model is None:
             abort(404, title=title, message=message)
         return model
 

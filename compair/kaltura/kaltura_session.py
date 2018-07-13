@@ -1,4 +1,10 @@
 import requests
+try:
+    from urlparse import urlparse
+    from urllib import quote_plus
+except ImportError:
+    from urllib.parse import urlparse
+    from urllib.parse import quote_plus
 from contextlib import contextmanager
 from flask import current_app
 from compair.core import abort
@@ -21,7 +27,20 @@ class KalturaSession(object):
         return cls._api_start(kaltura_user_id, privileges=edit+","+urirestrict)
 
     @classmethod
-    def _api_start(cls, kaltura_user_id, privileges=None):
+    def generate_direct_media_access_ks(cls, kaltura_user_id, entry_id, url, expiry=300):
+        sview = "sview:" + entry_id
+        urirestrict = ''
+        if url:
+            chunks = urlparse(url)
+            if chunks.path:
+                urirestrict = "urirestrict:" + chunks.path + '/*'
+        if not urirestrict:
+            urirestrict = "urirestrict:" + "/p/" + quote_plus(str(KalturaCore.partner_id()), '') + "/sp/*"
+
+        return str(cls._api_start(kaltura_user_id, privileges=sview+","+urirestrict, expiry=expiry))
+
+    @classmethod
+    def _api_start(cls, kaltura_user_id, privileges=None, expiry=None):
         url = KalturaCore.base_url()+"/service/session/action/start"
         params = {
             'partnerId': KalturaCore.partner_id(),
@@ -32,6 +51,8 @@ class KalturaSession(object):
         }
         if privileges:
             params['privileges'] = privileges
+        if expiry:
+            params['expiry'] = expiry
         result = requests.get(url, params=params, verify=KalturaCore.enforce_ssl())
 
         if result.status_code == 200:
