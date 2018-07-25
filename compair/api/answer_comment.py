@@ -7,7 +7,7 @@ from sqlalchemy import and_, or_
 
 from . import dataformat
 from compair.core import db, event, abort
-from compair.authorization import require, allow, USER_IDENTITY
+from compair.authorization import require, allow
 from compair.models import User, Answer, Assignment, Course, AnswerComment, \
     CourseRole, SystemRole, AnswerCommentType
 from .util import new_restful_api, get_model_changes, pagination_parser
@@ -65,6 +65,8 @@ class AnswerCommentListAPI(Resource):
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+
+        restrict_user = not allow(MANAGE, assignment)
 
         params = answer_comment_list_parser.parse_args()
         answer_uuids = []
@@ -173,7 +175,7 @@ class AnswerCommentListAPI(Resource):
             user=current_user,
             data={'answer_ids': ','.join([str(answer.id) for answer in answers])})
 
-        return marshal(answer_comments, dataformat.get_answer_comment(not allow(READ, USER_IDENTITY)))
+        return marshal(answer_comments, dataformat.get_answer_comment(restrict_user))
 
     @login_required
     def post(self, course_uuid, assignment_uuid, answer_uuid):
@@ -186,6 +188,8 @@ class AnswerCommentListAPI(Resource):
         require(CREATE, AnswerComment(course_id=course.id),
             title="Feedback Not Saved",
             message="Sorry, your role in this course does not allow you to save feedback for this answer.")
+
+        restrict_user = not allow(MANAGE, assignment)
 
         answer_comment = AnswerComment(answer_id=answer.id)
 
@@ -231,9 +235,9 @@ class AnswerCommentListAPI(Resource):
             user=current_user,
             course_id=course.id,
             answer_comment=answer_comment,
-            data=marshal(answer_comment, dataformat.get_answer_comment(False)))
+            data=marshal(answer_comment, dataformat.get_answer_comment(restrict_user)))
 
-        return marshal(answer_comment, dataformat.get_answer_comment())
+        return marshal(answer_comment, dataformat.get_answer_comment(restrict_user))
 
 api.add_resource(
     AnswerCommentListAPI,
@@ -255,6 +259,8 @@ class AnswerCommentAPI(Resource):
             title="Feedback Unavailable",
             message="Sorry, your role in this course does not allow you to view this feedback.")
 
+        restrict_user = not allow(MANAGE, assignment)
+
         on_answer_comment_get.send(
             self,
             event_name=on_answer_comment_get.name,
@@ -262,7 +268,7 @@ class AnswerCommentAPI(Resource):
             course_id=course.id,
             data={'assignment_id': assignment.id, 'answer_id': answer.id, 'answer_comment_id': answer_comment.id})
 
-        return marshal(answer_comment, dataformat.get_answer_comment())
+        return marshal(answer_comment, dataformat.get_answer_comment(restrict_user))
 
     @login_required
     def post(self, course_uuid, assignment_uuid, answer_uuid, answer_comment_uuid):
@@ -276,6 +282,8 @@ class AnswerCommentAPI(Resource):
         require(EDIT, answer_comment,
             title="Feedback Not Saved",
             message="Sorry, your role in this course does not allow you to save feedback for this answer.")
+
+        restrict_user = not allow(MANAGE, assignment)
 
         was_draft = answer_comment.draft
 
@@ -329,7 +337,7 @@ class AnswerCommentAPI(Resource):
             assignment.calculate_grade(answer_comment.user)
             course.calculate_grade(answer_comment.user)
 
-        return marshal(answer_comment, dataformat.get_answer_comment())
+        return marshal(answer_comment, dataformat.get_answer_comment(restrict_user))
 
     @login_required
     def delete(self, course_uuid, assignment_uuid, answer_uuid, answer_comment_uuid):
