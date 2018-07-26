@@ -310,7 +310,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
         }
         mocked_kaltura_media_add_content.return_value = {
             "id": "mock_entry_id",
-            "downloadUrl": "www.download/url.com"
+            "downloadUrl": "http://www.download/url.com"
         }
 
         kaltura_media = KalturaMedia(
@@ -376,7 +376,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             self.assertEqual(rv.json['file']['id'], kaltura_media.files.all()[0].uuid)
             self.assertEqual(kaltura_media.file_name, "uploaded_audio_file.mp3")
             self.assertEqual(kaltura_media.entry_id, "mock_entry_id")
-            self.assertEqual(kaltura_media.download_url, "www.download/url.com")
+            self.assertEqual(kaltura_media.download_url, "http://www.download/url.com")
             self.assertEqual(kaltura_media.service_url, "https://www.kaltura.com")
 
             mocked_kaltura_session_start.assert_called_once_with("test@test.com")
@@ -395,6 +395,16 @@ class FileRetrieveTests(ComPAIRAPITestCase):
 
             mocked_kaltura_media_add_content.assert_called_once_with("ks_mock", "mock_entry_id", "mocked_upload_token_id")
             mocked_kaltura_media_add_content.reset_mock()
+
+            # test direct download from kaltura via /attachment
+            kaltura_attachment_url = self.base_url + '/attachment/' + rv.json['file']['name'] + '?name=uploaded_audio_file.mp3'
+            rv = self.client.get(kaltura_attachment_url)
+            self.assertTrue(rv.location.startswith(kaltura_media.download_url))  # redirecting to Kaltura
+            mocked_kaltura_session_start.assert_called_once_with("test@test.com", \
+                expiry=60, \
+                privileges='sview:'+kaltura_media.entry_id+',urirestrict:/url.com/*'
+                )
+            mocked_kaltura_session_start.reset_mock()
 
             # use global unique identifer (user has no global unique identifer)
             current_app.config['KALTURA_USE_GLOBAL_UNIQUE_IDENTIFIER'] = True

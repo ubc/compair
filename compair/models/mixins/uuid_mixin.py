@@ -1,6 +1,8 @@
 import uuid
 import base64
 
+from sqlalchemy.orm import joinedload
+
 from compair.core import db, abort
 
 class UUIDMixin(db.Model):

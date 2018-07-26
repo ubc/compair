@@ -1,3 +1,7 @@
+try:
+    from urllib import quote_plus
+except ImportError:
+    from urllib.parse import quote_plus
 from flask import current_app
 from flask_login import current_user
 from compair.core import abort
@@ -71,3 +75,26 @@ class KalturaAPI(object):
         db.session.commit()
 
         return kaltura_media
+
+    @classmethod
+    def get_direct_access_url(cls, entry_id, download_url, expiry=300):
+        """
+            Generate a new Kaltura Session (KS) and return an URL for direct download of Kaltura media file.
+            :param entry_id: the Kaltura entry ID of the file to download
+            :param download_url: URL to download the file
+            :param expiry: optional expiry time of the KS, in seconds. Default is 300 seconds.
+            :return: a URL with KS attached for downloading the given Kaltura media file
+        """
+        kaltura_user_id = KalturaCore.user_id()
+        if current_app.config.get('KALTURA_USE_GLOBAL_UNIQUE_IDENTIFIER', False) and current_user and current_user.global_unique_identifier:
+            kaltura_user_id = current_user.global_unique_identifier
+
+        url = download_url
+        if not url:
+            abort(404, title="File Not Found",
+                message="The file is not available on Kaltura server yet. Please try again later.")
+
+        session = KalturaSession.generate_direct_media_access_ks(kaltura_user_id, entry_id, url, expiry)
+        url = url + "/ks/" + quote_plus(session, '')
+
+        return url

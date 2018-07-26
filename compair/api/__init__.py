@@ -4,9 +4,13 @@ import os
 from flask import redirect, render_template, jsonify
 from flask_login import login_required, current_user, current_app
 from flask import make_response
-from flask import send_file, url_for
+from flask import send_file, url_for, redirect
 from flask_restful.reqparse import RequestParser
 
+from bouncer.constants import READ
+from compair.authorization import require
+from compair.kaltura import KalturaAPI
+from compair.models import File
 from compair.core import event
 on_get_file = event.signal('GET_FILE')
 
@@ -208,6 +212,32 @@ def register_api_blueprints(app):
             'report': app.config['REPORT_FOLDER']
         }
         file_path = '{}/{}'.format(file_dirs[file_type], file_name)
+        params = attachment_download_parser.parse_args()
+
+        if file_type == 'attachment':
+            attachment = File.get_by_file_name_or_404(
+                file_name,
+                joinedloads=['answers', 'assignments']
+            )
+
+            for answer in attachment.answers:
+                require(READ, answer,
+                    title="Attachment Unavailable",
+                    message="Sorry, your role does not allow you to view the attachment.")
+
+            for assignment in attachment.assignments:
+                require(READ, assignment,
+                    title="Attachment Unavailable",
+                    message="Sorry, your role does not allow you to view the attachment.")
+
+            # If attachment is in Kaltura, redirect the user
+            if attachment.kaltura_media and KalturaAPI.enabled():
+                entry_id = attachment.kaltura_media.entry_id
+                download_url = attachment.kaltura_media.download_url
+                if entry_id:
+                    # Short-lived session of 60 seconds for user to start the media download
+                    kaltura_url = KalturaAPI.get_direct_access_url(entry_id, download_url, 60)
+                    return redirect(kaltura_url)
 
         if not os.path.exists(file_path):
             return make_response('invalid file name', 404)
@@ -218,7 +248,6 @@ def register_api_blueprints(app):
         as_attachment = False
 
         if file_type == 'attachment' and mimetype != "application/pdf":
-            params = attachment_download_parser.parse_args()
             attachment_filename = params.get('name') #optionally set the download file name
             as_attachment = True
 
