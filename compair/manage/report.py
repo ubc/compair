@@ -114,10 +114,12 @@ def create(assignment_id):
         .options(joinedload('criteria_scores')) \
         .filter(and_(
             Answer.assignment_id == assignment.id,
+            Answer.active == True,
             Answer.draft == False,
             Answer.practice == False
         )) \
-        .order_by(Answer.assignment_id, Answer.user_id)
+        .order_by(Answer.assignment_id, Answer.user_id) \
+        .all()
 
     scores = []
     for answer in answers:
@@ -138,7 +140,7 @@ def create(assignment_id):
                 criterion_score.loses, criterion_score.opponents])
 
     write_csv(
-        file_name + 'scores.csv',
+        file_name + 'scores_final.csv',
         ['User Id', 'Answer Id', 'Criterion Id', 'Criterion', 'Score', 'Rounds', 'Wins', 'Loses', 'Opponents'],
         scores
     )
@@ -163,7 +165,9 @@ def create(assignment_id):
         .order_by(Comparison.modified, Comparison.user_id) \
         .all()
 
-    for comparison in comparisons:
+    round_length = float(len(answers)) / 2
+    round_number = 0
+    for index, comparison in enumerate(comparisons):
         answer1_id = comparison.answer1_id
         answer2_id = comparison.answer2_id
 
@@ -283,6 +287,51 @@ def create(assignment_id):
                 answer2_id, answer2_score_before.score, answer2_score_after.score,
                 winner_id, comparison_criterion.modified
             ])
+
+        if (index+1) % round_length < 1:
+            round_number += 1
+
+            round_scores = []
+            for answer in answers:
+                score = scores['overall'].get(answer.id, ScoredObject(
+                    key=answer2_id,
+                    score=elo.INITIAL,
+                    variable1=elo.INITIAL,
+                    variable2=None,
+                    rounds=0,
+                    wins=0,
+                    loses=0,
+                    opponents=0
+                ))
+
+                round_scores.append([answer.user_id, answer.id, None, 'Overall',
+                    score.score, score.rounds, score.wins,
+                    score.loses, score.opponents])
+
+                comparison_criteria = comparison.comparison_criteria
+                comparison_criteria.sort(key=lambda x: x.criterion_id)
+                for comparison_criterion in comparison_criteria:
+                    criterion = next(criterion for criterion in criteria if criterion.id == comparison_criterion.criterion_id)
+                    criterion_score = scores[criterion.id].get(answer.id, ScoredObject(
+                        key=answer2_id,
+                        score=elo.INITIAL,
+                        variable1=elo.INITIAL,
+                        variable2=None,
+                        rounds=0,
+                        wins=0,
+                        loses=0,
+                        opponents=0
+                    ))
+
+                    round_scores.append([answer.user_id, answer.id, criterion.id, criterion.name,
+                        criterion_score.score, criterion_score.rounds, criterion_score.wins,
+                        criterion_score.loses, criterion_score.opponents])
+
+            write_csv(
+                file_name + 'scores_round_' + str(round_number) + '.csv',
+                ['User Id', 'Answer Id', 'Criterion Id', 'Criterion', 'Score', 'Rounds', 'Wins', 'Loses', 'Opponents'],
+                round_scores
+            )
 
     write_csv(
         file_name + 'comparisons.csv',

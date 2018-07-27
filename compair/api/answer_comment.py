@@ -191,6 +191,8 @@ class AnswerCommentListAPI(Resource):
 
         restrict_user = not allow(MANAGE, assignment)
 
+        restrict_user = not allow(MANAGE, assignment)
+
         answer_comment = AnswerComment(answer_id=answer.id)
 
         params = new_answer_comment_parser.parse_args()
@@ -261,6 +263,8 @@ class AnswerCommentAPI(Resource):
 
         restrict_user = not allow(MANAGE, assignment)
 
+        restrict_user = not allow(MANAGE, assignment)
+
         on_answer_comment_get.send(
             self,
             event_name=on_answer_comment_get.name,
@@ -282,6 +286,8 @@ class AnswerCommentAPI(Resource):
         require(EDIT, answer_comment,
             title="Feedback Not Saved",
             message="Sorry, your role in this course does not allow you to save feedback for this answer.")
+
+        restrict_user = not allow(MANAGE, assignment)
 
         restrict_user = not allow(MANAGE, assignment)
 
