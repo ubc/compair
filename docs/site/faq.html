@@ -41,8 +41,8 @@
                       <li><a href="workflow.html">Workflow</a></li>
                       <li><a href="examples.html">Examples</a></li>
                       <li><a href="best-practices.html">Best Practices</a></li>
-                      <li class="active"><a href="faq.html">FAQ</a></li>
                       <li><a href="get-started.html">Get Started</a></li>
+                      <li class="active"><a href="faq.html">FAQ</a></li>
                   </ul>
                 </div>
               </div>
@@ -53,64 +53,93 @@
                 <div class="col-md-8">
                     <h1 class="main-heading">Frequently Asked Questions <img src="img/compair-logo-scale.png" alt="ComPAIR Home" class="pull-right"></h1>
 
-                    <p>ComPAIR is a flexible learning application that may be used in a variety of ways across disciplines to encourage richer peer feedback and deeper critical thinking. Based on its use so far, here are common questions (with answers) from instructors, students, and support staff.</p>
+                    <p class="intro-text">ComPAIR has been used in active courses at the University of British Columbia and other institutions since 2014. These are questions (with answers) from instructors, students, and support staff that have come up over the years.</p>
 
-                    <h3 class="text-center highlight-heading">To answer the <span class="green-text">#1 question</span>: YES! ComPAIR is <span class="green-text">open source</span>, meaning everyone can use and modify it <span class="green-text">free of charge</span></h3>
+                    <h3 class="text-center highlight-heading"><span class="text-primary glyphicon glyphicon-thumbs-up"></span><br /><em>To answer our #1 question first:</em><br /> YES! Anyone can use or modify ComPAIR <strong>free of charge</strong>,<br /> as it is an <strong>open source</strong> application</h3>
 
-                    <h2>Instructor questions</h2>
+                    <h2 class="sub-heading"><span class="glyphicon glyphicon-education"></span> Instructor questions</h2>
                     <dl>
-                        <dt>How do I make assignments anonymous?</dt>
-                        <dd>ComPAIR by default encourages anonymity by providing students with anonymous display names when they register. Additionally, comparisons never show any identifying information (including display names). You can reinforce anonymity by reminding students <em>not</em> to put identifying information in their display names or in their answer submissions (especially if these are file uploads).</dd>
-                        <dt>How do I enable scoring in ComPAIR? / Why don't I see scores for answers in ComPAIR?</dt>
-                        <dd>To enable the tracking of answer scores, you must choose the "Adaptive" answer pair selection option (the default) in the "Comparison Settings" when creating or editing an assignment. Note that this cannot be changed once comparing has begun. Scores are not tracked (and therefore not visible) if the "Random" answer pair selection option is used. This is because when answers are paired randomly with one another, an unreasonable number of comparisons is required to produce a meaningful score.</dd>
-                        </dl>
-                        <dl>
-                        <dt>Can I use scores for expedited / crowd-sourced grading of answers?</dt>
-                        <dd>Instructors have chosen to use ComPAIR's scoring/ranking of answers for grading, primarily by chunking the answers into rough top, middle, and bottom groups and assigning a grade to each. However, we caution against relying on ComPAIR scores for grading without any additional validation. The algorithm behind the scores has not yet been thoroughly vetted for this purpose and ultimately relies on the skills and training of novice users (students) to provide accurate, well-informed rankings of their peers.</dd>
+                        <dt>How are comparisons assigned?</dt>
+                        <dd>ComPAIR automatically selects answer pairs acccording to the answer pair selection option you choose when creating or editing an assignment; pairs cannot be assigned manually. The options are "Adaptive" (tracks <a href="best-practices.html#scoring">dynamic scores</a> for each answer and pairs similarly-scored answers) or "Random" (pairs answers based on chance alone). With either option, students will <em>not</em> see their own (or their group's) answer in the pairs, and all answers will appear in roughly the same number of pairs, meaning each will receive about the same amount of peer feedback.</dd>
+                        
+                        <dt>How do I enable scores in ComPAIR? / Why don't I see scores in ComPAIR?</dt>
+                        <dd>To enable the tracking of <a href="best-practices.html#scoring">answer scores</a>, choose the "Adaptive" answer pair selection option (the default) when creating or editing an assignment. Note that this cannot be changed once comparing has begun. Scores are not tracked (and therefore not visible) if the "Random" answer pair selection option is used. This is because when answers are paired randomly with one another, an unreasonable number of comparisons is required to produce a meaningful score.</dd>
+                        
+                        <dt>Can I use the scores for marking?</dt>
+                        <dd>Instructors have chosen to use ComPAIR's scoring/ranking of answers for grading, primarily by chunking the answers into rough top, middle, and bottom groups and assigning a grade to each. However, we caution against relying on ComPAIR scores for grading without any additional validation. Our internal research so far indicates that ComPAIR may not be reliable for grading in this fashion, as it ultimately relies on the skills and training of novice users (students) to provide accurate, well-informed rankings of their peers' answers. Many instructors have found it fairer to grade students with some combination of their participation (in answering, comparing, self-evaluating) and the quality of the peer feedback they give.</dd>
+                        
+                        <dt>Are assignments / peer reviews anonymous?</dt>
+                        <dd>ComPAIR by default encourages peer-to-peer anonymity by providing students with anonymous display names when they register. Additionally, comparisons never show any identifying information (including display names). You can reinforce anonymity by reminding students <em>not</em> to put identifying information in their display names or in their answer submissions (especially if these are file uploads).</dd>
+                         
+                        <dt>How do I create a group assignment?</dt>
+                        <dd>Select the group option when creating or editing an assignment, and make sure you've set up the right number of groups in ComPAIR to work with the number of comparisons you require. Note that this cannot be changed once answering has begun. When you use a group assignment, one answer will be requested from each group but each group member must complete the required comparisons and self-evaluation (if enabled) individually.</dd>
+                        
+                        <dt>How do I submit on behalf of a student / deal with late answers for an assignment?</dt>
+                        <dd>To submit on behalf of a student, click the "Answer" button for the assignment, then select the student's name from the "Submit As" dropdown. From the students' perspective, these submissions will appear as their own and they will see any peer feedback left for these answers.</dd>
                     </dl>
 
-                    <h2>Student questions</h2>
+                    <h2 class="sub-heading"><span class="glyphicon glyphicon-user"></span> Student questions</h2>
                     <dl>
                         <dt>Why can't I log in?</dt>
-                        <dd>First, confirm your registration in the course using ComPAIR. For UBC students, see if you have access to the course in Canvas; if you can't access the course in Canvas, contact <a href="https://it.ubc.ca/got-question-about-it-products-and-support#helpdesk" target="_blank">UBC IT support</a>. Second, if your course uses an external site (like Canvas), make sure you enter the application initially by clicking the ComPAIR link from that site. This properly activates your ComPAIR account for the course.</dd>
+                        <dd>First, confirm your registration in the course using ComPAIR. For UBC students, see if you have access to the course in Canvas; if you can't access the course in Canvas, contact <a href="https://it.ubc.ca/got-question-about-it-products-and-support#helpdesk" target="_blank">UBC IT support</a>. Second, if your course uses an external site (like Canvas), make sure you enter the application initially by clicking the ComPAIR link from that site. This properly activates your ComPAIR account for the course. If your course does not use an external site, contact your instructor or TA for help.</dd>
+                        
                         <dt>Why can't I answer / compare / self-evaluate?</dt>
-                        <dd>Each phase of a ComPAIR assignment may have a set start and end date. If you missed the period to answer, compare, or self-evaluate, you will be unable to complete that phase, although instructors may agree to upload an answer on your behalf. Additionally, if you missed answering, you will be unable to self-evaluate, since ComPAIR will think you have nothing to evaluate.</dd>
+                        <dd>Each phase of a ComPAIR assignment may have a hard start and end date. If you missed the period to answer, compare, or self-evaluate, you will be unable to complete that phase, although an instructor may agree to upload an answer on your behalf (if you have created a ComPAIR account properly). Additionally, if you missed answering, you will be unable to self-evaluate, since ComPAIR will think you have nothing <em>to</em> evaluate.</dd>
+                        
+                        <dt>When I pick one student's answer over another, will the other student get a bad mark?</dt>
+                        <dd>No, your choice does not directly assign a mark to either answer. Depending on how instructors set up ComPAIR assignments, the application may track a score for each answer. However, this score is influenced by how answers are chosen in <em>all</em> the answer pairs they appear in, not just the ones you see and respond to.</dd>
+                        
+                        <dt>Can I undo / redo / edit a comparison?</dt>
+                        <dd>Once you submit a comparison, you cannot change your answer selection or peer feedback for that answer pair. However, if you happen to see the same answer again in a later answer pair, you will have to option to revise your peer feedback for that answer only.</dd>
+                        
                         <dt>Where can I find my peer feedback?</dt>
                         <dd>Once you click into any assignment, you should see a tab called "Your Answer + Its Feedback". Peer feedback will appear underneath your answer, with private feedback visible only to you (and the instructors/TAs) and public feedback visible to everyone. If you don't see much (or any) feedback, your answer was likely submitted later and couldn't be included in many (or any) comparisons for feedback.</dd>
+                        
+                        <dt>Am I anonymous in ComPAIR?</dt>
+                        <dd>Instructors and TAs will always know who is who in ComPAIR, but the application by default encourages peer-to-peer anonymity by providing an anonymous display name when you register. Additionally, comparisons never show any identifying information (including display names). You can stay anonymous by <em>not</em> putting identifying information in your display name or in your answer submissions (especially if these are file uploads).</dd>
                     </dl>
 
-                    <h2>Technical questions</h2>
+                    <h2 class="sub-heading"><span class="glyphicon glyphicon-wrench"></span> Technical questions</h2>
                     <dl>
+                        <dt>Where can I get UBC-specific help with using ComPAIR?</dt>
+                        <dd>UBC faculty, staff, and students can email <a href="mailto:compair.support@ubc.ca" target="_self">compair.support@ubc.ca</a> or contact the <a href="http://lthub.ubc.ca/support/lt-hub/" target="_blank">Learning Technology Hub <i class="glyphicon glyphicon-new-window"></i></a> for one-on-one assistance. All issues can be reported at these contact points, and support staff will escalate any unresolved problems to the development team.</dd>
+                        
                         <dt>How do I get ComPAIR working at my school/university?</dt>
-                        <dd>ComPAIR is a self-hosted application, meaning it does not run from one central location for everyone; the code needs to be downloaded and installed locally. Technical support staff can check out our <a href="get-started.html">get started documentation</a> for installation options.</dd>
+                        <dd>ComPAIR is a self-hosted application, meaning it does not run from one central location for everyone; the code needs to be <a href="https://github.com/ubc/compair" target="_blank">downloaded <i class="glyphicon glyphicon-new-window"></i></a> and installed locally. Technical support staff can check out our <a href="get-started.html#outside-ubc">get started documentation</a> for installation options.</dd>
+                        
                         <dt>Can you help with setup at my school/university?</dt>
-                        <dd>If you have specific questions about setup not answered in our documentation or <a href="https://github.com/ubc/compair/blob/master/README.md" target="_blank">Github README <i class="glyphicon glyphicon-new-window"></i></a>, please post them on our <a href="https://groups.google.com/forum/#!forum/compair" target="_blank">ComPAIR Google group <i class="glyphicon glyphicon-new-window"></i></a>, which is actively monitored by the UBC ComPAIR team and community.</dd>
-                        <dt>Where is the student data stored?</dt>
-                        <dd>At UBC, the ComPAIR student data is stored on servers located on campus, making this application FIPPA-compliant. If you're external to UBC, please contact technical support staff for information about your local storage situation.</dd>
+                        <dd>If you have specific questions about setup not answered in our documentation or <a href="https://github.com/ubc/compair/blob/master/README.md" target="_blank">Github README <i class="glyphicon glyphicon-new-window"></i></a>, please post them to our <a href="https://groups.google.com/forum/#!forum/compair" target="_blank">ComPAIR Google group <i class="glyphicon glyphicon-new-window"></i></a>, which is actively monitored by the UBC ComPAIR team and community.</dd>
+                        
+                        <dt>Where is the student data stored? / Is this FIPPA-compliant?</dt>
+                        <dd>At UBC, the ComPAIR student data is stored on Canadian servers located on campus, making this application fully FIPPA-compliant. If you're external to UBC, please contact technical support staff for information about your local storage situation.</dd>
+                        
                         <dt>What browsers does this application support?</dt>
-                        <dd>Supported browsers include Firefox, Chrome, Safari, and IE9+.</dd>
+                        <dd>Supported browsers include Chrome, Firefox, Safari, and IE9+.</dd>
+                        
                         <dt>Is ComPAIR mobile-friendly?</dt>
                         <dd>ComPAIR uses responsive design, meaning it adjusts to fit the size of the screen it is used on. This makes it mobile-friendly and without having to download a special app; instead, anyone can go directly to the URL from their mobile device.</dd>
                     </dl>
+                    
+                    <h2 class="sub-heading"><span class="glyphicon glyphicon-link"></span> Additional resources</h2>
+                        <ul>
+                            <li>ComPAIR Article - <a href="http://tlijournal.com/tli/index.php/TLI/article/view/156/191" target="_blank">"ComPAIR: A New Online Tool Using Adaptive Comparative Judgement to Support Learning with Peer Feedback" <i class="glyphicon glyphicon-new-window"></i></a></li>
+                            <li>Related Article - <a href="http://www.tandfonline.com/doi/full/10.1080/0969594X.2012.665354?scroll=top&needAccess=true#aHR0cDovL3d3dy50YW5kZm9ubGluZS5jb20vZG9pL3BkZi8xMC4xMDgwLzA5Njk1OTRYLjIwMTIuNjY1MzU0P25lZWRBY2Nlc3M9dHJ1ZUBAQDA=">"The method of Adaptive Comparative Judgement" <i class="glyphicon glyphicon-new-window" target="_blank"></i></a></li>
+                            <li>ComPAIR Presentation Slides - <a href="https://docs.google.com/presentation/d/1zmRi7n-i83AcSpuLeL-s7kUET52F4kczew577OtTeng/edit?usp=sharing" target="_blank">BCNet Conference 2017 <i class="glyphicon glyphicon-new-window"></i></a></li>
+                        </ul>
+                    
                     <p class="text-center"><a href="https://compairdemo.ctlt.ubc.ca" target="_blank" class="btn btn-success btn-lg" role="button">Try the demo <i class="glyphicon glyphicon-new-window"></i></a> &nbsp; <a href="https://github.com/ubc/compair" target="_blank" class="btn btn-success btn-lg" role="button">Download our code <i class="glyphicon glyphicon-new-window"></i></a></p>
                 </div>
                 <div class="col-md-4">
                     <div class="fixed-position">
                         <h2 class="intro-list-heading">Get to know ComPAIR</h2>
+                        <p class="alert alert-light">ComPAIR is an open-source peer review application that pairs student answers for deeper learning through comparison of peer work</p>
                         <ul class="intro-list">
                             <li><span>Understand the <a href="workflow.html">assignment workflow</a> in the application from instructor and student perspectives.</span></li>
                             <li><span>Read about <a href="examples.html">real-life examples &raquo;</a> from English, Physics, and Math courses at the University of British Columbia.</span></li>
                             <li><span>Learn about the recommended <a href="best-practices.html">best practices &raquo;</a> based on experience and research so far.</span></li>
-                            <li class="side-selected"><i class="glyphicon glyphicon-menu-right pull-left"></i> <span>Explore <strong>frequently asked questions</strong> from instructor, student, and technical perspectives.</span></li>
                             <li><span>Get started with <a href="get-started.html">basic documentation &raquo;</a> for using ComPAIR as a standalone application or as an integration.</span></li>
+                            <li class="side-selected"><i class="glyphicon glyphicon-menu-right pull-left"></i> <span>Explore <strong>frequently asked questions</strong> from instructor, student, and technical perspectives.</span></li>
                             <li><a href="https://compairdemo.ctlt.ubc.ca" target="_blank" class="btn btn-primary">Try Demo <i class="glyphicon glyphicon-new-window"></i></a> &nbsp; <a href="https://github.com/ubc/compair" target="_blank" class="btn btn-primary">Download Code <i class="glyphicon glyphicon-new-window"></i></a></li>
-                        </ul>
-                        <h3>Additional resources</h3>
-                        <ul>
-                            <li><a href="http://tlijournal.com/tli/index.php/TLI/article/view/156/191" target="_blank">ComPAIR Article - <em>Teaching &amp; Learning Inquiry</em> - September 2017 <i class="glyphicon glyphicon-new-window"></i></a></li>
-                            <li><a href="https://docs.google.com/presentation/d/1zmRi7n-i83AcSpuLeL-s7kUET52F4kczew577OtTeng/edit?usp=sharing" target="_blank">ComPAIR Presentation Slides - BCNet Conference 2017 <i class="glyphicon glyphicon-new-window"></i></a></li>
-                            <li><a href="https://isit.arts.ubc.ca/compair/" target="_blank">ComPAIR Overview - UBC Arts Instructional Support and Information Technology <i class="glyphicon glyphicon-new-window"></i></a></li>
-                            <li><a href="http://www.tandfonline.com/doi/full/10.1080/0969594X.2012.665354?scroll=top&needAccess=true#aHR0cDovL3d3dy50YW5kZm9ubGluZS5jb20vZG9pL3BkZi8xMC4xMDgwLzA5Njk1OTRYLjIwMTIuNjY1MzU0P25lZWRBY2Nlc3M9dHJ1ZUBAQDA=" target="_blank">Related Article - "The method of Adaptive Comparative Judgement" (Pollitt, 2012) <i class="glyphicon glyphicon-new-window"></i></a></li>
                         </ul>
                     </div>
                </div>
@@ -119,7 +148,7 @@
             <hr>
 
             <footer>
-                <p>&copy; University of British Columbia | <a href="http://ctlt.ubc.ca/" target="_blank">Centre for Teaching, Learning and Technology <i class="glyphicon glyphicon-new-window"></i></a></p>
+                <p>&copy; University of British Columbia | Centre for Teaching, Learning and Technology</p>
             </footer>
 
         </div> <!-- /container -->
