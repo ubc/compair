@@ -41,10 +41,10 @@
         <legend>Schedule</legend>
         <div class="row">
             <div class="col-md-6 form-group">
-                <label>Course Begins</label><br />
+                <label class="required-star">Course Begins</label><br />
                 <div class="assignment-date">
                     <span class="input-group">
-                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_start.date"
+                        <input type="text" class="form-control" required uib-datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_start.date"
                             is-open="duplicateCourse.date.course_start.opened"
                             datepicker-options="{ maxDate: duplicateCourse.date.course_end.date }" />
                         <span class="input-group-btn">
@@ -196,7 +196,7 @@
     </fieldset>
 
     <div class="form-group text-center">
-        <a class="btn btn-success btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
+        <a class="btn btn-success btn-lg" value="Next" ng-click="duplicateCourseForm.$invalid || duplicateNext()"
             ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
         <a class="btn btn-default btn-lg mirror-submit" value="Back" ng-click="showAssignments= canGoBack(duplicateCourseForm) ? !showAssignments : showAssignments;"
             ng-show="showAssignments">&laquo; Back</a>

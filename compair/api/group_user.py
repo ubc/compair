@@ -16,7 +16,7 @@ from compair.models import UserCourse, User, Course, CourseRole, \
 from .util import new_restful_api, get_model_changes
 
 user_list_parser = RequestParser()
-user_list_parser.add_argument('ids', type=list, required=True, default=[], location='json')
+user_list_parser.add_argument('ids', type=list, required=True, nullable=False, default=[], location='json')
 
 group_user_api = Blueprint('group_user_api', __name__)
 api = new_restful_api(group_user_api)

@@ -52,7 +52,7 @@ describe('course-module', function () {
     };
     var mockCourse = {
         "available": true,
-        "start_date": null,
+        "start_date": "2015-01-02T23:00:00",
         "end_date": null,
         "assignment_count": 0,
         "student_assignment_count": 0,
@@ -113,7 +113,7 @@ describe('course-module', function () {
                     "year": 2015,
                     "term": "Winter",
                     "sandbox": false,
-                    "start_date": null,
+                    "start_date": "2015-01-02T23:00:00",
                     "end_date": null,
                     "assignment_count": 0,
                     "student_assignment_count": 0,
@@ -153,6 +153,8 @@ describe('course-module', function () {
                 it('should be able to save new course', function () {
                     $rootScope.course = angular.copy(course);
                     $rootScope.course.id = undefined;
+                    $rootScope.date.course_start.date = new Date(2015,1,2,0,0,0,0);
+                    $rootScope.date.course_start.time = new Date(2015,1,2,0,0,0,0);
                     $httpBackend.expectPOST('/api/courses', $rootScope.course).respond(angular.merge({}, course, {id: "2abcABC123-abcABC123_Z"}));
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);
@@ -331,7 +333,7 @@ describe('course-module', function () {
                     "year": 2015,
                     "term": "Winter",
                     "sandbox": false,
-                    "start_date": null,
+                    "start_date": "2015-01-02T23:00:00",
                     "end_date": null,
                     "assignment_count": 0,
                     "student_assignment_count": 0,
@@ -357,6 +359,8 @@ describe('course-module', function () {
                     $rootScope.course = angular.copy(course);
                     var newCourseId = "3abcABC123-abcABC123_Z"
                     $rootScope.course.id = undefined;
+                    $rootScope.date.course_start.date = new Date(2015,1,2,0,0,0,0);
+                    $rootScope.date.course_start.time = new Date(2015,1,2,0,0,0,0);
                     $httpBackend.expectPOST('/api/courses', $rootScope.course).respond(angular.merge({}, course, {id: newCourseId}));
                     $rootScope.save();
                     expect($rootScope.submitted).toBe(true);

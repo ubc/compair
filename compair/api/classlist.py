@@ -27,7 +27,7 @@ new_course_user_parser = RequestParser()
 new_course_user_parser.add_argument('course_role')
 
 update_users_course_role_parser = RequestParser()
-update_users_course_role_parser.add_argument('ids', type=list, required=True, default=[], location='json')
+update_users_course_role_parser.add_argument('ids', type=list, required=True, nullable=False, default=[], location='json')
 update_users_course_role_parser.add_argument('course_role', default=CourseRole.dropped.value)
 
 

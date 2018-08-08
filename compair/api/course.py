@@ -19,23 +19,23 @@ course_api = Blueprint('course_api', __name__)
 api = new_restful_api(course_api)
 
 new_course_parser = reqparse.RequestParser()
-new_course_parser.add_argument('name', required=True, help='Course name is required.')
-new_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
-new_course_parser.add_argument('term', required=True, help='Course term/semester is required.')
+new_course_parser.add_argument('name', required=True, nullable=False, help='Course name is required.')
+new_course_parser.add_argument('year', type=int, required=True, nullable=False, help='Course year is required.')
+new_course_parser.add_argument('term', required=True, nullable=False, help='Course term/semester is required.')
 new_course_parser.add_argument('sandbox', type=bool, default=False)
-new_course_parser.add_argument('start_date', default=None)
+new_course_parser.add_argument('start_date', required=True, nullable=False, help='Course start date is required.')
 new_course_parser.add_argument('end_date', default=None)
 
 existing_course_parser = new_course_parser.copy()
-existing_course_parser.add_argument('id', required=True, help='Course id is required.')
+existing_course_parser.add_argument('id', required=True, nullable=False, help='Course id is required.')
 
 
 duplicate_course_parser = reqparse.RequestParser()
-duplicate_course_parser.add_argument('name', required=True, help='Course name is required.')
-duplicate_course_parser.add_argument('year', type=int, required=True, help='Course year is required.')
-duplicate_course_parser.add_argument('term', required=True, help='Course term/semester is required.')
+duplicate_course_parser.add_argument('name', required=True, nullable=False, help='Course name is required.')
+duplicate_course_parser.add_argument('year', type=int, required=True, nullable=False, help='Course year is required.')
+duplicate_course_parser.add_argument('term', required=True, nullable=False, help='Course term/semester is required.')
 duplicate_course_parser.add_argument('sandbox', type=bool, default=False)
-duplicate_course_parser.add_argument('start_date', default=None)
+duplicate_course_parser.add_argument('start_date', required=True, nullable=False, help='Course start date is required.')
 duplicate_course_parser.add_argument('end_date', default=None)
 # has to add location parameter, otherwise MultiDict will screw up the list
 duplicate_course_parser.add_argument('assignments', type=list, default=[], location='json') #only ids and dates
@@ -65,7 +65,7 @@ class CourseListAPI(Resource):
             year=params.get("year"),
             term=params.get("term"),
             sandbox=params.get("sandbox"),
-            start_date=params.get('start_date', None),
+            start_date=params.get('start_date'),
             end_date=params.get('end_date', None)
         )
         if new_course.start_date is not None:
@@ -153,7 +153,7 @@ class CourseAPI(Resource):
         course.term = params.get("term", course.term)
         course.sandbox = params.get("sandbox", course.sandbox)
 
-        course.start_date = params.get("start_date", None)
+        course.start_date = params.get("start_date")
         if course.start_date is not None:
             course.start_date = datetime.datetime.strptime(
                 course.start_date,
@@ -229,7 +229,9 @@ class CourseDuplicateAPI(Resource):
             params.get("end_date"), '%Y-%m-%dT%H:%M:%S.%fZ'
         ) if params.get("end_date") else None
 
-        if start_date and end_date and start_date > end_date:
+        if start_date is None:
+            abort(400, title="Course Not Saved", message="Course start time is required.")
+        elif start_date and end_date and start_date > end_date:
             abort(400, title="Course Not Saved", message="Course end time must be after course start time.")
 
         assignments = [assignment for assignment in course.assignments if assignment.active]

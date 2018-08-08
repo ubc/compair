@@ -28,7 +28,7 @@ comparison_api = Blueprint('comparison_api', __name__)
 api = new_restful_api(comparison_api)
 
 update_comparison_parser = RequestParser()
-update_comparison_parser.add_argument('comparison_criteria', type=list, required=True, location='json')
+update_comparison_parser.add_argument('comparison_criteria', type=list, required=True, nullable=False, location='json')
 update_comparison_parser.add_argument('draft', type=bool, default=False)
 
 # events

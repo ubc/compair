@@ -19,10 +19,10 @@ group_api = Blueprint('group_api', __name__)
 api = new_restful_api(group_api)
 
 new_group_parser = RequestParser()
-new_group_parser.add_argument('name', required=True, help="Group name is required.")
+new_group_parser.add_argument('name', required=True, nullable=False, help="Group name is required.")
 
 existing_group_parser = new_group_parser.copy()
-existing_group_parser.add_argument('id', required=True, help="Group id is required.")
+existing_group_parser.add_argument('id', required=True, nullable=False, help="Group id is required.")
 
 # events
 on_group_create = event.signal('GROUP_CREATE')

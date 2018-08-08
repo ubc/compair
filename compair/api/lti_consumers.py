@@ -21,13 +21,13 @@ def non_blank_text(value):
         return None if text_type(value).strip() == "" else text_type(value)
 
 new_consumer_parser = reqparse.RequestParser()
-new_consumer_parser.add_argument('oauth_consumer_key', type=str, required=True)
+new_consumer_parser.add_argument('oauth_consumer_key', type=str, required=True, nullable=False)
 new_consumer_parser.add_argument('oauth_consumer_secret', type=str)
 new_consumer_parser.add_argument('global_unique_identifier_param', type=non_blank_text)
 new_consumer_parser.add_argument('student_number_param', type=non_blank_text)
 
 existing_consumer_parser = new_consumer_parser.copy()
-existing_consumer_parser.add_argument('id', type=str, required=True)
+existing_consumer_parser.add_argument('id', type=str, required=True, nullable=False)
 existing_consumer_parser.add_argument('active', type=bool, default=True)
 
 consumer_list_parser = pagination_parser.copy()

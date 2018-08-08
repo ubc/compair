@@ -493,6 +493,7 @@ module.controller(
 
         $scope.save = function() {
             $scope.submitted = true;
+
             if ($scope.date.course_start.date != null) {
                 $scope.course.start_date = combineDateTime($scope.date.course_start);
             } else {
@@ -503,7 +504,13 @@ module.controller(
             } else {
                 $scope.course.end_date = null;
             }
-            if ($scope.course.start_date != null && $scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
+
+            if ($scope.course.start_date == null) {
+                Toaster.warning('Course Not Saved', 'Please indicate the course start time and save again.');
+                $scope.submitted = false;
+                return;
+            }
+            else if ($scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
                 Toaster.warning('Course Not Saved', 'Please set course end time after course start time and save again.');
                 $scope.submitted = false;
                 return;
@@ -681,6 +688,11 @@ module.controller(
             }, dates[0])).toDate();
         };
 
+        $scope.duplicateNext = function() {
+            $scope.showAssignments = true;
+            $scope.adjustDuplicateAssignmentDates();
+        }
+
         $scope.duplicate = function() {
             $scope.submitted = true;
             $scope.duplicateCourse.assignments = [];
@@ -695,7 +707,13 @@ module.controller(
             } else {
                 $scope.duplicateCourse.end_date = null;
             }
-            if ($scope.duplicateCourse.start_date != null && $scope.duplicateCourse.end_date != null && $scope.duplicateCourse.start_date > $scope.duplicateCourse.end_date) {
+
+            if ($scope.duplicateCourse.start_date == null) {
+                Toaster.warning('Course Not Saved', 'Please indicate the course start time and try again.');
+                $scope.submitted = false;
+                return;
+            }
+            else if ($scope.duplicateCourse.start_date != null && $scope.duplicateCourse.end_date != null && $scope.duplicateCourse.start_date > $scope.duplicateCourse.end_date) {
                 Toaster.warning('Course Not Duplicated', 'Please set course end time after course start time and try again.');
                 $scope.submitted = false;
                 return;
@@ -829,7 +847,12 @@ module.controller(
                 $scope.course.end_date = null;
             }
 
-            if ($scope.course.start_date != null && $scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
+            if ($scope.course.start_date == null) {
+                Toaster.warning('Course Not Saved', 'Please indicate the course start time and save again.');
+                $scope.submitted = false;
+                return;
+            }
+            else if ($scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
                 Toaster.warning('Course Not Saved', 'Please set course end time after course start time and save again.');
                 $scope.submitted = false;
                 return;
