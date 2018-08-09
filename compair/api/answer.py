@@ -1,3 +1,5 @@
+import datetime
+
 from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
 from flask import Blueprint
 from flask_login import login_required, current_user, current_app
@@ -157,7 +159,7 @@ class AnswerRootAPI(Resource):
             # use outer join to include comparable answers that are not yet compared (for non-restricted users)
             query = query.outerjoin(AnswerScore) \
                 .filter(Answer.comparable == True) \
-                .order_by(AnswerScore.score.desc(), Answer.created.desc())
+                .order_by(AnswerScore.score.desc(), Answer.submission_date.desc(), Answer.created.desc())
 
             if restrict_user:
                 # when orderd by rank, students won't see answers that are not compared (i.e. no score/rank)
@@ -175,7 +177,7 @@ class AnswerRootAPI(Resource):
 
         else:
             # when ordered by date, non-comparable answers should be on top of the list
-            query = query.order_by(Answer.comparable, Answer.created.desc())
+            query = query.order_by(Answer.comparable, Answer.submission_date.desc(), Answer.created.desc())
 
         page = query.paginate(params['page'], params['perPage'], error_out=False)
         # remove label entities from results
@@ -248,6 +250,10 @@ class AnswerRootAPI(Resource):
             if group == None:
                 abort(400, title="Answer Not Submitted",
                     message="You are currently not in any group for this course. Please contact your instructor to be added to a group.")
+
+        # set submission date if answer is being submitted for the first time
+        if not answer.draft and not answer.submission_date:
+            answer.submission_date = datetime.datetime.utcnow()
 
         check_for_existing_answers = False
         if group and assignment.enable_group_answers:
@@ -397,6 +403,10 @@ class AnswerIdAPI(Resource):
 
         user = User.get_by_uuid_or_404(user_uuid) if user_uuid else answer.user
         group = Group.get_active_by_uuid_or_404(group_uuid) if group_uuid else answer.group
+
+        # set submission date if answer is being submitted for the first time
+        if not answer.draft and not answer.submission_date:
+            answer.submission_date = datetime.datetime.utcnow()
 
         check_for_existing_answers = False
         if group and assignment.enable_group_answers:

@@ -53,7 +53,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         order_by=AssignmentCriterion.position.asc(), collection_class=ordering_list('position', count_from=0))
 
     answers = db.relationship("Answer", backref="assignment", lazy="dynamic",
-        order_by=Answer.created.desc())
+        order_by=Answer.submission_date.desc())
     comparisons = db.relationship("Comparison", backref="assignment", lazy="dynamic")
     comparison_examples = db.relationship("ComparisonExample", backref="assignment", lazy="dynamic")
     scores = db.relationship("AnswerScore", backref="assignment", lazy="dynamic")

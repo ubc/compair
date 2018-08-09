@@ -28,6 +28,7 @@ class Answer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     draft = db.Column(db.Boolean(), default=False, nullable=False, index=True)
     top_answer = db.Column(db.Boolean(), default=False, nullable=False, index=True)
     comparable = db.Column(db.Boolean(), default=True, nullable=False, index=True)
+    submission_date = db.Column(db.DateTime(timezone=True), nullable=True)
 
     # relationships
     # assignment via Assignment Model

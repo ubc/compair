@@ -197,7 +197,7 @@ def participation_stat_report(course, assignments, group, overall):
                     Answer.group_id.in_(group_ids)
                 )
             )) \
-            .order_by(Answer.created) \
+            .order_by(Answer.submission_date) \
             .all()
 
         user_answers = {}   # structure - user_id/[answer list]

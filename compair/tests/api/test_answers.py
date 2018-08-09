@@ -64,7 +64,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
                     rv = self.client.get(self.base_url)
                     self.assert200(rv)
                     actual_answers = rv.json['objects']
-                    expected_answers = sorted([answer for answer in answers], key=lambda ans: ans.created, reverse=True)
+                    expected_answers = sorted([answer for answer in answers], key=lambda ans: ans.submission_date, reverse=True)
                     expected_answers = sorted(expected_answers, key=lambda ans: ans.comparable)[:20]
                     for i, expected in enumerate(expected_answers):
                         actual = actual_answers[i]
@@ -84,7 +84,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
                         rv = self.client.get(self.base_url + '?page=2')
                         self.assert200(rv)
                         actual_answers = rv.json['objects']
-                        expected_answers = sorted([answer for answer in answers], key=lambda ans: ans.created, reverse=True)
+                        expected_answers = sorted([answer for answer in answers], key=lambda ans: ans.submission_date, reverse=True)
                         expected_answers = sorted(expected_answers, key=lambda ans: ans.comparable)[20:]
                         for i, expected in enumerate(expected_answers):
                             actual = actual_answers[i]
@@ -105,7 +105,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
                     # test the result is paged and sorted
                     expected = sorted(
                         [answer for answer in answers if answer.score],
-                        key=lambda ans: (ans.score.score, ans.created),
+                        key=lambda ans: (ans.score.score, ans.submission_date),
                         reverse=True)[:10]
                     self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
                     for ans in result:
@@ -126,7 +126,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
                     # test the result is paged and sorted
                     expected = sorted(
                         [answer for answer in answers if answer.score],
-                        key=lambda ans: (ans.score.score, ans.created),
+                        key=lambda ans: (ans.score.score, ans.submission_date),
                         reverse=True)[:20]
                     self.assertEqual([a.uuid for a in expected], [a['id'] for a in result])
                     for ans in result:
@@ -266,7 +266,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 # test the result is paged and sorted
                 expected = sorted(
                     [answer for answer in answers if answer.comparable],
-                    key=lambda ans: (ans.score.score if ans.score else float('-inf'), ans.created),
+                    key=lambda ans: (ans.score.score if ans.score else float('-inf'), ans.submission_date),
                     reverse=True)
                 self.assertEqual([a.uuid for a in expected[:20]], [a['id'] for a in result])
                 self.assertEqual(1, rv.json['page'])
@@ -284,7 +284,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
                     result = rv.json['objects']
                     expected = sorted(
                         [answer for answer in answers if answer.comparable],
-                        key=lambda ans: (ans.score.score if ans.score else float('-inf'), ans.created),
+                        key=lambda ans: (ans.score.score if ans.score else float('-inf'), ans.submission_date),
                         reverse=True)
                     self.assertEqual([a.uuid for a in expected[20:]], [a['id'] for a in result])
                     self.assertEqual(2, rv.json['page'])
