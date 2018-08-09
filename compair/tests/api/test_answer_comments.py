@@ -562,6 +562,22 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
 
         # test author
         with self.login(self.data.get_extra_student(0).username):
+
+            # test student can not change comment to self-eval / eval
+            invalid = content.copy()
+            invalid['comment_type'] = AnswerCommentType.self_evaluation.value
+            rv = self.client.post(url, data=json.dumps(invalid), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual("Feedback Not Saved", rv.json['title'])
+            self.assertEqual("Feedback type cannot be changed. Please contact support for assistance.", rv.json['message'])
+
+            invalid = content.copy()
+            invalid['comment_type'] = AnswerCommentType.evaluation.value
+            rv = self.client.post(url, data=json.dumps(invalid), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual("Feedback Not Saved", rv.json['title'])
+            self.assertEqual("Feedback type cannot be changed. Please contact support for assistance.", rv.json['message'])
+
             with mail.record_messages() as outbox:
                 content['content'] = 'I am the author'
                 rv = self.client.post(url, data=json.dumps(content), content_type='application/json')
