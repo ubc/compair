@@ -194,7 +194,7 @@
 
         </div>
     </fieldset>
-
+    <p class="text-center text-muted" ng-show="!reportFile"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
     <div class="form-group text-center">
         <a class="btn btn-success btn-lg" value="Next" ng-click="showAssignments=!showAssignments; adjustDuplicateAssignmentDates()"
             ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
