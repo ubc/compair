@@ -466,7 +466,7 @@
             </div>
         </div>
     </fieldset>
-
+    <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
     <input ng-if="method == 'copy'" type="submit" class="btn btn-success btn-lg center-block" value="Duplicate"
         ng-disabled="assignmentForm.$invalid || assignment.criteria.length == 0 || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
     <input ng-if="method != 'copy'" type="submit" class="btn btn-success btn-lg center-block" value="Save"
