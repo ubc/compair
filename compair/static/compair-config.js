@@ -7,6 +7,7 @@ String.prototype.format = function() {
 
 var myApp = angular.module('myApp', [
     'ngRoute',
+    'ngMessages',
     'http-auth-interceptor',
     'LocalStorageModule',
     'ng-breadcrumbs',

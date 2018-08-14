@@ -1,11 +1,11 @@
-<div class="form-group has-feedback" ng-class="{
-    'has-error': formControl.$invalid,
-    'has-success': formControl.$valid && formControl.$dirty}">
+<div class="form-group has-feedback" ng-class="{'has-error': formControl.$invalid}">
     <span ng-transclude></span>
-    <span ng-show="formControl.$valid && formControl.$dirty"
-        class="glyphicon glyphicon-ok form-control-feedback">
-        </span>
     <span ng-show="formControl.$invalid"
-        class="glyphicon glyphicon-flag form-control-feedback">
+        class="glyphicon glyphicon-hand-left form-control-feedback">
         </span>
+    <div class="form-control-error" ng-if="formControl.$invalid" ng-messages="formControl.$error" role="alert">
+        <div ng-message="pwMatch">Please re-enter password to match the one above</div>
+        <div ng-message="required">Please fill in this field</div>
+        <div ng-message="email">Please enter a valid email address</div>
+    </div>
 </div>

@@ -1304,13 +1304,13 @@ module.controller("AssignmentViewController",
 module.controller("AssignmentWriteController",
     [ "$scope", "$q", "$location", "$routeParams", "$route", "AssignmentResource", "$uibModal",
              "CriterionResource", "required_rounds", "Toaster", "attachService", "UploadValidator",
-             "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource",
-             "AnswerResource", "xAPIStatementHelper", "resolvedData", "moment",
+             "EditorOptions", "PairingAlgorithm", "ComparisonExampleResource", "AnswerResource",
+             "$anchorScroll", "$timeout", "xAPIStatementHelper", "resolvedData", "moment",
              "embeddableRichContent", "$http", "answerAttachService",
     function($scope, $q, $location, $routeParams, $route, AssignmentResource, $uibModal,
              CriterionResource, required_rounds, Toaster, attachService, UploadValidator,
-             EditorOptions, PairingAlgorithm, ComparisonExampleResource,
-             AnswerResource, xAPIStatementHelper, resolvedData, moment,
+             EditorOptions, PairingAlgorithm, ComparisonExampleResource, AnswerResource,
+             $anchorScroll, $timeout, xAPIStatementHelper, resolvedData, moment,
              embeddableRichContent, $http, answerAttachService)
     {
         $scope.courseId = $routeParams.courseId;
@@ -1536,13 +1536,6 @@ module.controller("AssignmentWriteController",
             }
         }
 
-        $scope.datePickerOpen = function($event, object) {
-            $event.preventDefault();
-            $event.stopPropagation();
-
-            object.opened = true;
-        };
-
         $scope.datePickerMinDate = function() {
             var dates = Array.prototype.slice.call(arguments).filter(function(val) {
                 return typeof val !== 'undefined' && val !== null;
@@ -1707,162 +1700,166 @@ module.controller("AssignmentWriteController",
             return (weight * 100) / total;
         };
 
-        $scope.assignmentSubmit = function () {
-            $scope.submitted = true;
+        $scope.assignmentSubmit = function (assignmentForm) {
+            $scope.submitted = false;
 
-            if ($scope.date.astart.date == null || $scope.date.astart.time == null ||
-                $scope.date.aend.date == null || $scope.date.aend.time == null) {
-                Toaster.warning('Assignment Not Saved', 'Please specify the start date and end date of answering period.');
-                $scope.submitted = false;
-                return;
-            }
+            if (assignmentForm.$valid) {
+                $scope.submitted = true;
 
-            $scope.assignment.answer_start = combineDateTime($scope.date.astart);
-            $scope.assignment.answer_end = combineDateTime($scope.date.aend);
-            $scope.assignment.compare_start = combineDateTime($scope.date.cstart);
-            $scope.assignment.compare_end = combineDateTime($scope.date.cend);
-            if ($scope.assignment.enable_self_evaluation) {
-                if ($scope.assignment.selfEvalCheck) {
-                    $scope.assignment.self_eval_start = combineDateTime($scope.date.sestart);
-                    $scope.assignment.self_eval_end = $scope.date.seend.date ? combineDateTime($scope.date.seend) : null;
+                if ($scope.date.astart.date == null || $scope.date.astart.time == null ||
+                    $scope.date.aend.date == null || $scope.date.aend.time == null) {
+                    Toaster.warning('Assignment Not Saved', 'Please specify the start date and end date of answering period.');
+                    $scope.submitted = false;
+                    return;
+                }
+
+                $scope.assignment.answer_start = combineDateTime($scope.date.astart);
+                $scope.assignment.answer_end = combineDateTime($scope.date.aend);
+                $scope.assignment.compare_start = combineDateTime($scope.date.cstart);
+                $scope.assignment.compare_end = combineDateTime($scope.date.cend);
+
+                if ($scope.assignment.enable_self_evaluation) {
+                    if ($scope.assignment.selfEvalCheck) {
+                        $scope.assignment.self_eval_start = combineDateTime($scope.date.sestart);
+                        $scope.assignment.self_eval_end = $scope.date.seend.date ? combineDateTime($scope.date.seend) : null;
+                    }
+                    else {
+                        $scope.assignment.self_eval_start = null;
+                        $scope.assignment.self_eval_end = null;
+                    }
                 }
                 else {
+                    $scope.assignment.selfEvalCheck = false;
+                    $scope.assignment.self_eval_instructions = null;
                     $scope.assignment.self_eval_start = null;
                     $scope.assignment.self_eval_end = null;
                 }
-            }
-            else {
-                $scope.assignment.selfEvalCheck = false;
-                $scope.assignment.self_eval_instructions = null;
-                $scope.assignment.self_eval_start = null;
-                $scope.assignment.self_eval_end = null;
-            }
 
-            // answer end datetime has to be after answer start datetime
-            if ($scope.assignment.answer_start >= $scope.assignment.answer_end) {
-                Toaster.warning('Assignment Not Saved', 'Please set answer end time after answer start time and save again.');
-                $scope.submitted = false;
-                return;
-            } else if ($scope.assignment.availableCheck && $scope.assignment.answer_start > $scope.assignment.compare_start) {
-                Toaster.warning("Assignment Not Saved", 'Please double-check the answer and comparison start and end times for mismatches and save again.');
-                $scope.submitted = false;
-                return;
-            } else if ($scope.assignment.availableCheck && $scope.assignment.compare_start >= $scope.assignment.compare_end) {
-                Toaster.warning("Assignment Not Saved", 'Please set comparison end time after comparison start time and save again.');
-                $scope.submitted = false;
-                return;
-            } else if ($scope.assignment.availableCheck && $scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start <= $scope.assignment.compare_start) {
-                Toaster.warning("Assignment Not Saved", 'Please set self-evaluation start time after compare start time and save again.');
-                $scope.submitted = false;
-                return;
-            } else if (!$scope.assignment.availableCheck && $scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start <= $scope.assignment.answer_end) {
-                Toaster.warning("Assignment Not Saved", 'Please set self-evaluation start time after answer end time and save again.');
-                $scope.submitted = false;
-                return;
-            } else if ($scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start >= $scope.assignment.self_eval_end) {
-                Toaster.warning("Assignment Not Saved", 'Please set self-evaluation end time after self-evaluation start time and save again.');
-                $scope.submitted = false;
-                return;
-            }
-
-            if ($scope.assignment.addPractice) {
-                var answer1 = $scope.comparison_example.answer1;
-                var answer2 = $scope.comparison_example.answer2;
-
-               if ( ((!answer1.content || answer1.content.trim() == "") && !answer1.file && (!answer1.file_alias || answer1.file_alias == "")) && ((!answer2.content || answer2.content.trim() == "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias == "")) ) {
-                    Toaster.warning("Assignment Not Saved", 'Please add content for answers in your practice pair and save again.');
+                // answer end datetime has to be after answer start datetime
+                if ($scope.assignment.answer_start >= $scope.assignment.answer_end) {
+                    Toaster.warning('Assignment Not Saved', 'Please set answer end time after answer start time and save again.');
+                    $scope.submitted = false;
+                    return;
+                } else if ($scope.assignment.availableCheck && $scope.assignment.answer_start > $scope.assignment.compare_start) {
+                    Toaster.warning("Assignment Not Saved", 'Please double-check the answer and comparison start and end times for mismatches and save again.');
+                    $scope.submitted = false;
+                    return;
+                } else if ($scope.assignment.availableCheck && $scope.assignment.compare_start >= $scope.assignment.compare_end) {
+                    Toaster.warning("Assignment Not Saved", 'Please set comparison end time after comparison start time and save again.');
+                    $scope.submitted = false;
+                    return;
+                } else if ($scope.assignment.availableCheck && $scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start <= $scope.assignment.compare_start) {
+                    Toaster.warning("Assignment Not Saved", 'Please set self-evaluation start time after compare start time and save again.');
+                    $scope.submitted = false;
+                    return;
+                } else if (!$scope.assignment.availableCheck && $scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start <= $scope.assignment.answer_end) {
+                    Toaster.warning("Assignment Not Saved", 'Please set self-evaluation start time after answer end time and save again.');
+                    $scope.submitted = false;
+                    return;
+                } else if ($scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start >= $scope.assignment.self_eval_end) {
+                    Toaster.warning("Assignment Not Saved", 'Please set self-evaluation end time after self-evaluation start time and save again.');
                     $scope.submitted = false;
                     return;
                 }
-                if ((!answer1.content || answer1.content.trim() == "") && !answer1.file && (!answer1.file_alias || answer1.file_alias == "")) {
-                    Toaster.warning("Assignment Not Saved", 'Please add content for the first answer in your practice pair and save again.');
-                    $scope.submitted = false;
-                    return;
-                }
-                if ((!answer2.content || answer2.content.trim() == "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias == "")) {
-                    Toaster.warning("Assignment Not Saved", 'Please add content for the second answer in your practice pair and save again.');
-                    $scope.submitted = false;
-                    return;
-                }
-            }
 
-            var promises = [];
-            // save duplicate version of public criteria for new assignments
-            if (!$scope.assignment.id) {
-                _.forEach($scope.assignment.criteria, function(criterion) {
-                    if (criterion.public) {
-                        var weight = criterion.weight;
-                        var criterionDuplicate = angular.copy(criterion);
-                        criterionDuplicate.id = null;
-                        criterionDuplicate.public = false;
-                        criterionDuplicate.default = false;
+                if ($scope.assignment.addPractice) {
+                    var answer1 = $scope.comparison_example.answer1;
+                    var answer2 = $scope.comparison_example.answer2;
 
-                        promises.push($q(function(resolve, reject) {
-                            CriterionResource.save({}, criterionDuplicate).$promise.then(
-                                function (ret) {
-                                    angular.copy(ret, criterion);
-                                    criterion.weight = weight;
-                                    resolve();
-                                },
-                                function (ret) {
-                                    reject();
-                                }
-                            );
-                        }));
+                if ( ((!answer1.content || answer1.content.trim() == "") && !answer1.file && (!answer1.file_alias || answer1.file_alias == "")) && ((!answer2.content || answer2.content.trim() == "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias == "")) ) {
+                        Toaster.warning("Assignment Not Saved", 'Please add content for answers in your practice pair and save again.');
+                        $scope.submitted = false;
+                        return;
                     }
+                    if ((!answer1.content || answer1.content.trim() == "") && !answer1.file && (!answer1.file_alias || answer1.file_alias == "")) {
+                        Toaster.warning("Assignment Not Saved", 'Please add content for the first answer in your practice pair and save again.');
+                        $scope.submitted = false;
+                        return;
+                    }
+                    if ((!answer2.content || answer2.content.trim() == "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias == "")) {
+                        Toaster.warning("Assignment Not Saved", 'Please add content for the second answer in your practice pair and save again.');
+                        $scope.submitted = false;
+                        return;
+                    }
+                }
+                var promises = [];
+                // save duplicate version of public criteria for new assignments
+                if (!$scope.assignment.id) {
+                    _.forEach($scope.assignment.criteria, function(criterion) {
+                        if (criterion.public) {
+                            var weight = criterion.weight;
+                            var criterionDuplicate = angular.copy(criterion);
+                            criterionDuplicate.id = null;
+                            criterionDuplicate.public = false;
+                            criterionDuplicate.default = false;
+
+                            promises.push($q(function(resolve, reject) {
+                                CriterionResource.save({}, criterionDuplicate).$promise.then(
+                                    function (ret) {
+                                        angular.copy(ret, criterion);
+                                        criterion.weight = weight;
+                                        resolve();
+                                    },
+                                    function (ret) {
+                                        reject();
+                                    }
+                                );
+                            }));
+                        }
+                    });
+                }
+
+                // see if need to re-upload the attachment
+                promises.push.apply(promises, answerAttachService.reUploadPromises($scope.uploader));
+
+                $q.all(promises).then(function() {
+                    // if option is not checked; make sure no compare dates are saved.
+                    if (!$scope.assignment.availableCheck) {
+                        $scope.assignment.compare_start = null;
+                        $scope.assignment.compare_end = null;
+                    }
+                    var file = attachService.getFile();
+                    if (file) {
+                        $scope.assignment.file = file;
+                        $scope.assignment.file_id = file.id
+                    } else if ($scope.assignment.file) {
+                        $scope.assignment.file_id = $scope.assignment.file.id;
+                    } else {
+                        $scope.assignment.file_id = null;
+                    }
+                    AssignmentResource.save({'courseId': $scope.courseId}, $scope.assignment)
+                        .$promise.then(function (ret) {
+                            var assignmentId = ret.id;
+                            $scope.assignment.id = ret.id;
+                            var promises = [];
+
+                            // only save comparison example changes if assignment hasn't been compared yet
+                            if (!$scope.assignment.compared) {
+                                if ($scope.assignment.addPractice) {
+                                    promises.push(saveComparisonsExample(assignmentId, $scope.comparison_example));
+                                } else {
+                                    promises.push(deleteComparisonsExample(assignmentId, $scope.comparison_example));
+                                }
+                            }
+
+                            $q.all(promises).then(function() {
+                                $scope.submitted = false;
+                                if ($scope.method == "copy") {
+                                    Toaster.success("Assignment Duplicated");
+                                } else {
+                                    Toaster.success("Assignment Saved");
+                                }
+                                $location.path('/course/' + $scope.courseId);
+                            }, function() {
+                                $scope.submitted = false;
+                            });
+                        },
+                        function (ret) {
+                            $scope.submitted = false;
+                        }
+                    );
                 });
             }
-
-            // see if need to re-upload the attachment
-            promises.push.apply(promises, answerAttachService.reUploadPromises($scope.uploader));
-
-            $q.all(promises).then(function() {
-                // if option is not checked; make sure no compare dates are saved.
-                if (!$scope.assignment.availableCheck) {
-                    $scope.assignment.compare_start = null;
-                    $scope.assignment.compare_end = null;
-                }
-                var file = attachService.getFile();
-                if (file) {
-                    $scope.assignment.file = file;
-                    $scope.assignment.file_id = file.id
-                } else if ($scope.assignment.file) {
-                    $scope.assignment.file_id = $scope.assignment.file.id;
-                } else {
-                    $scope.assignment.file_id = null;
-                }
-                AssignmentResource.save({'courseId': $scope.courseId}, $scope.assignment)
-                    .$promise.then(function (ret) {
-                        var assignmentId = ret.id;
-                        $scope.assignment.id = ret.id;
-                        var promises = [];
-
-                        // only save comparison example changes if assignment hasn't been compared yet
-                        if (!$scope.assignment.compared) {
-                            if ($scope.assignment.addPractice) {
-                                promises.push(saveComparisonsExample(assignmentId, $scope.comparison_example));
-                            } else {
-                                promises.push(deleteComparisonsExample(assignmentId, $scope.comparison_example));
-                            }
-                        }
-
-                        $q.all(promises).then(function() {
-                            $scope.submitted = false;
-                            if ($scope.method == "copy") {
-                                Toaster.success("Assignment Duplicated");
-                            } else {
-                                Toaster.success("Assignment Saved");
-                            }
-                            $location.path('/course/' + $scope.courseId);
-                        }, function() {
-                            $scope.submitted = false;
-                        });
-                    },
-                    function (ret) {
-                        $scope.submitted = false;
-                    }
-                );
-            });
         };
 
         var deleteComparisonsExample = function(assignmentId, comparison_example) {

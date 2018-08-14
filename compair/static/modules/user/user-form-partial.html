@@ -1,4 +1,4 @@
-<form name="userForm" class="form" ng-submit="save()" novalidate>
+<form name="userForm" class="form" ng-submit="save(userForm)" novalidate>
     <fieldset>
         <legend>User Details</legend>
         <p class="instructional-text" ng-if="canManageUsers">
@@ -9,14 +9,14 @@
         <div class="form-group" ng-if="canManageUsers">
             <label for="system_role" class="required-star">Application Role </label>
             <select class="form-control" id="system_role" name="system_role"
-                ng-model="user.system_role" required
+                ng-model="user.system_role" ng-required="userForm.$submitted"
                 ng-options="system_role as system_role for system_role in system_roles"></select>
         </div>
         <compair-field-with-feedback form-control="userForm.displayName">
             <label for="displayName" class="required-star">Display Name</label>
             <input class="form-control" id="displayName" type="text"
                 name="displayName" ng-model="user.displayname"
-                required placeholder="the name you want others to see"
+                ng-required="userForm.$submitted" placeholder="the name you want others to see"
                 ng-disabled="loggedInUserIsStudent && !UserSettings.allow_student_change_display_name" />
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="userForm.firstName">
@@ -37,7 +37,7 @@
                 name="student_number" ng-model="user.student_number"
                 ng-disabled="loggedInUserIsStudent && !UserSettings.allow_student_change_student_number" />
         </compair-field-with-feedback>
-        <compair-field-with-feedback form-control="userForm.email" ng-if="canManageUsers || UserSettings.expose_email_to_instructor || user.id == loggedInUser.id">
+        <compair-field-with-feedback form-control="userForm.$submitted ? userForm.email : undefined" ng-if="canManageUsers || UserSettings.expose_email_to_instructor || user.id == loggedInUser.id">
             <label for="email">Email </label>
             <input class="form-control" id="email" type="email"
                 name="email" ng-model="user.email"
@@ -61,20 +61,20 @@
             <label for="username" class="required-star">ComPAIR Username </label>
             <input class="form-control" id="username" type="text"
                 name="username" ng-model="user.username"
-                ng-required="user.uses_compair_login" />
+                ng-required="userForm.$submitted && user.uses_compair_login" />
         </compair-field-with-feedback>
         <div ng-if="method == 'create'">
             <compair-field-with-feedback form-control="userForm.password">
                 <label for="password" class="required-star">ComPAIR Password </label>
                 <input class="form-control" id="password" type="password"
                     name="password" ng-model="user.password"
-                    ng-minlength="4" required />
+                    ng-minlength="4" ng-required="userForm.$submitted" />
             </compair-field-with-feedback>
-            <compair-field-with-feedback form-control="userForm.verifyPassword">
+            <compair-field-with-feedback form-control="userForm.$submitted ? userForm.verifyPassword : undefined">
                 <label for="verifyPassword" class="required-star">Verify Password </label>
                 <input class="form-control" id="verifyPassword" type="password"
                     name="verifyPassword" ng-model="user.verifyPassword"
-                    ng-minlength="4" required pw-match="password" />
+                    ng-minlength="4" ng-required="userForm.$submitted" pw-match="password" />
             </compair-field-with-feedback>
         </div>
         <div ng-if="method != 'create' && ((ownProfile || canManageUsers) && user.uses_compair_login)">
@@ -84,5 +84,5 @@
 
     </fieldset>
     <input type="submit" class="btn btn-success center-block btn-lg" value="Save"
-        ng-disabled="userForm.$invalid || submitted" />
+        ng-disabled="submitted" />
 </form>

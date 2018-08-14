@@ -44,7 +44,8 @@
     "angular-local-storage": "~0.7.1",
     "angular-promise-extras": "~0.1.8",
     "ng-kaltura-player": "~1.2.1",
-    "pdf.js-viewer": "~1.6.211"
+    "pdf.js-viewer": "~1.6.211",
+    "angular-messages": "1.5.11"
   },
   "resolutions": {
     "angular": "1.5.11",
