@@ -4,18 +4,38 @@
                 font-size: 1.6em;
             }
             p {
-                margin: 1.4em 0;
+                margin: 1.8em 0;
                 line-height: 1.6em;
             }
             h1.main-heading {
                 margin-top: 1em;
                 border-bottom: 4px solid;
             }
+            h2.sub-heading {
+                margin-top: 1.5em;
+                padding: .25em .5em;
+                color: #5cb85c;
+                border-bottom: 2px dotted #5cb85c;
+            }
             h3 {
                 line-height: 1.4em;
             }
+            dt {
+                font-size: 1.1em;
+            }
+            dd {
+                margin-bottom: 1.4em;
+                margin-left: 2em;
+                font-size: .9em;
+            }
             img {
                 max-width: 100%;
+            }
+            blockquote {
+                margin-top: 2em;
+                color: #666;
+                font-size: 1em;
+                background-color: #fafafa;
             }
             .navbar-brand {
                 padding:5px 15px 0 15px;
@@ -34,6 +54,9 @@
             .screenshot {
                 border: 1px solid #ccc;
                 border-bottom: none;
+            }
+            .intro-text {
+                font-size: 1.2em;
             }
             .green-text {
                 color: #5cb85c;
@@ -65,17 +88,25 @@
                 margin: 0;
             }
             .highlight-heading {
-                padding: .8em;
+                padding: 1em;
+                margin-left: 0;
+                margin-right: 0;
                 background: #eee;
                 border-radius: 5px;
+                font-weight: normal;
+            }
+            .highlight-heading .glyphicon {
+                font-size: 1.4em;
             }
             .intro-list-heading {
                 margin-top: .9em;
+                margin-left: .6em;
+                font-variant: small-caps;
+                font-weight: normal;
             }
             .intro-list {
                 margin-top: 1.2em;
                 padding-left: 0;
-                font-size: 1.05em;
                 list-style: none;
                 border-left: 5px solid #eee;
             }
@@ -111,7 +142,23 @@
                 position: fixed;
                 width: 33.33%;
             }
+            .thumbnail {
+                margin-left: 2%;
+                width: 96%;
+            }
             .thumbnail .caption {
                 color: #888;
                 text-align: center;
+            }
+            .list-group {
+                margin: 2em 0;
+            }
+            .list-group-item-light,
+            .alert-light {
+                background-color: #fafafa;
+            }
+            .list-group .indented {
+                display: inline-block;
+                margin: .75em 1em 1em 1em;
+                font-size: .9em;
             }
