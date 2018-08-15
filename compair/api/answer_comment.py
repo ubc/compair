@@ -308,9 +308,18 @@ class AnswerCommentAPI(Resource):
             AnswerCommentType.self_evaluation.value
         ]
 
+        eval_comment_types = [
+            AnswerCommentType.evaluation.value,
+            AnswerCommentType.self_evaluation.value
+        ]
+
         comment_type = params.get("comment_type", AnswerCommentType.private.value)
         if comment_type not in comment_types:
             abort(400, title="Feedback Not Saved", message="This feedback type is not recognized. Please contact support for assistance.")
+
+        # do not allow changing a self-eval into a comment or vise-versa
+        if (answer_comment.comment_type.value in eval_comment_types or comment_type in eval_comment_types) and answer_comment.comment_type.value != comment_type:
+            abort(400, title="Feedback Not Saved", message="Feedback type cannot be changed. Please contact support for assistance.")
 
         answer_comment.comment_type = AnswerCommentType(comment_type)
 
