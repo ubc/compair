@@ -3,9 +3,14 @@ import time
 import unicodecsv as csv
 import re
 import string
+try:
+    from urllib import quote_plus
+except ImportError:
+    from urllib.parse import quote_plus
 
 from bouncer.constants import MANAGE
-from flask import Blueprint, current_app
+from flask import Blueprint, current_app, request
+from flask import url_for
 from flask_login import login_required, current_user
 
 from flask_restful import Resource, reqparse
@@ -16,7 +21,8 @@ from sqlalchemy.orm import joinedload
 from compair.authorization import require
 from compair.core import event, abort
 from compair.models import User, CourseRole, Assignment, UserCourse, Course, Answer, \
-    AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType, Group
+    AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType, Group, File, KalturaMedia
+from compair.kaltura import KalturaAPI
 from .util import new_restful_api
 
 report_api = Blueprint('report_api', __name__)
@@ -76,36 +82,38 @@ class ReportRootAPI(Resource):
             data = participation_stat_report(course, assignments, group, assignment_uuid is None)
 
             title = [
-                'Assignment', 'User UUID', 'Last Name', 'First Name', 'Answer Submitted', 'Answer ID',
-                'Answer', 'Overall Rank', 'Overall Score',
-                'Evaluations Submitted', 'Evaluations Required', 'Evaluation Requirements Met',
-                'Replies Submitted']
+                'Assignment', 'Last Name', 'First Name','Student Number', 'User UUID',
+                'Answer', 'Answer ID', 'Answer Deleted', 'Answer Last Modified',
+                'Answer Score (Normalized)', 'Overall Rank',
+                'Comparisons Submitted', 'Comparisons Required', 'Comparison Requirements Met',
+                'Self-Evaluation Submitted', 'Feedback Submitted (During Comparisons)', 'Feedback Submitted (Outside Comparisons)']
             titles = [title]
 
         elif report_type == "participation":
-            user_titles = ['Last Name', 'First Name', 'Student No']
+            user_titles = ['Last Name', 'First Name', 'Student Number']
             data = participation_report(course, assignments, group)
 
             title_row1 = [""] * len(user_titles)
             title_row2 = user_titles
 
             for assignment in assignments:
-                assignment_criteria = AssignmentCriterion.query \
-                    .filter_by(
-                        assignment_id=assignment.id,
-                        active=True
-                    ) \
-                    .order_by(AssignmentCriterion.position) \
-                    .all()
-
-                title_row1 += [assignment.name] + [""] * len(assignment_criteria)
-                title_row2.append('Percentage score for answer overall')
-                for assignment_criterion in assignment_criteria:
-                    title_row2.append('Percentage score for "' + assignment_criterion.criterion.name + '"')
-                title_row2.append("Evaluations Submitted (" + str(assignment.total_comparisons_required) + ' required)')
+                title_row1 += [assignment.name]
+                title_row2.append('Participation Grade')
+                title_row1 += [""]
+                title_row2.append('Answer')
+                title_row1 += [""]
+                title_row2.append('Attachment')
+                title_row1 += [""]
+                title_row2.append('Answer Score (Normalized)')
+                title_row1 += [""]
+                title_row2.append("Comparisons Submitted (" + str(assignment.total_comparisons_required) + ' required)')
                 if assignment.enable_self_evaluation:
                     title_row1 += [""]
-                    title_row2.append("Self Evaluation Submitted")
+                    title_row2.append("Self-Evaluation Submitted")
+                title_row1 += [""]
+                title_row2.append("Feedback Submitted (During Comparisons)")
+                title_row1 += [""]
+                title_row2.append("Feedback Submitted (Outside Comparisons)")
             titles = [title_row1, title_row2]
 
         elif report_type == "peer_feedback":
@@ -117,9 +125,9 @@ class ReportRootAPI(Resource):
             ]
             titles2 = [
                 "Assignment",
-                "Last Name", "First Name", "Student No",
-                "Last Name", "First Name", "Student No",
-                "Feedback Type", "Feedback"
+                "Last Name", "First Name", "Student Number",
+                "Last Name", "First Name", "Student Number",
+                "Feedback Type", "Feedback", "Feedback Character Count"
             ]
             data = peer_feedback_report(course, assignments, group)
             titles = [titles1, titles2]
@@ -163,6 +171,7 @@ def participation_stat_report(course, assignments, group, overall):
         query = query.filter(group.id == UserCourse.group_id)
     classlist = query.order_by(User.lastname, User.firstname, User.id).all()
 
+    assignment_ids = [assignment.id for assignment in assignments]
     class_ids = [u.user.id for u in classlist]
 
     group_ids = [g.id for g in course.groups.all() if g.active]
@@ -179,7 +188,6 @@ def participation_stat_report(course, assignments, group, overall):
         answers = Answer.query \
             .options(joinedload('score')) \
             .filter(and_(
-                Answer.active == True,
                 Answer.assignment_id == assignment.id,
                 Answer.comparable == True,
                 Answer.draft == False,
@@ -215,57 +223,88 @@ def participation_stat_report(course, assignments, group, overall):
             .filter(Answer.assignment_id == assignment.id) \
             .filter(AnswerComment.draft == False) \
             .filter(AnswerComment.active == True) \
-            .with_entities(AnswerComment.user_id, func.count(AnswerComment.id)) \
-            .group_by(AnswerComment.user_id) \
+            .with_entities(AnswerComment.user_id, AnswerComment.comment_type, func.count(AnswerComment.id)) \
+            .group_by(AnswerComment.user_id, AnswerComment.comment_type) \
             .all()
-        comments = {user_id: count for (user_id, count) in comments}
+        comments_self_eval = {user_id: count for (user_id, comment_type, count) in comments if comment_type == AnswerCommentType.self_evaluation}
+        comments_during_comparison = {user_id: count for (user_id, comment_type, count) in comments if comment_type == AnswerCommentType.evaluation}
+        comments_private = {user_id: count for (user_id, comment_type, count) in comments if comment_type == AnswerCommentType.private}
+        comments_public = {user_id: count for (user_id, comment_type, count) in comments if comment_type == AnswerCommentType.public}
 
         total_req += assignment.total_comparisons_required  # for overall required
 
         for user_course in classlist:
             user = user_course.user
-            temp = [assignment.name, user.uuid, user.lastname, user.firstname]
+            temp = [assignment.name, user.lastname, user.firstname, user.student_number, user.uuid]
 
             # OVERALL
             total.setdefault(user.id, {
                 'total_answers': 0,
                 'total_evaluations': 0,
-                'total_comments': 0
+                'total_comments_self_eval': 0,
+                'total_comments_during_comparison': 0,
+                'total_comments_outside_comparison': 0
             })
 
             # each user has at least 1 line per assignment, regardless whether there is an answer
-            submitted = len(user_answers.get(user.id, []))
-            the_answer = user_answers[user.id][0] if submitted else None
+            active_answer_list = [ans for ans in user_answers.get(user.id, []) if ans.active]
+            deleted_answer_list = [ans for ans in user_answers.get(user.id, []) if not ans.active]
+            submitted = len(active_answer_list)
+            deleted_count = len(deleted_answer_list)
+            the_answer = active_answer_list[0] if submitted else None
+            is_deleted = 'N' if submitted else 'N/A'
             answer_uuid = the_answer.uuid if submitted else 'N/A'
+            answer_last_modified = datetime_to_string(the_answer.modified) if submitted else 'N/A'
             answer_text = snippet(the_answer.content) if submitted else 'N/A'
             answer_rank = the_answer.score.rank if submitted and the_answer.score else 'Not Evaluated'
-            answer_score = the_answer.score.normalized_score if submitted and the_answer.score else 'Not Evaluated'
+            answer_score = round_score(the_answer.score.normalized_score) if submitted and the_answer.score else 'Not Evaluated'
             total[user.id]['total_answers'] += submitted
-            temp.extend([submitted, answer_uuid, answer_text, answer_rank, answer_score])
+            temp.extend([answer_text, answer_uuid, is_deleted, answer_last_modified, answer_score, answer_rank])
 
             evaluations = evaluation_submitted.get(user.id, 0)
             evaluation_req_met = 'Yes' if evaluations >= assignment.total_comparisons_required else 'No'
             total[user.id]['total_evaluations'] += evaluations
             temp.extend([evaluations, assignment.total_comparisons_required, evaluation_req_met])
 
-            comment_count = comments[user.id] if user.id in comments else 0
-            total[user.id]['total_comments'] += comment_count
-            temp.append(comment_count)
+            comment_self_eval_count = comments_self_eval.get(user.id, 0)
+            comment_during_comparison_count = comments_during_comparison.get(user.id, 0)
+            comment_outside_comparison_count = comments_private.get(user.id, 0) + comments_public.get(user.id, 0)
+            total[user.id]['total_comments_self_eval'] += comment_self_eval_count
+            total[user.id]['total_comments_during_comparison'] += comment_during_comparison_count
+            total[user.id]['total_comments_outside_comparison'] += comment_outside_comparison_count
+            temp.extend([comment_self_eval_count, comment_during_comparison_count, comment_outside_comparison_count])
 
             report.append(temp)
 
             # handle multiple answers from the user (normally only apply for instructors / TAs)
             if submitted > 1:
-                for answer in user_answers[user.id][1:]:
+                for answer in active_answer_list[1:]:
                     answer_uuid = answer.uuid
+                    answer_last_modified = datetime_to_string(answer.modified)
                     answer_text = snippet(answer.content)
                     answer_rank = answer.score.rank if submitted and answer.score else 'Not Evaluated'
-                    answer_score = answer.score.normalized_score if submitted and answer.score else 'Not Evaluated'
-                    temp = [assignment.name, user.uuid, user.lastname,
-                        user.firstname, submitted, answer_uuid, answer_text,
-                        answer_rank, answer_score,
+                    answer_score = round_score(answer.score.normalized_score) if submitted and answer.score else 'Not Evaluated'
+                    temp = [assignment.name, user.lastname, user.firstname, user.student_number, user.uuid,
+                        answer_text, answer_uuid, 'N', answer_last_modified,
+                        answer_score, answer_rank,
                         evaluations, assignment.total_comparisons_required,
-                        evaluation_req_met, comment_count]
+                        evaluation_req_met, comment_self_eval_count, comment_during_comparison_count, comment_outside_comparison_count]
+
+                    report.append(temp)
+
+            # add deleted answers, if any
+            if deleted_count > 0:
+                for answer in deleted_answer_list:
+                    answer_uuid = answer.uuid
+                    answer_last_modified = datetime_to_string(answer.modified)
+                    answer_text = snippet(answer.content)
+                    answer_rank = answer.score.rank if answer.score else 'Not Evaluated'
+                    answer_score = round_score(answer.score.normalized_score) if answer.score else 'Not Evaluated'
+                    temp = [assignment.name, user.lastname, user.firstname, user.student_number, user.uuid,
+                        answer_text, answer_uuid, 'Y', answer_last_modified,
+                        answer_score, answer_rank,
+                        evaluations, assignment.total_comparisons_required,
+                        evaluation_req_met, comment_self_eval_count, comment_during_comparison_count, comment_outside_comparison_count]
 
                     report.append(temp)
 
@@ -275,16 +314,17 @@ def participation_stat_report(course, assignments, group, overall):
             sum_submission = total.setdefault(user.id, {
                 'total_answers': 0,
                 'total_evaluations': 0,
-                'total_comments': 0
+                'total_comments_self_eval': 0,
+                'total_comments_during_comparison': 0,
+                'total_comments_outside_comparison': 0
             })
             # assume a user can only at most do the required number
             req_met = 'Yes' if sum_submission['total_evaluations'] >= total_req else 'No'
             temp = [
-                '(Overall in Course)', user.uuid, user.lastname, user.firstname,
-                sum_submission['total_answers'], '', '',
-                '', '',
-                sum_submission['total_evaluations'], total_req, req_met,
-                sum_submission['total_comments']]
+                '(Overall in Course)', user.lastname, user.firstname, user.student_number, user.uuid,
+                sum_submission['total_answers'], '', '', '', '', '',
+                sum_submission['total_evaluations'], total_req, req_met, sum_submission['total_comments_self_eval'],
+                sum_submission['total_comments_during_comparison'], sum_submission['total_comments_outside_comparison']]
             report.append(temp)
     return report
 
@@ -312,6 +352,7 @@ def participation_report(course, assignments, group):
 
     # ANSWERS - scores
     answers = Answer.query \
+        .options(joinedload('file')) \
         .options(joinedload('score')) \
         .options(joinedload('criteria_scores')) \
         .filter(and_(
@@ -328,6 +369,8 @@ def participation_report(course, assignments, group):
 
     scores = {} # structure - user_id/assignment_id/normalized_score
     criteria_scores = {} # structure - user_id/assignment_id/criterion_id/normalized_score
+    answer_count = {} # structure - user_id/assignment_id/[answers]
+    answer_attachment = {} # structure - user_id/assignment_id/[File]
     for answer in answers:
         user_ids = group_users.get(answer.group_id, []) if answer.group_answer else [answer.user_id]
         for user_id in user_ids:
@@ -340,6 +383,16 @@ def participation_report(course, assignments, group):
             assignment_object = user_object.setdefault(answer.assignment_id, {})
             for s in answer.criteria_scores:
                 assignment_object[s.criterion_id] = s.normalized_score
+
+            # set answer_count
+            user_object = answer_count.setdefault(user_id, {})
+            assignment_list = user_object.setdefault(answer.assignment_id, [])
+            assignment_list.append(escape_leading_symbols_for_excel(strip_html(answer.content)))
+
+            # set answer_attachment
+            user_object = answer_attachment.setdefault(user_id, {})
+            assignment_list = user_object.setdefault(answer.assignment_id, [])
+            assignment_list.append(answer.file)
 
     # COMPARISONS
     comparisons_counts = Comparison.query \
@@ -369,43 +422,45 @@ def participation_report(course, assignments, group):
         criteria[assignment_criterion.assignment_id] \
             .append(assignment_criterion.criterion_id)
 
-    # SELF-EVALUATION - assuming no comparions
-    self_evaluation = AnswerComment.query \
-        .filter_by(comment_type=AnswerCommentType.self_evaluation) \
-        .join(Answer) \
-        .filter(Answer.assignment_id.in_(assignment_ids)) \
-        .filter(AnswerComment.user_id.in_(class_ids)) \
-        .filter(AnswerComment.draft == False) \
-        .with_entities(Answer.assignment_id, AnswerComment.user_id, func.count(AnswerComment.id)) \
-        .group_by(Answer.assignment_id, AnswerComment.user_id) \
-        .all()
-
-    comments = {}  # structure - user_id/assignment_id/count
-    for (assignment_id, user_id, count) in self_evaluation:
-        comments.setdefault(user_id, {}).setdefault(assignment_id, 0)
-        comments[user_id][assignment_id] = count
+    user_grades = {} # structure - user_id/assignment_id/grade
+    for assignment in assignments:
+        for grade in assignment.grades:
+            user_object = user_grades.setdefault(grade.user_id, {})
+            user_object[grade.assignment_id] = round_grade(grade.grade * 100)
 
     for user_courses in classlist:
         user = user_courses.user
         temp = [user.lastname, user.firstname, user.student_number]
 
         for assignment in assignments:
+            # COMMENTS
+            comments = AnswerComment.query \
+                .join(Answer) \
+                .filter(Answer.assignment_id == assignment.id) \
+                .filter(AnswerComment.user_id == user.id) \
+                .filter(AnswerComment.draft == False) \
+                .filter(AnswerComment.active == True) \
+                .with_entities(AnswerComment.comment_type, func.count(AnswerComment.id)) \
+                .group_by(AnswerComment.comment_type) \
+                .all()
+            comments_counts = {comment_type: count for (comment_type, count) in comments}
+            comments_self_eval = comments_counts.get(AnswerCommentType.self_evaluation, 0)
+            comments_during_comparison = comments_counts.get(AnswerCommentType.evaluation, 0)
+            comments_outside_comparison = comments_counts.get(AnswerCommentType.public, 0) + comments_counts.get(AnswerCommentType.private, 0)
+
+            temp.append(user_grades.get(user.id, {}).get(assignment.id, ""))
+            temp.append('\n\n'.join(answer_count.get(user.id, {}).get(assignment.id, [])))
+            temp.append('\n\n'.join( \
+                [generate_hyperlink_for_excel(attachment_url(f)) for f in answer_attachment.get(user.id, {}).get(assignment.id, [])] \
+                ))
             if user.id not in scores or assignment.id not in scores[user.id]:
                 score = 'No Answer'
             elif scores[user.id][assignment.id] == None:
                 score = 'Not Evaluated'
             else:
-                score = scores[user.id][assignment.id]
+                score = round_score(scores[user.id][assignment.id])
             temp.append(score)
 
-            for criterion in criteria[assignment.id]:
-                if user.id not in criteria_scores or assignment.id not in criteria_scores[user.id]:
-                    criterion_score = 'No Answer'
-                elif criterion not in criteria_scores[user.id][assignment.id]:
-                    criterion_score = 'Not Evaluated'
-                else:
-                    criterion_score = criteria_scores[user.id][assignment.id][criterion]
-                temp.append(criterion_score)
             if user.id not in comparisons or assignment.id not in comparisons[user.id]:
                 compared = 0
             else:
@@ -413,10 +468,11 @@ def participation_report(course, assignments, group):
             temp.append(str(compared))
             # self-evaluation
             if assignment.enable_self_evaluation:
-                if user.id not in comments or assignment.id not in comments[user.id]:
-                    temp.append(0)
-                else:
-                    temp.append(comments[user.id][assignment.id])
+                temp.append(comments_self_eval)
+            # feedback counts
+            temp.append(comments_during_comparison)
+            temp.append(comments_outside_comparison)
+
         report.append(temp)
 
     return report
@@ -488,7 +544,10 @@ def peer_feedback_report(course, assignments, group):
                     else:
                         temp += [feedback.receiver_lastname, feedback.receiver_firstname, feedback.receiver_student_number]
 
-                    temp += [feedback_type, strip_html(feedback.content)]
+                    plain_feedback_content = strip_html(feedback.content).strip(' \t\n\r')
+                    temp += [feedback_type, \
+                        escape_leading_symbols_for_excel(plain_feedback_content), \
+                        len(plain_feedback_content)]
 
                     report.append(temp)
 
@@ -515,12 +574,60 @@ def strip_html(text):
     text = text.replace('&#39;', '\'')
     return text
 
+def escape_leading_symbols_for_excel(text):
+    result = text
+    # Insert a tab at the begining if the text starts with specific symbol.
+    # This will escape it for Excel. If the CSV is to be processed by another
+    # program, trimming will be required.
+    if len(text) == 0:
+        return result
+    if text[0] in ['-', '+', '=']:
+        result = '\t' + text
+    return result
+
+def generate_hyperlink_for_excel(url):
+    if not url:
+        return ''
+    # Excel has length limit of 255 for string parameters.
+    # Unfortunately, trying to break it down and concatenate back together wont work for HYPERLINK.
+    # chunks = 'CONCATENATE("' + '","'.join([url[i:i+255] for i in range(0, len(url), 255)]) + '")'
+    # return '=HYPERLINK(' + chunks + ', "View")'
+    if len(url) > 255:
+        return url
+    return '=HYPERLINK("' + url + '", "Click to view")'
+
 def snippet(content, length=100, suffix='...'):
     if content == None:
         return ""
     content = strip_html(content)
     content = content.replace('\n', ' ').replace('\r', '').strip()
+    content = escape_leading_symbols_for_excel(content)
     if len(content) <= length:
         return content
     else:
         return ' '.join(content[:length+1].split(' ')[:-1]) + suffix
+
+def round_score(score, ndigits=0):
+    """
+    Round score to ndigits digits after decimal point
+    """
+    return round(score, ndigits)
+
+def round_grade(grade, ndigits=0):
+    """
+    Round grade to ndigits digits after decimal point
+    """
+    return round(grade, ndigits)
+
+def attachment_url(file):
+    """
+    Generate url from attachment File
+    """
+    if not file:
+        return ''
+    return url_for('file_retrieve', file_type='attachment', file_name=file.name, _external=True)
+
+def datetime_to_string(datetime):
+    if not datetime:
+        return 'N/A'
+    return datetime.strftime("%Y-%m-%d %H:%M:%S")
