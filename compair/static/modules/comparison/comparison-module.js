@@ -266,9 +266,9 @@ module.controller(
 module.controller(
     'ComparisonSelfEvalController',
     ['$location', '$scope', '$routeParams', 'AnswerResource', 'AssignmentResource', 'AnswerCommentResource',
-     'Toaster', 'AnswerCommentType', 'EditorOptions', "xAPI", "xAPIStatementHelper", "resolvedData",
+     'Toaster', 'AnswerCommentType', 'EditorOptions', "xAPI", "xAPIStatementHelper", "resolvedData", 'Session',
     function($location, $scope, $routeParams, AnswerResource, AssignmentResource, AnswerCommentResource,
-             Toaster, AnswerCommentType, EditorOptions, xAPI, xAPIStatementHelper, resolvedData)
+             Toaster, AnswerCommentType, EditorOptions, xAPI, xAPIStatementHelper, resolvedData, Session)
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId;
@@ -323,14 +323,17 @@ module.controller(
                     };
                     $scope.comment.comment_type = AnswerCommentType.self_evaluation;
                     $scope.comment.draft = true;
-                    AnswerCommentResource.save(params, $scope.comment).$promise.then(
-                        function(ret) {
-                            $scope.comment = ret;
-                            xAPIStatementHelper.initialize_self_evaluation_question(
-                                $scope.comment, $scope.tracking.getRegistration()
-                            );
-                        }
-                    );
+                    // TODO review suppression logic. For now, avoid saving the self-eval when impersonating.
+                    if (!Session.isImpersonating()) {
+                        AnswerCommentResource.save(params, $scope.comment).$promise.then(
+                            function(ret) {
+                                $scope.comment = ret;
+                                xAPIStatementHelper.initialize_self_evaluation_question(
+                                    $scope.comment, $scope.tracking.getRegistration()
+                                );
+                            }
+                        );
+                    }
                 }
             }
         );
