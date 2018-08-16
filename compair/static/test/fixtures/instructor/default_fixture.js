@@ -80,14 +80,16 @@ storage.users[student2.id] = student2;
 var course = courseFactory.generateCourse("1abcABC123-abcABC123_Z", {
     name: "CHEM 111",
     year: 2015,
-    term: "Winter"
+    term: "Winter",
+    start_date: "2015-01-02T23:00:00"
 });
 storage.courses[course.id] = course;
 
 var course2 = courseFactory.generateCourse("2abcABC123-abcABC123_Z", {
     name: "PHYS 101",
     year: 2015,
-    term: "Winter"
+    term: "Winter",
+    start_date: "2015-01-02T23:00:00"
 });
 storage.courses[course2.id] = course2;
 

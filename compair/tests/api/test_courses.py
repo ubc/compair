@@ -87,7 +87,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'year': 2015,
             'term': 'Winter',
             'sandbox' : False,
-            'start_date': None,
+            'start_date': datetime.datetime.utcnow().isoformat() + 'Z',
             'end_date': None
         }
         # Test login required
@@ -137,6 +137,13 @@ class CoursesAPITests(ComPAIRAPITestCase):
                 .one_or_none()
             self.assertIsNotNone(user_course)
 
+            # Start date missing
+            invalid_expected = course_expected.copy()
+            invalid_expected['start_date'] = None
+            rv = self.client.post('/api/courses', data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["message"]["start_date"], "Course start date is required.")
+
             # Starts in the future
             now = datetime.datetime.utcnow()
             course_expected['start_date'] = (now + datetime.timedelta(days=7)).isoformat() + 'Z',
@@ -146,7 +153,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertFalse(rv.json['available'])
 
             # Ended in the past
-            course_expected['start_date'] = None
+            course_expected['start_date'] = (now - datetime.timedelta(days=14)).isoformat() + 'Z',
             course_expected['end_date'] = (now - datetime.timedelta(days=7)).isoformat() + 'Z',
             rv = self.client.post('/api/courses', data=json.dumps(course_expected), content_type='application/json')
             self.assert200(rv)
@@ -173,7 +180,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'year': 2015,
             'term': 'Winter',
             'sandbox': False,
-            'start_date': None,
+            'start_date': datetime.datetime.utcnow().isoformat() + 'Z',
             'end_date': None
         }
         url = '/api/courses/' + self.data.get_course().uuid
@@ -221,6 +228,13 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(expected['name'], rv.json['name'])
             self.assertTrue(rv.json['available'])
 
+            # Start date missing
+            invalid = expected.copy()
+            invalid['start_date'] = None
+            rv = self.client.post(url, data=json.dumps(invalid), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json["message"]["start_date"], "Course start date is required.")
+
             # Starts in the future
             now = datetime.datetime.utcnow()
             expected['start_date'] = (now + datetime.timedelta(days=7)).isoformat() + 'Z',
@@ -230,7 +244,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertFalse(rv.json['available'])
 
             # Ended in the past
-            expected['start_date'] = None
+            expected['start_date'] = (now - datetime.timedelta(days=14)).isoformat() + 'Z',
             expected['end_date'] = (now - datetime.timedelta(days=7)).isoformat() + 'Z',
             rv = self.client.post(url, data=json.dumps(expected), content_type='application/json')
             self.assert200(rv)
@@ -303,7 +317,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             'year': 2015,
             'term': 'Winter',
             'sandbox': False,
-            'start_date': None,
+            'start_date': datetime.datetime.utcnow().isoformat() + 'Z',
             'end_date': None
         }
         # test login required
@@ -330,16 +344,20 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assert404(rv)
 
             # test year missing
-            invalid_expected = {
-                'term': 'Winter'
-            }
+            invalid_expected = expected.copy()
+            invalid_expected['year'] = None
             rv = self.client.post('/api/courses/999/duplicate', data=json.dumps(invalid_expected), content_type='application/json')
             self.assert404(rv)
 
             # test term missing
-            invalid_expected = {
-                'year': 2015
-            }
+            invalid_expected = expected.copy()
+            invalid_expected['term'] = None
+            rv = self.client.post('/api/courses/999/duplicate', data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert404(rv)
+
+            # course start date missing
+            invalid_expected = expected.copy()
+            invalid_expected['start_date'] = None
             rv = self.client.post('/api/courses/999/duplicate', data=json.dumps(invalid_expected), content_type='application/json')
             self.assert404(rv)
 
@@ -354,7 +372,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             self.assertEqual(expected['year'], rv.json['year'])
             self.assertEqual(expected['term'], rv.json['term'])
             self.assertEqual(expected['sandbox'], rv.json['sandbox'])
-            self.assertEqual(expected['start_date'], rv.json['start_date'])
+            self.assertEqual(expected['start_date'].replace('Z', ''), rv.json['start_date'].replace('+00:00', ''))
             self.assertEqual(expected['end_date'], rv.json['end_date'])
 
             # verify instructor added to duplicate course
@@ -766,7 +784,7 @@ class CourseDemoAPITests(ComPAIRAPIDemoTestCase):
             'year': 2015,
             'term': 'Winter',
             'sandbox': False,
-            'start_date': None,
+            'start_date': datetime.datetime.utcnow().isoformat() + 'Z',
             'end_date': None,
             'description': 'Test Description'
         }

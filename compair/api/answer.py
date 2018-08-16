@@ -29,7 +29,7 @@ new_answer_parser.add_argument('file_id', default=None)
 new_answer_parser.add_argument('draft', type=bool, default=False)
 
 existing_answer_parser = RequestParser()
-existing_answer_parser.add_argument('id', required=True, help="Answer id is required.")
+existing_answer_parser.add_argument('id', required=True, nullable=False, help="Answer id is required.")
 existing_answer_parser.add_argument('user_id', default=None)
 existing_answer_parser.add_argument('group_id', default=None)
 existing_answer_parser.add_argument('comparable', type=bool, default=True)
@@ -50,7 +50,7 @@ user_answer_list_parser.add_argument('unsaved', type=bool, required=False, defau
 
 top_answer_parser = RequestParser()
 top_answer_parser.add_argument(
-    'top_answer', type=bool, required=True,
+    'top_answer', type=bool, required=True, nullable=False,
     help="Expected boolean value 'top_answer' is missing."
 )
 

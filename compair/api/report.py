@@ -31,7 +31,7 @@ api = new_restful_api(report_api)
 report_parser = reqparse.RequestParser()
 report_parser.add_argument('group_id')
 # may change 'type' to int
-report_parser.add_argument('type', required=True)
+report_parser.add_argument('type', required=True, nullable=False)
 report_parser.add_argument('assignment')
 
 # events

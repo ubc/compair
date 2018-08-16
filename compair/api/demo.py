@@ -16,7 +16,7 @@ demo_api = Blueprint('demo_api', __name__)
 api = new_restful_api(demo_api)
 
 new_user_demo_parser = RequestParser()
-new_user_demo_parser.add_argument('system_role', type=str, required=True)
+new_user_demo_parser.add_argument('system_role', type=str, required=True, nullable=False)
 
 # events
 on_user_demo_create = event.signal('USER_DEMO_CREATE')

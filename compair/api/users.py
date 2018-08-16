@@ -1,3 +1,7 @@
+import datetime
+import dateutil.parser
+import pytz
+
 from flask import Blueprint, current_app, session as sess
 from bouncer.constants import MANAGE, EDIT, CREATE, READ
 from flask_restful import Resource, marshal
@@ -34,31 +38,31 @@ def string_to_bool(value):
 new_user_parser = RequestParser()
 new_user_parser.add_argument('username', type=non_blank_text, required=False)
 new_user_parser.add_argument('student_number', type=non_blank_text)
-new_user_parser.add_argument('system_role', required=True)
+new_user_parser.add_argument('system_role', default=None)
 new_user_parser.add_argument('firstname', type=non_blank_text)
 new_user_parser.add_argument('lastname', type=non_blank_text)
-new_user_parser.add_argument('displayname', required=True)
+new_user_parser.add_argument('displayname', required=True, nullable=False)
 new_user_parser.add_argument('email')
 new_user_parser.add_argument('email_notification_method')
 new_user_parser.add_argument('password', required=False)
 
 existing_user_parser = RequestParser()
-existing_user_parser.add_argument('id', required=True)
+existing_user_parser.add_argument('id', required=True, nullable=False)
 existing_user_parser.add_argument('username', type=non_blank_text, required=False)
 existing_user_parser.add_argument('student_number', type=non_blank_text)
-existing_user_parser.add_argument('system_role', required=True)
+existing_user_parser.add_argument('system_role', default=None)
 existing_user_parser.add_argument('firstname', type=non_blank_text)
 existing_user_parser.add_argument('lastname', type=non_blank_text)
-existing_user_parser.add_argument('displayname', required=True)
+existing_user_parser.add_argument('displayname', required=True, nullable=False)
 existing_user_parser.add_argument('email')
 existing_user_parser.add_argument('email_notification_method')
 
 update_notification_settings_parser = RequestParser()
-update_notification_settings_parser.add_argument('email_notification_method', required=True)
+update_notification_settings_parser.add_argument('email_notification_method', required=True, nullable=False)
 
 update_password_parser = RequestParser()
 update_password_parser.add_argument('oldpassword', required=False)
-update_password_parser.add_argument('newpassword', required=True)
+update_password_parser.add_argument('newpassword', required=True, nullable=False)
 
 user_list_parser = pagination_parser.copy()
 user_list_parser.add_argument('search', required=False, default=None)
@@ -69,15 +73,17 @@ user_list_parser.add_argument('ids', required=False, default=None)
 user_course_list_parser = pagination_parser.copy()
 user_course_list_parser.add_argument('search', required=False, default=None)
 user_course_list_parser.add_argument('includeSandbox', type=string_to_bool, required=False, default=None)
+user_course_list_parser.add_argument('period', type=non_blank_text, required=False, default=None)
 
 user_id_course_list_parser = pagination_parser.copy()
 user_id_course_list_parser.add_argument('search', required=False, default=None)
 user_id_course_list_parser.add_argument('includeSandbox', type=string_to_bool, required=False, default=None)
+user_id_course_list_parser.add_argument('period', type=non_blank_text, required=False, default=None)
 user_id_course_list_parser.add_argument('orderBy', required=False, default=None)
 user_id_course_list_parser.add_argument('reverse', type=bool, default=False)
 
 user_course_status_list_parser = RequestParser()
-user_course_status_list_parser.add_argument('ids', required=True, default=None)
+user_course_status_list_parser.add_argument('ids', required=True, nullable=False, default=None)
 
 # events
 on_user_modified = event.signal('USER_MODIFIED')
@@ -396,6 +402,22 @@ class CurrentUserCourseListAPI(Resource):
             query = query.filter(
                 Course.sandbox == params['includeSandbox']
             )
+
+        if params['period'] != None:
+            now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
+            if params['period'] == 'upcoming':
+                query = query.filter(
+                    Course.start_date > now
+                )
+            elif params['period'] == 'active':
+                query = query.filter(and_(
+                    or_(Course.start_date == None, Course.start_date <= now),
+                    or_(Course.end_date == None, Course.end_date >= now),
+                ))
+            elif params['period'] == 'past':
+                query = query.filter(
+                    Course.end_date < now
+                )
 
         page = query.paginate(params['page'], params['perPage'])
 

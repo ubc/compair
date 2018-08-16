@@ -9,7 +9,7 @@ var courseTemplate = {
     "start_time": null,
     "end_time": null,
     "available": true,
-    "start_date": null,
+    "start_date": "Fri, 02 Jan 2015 00:00:00 -0000",
     "end_date": null,
     "assignment_count": 0,
     "student_assignment_count": 0,

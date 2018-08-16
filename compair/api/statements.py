@@ -12,8 +12,8 @@ api = new_restful_api(statement_api)
 
 
 statement_parser = reqparse.RequestParser()
-statement_parser.add_argument('verb', type=dict, location='json', required=True)
-statement_parser.add_argument('object', type=dict, location='json', required=True)
+statement_parser.add_argument('verb', type=dict, location='json', required=True, nullable=False)
+statement_parser.add_argument('object', type=dict, location='json', required=True, nullable=False)
 statement_parser.add_argument('context', type=dict, location='json', required=False)
 statement_parser.add_argument('result', type=dict, location='json', required=False)
 statement_parser.add_argument('timestamp', required=False)

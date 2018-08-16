@@ -33,7 +33,8 @@ module.controller(
             page: 1,
             perPage: 10,
             search: null,
-            includeSandbox: null
+            includeSandbox: null,
+            period: null
         };
         $scope.canAddCourse = resolvedData.canAddCourse;
         $scope.loggedInUserId = resolvedData.loggedInUser.id;

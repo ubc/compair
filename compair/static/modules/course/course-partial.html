@@ -40,15 +40,15 @@
         <legend>Schedule</legend>
         <div class="instructional-text" ng-hide="status">
         <p>
-            <strong>Optionally set the course dates</strong> during which enrolled students can see and access the course content when they log in. Setting no dates means the course is always accessible to students. (You will be able to set different dates for individual assignments when you create them.)
+            <strong>Set the course dates</strong> during which enrolled students can see and access the course content when they log in. You may optionally leave the course end date blank so that the course would be accessible to students anytime after the course start date. (You will be able to set different dates for individual assignments when you create them.)
         </p>
         </div>
         <div class="row">
             <div class="col-md-6 form-group">
-                <label>Course Begins</label><br />
+                <label class="required-star">Course Begins</label><br />
                 <div class="assignment-date">
                     <span class="input-group">
-                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.course_start.date" is-open="date.course_start.opened" datepicker-options="{ maxDate: date.course_end.date }" />
+                        <input type="text" class="form-control" required uib-datepicker-popup="{{format}}" ng-model="date.course_start.date" is-open="date.course_start.opened" datepicker-options="{ maxDate: date.course_end.date }" />
                         <span class="input-group-btn">
                             <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.course_start)"><i class="glyphicon glyphicon-calendar"></i></button>
                         </span>
