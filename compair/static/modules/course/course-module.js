@@ -629,8 +629,11 @@ module.controller(
                         astart: {date: null, time: new Date().setHours(0, 0, 0, 0)},
                         aend: {date: null, time: new Date().setHours(23, 59, 0, 0)},
                         cstart: {date: null, time: new Date().setHours(0, 0, 0, 0)},
-                        cend: {date: null, time: new Date().setHours(23, 59, 0, 0)}
-                    }
+                        cend: {date: null, time: new Date().setHours(23, 59, 0, 0)},
+                        sestart: {date: null, time: new Date().setHours(0, 0, 0, 0)},
+                        seend: {date: null, time: new Date().setHours(23, 59, 0, 0)},
+                    },
+                    enable_self_evaluation: assignment.enable_self_evaluation,
                 }
 
                 duplicate_assignment.date.astart.date = getNewDuplicateDate(assignment.answer_start, weekDelta).toDate();
@@ -651,6 +654,20 @@ module.controller(
 
                 if (assignment.compare_start && assignment.compare_end) {
                     duplicate_assignment.availableCheck = true;
+                }
+
+                if (assignment.self_eval_start) {
+                    duplicate_assignment.date.sestart.date = getNewDuplicateDate(assignment.self_eval_start, weekDelta).toDate();
+                    duplicate_assignment.date.sestart.time = moment(assignment.self_eval_start).toDate();
+                }
+
+                if (assignment.self_eval_start) {
+                    duplicate_assignment.selfEvalCheck = true;
+                }
+
+                if (assignment.self_eval_end) {
+                    duplicate_assignment.date.seend.date =  getNewDuplicateDate(assignment.self_eval_end, weekDelta).toDate();
+                    duplicate_assignment.date.seend.time = moment(assignment.self_eval_end).toDate();
                 }
 
                 $scope.duplicateAssignments.push(duplicate_assignment);
@@ -729,6 +746,9 @@ module.controller(
                     answer_end: combineDateTime(assignment.date.aend),
                     compare_start: combineDateTime(assignment.date.cstart),
                     compare_end: combineDateTime(assignment.date.cend),
+                    enable_self_evaluation: assignment.enable_self_evaluation,
+                    self_eval_start: assignment.enable_self_evaluation && assignment.selfEvalCheck? combineDateTime(assignment.date.sestart) : null,
+                    self_eval_end: assignment.enable_self_evaluation && assignment.selfEvalCheck? combineDateTime(assignment.date.seend) : null,
                 }
 
                 // answer end datetime has to be after answer start datetime
@@ -744,12 +764,21 @@ module.controller(
                     Toaster.warning('Assignment Not Duplicated', 'Please set comparison end time after comparison start time and try again.');
                     $scope.submitted = false;
                     return;
+                } else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start >= assignment_submit.self_eval_end) {
+                    Toaster.warning('Assignment Not Duplicated', 'Please set self-evaluation end time after self-evaluation start time and try again.');
+                    $scope.submitted = false;
+                    return;
                 }
 
                 // if option is not checked; make sure no compare dates are saved.
                 if (!assignment.availableCheck) {
                     assignment_submit.compare_start = null;
                     assignment_submit.compare_end = null;
+                }
+                // same for self-evaluation dates
+                if (!assignment.selfEvalCheck) {
+                    assignment_submit.self_eval_start = null;
+                    assignment_submit.self_eval_end = null;
                 }
 
                 $scope.duplicateCourse.assignments.push(assignment_submit);

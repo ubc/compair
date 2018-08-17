@@ -191,7 +191,68 @@
                     </div>
                 </div>
             </div>
+            <div class="row">
+                <div class="col-md-12 form-group">
+                    <label class="required-star">Self-Evaluation</label>
+                    <br>
+                    <label class="form-check-label not-bold">
+                        <input class="form-check-input" type="radio"
+                                ng-model="assignment.enable_self_evaluation" ng-value="true">
+                        &nbsp;Include self-evaluation for students &nbsp;&nbsp;
+                    </label>
+                    <label class="form-check-label not-bold">
+                        <input class="form-check-input" type="radio"
+                                ng-model="assignment.enable_self_evaluation" ng-value="false">
+                        &nbsp;Do not include self-evaluation
+                    </label>
+                </div>
+            </div>
+            <div class="row" ng-show="assignment.enable_self_evaluation">
+                <div class="col-md-12 form-group">
+                    <input type="checkbox" ng-model="assignment.selfEvalCheck">
+                    <label for="selfEvalCheck">Manually set when students self-evaluate<span ng-show="assignment.selfEvalCheck">:</span></label>
+                    <br /><br />
 
+                    <div ng-show="assignment.selfEvalCheck">
+                        <div class="row">
+                            <div class="col-md-6 form-group">
+                                <label class="required-star">Self-Evaluation Begins</label><br />
+                                <div class="assignment-date">
+                                    <span class="input-group">
+                                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.sestart.date"
+                                            is-open="assignment.date.sestart.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck"
+                                            datepicker-options="{ minDate: datePickerMinDate(assignment.date.sestart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(assignment.date.seend.date, duplicateCourse.date.course_end.date) }"
+                                            />
+                                        <span class="input-group-btn">
+                                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.sestart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                        </span>
+                                    </span>
+                                </div>
+                                <div class="assignment-date">
+                                    <div uib-timepicker ng-model="assignment.date.sestart.time" minute-step="1" mousewheel="false"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label class="required-star">Self-Evaluation Ends</label><br />
+                                <div class="assignment-date">
+                                    <span class="input-group">
+                                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.seend.date"
+                                            is-open="assignment.date.seend.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck"
+                                            datepicker-options="{ minDate: datePickerMinDate(assignment.date.sestart.date, assignment.date.sestart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(duplicateCourse.date.course_end.date) }"
+                                            />
+                                        <span class="input-group-btn">
+                                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.seend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                        </span>
+                                    </span>
+                                </div>
+                                <div class="assignment-date">
+                                    <div uib-timepicker ng-model="assignment.date.seend.time" minute-step="1" mousewheel="false"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </fieldset>
     <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>

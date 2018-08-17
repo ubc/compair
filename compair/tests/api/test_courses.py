@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 import datetime
 import json
+from random import choice
+from string import ascii_letters
 from compair import db
 
 from data.fixtures import DefaultFixture
@@ -395,6 +397,7 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
         self.course.end_date = datetime.datetime.utcnow() + datetime.timedelta(days=90)
 
         index = 0
+        self.assertGreaterEqual(self.course.assignments.count(), 4) # make sure we have enough assignments to play with
         for assignment in self.course.assignments:
             assignment.answer_start = self.course.start_date + datetime.timedelta(days=index)
             assignment.answer_end = self.course.start_date + datetime.timedelta(days=index+7)
@@ -402,6 +405,19 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
                 assignment.compare_start = self.course.start_date + datetime.timedelta(days=index+14)
             if assignment.compare_end != None:
                 assignment.compare_end = self.course.start_date + datetime.timedelta(days=index+21)
+            # modify some assignments with self-evaluation
+            if index % 2 == 0:
+                assignment.enable_self_evaluation = True
+            else:
+                assignment.enable_self_evaluation = False
+            if index % 4 == 0:
+                assignment.self_eval_start = assignment.answer_end + datetime.timedelta(days=1)
+                assignment.self_eval_end = assignment.self_eval_start + datetime.timedelta(days=1)
+                assignment.self_eval_instructions = ''.join([choice(ascii_letters) for i in range(10)])
+            else:
+                assignment.self_eval_start = None
+                assignment.self_eval_end = None
+                assignment.self_eval_instructions = None
             index+=1
         db.session.commit()
 
@@ -426,7 +442,11 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
                 'id': assignment.uuid,
                 'name': assignment.name,
                 'answer_start': (assignment.answer_start + self.date_delta).isoformat() + 'Z',
-                'answer_end': (assignment.answer_end + self.date_delta).isoformat() + 'Z'
+                'answer_end': (assignment.answer_end + self.date_delta).isoformat() + 'Z',
+                'enable_self_evaluation': assignment.enable_self_evaluation,
+                'self_eval_start': (assignment.self_eval_start + self.date_delta).isoformat() + 'Z' if assignment.self_eval_start else assignment.self_eval_start,
+                'self_eval_end': (assignment.self_eval_end + self.date_delta).isoformat() + 'Z' if assignment.self_eval_end else assignment.self_eval_end,
+                'self_eval_instructions': assignment.self_eval_instructions,
             }
 
             if assignment.compare_start != None:
@@ -716,6 +736,20 @@ class CoursesDuplicateComplexAPITests(ComPAIRAPITestCase):
                     duplicate_criteria = duplicate_assignment.criteria[index]
                     self.assertEqual(original_criteria.id, duplicate_criteria.id)
 
+                self.assertEqual(original_assignment.enable_self_evaluation,
+                    duplicate_assignment.enable_self_evaluation)
+                if original_assignment.self_eval_start:
+                    self.assertEqual(original_assignment.self_eval_start,
+                        (duplicate_assignment.self_eval_start - self.date_delta))
+                else:
+                    self.assertIsNone(duplicate_assignment.self_eval_start)
+                if original_assignment.self_eval_end:
+                    self.assertEqual(original_assignment.self_eval_end,
+                        (duplicate_assignment.self_eval_end - self.date_delta))
+                else:
+                    self.assertIsNone(duplicate_assignment.self_eval_end)
+                self.assertEqual(original_assignment.self_eval_instructions,
+                    duplicate_assignment.self_eval_instructions)
 
                 original_comparison_examples = original_assignment.comparison_examples.all()
                 duplicate_comparison_examples = duplicate_assignment.comparison_examples.all()

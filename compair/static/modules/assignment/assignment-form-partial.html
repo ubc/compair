@@ -211,7 +211,7 @@
                         <div class="assignment-date">
                             <span class="input-group">
                                 <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.sestart.date"
-                                    is-open="date.sestart.opened" ng-required="assignment.selfEvalCheck"
+                                    is-open="date.sestart.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck"
                                     datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(date.seend.date, course.end_date) }"
                                     />
                                 <span class="input-group-btn">
@@ -224,11 +224,11 @@
                         </div>
                     </div>
                     <div class="col-md-6 form-group">
-                        <label>Self-Evaluation Ends</label><br />
+                        <label class="required-star">Self-Evaluation Ends</label><br />
                         <div class="assignment-date">
                             <span class="input-group">
                                 <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.seend.date"
-                                    is-open="date.seend.opened"
+                                    is-open="date.seend.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck"
                                     datepicker-options="{ minDate: datePickerMinDate(date.astart.date, date.sestart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
                                     />
                                 <span class="input-group-btn">

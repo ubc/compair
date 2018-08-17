@@ -257,6 +257,9 @@ class CourseDuplicateAPI(Resource):
                 assignment_copy_data['compare_end'] = datetime.datetime.strptime(
                     assignment_copy_data.get('compare_end'), '%Y-%m-%dT%H:%M:%S.%fZ')
 
+            if 'enable_self_evaluation' not in assignment_copy_data:
+                assignment_copy_data['enable_self_evaluation'] = False
+
             if assignment_copy_data.get('self_eval_start'):
                 assignment_copy_data['self_eval_start'] = datetime.datetime.strptime(
                     assignment_copy_data.get('self_eval_start'), '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -316,13 +319,17 @@ class CourseDuplicateAPI(Resource):
                 compare_start=assignment_copy_data.get('compare_start'),
                 compare_end=assignment_copy_data.get('compare_end'),
 
+                self_eval_start=assignment_copy_data.get('self_eval_start') if assignment_copy_data.get('enable_self_evaluation', False) else None,
+                self_eval_end=assignment_copy_data.get('self_eval_end') if assignment_copy_data.get('enable_self_evaluation', False) else None,
+                self_eval_instructions=assignment.self_eval_instructions if assignment_copy_data.get('enable_self_evaluation', False) else None,
+
                 answer_grade_weight=assignment.answer_grade_weight,
                 comparison_grade_weight=assignment.comparison_grade_weight,
                 self_evaluation_grade_weight=assignment.self_evaluation_grade_weight,
 
                 number_of_comparisons=assignment.number_of_comparisons,
                 students_can_reply=assignment.students_can_reply,
-                enable_self_evaluation=assignment.enable_self_evaluation,
+                enable_self_evaluation=assignment_copy_data.get('enable_self_evaluation', False),
                 enable_group_answers=assignment.enable_group_answers,
                 pairing_algorithm=assignment.pairing_algorithm,
                 scoring_algorithm=assignment.scoring_algorithm,
