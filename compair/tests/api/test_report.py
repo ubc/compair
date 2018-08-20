@@ -550,7 +550,7 @@ class ReportAPITest(ComPAIRAPITestCase):
     def _check_participation_stat_report_heading_rows(self, heading):
         expected_heading = [
             'Assignment', 'Last Name', 'First Name', 'Student Number', 'User UUID',
-            'Answer', 'Answer ID', 'Answer Deleted', 'Answer Last Modified',
+            'Answer', 'Answer ID', 'Answer Deleted', 'Answer Submission Date', 'Answer Last Modified',
             'Answer Score (Normalized)', 'Overall Rank',
             'Comparisons Submitted', 'Comparisons Required', 'Comparison Requirements Met',
             'Self-Evaluation Submitted', 'Feedback Submitted (During Comparisons)', 'Feedback Submitted (Outside Comparisons)']
@@ -577,6 +577,7 @@ class ReportAPITest(ComPAIRAPITestCase):
         expected_row.append(student.student_number)
         expected_row.append(student.uuid)
         expected_row.append(str(user_stats["answers_submitted"]))
+        expected_row.append("")
         expected_row.append("")
         expected_row.append("")
         expected_row.append("")
@@ -698,8 +699,10 @@ class ReportAPITest(ComPAIRAPITestCase):
                 expected_row.append('N' if answer.active else 'Y')
                 if answer.active:
                     user_stats["answers_submitted"] += 1
+                expected_row.append(answer.submission_date.strftime("%Y-%m-%d %H:%M:%S") if answer.submission_date else "N/A")
                 expected_row.append(answer.modified.strftime("%Y-%m-%d %H:%M:%S") if answer.modified else "N/A")
             else:
+                expected_row.append("N/A")
                 expected_row.append("N/A")
                 expected_row.append("N/A")
                 expected_row.append("N/A")
