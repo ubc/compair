@@ -10,7 +10,16 @@
 
 ## Notable changes
 
-...
+* Improvements for automatic ComPAIR account creation and LTI account linking (when `global_unique_identifier` is configured)
+* The ability to create group assignments, meaning students submit one answer per group but still complete required comparisons/self-evaluation individually
+* The addition of a student view, which lets instructors preview the application from a specific student’s POV
+* The option to use specific dates and customized instructions for the self-evaluation step
+* Improvements to the layout and data in downloadable reports
+* New course filters on the dashboard, so instructors can view just their upcoming, active, or current courses
+* Updates to the look and content of the support site, including a new FAQ page
+* A back end change allowing easier customization of the login text and buttons
+
+For full list of changes: https://github.com/ubc/compair/issues?utf8=%E2%9C%93&q=milestone%3A%22Version%201.2%22%20
 
 # v1.1.4
 
