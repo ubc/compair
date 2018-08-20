@@ -83,7 +83,7 @@ class ReportRootAPI(Resource):
 
             title = [
                 'Assignment', 'Last Name', 'First Name','Student Number', 'User UUID',
-                'Answer', 'Answer ID', 'Answer Deleted', 'Answer Last Modified',
+                'Answer', 'Answer ID', 'Answer Deleted', 'Answer Submission Date', 'Answer Last Modified',
                 'Answer Score (Normalized)', 'Overall Rank',
                 'Comparisons Submitted', 'Comparisons Required', 'Comparison Requirements Met',
                 'Self-Evaluation Submitted', 'Feedback Submitted (During Comparisons)', 'Feedback Submitted (Outside Comparisons)']
@@ -254,12 +254,13 @@ def participation_stat_report(course, assignments, group, overall):
             the_answer = active_answer_list[0] if submitted else None
             is_deleted = 'N' if submitted else 'N/A'
             answer_uuid = the_answer.uuid if submitted else 'N/A'
+            answer_submission_date = datetime_to_string(the_answer.submission_date) if submitted else 'N/A'
             answer_last_modified = datetime_to_string(the_answer.modified) if submitted else 'N/A'
             answer_text = snippet(the_answer.content) if submitted else 'N/A'
             answer_rank = the_answer.score.rank if submitted and the_answer.score else 'Not Evaluated'
             answer_score = round_score(the_answer.score.normalized_score) if submitted and the_answer.score else 'Not Evaluated'
             total[user.id]['total_answers'] += submitted
-            temp.extend([answer_text, answer_uuid, is_deleted, answer_last_modified, answer_score, answer_rank])
+            temp.extend([answer_text, answer_uuid, is_deleted, answer_submission_date, answer_last_modified, answer_score, answer_rank])
 
             evaluations = evaluation_submitted.get(user.id, 0)
             evaluation_req_met = 'Yes' if evaluations >= assignment.total_comparisons_required else 'No'
@@ -280,12 +281,13 @@ def participation_stat_report(course, assignments, group, overall):
             if submitted > 1:
                 for answer in active_answer_list[1:]:
                     answer_uuid = answer.uuid
+                    answer_submission_date = datetime_to_string(answer.submission_date)
                     answer_last_modified = datetime_to_string(answer.modified)
                     answer_text = snippet(answer.content)
                     answer_rank = answer.score.rank if submitted and answer.score else 'Not Evaluated'
                     answer_score = round_score(answer.score.normalized_score) if submitted and answer.score else 'Not Evaluated'
                     temp = [assignment.name, user.lastname, user.firstname, user.student_number, user.uuid,
-                        answer_text, answer_uuid, 'N', answer_last_modified,
+                        answer_text, answer_uuid, 'N', answer_submission_date, answer_last_modified,
                         answer_score, answer_rank,
                         evaluations, assignment.total_comparisons_required,
                         evaluation_req_met, comment_self_eval_count, comment_during_comparison_count, comment_outside_comparison_count]
@@ -296,12 +298,13 @@ def participation_stat_report(course, assignments, group, overall):
             if deleted_count > 0:
                 for answer in deleted_answer_list:
                     answer_uuid = answer.uuid
+                    answer_submission_date = datetime_to_string(answer.submission_date)
                     answer_last_modified = datetime_to_string(answer.modified)
                     answer_text = snippet(answer.content)
                     answer_rank = answer.score.rank if answer.score else 'Not Evaluated'
                     answer_score = round_score(answer.score.normalized_score) if answer.score else 'Not Evaluated'
                     temp = [assignment.name, user.lastname, user.firstname, user.student_number, user.uuid,
-                        answer_text, answer_uuid, 'Y', answer_last_modified,
+                        answer_text, answer_uuid, 'Y', answer_submission_date, answer_last_modified,
                         answer_score, answer_rank,
                         evaluations, assignment.total_comparisons_required,
                         evaluation_req_met, comment_self_eval_count, comment_during_comparison_count, comment_outside_comparison_count]
@@ -322,7 +325,7 @@ def participation_stat_report(course, assignments, group, overall):
             req_met = 'Yes' if sum_submission['total_evaluations'] >= total_req else 'No'
             temp = [
                 '(Overall in Course)', user.lastname, user.firstname, user.student_number, user.uuid,
-                sum_submission['total_answers'], '', '', '', '', '',
+                sum_submission['total_answers'], '', '', '', '', '', '',
                 sum_submission['total_evaluations'], total_req, req_met, sum_submission['total_comments_self_eval'],
                 sum_submission['total_comments_during_comparison'], sum_submission['total_comments_outside_comparison']]
             report.append(temp)
