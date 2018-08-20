@@ -359,6 +359,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
                     # retrieve again and verify
                     actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
                     self.assertEqual(comp_ans['content'], actual_answer.content)
+                    self.assertIsNotNone(actual_answer.submission_date)
                     self.assertTrue(actual_answer.comparable)
 
             with self.login(self.fixtures.instructor.username):
@@ -483,6 +484,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 actual_answer = Answer.query.filter_by(uuid=rv.json['id']).one()
                 self.assertEqual(expected_answer['content'], actual_answer.content)
                 self.assertEqual(expected_answer['draft'], actual_answer.draft)
+                self.assertIsNone(actual_answer.submission_date)
 
                 # grades should not change
                 new_course_grade = CourseGrade.get_user_course_grade(self.fixtures.course, self.fixtures.students[-1]).grade
@@ -804,6 +806,7 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 self.assertEqual(draft_answer.uuid, rv.json['id'])
                 self.assertEqual('This is an edit', rv.json['content'])
                 self.assertEqual(draft_answer.draft, rv.json['draft'])
+                self.assertIsNone(rv.json['submission_date'])
                 self.assertTrue(rv.json['draft'])
 
                 # grades should not change
@@ -824,7 +827,10 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 self.assertEqual(draft_answer.uuid, rv.json['id'])
                 self.assertEqual('This is an edit', rv.json['content'])
                 self.assertEqual(draft_answer.draft, rv.json['draft'])
+                self.assertIsNotNone(rv.json['submission_date'])
                 self.assertFalse(rv.json['draft'])
+
+                current_submission_date = rv.json['submission_date']
 
                 # grades should increase
                 new_course_grade = CourseGrade.get_user_course_grade(self.fixtures.course, draft_student)
@@ -862,6 +868,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 self.assertEqual(draft_answer.uuid, rv.json['id'])
                 self.assertEqual('This is an edit', rv.json['content'])
                 self.assertEqual(draft_answer.draft, rv.json['draft'])
+                self.assertIsNotNone(rv.json['submission_date'])
+                self.assertEqual(current_submission_date, rv.json['submission_date'])
                 self.assertFalse(rv.json['draft'])
 
                 mocked_update_assignment_grades_run.reset_mock()
@@ -869,11 +877,13 @@ class AnswersAPITests(ComPAIRAPITestCase):
 
             # test edit by author
             with self.login(student.username):
+                previous_submission_date = answer.submission_date
                 rv = self.client.post(self.base_url + '/' + answer.uuid,
                     data=json.dumps(expected), content_type='application/json')
                 self.assert200(rv)
                 self.assertEqual(answer.uuid, rv.json['id'])
                 self.assertEqual('This is an edit', rv.json['content'])
+                self.assertEqual(previous_submission_date, answer.submission_date)
 
             # test edit by user that can manage posts
             with self.login(self.fixtures.instructor.username):

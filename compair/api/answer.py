@@ -251,10 +251,6 @@ class AnswerRootAPI(Resource):
                 abort(400, title="Answer Not Submitted",
                     message="You are currently not in any group for this course. Please contact your instructor to be added to a group.")
 
-        # set submission date if answer is being submitted for the first time
-        if not answer.draft and not answer.submission_date:
-            answer.submission_date = datetime.datetime.utcnow()
-
         check_for_existing_answers = False
         if group and assignment.enable_group_answers:
             if group.course_id != course.id:
@@ -308,6 +304,10 @@ class AnswerRootAPI(Resource):
             draft_answers = [prev_answer for prev_answer in prev_answers if prev_answer.draft]
             for draft_answer in draft_answers:
                 draft_answer.active = False
+
+        # set submission date if answer is being submitted for the first time
+        if not answer.draft and not answer.submission_date:
+            answer.submission_date = datetime.datetime.utcnow()
 
         db.session.add(answer)
         db.session.commit()
@@ -404,10 +404,6 @@ class AnswerIdAPI(Resource):
         user = User.get_by_uuid_or_404(user_uuid) if user_uuid else answer.user
         group = Group.get_active_by_uuid_or_404(group_uuid) if group_uuid else answer.group
 
-        # set submission date if answer is being submitted for the first time
-        if not answer.draft and not answer.submission_date:
-            answer.submission_date = datetime.datetime.utcnow()
-
         check_for_existing_answers = False
         if group and assignment.enable_group_answers:
             if group.course_id != course.id:
@@ -477,6 +473,10 @@ class AnswerIdAPI(Resource):
         # non-drafts must have content
         if not answer.draft and not answer.content and not file_uuid:
             abort(400, title="Answer Not Submitted", message="Please provide content in the text editor or upload a file and try submitting again.")
+
+        # set submission date if answer is being submitted for the first time
+        if not answer.draft and not answer.submission_date:
+            answer.submission_date = datetime.datetime.utcnow()
 
         model_changes = get_model_changes(answer)
         db.session.add(answer)
