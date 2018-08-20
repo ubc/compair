@@ -61,7 +61,11 @@
                     ng-model="courseFilters.search">
             </div>
         </form>
+        
     </div>
+    
+    <!-- REMOVE AFTER LTI UPGRADE -->
+    <p class="alert text-muted" ng-show="!canAddCourse">If you don't see the course(s) you expect below: 1) check your registration in the course (for example, see if you have access to the course in Canvas) and contact <a href="https://it.ubc.ca/got-question-about-it-products-and-support#helpdesk" target="_blank">UBC IT support</a> to register, then 2) if your course has a Canvas site, click the ComPAIR link from there once. For further help, contact <a href="mailto:compair.support@ubc.ca" target="_self">ComPAIR technical support</a>.</p>
 
     <!-- Course listing -->
     <div class="course-list" ng-if="courses.length">

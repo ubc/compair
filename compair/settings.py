@@ -95,12 +95,12 @@ SAML_LOGIN_ENABLED = False
 LTI_LOGIN_ENABLED = True
 
 LOGIN_ADDITIONAL_INSTRUCTIONS_HTML = """
-<h3>If you can't log in, please check:</h3>
+<h3>For course access issues, please check:</h3>
 <dl>
-    <dt>If you are a student: Are you registered in the course that is using this application?</dt>
-        <dd>See if you have access to the course in Canvas. If you can't access the course in Canvas, contact <a href="https://it.ubc.ca/got-question-about-it-products-and-support#helpdesk" target="_blank">UBC IT support</a>.</dd>
+    <dt>Are you registered in the course that is using this application?</dt>
+        <dd>For example, see if you have access to the course in Canvas. If you aren't registered, contact <a href="https://it.ubc.ca/got-question-about-it-products-and-support#helpdesk" target="_blank">UBC IT support</a>.</dd>
     <dt>Did you click the ComPAIR link from Canvas at least once?</dt>
-        <dd>You must enter the application initially by clicking the ComPAIR link in the course's Canvas site. This activates your ComPAIR account for the course.</dd>
+        <dd>If your course has a Canvas site, click the ComPAIR link from there once. This action enrols you in the ComPAIR course.</dd>
     <dt>Are you using a modern browser?</dt>
         <dd>Supported browsers for this application include <a href="https://www.mozilla.org/en-US/firefox/new/" target="_blank">Firefox</a>, <a href="http://www.google.com/chrome/" target="_blank">Chrome</a>, <a href="https://www.apple.com/ca/safari/" target="_blank">Safari</a>, and <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie" target="_blank">IE9+</a>.</dd>
     <dt>Did you answer 'yes' to all the troubleshooting questions above?</dt>
