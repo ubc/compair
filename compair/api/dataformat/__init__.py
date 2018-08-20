@@ -247,6 +247,7 @@ def get_answer(restrict_user=True, include_answer_author=True, include_score=Tru
         'public_comment_count': fields.Integer,
 
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created)),
+        'submission_date': fields.DateTime(dt_format='iso8601', default=None, attribute=lambda x: replace_tzinfo(x.submission_date)),
         'comparable': fields.Boolean
     }
 

@@ -177,7 +177,7 @@
                     <div class="each-header clearfix">
                         <compair-answer-avatar answer="answer"></compair-answer-avatar>
                         <span class="label label-default" ng-if="instructors[answer.user_id]">{{instructors[answer.user_id]}}</span>
-                        <strong>said</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                        <strong>said</strong> on {{answer.submission_date | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment">
                             <em>{{instructorLabel(answer.user_id)}} Response</em>
                             <span ng-if="canManageAssignment && !answerFilters.anonymous && answer.score && answer.comparable" class="label label-warning score-tooltip" uib-tooltip="Scores are normalized, so the top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
@@ -218,7 +218,7 @@
                             ></compair-answer-avatar>
                         <span ng-show="answerFilters.anonymous">Student</span>
                         <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
-                        <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                        <strong>answered</strong> on {{answer.submission_date | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right">
                             <!-- Student Score (not used for instructor answers) -->
                             <span ng-if="canManageAssignment && !answerFilters.anonymous && answer.score" class="label label-warning score-tooltip" uib-tooltip="Scores are normalized, so the top-ranked answer or&mdash;in the case of a tie&mdash;answers for the assignment receive 100%. All other answers receive a lower percentage based on how well they did compared to the top-ranked answer." tooltip-trigger tooltip-animation="false" tooltip-placement="left">
@@ -362,7 +362,7 @@
                     <div class="each-header clearfix">
                         <compair-answer-avatar answer="answer" skip-name="true" me="true"></compair-answer-avatar>
                         <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
-                        <strong>answered</strong> on {{answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
+                        <strong>answered</strong> on {{answer.submission_date | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment || ((answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id)) && assignment.answer_period && !assignment.compare_period)">
                             <a href="" title="Delete this answer" confirmation-needed="deleteAnswer(answer)" keyword="answer">
                                 <i class="fa fa-trash-o"></i>

@@ -1,3 +1,5 @@
+import datetime
+
 from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
 from flask import Blueprint
 from flask_login import login_required, current_user, current_app
@@ -157,7 +159,7 @@ class AnswerRootAPI(Resource):
             # use outer join to include comparable answers that are not yet compared (for non-restricted users)
             query = query.outerjoin(AnswerScore) \
                 .filter(Answer.comparable == True) \
-                .order_by(AnswerScore.score.desc(), Answer.created.desc())
+                .order_by(AnswerScore.score.desc(), Answer.submission_date.desc(), Answer.created.desc())
 
             if restrict_user:
                 # when orderd by rank, students won't see answers that are not compared (i.e. no score/rank)
@@ -175,7 +177,7 @@ class AnswerRootAPI(Resource):
 
         else:
             # when ordered by date, non-comparable answers should be on top of the list
-            query = query.order_by(Answer.comparable, Answer.created.desc())
+            query = query.order_by(Answer.comparable, Answer.submission_date.desc(), Answer.created.desc())
 
         page = query.paginate(params['page'], params['perPage'], error_out=False)
         # remove label entities from results
@@ -302,6 +304,10 @@ class AnswerRootAPI(Resource):
             draft_answers = [prev_answer for prev_answer in prev_answers if prev_answer.draft]
             for draft_answer in draft_answers:
                 draft_answer.active = False
+
+        # set submission date if answer is being submitted for the first time
+        if not answer.draft and not answer.submission_date:
+            answer.submission_date = datetime.datetime.utcnow()
 
         db.session.add(answer)
         db.session.commit()
@@ -467,6 +473,10 @@ class AnswerIdAPI(Resource):
         # non-drafts must have content
         if not answer.draft and not answer.content and not file_uuid:
             abort(400, title="Answer Not Submitted", message="Please provide content in the text editor or upload a file and try submitting again.")
+
+        # set submission date if answer is being submitted for the first time
+        if not answer.draft and not answer.submission_date:
+            answer.submission_date = datetime.datetime.utcnow()
 
         model_changes = get_model_changes(answer)
         db.session.add(answer)

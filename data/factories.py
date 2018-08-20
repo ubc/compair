@@ -105,8 +105,9 @@ class AnswerFactory(factory.alchemy.SQLAlchemyModelFactory):
     #group = factory.SubFactory(GroupFactory)
     content = factory.Sequence(lambda n: 'this is some content for post ü %d' % n)
     draft = False
-    # Make sure created dates are unique.
+    # Make sure created / submission dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
+    submission_date = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
 class AnswerScoreFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:

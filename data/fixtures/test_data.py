@@ -685,7 +685,8 @@ class TestFixture:
             for assignment in self.assignments:
                 answer = AnswerFactory(
                     assignment=assignment,
-                    draft=True
+                    draft=True,
+                    submission_date=None
                 )
                 if assignment.enable_group_answers:
                     answer.group = self.draft_group
@@ -943,6 +944,9 @@ class TestFixture:
             group=None,
             draft=draft
         )
+        if (draft):
+            answer.submission_date=None
+
         db.session.commit()
         self.answers.append(answer)
         return self
@@ -954,6 +958,9 @@ class TestFixture:
             user=None,
             draft=draft
         )
+        if (draft):
+            answer.submission_date=None
+
         db.session.commit()
         self.answers.append(answer)
         return self

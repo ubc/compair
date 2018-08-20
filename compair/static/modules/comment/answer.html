@@ -1,6 +1,6 @@
 <div ng-if="answer">
     <compair-student-avatar user="answer.user"></compair-student-avatar>
-    <strong>answered</strong> on {{ answer.created | amDateFormat: 'MMM D @ h:mm a'}}:
+    <strong>answered</strong> on {{ answer.submission_date | amDateFormat: 'MMM D @ h:mm a'}}:
     <rich-content content="answer.content" attachment="answer.file"></rich-content>
 </div>
 <div ng-if="!answer"><p><i>(No answer has been submitted by this student.)</i></p></div>
