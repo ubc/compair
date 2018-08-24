@@ -262,7 +262,7 @@ myApp.factory('RouteResolves',
             return $q.when({'objects':[]});
         },
         userThirdPartyUsers: function() {
-            if (AuthTypesEnabled.cas) {
+            if (AuthTypesEnabled.cas || AuthTypesEnabled.saml) {
                 var userId = $route.current.params.userId;
                 return UserThirdPartyUsersResource.get({'id': userId}).$promise;
             }
