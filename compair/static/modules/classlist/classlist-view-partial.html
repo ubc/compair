@@ -118,7 +118,7 @@
                     <th>
                         <a href="" ng-click="updateTableOrderBy('course_role')">Course Role</a>
                     </th>
-                    <th ng-if="groups.length > 0">
+                    <th>
                         <a href="" ng-click="updateTableOrderBy('group_name')">Course Group</a>
                     </th>
                 </tr>
@@ -145,10 +145,10 @@
                                 ng-change="enrol(user)"></select>
                         <span ng-if="loggedInUserId == user.id && !canManageUsers">{{ user.course_role }}</span>
                     </td>
-                    <td ng-if="groups.length > 0">
-                        <select ng-model="user.group_id" ng-options="group.id as group.name for group in groups"
-                                ng-change="updateGroup(user)">
-                            <option value="">- None -</option>
+                    <td>
+                        <select ng-model="user.group_id" ng-options="group.id as group.name disable when group.disabled for group in groups.concat(groupAddOptions)"
+                                ng-change="updateGroup(user, false, '{{user.group_id}}')">
+                            <option value="">( none )</option>
                         </select>
                     </td>
                 </tr>

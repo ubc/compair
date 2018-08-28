@@ -85,6 +85,9 @@ module.controller(
         $scope.lti_membership_pending = 0;
         $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
 
+        $scope.groupAddOptions = Array( {'id':'-1',  'name':'--------------------', 'disabled':true},
+                                        {'id':'add', 'name':'Add new group'});
+
         if ($scope.course.lti_linked) {
             LTIResource.getMembershipStatus({id: $scope.courseId},
                 function(ret) {
@@ -187,11 +190,42 @@ module.controller(
             }
         };
 
-        $scope.updateGroup = function(user) {
-            if (user.group_id) {
+        $scope.addUserToNewGroup = function(user) {
+            var modalScope = $scope.$new();
+            modalScope.courseId = $scope.courseId;
+            modalScope.groups = $scope.groups;
+
+            var modalInstance = $uibModal.open({
+                animation: true,
+                backdrop: 'static',
+                controller: "AddGroupModalController",
+                templateUrl: 'modules/group/group-modal-partial.html',
+                scope: modalScope
+            });
+
+            modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal("Edit Group");
+            });
+            modalInstance.result.then(function (group_id) {
+                user.group_id = group_id;
+                $scope.updateGroup(user, true);
+                xAPIStatementHelper.closed_modal("Edit Group");
+            }, function () {
+                xAPIStatementHelper.closed_modal("Edit Group");
+            });
+        };
+
+        $scope.updateGroup = function(user, reload, original_group_id) {
+            if (user.group_id == 'add') {
+                $scope.addUserToNewGroup(user);
+                user.group_id = original_group_id;
+            } else if (user.group_id) {
                 GroupUserResource.add({'courseId': $scope.courseId, 'userId': user.id, 'groupId': user.group_id}, {},
                     function (ret) {
                         Toaster.success("User Saved", "Successfully added the user to group " + ret.name + ".");
+                        if (reload) {
+                            $route.reload();
+                        }
                     },
                     function (ret) {
                         // will reset the changed group_id in the select

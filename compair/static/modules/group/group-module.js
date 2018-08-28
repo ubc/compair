@@ -61,8 +61,8 @@ module.factory(
 /***** Controllers *****/
 module.controller(
     'AddGroupModalController',
-    ["$rootScope", "$scope", "$uibModalInstance", "GroupResource",
-    function ($rootScope, $scope, $uibModalInstance, GroupResource) {
+    ["$rootScope", "$scope", "$uibModalInstance", "$filter", "Toaster", "GroupResource",
+    function ($rootScope, $scope, $uibModalInstance, $filter, Toaster, GroupResource) {
         $scope.group = {};
         $scope.modalInstance = $uibModalInstance;
         $scope.submitted = false;
@@ -70,14 +70,22 @@ module.controller(
         $scope.groupSubmit = function () {
             $scope.submitted = true;
 
-            GroupResource.save({'courseId': $scope.courseId}, $scope.group).$promise.then(
-                function (ret) {
-                    $scope.group = ret;
-                    $uibModalInstance.close($scope.group.id);
-                }
-            ).finally(function() {
+            var groupNameExists = $filter('filter')($scope.groups, {'name':$scope.group.name}, true).length > 0;
+
+            if (groupNameExists) {
+                Toaster.warning("Group Not Added", "The group name you have entered already exists. Please enter another group name and press Save.");
                 $scope.submitted = false;
-            });
+            }
+            else {
+                GroupResource.save({'courseId': $scope.courseId}, $scope.group).$promise.then(
+                    function (ret) {
+                        $scope.group = ret;
+                        $uibModalInstance.close($scope.group.id);
+                    }
+                ).finally(function() {
+                    $scope.submitted = false;
+                });
+            }
         }
     }
 ]);

@@ -44,6 +44,19 @@ class GroupRootAPI(Resource):
         params = new_group_parser.parse_args()
 
         new_group.name = params.get("name")
+
+        # check if group name is unique
+        group_name_exists = Group.query \
+            .filter(
+                Group.course_id == course.id,
+                Group.name == new_group.name
+            ) \
+            .first()
+
+        if group_name_exists:
+            abort(400, title="Group Not Added",
+                message="Sorry, the group name you have entered already exists. Please choose a different name.")
+
         db.session.add(new_group)
         db.session.commit()
 
@@ -95,6 +108,19 @@ class GroupIdAPI(Resource):
             message="Sorry, your role in this course does not allow you to save groups.")
 
         params = existing_group_parser.parse_args()
+
+        # check if group name is unique
+        group_name_exists = Group.query \
+            .filter(
+                Group.id != group.id,
+                Group.course_id == group.course_id,
+                Group.name == params.get("name", group.name)
+            ) \
+            .first()
+
+        if group_name_exists:
+            abort(400, title="Group Not Saved",
+                message="Sorry, the group name you have entered already exists. Please choose a different name.")
 
         group.name = params.get("name", group.name)
 
