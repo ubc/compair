@@ -56,3 +56,8 @@ class Group(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     @classmethod
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
+
+    __table_args__ = (
+        db.UniqueConstraint('course_id', 'name', name='uq_course_and_group_name'),
+        DefaultTableMixin.default_table_args
+    )

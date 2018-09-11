@@ -64,6 +64,10 @@ class GroupsAPITests(ComPAIRAPITestCase):
             'name': 'Group 101',
         }
 
+        invalid_expected = {
+            'name': self.fixtures.groups[1].name,
+        }
+
         # test login required
         rv = self.client.post(url, data=json.dumps(group_expected), content_type='application/json')
         self.assert401(rv)
@@ -91,6 +95,12 @@ class GroupsAPITests(ComPAIRAPITestCase):
             rv = self.client.post(invalid_url, data=json.dumps(group_expected), content_type='application/json')
             self.assert404(rv)
 
+            # test non-unique name
+            rv = self.client.post(url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json['title'], "Group Not Added")
+            self.assertEqual(rv.json['message'], "Sorry, the group name you have entered already exists. Please choose a different name.")
+
             # test successful query
             rv = self.client.post(url, data=json.dumps(group_expected), content_type='application/json')
             self.assert200(rv)
@@ -105,6 +115,11 @@ class GroupsAPITests(ComPAIRAPITestCase):
         group_expected = {
             'id': group.uuid,
             'name': 'New Group Name',
+        }
+
+        invalid_expected = {
+            'id': group.uuid,
+            'name': self.fixtures.groups[1].name,
         }
 
         # test login required
@@ -138,6 +153,12 @@ class GroupsAPITests(ComPAIRAPITestCase):
             invalid_url = '/api/courses/'+self.fixtures.course.uuid+'/groups/999'
             rv = self.client.post(invalid_url, data=json.dumps(group_expected), content_type='application/json')
             self.assert404(rv)
+
+            # test non-unique name
+            rv = self.client.post(url, data=json.dumps(invalid_expected), content_type='application/json')
+            self.assert400(rv)
+            self.assertEqual(rv.json['title'], "Group Not Saved")
+            self.assertEqual(rv.json['message'], "Sorry, the group name you have entered already exists. Please choose a different name.")
 
             # test successful query
             rv = self.client.post(url, data=json.dumps(group_expected), content_type='application/json')
