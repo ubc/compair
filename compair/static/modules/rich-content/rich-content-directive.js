@@ -287,7 +287,7 @@ module.directive('richContent',
                     var content = $sanitize($scope.content);
 
                     $scope.embeddableLinks = [];
-                    var matches = [];
+                    var linkMatches = [];
                     var linkRegex = /<a[^>]*>[^<]+<\/a>/ig;
                     var linkMatch = null;
                     while ( (linkMatch = linkRegex.exec(content)) !== null ) {
@@ -298,7 +298,7 @@ module.directive('richContent',
                             var embeddableContent = embeddableRichContent.generateEmbeddableContent(href, $scope.downloadName);
                             if (embeddableContent) {
                                 $scope.embeddableLinks.push(embeddableContent);
-                                matches.push({
+                                linkMatches.push({
                                     contentIndex: linkRegex.lastIndex,
                                     embeddableLinkIndex: $scope.embeddableLinks.length-1
                                 })
@@ -306,15 +306,30 @@ module.directive('richContent',
                         }
                     }
 
-                    for (var count = matches.length-1; count >= 0; --count) {
-                        var contentIndex = matches[count].contentIndex;
-                        var embeddableLinkIndex = matches[count].embeddableLinkIndex;
+                    for (var count = linkMatches.length-1; count >= 0; --count) {
+                        var contentIndex = linkMatches[count].contentIndex;
+                        var embeddableLinkIndex = linkMatches[count].embeddableLinkIndex;
                         var template =
                             '&mdash;<a href="" ng-click="showEmbeddableLinkModal(embeddableLinks['+embeddableLinkIndex+'])" '+
                                 'class="btn btn-info btn-xs">'+
                                 'Open in Pop-up'+
                             '</a>';
                         content = content.substr(0, contentIndex) + template + content.substr(contentIndex);
+                    }
+
+                    var mediaMatches = [];
+                    // image, audio, or video tags
+                    var mediaRegex = /<img[^>]*>|<video[^>]*>|<audio[^>]*>/ig;
+                    var mediaMatch = null;
+                    while ( (mediaMatch = mediaRegex.exec(content)) !== null ) {
+                        mediaMatches.push(mediaRegex.lastIndex);
+                    }
+
+                    // add crossorigin="anonymous" to image, video, and audio tags
+                    for (var count = mediaMatches.length-1; count >= 0; --count) {
+                        var contentIndex = mediaMatches[count];
+                        var template = ' crossorigin="anonymous" ';
+                        content = content.substr(0, contentIndex-1) + template + content.substr(contentIndex-1);
                     }
 
                     // needs to be compiled by dynamic
