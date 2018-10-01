@@ -6,8 +6,8 @@ import mock
 from data.fixtures.test_data import SimpleAssignmentTestData, LTITestData, ThirdPartyAuthTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, UserCourse, \
-    LTIConsumer, LTIContext, LTIUser, LTIMembership,  \
-    LTIResourceLink, LTIUserResourceLink
+    LegacyLTIConsumer, LegacyLTIContext, LegacyLTIUser, LegacyLTIMembership,  \
+    LegacyLTIResourceLink, LegacyLTIUserResourceLink
 from compair.models.lti_models import MembershipInvalidRequestException, MembershipNoResultsException, \
     MembershipNoValidContextsException
 from compair.core import db
@@ -66,8 +66,8 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             actual_lti_contexts = rv.json['objects']
 
             result = rv.json['objects']
-            expected_results = LTIContext.query \
-                .order_by(LTIContext.created.desc()) \
+            expected_results = LegacyLTIContext.query \
+                .order_by(LegacyLTIContext.created.desc()) \
                 .paginate(1, 20)
 
             for i, expected in enumerate(expected_results.items):
@@ -88,8 +88,8 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
 
             result = rv.json['objects']
-            expected_results = LTIContext.query \
-                .order_by(LTIContext.created.desc()) \
+            expected_results = LegacyLTIContext.query \
+                .order_by(LegacyLTIContext.created.desc()) \
                 .paginate(2, 20)
 
             for i, expected in enumerate(expected_results.items):
@@ -247,7 +247,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
         self.assert200(rv)
 
 
-    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._post_membership_request')
+    @mock.patch('compair.models.lti_models.legacy_lti_membership.LegacyLTIMembership._post_membership_request')
     def test_lti_course_link_with_membership_ext(self, mocked_post_membership_request):
         instructor = self.data.get_authorized_instructor()
         course = self.data.get_course()
@@ -375,7 +375,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
@@ -454,7 +454,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
@@ -471,7 +471,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                 else:
                     self.assertIsNone(lti_membership.lti_user.student_number)
 
-    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._get_membership_request')
+    @mock.patch('compair.models.lti_models.legacy_lti_membership.LegacyLTIMembership._get_membership_request')
     def test_lti_course_link_with_membership_service(self, mocked_get_membership_request):
         instructor = self.data.get_authorized_instructor()
         course = self.data.get_course()
@@ -689,11 +689,11 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
-            lti_user_resource_links = LTIUserResourceLink.query \
+            lti_user_resource_links = LegacyLTIUserResourceLink.query \
                 .all()
 
             self.assertEqual(len(lti_memberships), 5)
@@ -1006,7 +1006,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                                 self.assertEqual(user_course.course_role, CourseRole.dropped)
 
                     # verify membership table
-                    lti_memberships = LTIMembership.query \
+                    lti_memberships = LegacyLTIMembership.query \
                         .filter_by(compair_course_id=course.id) \
                         .all()
 
@@ -1151,7 +1151,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
@@ -1205,7 +1205,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             # test deletion by admin
             rv = self.client.delete(url)
             self.assert200(rv)
-            self.assertEqual(len(course.lti_contexts.all()), 1)
+            self.assertEqual(len(course.legacy_lti_contexts.all()), 1)
 
             # test lti link is unlinked
             rv = self.client.delete(url)
@@ -1217,9 +1217,9 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             url = '/api/lti/course/'+course.uuid+'/context/'+lti_context2.uuid
             rv = self.client.delete(url)
             self.assert200(rv)
-            self.assertEqual(len(course.lti_contexts.all()), 0)
+            self.assertEqual(len(course.legacy_lti_contexts.all()), 0)
 
-    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._get_membership')
+    @mock.patch('compair.models.lti_models.legacy_lti_membership.LegacyLTIMembership._get_membership')
     def test_lti_course_unlink_with_membership(self, mocked_get_membership):
         mocked_get_membership.return_value = []
 
@@ -1246,7 +1246,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             # test deletion by admin
             rv = self.client.delete(url)
             self.assert200(rv)
-            self.assertEqual(len(course.lti_contexts.all()), 1)
+            self.assertEqual(len(course.legacy_lti_contexts.all()), 1)
 
             mocked_get_membership.assert_called_once_with(
                 lti_context2
@@ -1258,11 +1258,11 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             url = '/api/lti/course/'+course.uuid+'/context/'+lti_context2.uuid
             rv = self.client.delete(url)
             self.assert200(rv)
-            self.assertEqual(len(course.lti_contexts.all()), 0)
+            self.assertEqual(len(course.legacy_lti_contexts.all()), 0)
 
             mocked_get_membership.assert_not_called()
 
-    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._post_membership_request')
+    @mock.patch('compair.models.lti_models.legacy_lti_membership.LegacyLTIMembership._post_membership_request')
     def test_lti_membership_for_consumer_with_membership_ext(self, mocked_post_membership_request):
         course = self.data.get_course()
         instructor = self.data.get_authorized_instructor()
@@ -1419,7 +1419,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
@@ -1520,7 +1520,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
@@ -1599,7 +1599,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
@@ -1645,7 +1645,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
@@ -1676,7 +1676,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                 "The LTI link does not support the membership extension. Please edit your LTI link settings or contact your system administrator and try again.")
 
 
-    @mock.patch('compair.models.lti_models.lti_membership.LTIMembership._get_membership_request')
+    @mock.patch('compair.models.lti_models.legacy_lti_membership.LegacyLTIMembership._get_membership_request')
     def test_lti_membership_for_consumer_with_membership_service(self, mocked_get_membership_request):
         course = self.data.get_course()
         instructor = self.data.get_authorized_instructor()
@@ -1873,7 +1873,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
@@ -2041,7 +2041,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
@@ -2165,7 +2165,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 
@@ -2223,7 +2223,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
                     self.assertEqual(user_course.course_role, CourseRole.dropped)
 
             # verify membership table
-            lti_memberships = LTIMembership.query \
+            lti_memberships = LegacyLTIMembership.query \
                 .filter_by(compair_course_id=course.id) \
                 .all()
 

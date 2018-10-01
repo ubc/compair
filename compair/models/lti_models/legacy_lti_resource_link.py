@@ -7,13 +7,13 @@ from . import *
 
 from compair.core import db
 
-class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
-    __tablename__ = 'lti_resource_link'
+class LegacyLTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
+    __tablename__ = 'legacy_lti_resource_link'
 
     # table columns
-    lti_consumer_id = db.Column(db.Integer, db.ForeignKey("lti_consumer.id", ondelete="CASCADE"),
+    lti_consumer_id = db.Column(db.Integer, db.ForeignKey("legacy_lti_consumer.id", ondelete="CASCADE"),
         nullable=False)
-    lti_context_id = db.Column(db.Integer, db.ForeignKey("lti_context.id", ondelete="CASCADE"),
+    lti_context_id = db.Column(db.Integer, db.ForeignKey("legacy_lti_context.id", ondelete="CASCADE"),
         nullable=True)
     resource_link_id = db.Column(db.String(255), nullable=False)
     resource_link_title = db.Column(db.String(255), nullable=True)
@@ -24,9 +24,9 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
 
     # relationships
     # compair_assignment via Assignment Model
-    # lti_consumer via LTIConsumer Model
-    # lti_context via LTIContext Model
-    lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_resource_link", lazy="dynamic")
+    # lti_consumer via LegacyLTIConsumer Model
+    # lti_context via LegacyLTIContext Model
+    lti_user_resource_links = db.relationship("LegacyLTIUserResourceLink", backref="lti_resource_link", lazy="dynamic")
 
     # hybrid and other functions
     context_id = association_proxy('lti_context', 'context_id')
@@ -57,7 +57,7 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def get_by_lti_consumer_id_and_resource_link_id(cls, lti_consumer_id, resource_link_id):
-        return LTIResourceLink.query \
+        return LegacyLTIResourceLink.query \
             .filter_by(
                 lti_consumer_id=lti_consumer_id,
                 resource_link_id=resource_link_id
@@ -66,11 +66,11 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
 
     @classmethod
     def get_by_tool_provider(cls, lti_consumer, tool_provider, lti_context=None):
-        lti_resource_link = LTIResourceLink.get_by_lti_consumer_id_and_resource_link_id(
+        lti_resource_link = LegacyLTIResourceLink.get_by_lti_consumer_id_and_resource_link_id(
             lti_consumer.id, tool_provider.resource_link_id)
 
         if lti_resource_link == None:
-            lti_resource_link = LTIResourceLink(
+            lti_resource_link = LegacyLTIResourceLink(
                 lti_consumer_id=lti_consumer.id,
                 resource_link_id=tool_provider.resource_link_id
             )

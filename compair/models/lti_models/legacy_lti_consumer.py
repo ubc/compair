@@ -6,8 +6,8 @@ from . import *
 
 from compair.core import db
 
-class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
-    __tablename__ = 'lti_consumer'
+class LegacyLTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
+    __tablename__ = 'legacy_lti_consumer'
 
     # table columns
     oauth_consumer_key = db.Column(db.String(255), unique=True, nullable=False)
@@ -21,15 +21,15 @@ class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin)
     student_number_param = db.Column(db.String(255), nullable=True)
 
     # relationships
-    lti_nonces = db.relationship("LTINonce", backref="lti_consumer", lazy="dynamic")
-    lti_contexts = db.relationship("LTIContext", backref="lti_consumer", lazy="dynamic")
-    lti_resource_links = db.relationship("LTIResourceLink", backref="lti_consumer", lazy="dynamic")
-    lti_users = db.relationship("LTIUser", backref="lti_consumer", lazy="dynamic")
+    lti_nonces = db.relationship("LegacyLTINonce", backref="lti_consumer", lazy="dynamic")
+    lti_contexts = db.relationship("LegacyLTIContext", backref="lti_consumer", lazy="dynamic")
+    lti_resource_links = db.relationship("LegacyLTIResourceLink", backref="lti_consumer", lazy="dynamic")
+    lti_users = db.relationship("LegacyLTIUser", backref="lti_consumer", lazy="dynamic")
 
     # hybrid and other functions
     @classmethod
     def get_by_consumer_key(cls, consumer_key):
-        return LTIConsumer.query \
+        return LegacyLTIConsumer.query \
             .filter_by(
                 active=True,
                 oauth_consumer_key=consumer_key
@@ -38,7 +38,7 @@ class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin)
 
     @classmethod
     def get_by_tool_provider(cls, tool_provider):
-        lti_consumer = LTIConsumer.get_by_consumer_key(
+        lti_consumer = LegacyLTIConsumer.get_by_consumer_key(
             tool_provider.consumer_key)
 
         if lti_consumer == None:

@@ -9,11 +9,11 @@ from . import *
 
 from compair.core import db, display_name_generator
 
-class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
-    __tablename__ = 'lti_user'
+class LegacyLTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
+    __tablename__ = 'legacy_lti_user'
 
     # table columns
-    lti_consumer_id = db.Column(db.Integer, db.ForeignKey("lti_consumer.id", ondelete="CASCADE"),
+    lti_consumer_id = db.Column(db.Integer, db.ForeignKey("legacy_lti_consumer.id", ondelete="CASCADE"),
         nullable=False)
     user_id = db.Column(db.String(255), nullable=False)
     lis_person_name_given = db.Column(db.String(255), nullable=True)
@@ -28,9 +28,9 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     # relationships
     # compair_user via User Model
-    # lti_consumer via LTIConsumer Model
-    lti_memberships = db.relationship("LTIMembership", backref="lti_user", lazy="dynamic")
-    lti_user_resource_links = db.relationship("LTIUserResourceLink", backref="lti_user", lazy="dynamic")
+    # lti_consumer via LegacyLTIConsumer Model
+    lti_memberships = db.relationship("LegacyLTIMembership", backref="lti_user", lazy="dynamic")
+    lti_user_resource_links = db.relationship("LegacyLTIUserResourceLink", backref="lti_user", lazy="dynamic")
 
     # hybrid and other functions
     lti_consumer_uuid = association_proxy('lti_consumer', 'uuid')
@@ -71,7 +71,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     @classmethod
     def get_by_lti_consumer_id_and_user_id(cls, lti_consumer_id, user_id):
-        return LTIUser.query \
+        return LegacyLTIUser.query \
             .filter_by(
                 lti_consumer_id=lti_consumer_id,
                 user_id=user_id
@@ -85,11 +85,11 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         if tool_provider.user_id == None:
             return None
 
-        lti_user = LTIUser.get_by_lti_consumer_id_and_user_id(
+        lti_user = LegacyLTIUser.get_by_lti_consumer_id_and_user_id(
             lti_consumer.id, tool_provider.user_id)
 
         if not lti_user:
-            lti_user = LTIUser(
+            lti_user = LegacyLTIUser(
                 lti_consumer_id=lti_consumer.id,
                 user_id=tool_provider.user_id,
                 system_role=SystemRole.instructor  \

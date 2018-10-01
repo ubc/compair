@@ -6,9 +6,9 @@ from data.fixtures.test_data import LTITestData, BasicTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 
 
-class LTIConsumersAPITests(ComPAIRAPITestCase):
+class LegacyLTIConsumersAPITests(ComPAIRAPITestCase):
     def setUp(self):
-        super(LTIConsumersAPITests, self).setUp()
+        super(LegacyLTIConsumersAPITests, self).setUp()
         self.data = BasicTestData()
         self.lti_data = LTITestData()
 

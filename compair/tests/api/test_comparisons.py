@@ -208,8 +208,8 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                 self.assert200(rv)
 
 
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_assignment_grades.run')
     def test_get_and_submit_comparison(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         lti_consumer = self.lti_data.lti_consumer
         (lti_user_resource_link1, lti_user_resource_link2) = self.lti_data.setup_student_user_resource_links(

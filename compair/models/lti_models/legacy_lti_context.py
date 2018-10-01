@@ -7,11 +7,11 @@ from . import *
 
 from compair.core import db
 
-class LTIContext(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
-    __tablename__ = 'lti_context'
+class LegacyLTIContext(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
+    __tablename__ = 'legacy_lti_context'
 
     # table columns
-    lti_consumer_id = db.Column(db.Integer, db.ForeignKey("lti_consumer.id", ondelete="CASCADE"),
+    lti_consumer_id = db.Column(db.Integer, db.ForeignKey("legacy_lti_consumer.id", ondelete="CASCADE"),
         nullable=False)
     context_id = db.Column(db.String(255), nullable=False)
     context_type = db.Column(db.String(255), nullable=True)
@@ -24,9 +24,9 @@ class LTIContext(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     # relationships
     # compair_course via Course Model
-    # lti_consumer via LTIConsumer Model
-    lti_memberships = db.relationship("LTIMembership", backref="lti_context", lazy="dynamic")
-    lti_resource_links = db.relationship("LTIResourceLink", backref="lti_context")
+    # lti_consumer via LegacyLTIConsumer Model
+    lti_memberships = db.relationship("LegacyLTIMembership", backref="lti_context", lazy="dynamic")
+    lti_resource_links = db.relationship("LegacyLTIResourceLink", backref="lti_context")
 
     # hybrid and other functions
     oauth_consumer_key = association_proxy('lti_consumer', 'oauth_consumer_key')
@@ -72,7 +72,7 @@ class LTIContext(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     @classmethod
     def get_by_lti_consumer_id_and_context_id(cls, lti_consumer_id, context_id):
-        return LTIContext.query \
+        return LegacyLTIContext.query \
             .filter_by(
                 lti_consumer_id=lti_consumer_id,
                 context_id=context_id
@@ -84,11 +84,11 @@ class LTIContext(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         if tool_provider.context_id == None:
             return None
 
-        lti_context = LTIContext.get_by_lti_consumer_id_and_context_id(
+        lti_context = LegacyLTIContext.get_by_lti_consumer_id_and_context_id(
             lti_consumer.id, tool_provider.context_id)
 
         if lti_context == None:
-            lti_context = LTIContext(
+            lti_context = LegacyLTIContext(
                 lti_consumer_id=lti_consumer.id,
                 context_id=tool_provider.context_id
             )

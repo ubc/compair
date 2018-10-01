@@ -6,7 +6,7 @@ from flask_script import Manager
 
 from compair.core import db
 from compair.models import User, ThirdPartyUser, ThirdPartyType, \
-    LTIUser
+    LegacyLTIUser
 from flask import current_app
 
 manager = Manager(usage="Manage Users")
@@ -42,8 +42,8 @@ def generate_global_unique_identifiers():
     if len(users) > 0:
         update_count = 0
         for user in users:
-            lti_user = user.lti_user_links \
-                .filter(LTIUser.global_unique_identifier != None) \
+            lti_user = user.legacy_lti_user_links \
+                .filter(LegacyLTIUser.global_unique_identifier != None) \
                 .first()
 
             if lti_user:

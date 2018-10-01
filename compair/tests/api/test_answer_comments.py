@@ -194,8 +194,8 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
                 self.assertEqual(3, len(rv.json))
                 self.assertEqual(draft_comment.uuid, rv.json[0]['id'])
 
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_assignment_grades.run')
     def test_create_answer_comment(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         url = self.get_url(
             course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
@@ -471,8 +471,8 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 self.assertNotIn('fullname', rv.json['user'])
 
 
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_assignment_grades.run')
     def test_edit_answer_comment(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         comment = self.data.get_answer_comments_by_assignment(self.assignment)[0]
         url = self.get_url(
@@ -761,8 +761,8 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
                 self.assert403(rv)
                 self.assertTrue(rv.json['disabled_by_impersonation'])
 
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_assignment_grades.run')
     def test_delete_answer_comment(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         comment = self.data.get_answer_comments_by_assignment(self.assignment)[0]
         url = self.get_url(

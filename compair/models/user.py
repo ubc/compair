@@ -81,8 +81,8 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         foreign_keys='ThirdPartyUser.user_id',
         backref="user", lazy='dynamic')
     # lti authentification
-    lti_user_links = db.relationship("LTIUser",
-        foreign_keys='LTIUser.compair_user_id',
+    legacy_lti_user_links = db.relationship("LegacyLTIUser",
+        foreign_keys='LegacyLTIUser.compair_user_id',
         backref="compair_user", lazy='dynamic')
 
     # hybrid and other functions

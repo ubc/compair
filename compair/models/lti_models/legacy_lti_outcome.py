@@ -9,13 +9,13 @@ from . import *
 
 from compair.core import db
 
-class LTIOutcome(object):
+class LegacyLTIOutcome(object):
     @classmethod
     def update_assignment_grades(cls, compair_assignment):
         from compair.models import CourseRole, AssignmentGrade
         from compair.tasks import update_lti_assignment_grades
 
-        lti_resource_links = compair_assignment.lti_resource_links.all()
+        lti_resource_links = compair_assignment.legacy_lti_resource_links.all()
 
         # nothing to update if assignment not linked to any lti resources
         if len(lti_resource_links) == 0:
@@ -63,10 +63,10 @@ class LTIOutcome(object):
 
     @classmethod
     def update_assignment_users_grades(cls, compair_assignment, compair_user_ids):
-        from compair.models import CourseRole, AssignmentGrade, LTIUser
+        from compair.models import CourseRole, AssignmentGrade, LegacyLTIUser
         from compair.tasks import update_lti_assignment_grades
 
-        lti_resource_links = compair_assignment.lti_resource_links.all()
+        lti_resource_links = compair_assignment.legacy_lti_resource_links.all()
 
         # nothing to update if assignment not linked to any lti resources
         if len(lti_resource_links) == 0:
@@ -98,7 +98,7 @@ class LTIOutcome(object):
 
             lti_user_resource_links = lti_resource_link.lti_user_resource_links \
                 .join("lti_user") \
-                .filter(LTIUser.compair_user_id.in_(compair_user_ids)) \
+                .filter(LegacyLTIUser.compair_user_id.in_(compair_user_ids)) \
                 .all()
 
             for lti_user_resource_link in lti_user_resource_links:
@@ -119,10 +119,10 @@ class LTIOutcome(object):
     @classmethod
     def update_course_grades(cls, compair_course):
         from compair.models import CourseRole, CourseGrade, \
-            LTIResourceLink, LTIUserResourceLink
+            LegacyLTIResourceLink, LegacyLTIUserResourceLink
         from compair.tasks import update_lti_course_grades
 
-        lti_contexts = compair_course.lti_contexts.all()
+        lti_contexts = compair_course.legacy_lti_contexts.all()
 
         # nothing to update if course not linked to any lti contexts
         if len(lti_contexts) == 0:
@@ -148,11 +148,11 @@ class LTIOutcome(object):
             if not lti_consumer.lis_outcome_service_url:
                 continue
 
-            lti_user_resource_links = LTIUserResourceLink.query \
+            lti_user_resource_links = LegacyLTIUserResourceLink.query \
                 .join("lti_resource_link") \
                 .filter(
-                    LTIResourceLink.lti_context_id == lti_context.id,
-                    LTIResourceLink.compair_assignment_id == None
+                    LegacyLTIResourceLink.lti_context_id == lti_context.id,
+                    LegacyLTIResourceLink.compair_assignment_id == None
                 ) \
                 .all()
 
@@ -178,10 +178,10 @@ class LTIOutcome(object):
     @classmethod
     def update_course_users_grade(cls, compair_course, compair_user_ids):
         from compair.models import CourseRole, CourseGrade, \
-            LTIResourceLink, LTIUserResourceLink
+            LegacyLTIResourceLink, LegacyLTIUserResourceLink
         from compair.tasks import update_lti_course_grades
 
-        lti_contexts = compair_course.lti_contexts.all()
+        lti_contexts = compair_course.legacy_lti_contexts.all()
 
         # nothing to update if course not linked to any lti contexts
         if len(lti_contexts) == 0:
@@ -210,13 +210,13 @@ class LTIOutcome(object):
             if not lti_consumer.lis_outcome_service_url:
                 continue
 
-            lti_user_resource_links = LTIUserResourceLink.query \
+            lti_user_resource_links = LegacyLTIUserResourceLink.query \
                 .join("lti_resource_link") \
                 .join("lti_user") \
                 .filter(
-                    LTIUser.compair_user_id.in_(compair_user_ids),
-                    LTIResourceLink.lti_context_id == lti_context.id,
-                    LTIResourceLink.compair_assignment_id == None
+                    LegacyLTIUser.compair_user_id.in_(compair_user_ids),
+                    LegacyLTIResourceLink.lti_context_id == lti_context.id,
+                    LegacyLTIResourceLink.compair_assignment_id == None
                 ) \
                 .all()
 

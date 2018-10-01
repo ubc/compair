@@ -7,8 +7,8 @@ from compair.core import db, random_generator
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \
     AnswerFactory, CriterionFactory, ComparisonFactory, AssignmentCriterionFactory, FileFactory, \
     AnswerCommentFactory, AnswerScoreFactory, ComparisonExampleFactory, \
-    LTIConsumerFactory, LTIContextFactory, LTIResourceLinkFactory, \
-    LTIUserFactory, LTIUserResourceLinkFactory, ThirdPartyUserFactory
+    LegacyLTIConsumerFactory, LegacyLTIContextFactory, LegacyLTIResourceLinkFactory, \
+    LegacyLTIUserFactory, LegacyLTIUserResourceLinkFactory, ThirdPartyUserFactory
 
 from compair.models import PairingAlgorithm, SystemRole, CourseRole, Comparison, \
     AnswerComment, AnswerCommentType, Answer, WinningAnswer

@@ -14,7 +14,7 @@ from . import *
 from compair.core import db
 
 from oauthlib.oauth1 import SIGNATURE_TYPE_BODY, SIGNATURE_TYPE_AUTH_HEADER, SIGNATURE_HMAC
-from .helpers import LTIMemerbshipServiceOauthClient
+from .legacy_helpers import LTIMemerbshipServiceOauthClient
 
 from requests_oauthlib import OAuth1
 from lti.utils import parse_qs, urlparse
@@ -27,13 +27,13 @@ try:
 except ImportError:
     from urllib import urlencode
 
-class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
-    __tablename__ = 'lti_membership'
+class LegacyLTIMembership(DefaultTableMixin, WriteTrackingMixin):
+    __tablename__ = 'legacy_lti_membership'
 
     # table columns
-    lti_context_id = db.Column(db.Integer, db.ForeignKey("lti_context.id", ondelete="CASCADE"),
+    lti_context_id = db.Column(db.Integer, db.ForeignKey("legacy_lti_context.id", ondelete="CASCADE"),
         nullable=False)
-    lti_user_id = db.Column(db.Integer, db.ForeignKey("lti_user.id", ondelete="CASCADE"),
+    lti_user_id = db.Column(db.Integer, db.ForeignKey("legacy_lti_user.id", ondelete="CASCADE"),
         nullable=False)
     roles = db.Column(db.String(255), nullable=True)
     lis_result_sourcedid = db.Column(db.String(255), nullable=True)
@@ -45,8 +45,8 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     compair_user_id = association_proxy('lti_user', 'compair_user_id')
 
     # relationships
-    # lti_conext via LTIContext Model
-    # lti_user via LTIUser Model
+    # lti_conext via LegacyLTIContext Model
+    # legacy_lti_user via LegacyLTIUser Model
 
     # hybrid and other functions
     context_id = association_proxy('lti_context', 'context_id')
@@ -57,7 +57,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         from . import MembershipNoValidContextsException
 
         valid_membership_contexts = [
-            lti_context for lti_context in course.lti_contexts if lti_context.membership_enabled
+            lti_context for lti_context in course.legacy_lti_contexts if lti_context.membership_enabled
         ]
 
         if len(valid_membership_contexts) == 0:
@@ -65,20 +65,20 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
         lti_members = []
         for lti_context in valid_membership_contexts:
-            members = LTIMembership._get_membership(lti_context)
-            lti_members += LTIMembership._update_membership_for_context(lti_context, members)
+            members = LegacyLTIMembership._get_membership(lti_context)
+            lti_members += LegacyLTIMembership._update_membership_for_context(lti_context, members)
 
-        LTIMembership._update_enrollment_for_course(course.id, lti_members)
+        LegacyLTIMembership._update_enrollment_for_course(course.id, lti_members)
 
     @classmethod
     def _update_membership_for_context(cls, lti_context, members):
         from compair.models import SystemRole, CourseRole, \
-            LTIUser, LTIUserResourceLink
+            LegacyLTIUser, LegacyLTIUserResourceLink
 
         lti_resource_links = lti_context.lti_resource_links
 
         # remove old membership rows
-        LTIMembership.query \
+        LegacyLTIMembership.query \
             .filter_by(
                 lti_context_id=lti_context.id
             ) \
@@ -91,10 +91,10 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
         existing_lti_users = []
         if len(user_ids) > 0:
-            existing_lti_users = LTIUser.query \
+            existing_lti_users = LegacyLTIUser.query \
                 .filter(and_(
-                    LTIUser.lti_consumer_id == lti_context.lti_consumer_id,
-                    LTIUser.user_id.in_(user_ids)
+                    LegacyLTIUser.lti_consumer_id == lti_context.lti_consumer_id,
+                    LegacyLTIUser.user_id.in_(user_ids)
                 )) \
                 .all()
 
@@ -103,10 +103,10 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         if len(existing_lti_users) > 0 and len(lti_resource_links) > 0:
             lti_resource_link_ids = [lti_resource_link.id for lti_resource_link in lti_resource_links]
             existing_lti_user_ids = [existing_lti_user.id for existing_lti_user in existing_lti_users]
-            existing_lti_user_resource_links = LTIUserResourceLink.query \
+            existing_lti_user_resource_links = LegacyLTIUserResourceLink.query \
                 .filter(and_(
-                    LTIUserResourceLink.lti_resource_link_id.in_(lti_resource_link_ids),
-                    LTIUserResourceLink.lti_user_id.in_(existing_lti_user_ids)
+                    LegacyLTIUserResourceLink.lti_resource_link_id.in_(lti_resource_link_ids),
+                    LegacyLTIUserResourceLink.lti_user_id.in_(existing_lti_user_ids)
                 )) \
                 .all()
 
@@ -130,7 +130,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
             # create lti user if doesn't exist
             if not lti_user:
-                lti_user = LTIUser(
+                lti_user = LegacyLTIUser(
                     lti_consumer_id=lti_context.lti_consumer_id,
                     user_id=member.get('user_id')
                 )
@@ -161,7 +161,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 course_role = CourseRole.teaching_assistant
 
             # create new lti membership row
-            lti_membership = LTIMembership(
+            lti_membership = LegacyLTIMembership(
                 lti_user=lti_user,
                 lti_context=lti_context,
                 roles=text_type(roles),
@@ -193,7 +193,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
 
                     # create new lti user resource link if needed
                     if not lti_user_resource_link:
-                        lti_user_resource_link = LTIUserResourceLink(
+                        lti_user_resource_link = LegacyLTIUserResourceLink(
                             lti_resource_link=lti_resource_link,
                             lti_user=lti_user,
                             roles=text_type(roles),
@@ -267,9 +267,9 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     @classmethod
     def _get_membership(cls, lti_context):
         if lti_context.membership_ext_enabled:
-            return LTIMembership._get_membership_ext(lti_context)
+            return LegacyLTIMembership._get_membership_ext(lti_context)
         elif lti_context.membership_service_enabled:
-            return LTIMembership._get_membership_service(lti_context)
+            return LegacyLTIMembership._get_membership_service(lti_context)
         return []
 
     @classmethod
@@ -289,7 +289,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
         signed_request = sign(request)
         params = parse_qs(signed_request.body.decode('utf-8'))
 
-        data = LTIMembership._post_membership_request(memberships_url, params)
+        data = LegacyLTIMembership._post_membership_request(memberships_url, params)
         root = ElementTree.fromstring(data.encode('utf-8'))
 
         codemajor = root.find('statusinfo/codemajor')
@@ -347,7 +347,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             #     signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC)
             signed_request = sign(request)
             headers = signed_request.headers
-            data = LTIMembership._get_membership_request(memberships_url, headers)
+            data = LegacyLTIMembership._get_membership_request(memberships_url, headers)
 
             if data == None:
                 break
@@ -435,7 +435,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                 #     signature_type=SIGNATURE_TYPE_AUTH_HEADER, signature_method=SIGNATURE_HMAC)
                 signed_request = sign(request)
                 headers = signed_request.headers
-                data = LTIMembership._get_membership_request(memberships_url, headers)
+                data = LegacyLTIMembership._get_membership_request(memberships_url, headers)
 
                 if data == None:
                     break

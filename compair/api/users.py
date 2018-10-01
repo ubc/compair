@@ -16,7 +16,7 @@ from compair.authorization import is_user_access_restricted, require, allow, USE
 from compair.core import db, event, abort, impersonation
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.models import User, SystemRole, Course, UserCourse, CourseRole, Assignment, \
-    LTIConsumer, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
+    LegacyLTIConsumer, LegacyLTIUser, LegacyLTIUserResourceLink, LegacyLTIContext, ThirdPartyUser, ThirdPartyType, \
     Answer, Comparison, AnswerComment, AnswerCommentType, EmailNotificationMethod
 from compair.api.login import authenticate
 from distutils.util import strtobool
@@ -310,15 +310,15 @@ class UserListAPI(Resource):
             abort(409, title="User Not Saved", message="Sorry, this student number already exists and student numbers must be unique in ComPAIR. Please enter another number and try saving again.")
 
         # handle lti_create_user_link setup for third party logins
-        if sess.get('lti_create_user_link') and sess.get('LTI'):
-            lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+        if sess.get('lti_create_user_link') and sess.get('LegacyLTI'):
+            lti_user = LegacyLTIUser.query.get_or_404(sess['lti_user'])
             lti_user.compair_user = user
             user.system_role = lti_user.system_role
             lti_user.update_user_profile()
 
             if sess.get('lti_context') and sess.get('lti_user_resource_link'):
-                lti_context = LTIContext.query.get_or_404(sess['lti_context'])
-                lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+                lti_context = LegacyLTIContext.query.get_or_404(sess['lti_context'])
+                lti_user_resource_link = LegacyLTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
                 if lti_context.is_linked_to_course():
                     # create new enrollment
                     new_user_course = UserCourse(
@@ -630,10 +630,10 @@ class UserLTIListAPI(Resource):
             title="User's LTI Account Links Unavailable",
             message="Sorry, your system role does not allow you to view LTI account links for this user.")
 
-        lti_users = user.lti_user_links \
+        lti_users = user.legacy_lti_user_links \
                         .order_by(
-                            LTIUser.lti_consumer_id,
-                            LTIUser.user_id
+                            LegacyLTIUser.lti_consumer_id,
+                            LegacyLTIUser.user_id
                             ) \
                         .all()
 
@@ -643,7 +643,7 @@ class UserLTIListAPI(Resource):
             user=current_user,
             data={'user_id': user.id})
 
-        return {"objects": marshal(lti_users, dataformat.get_lti_user())}
+        return {"objects": marshal(lti_users, dataformat.get_legacy_lti_user())}
 
 # /id/lti/users/uuid
 class UserLTIAPI(Resource):
@@ -654,7 +654,7 @@ class UserLTIAPI(Resource):
         """
 
         user = User.get_by_uuid_or_404(user_uuid)
-        lti_user = LTIUser.get_by_uuid_or_404(lti_user_uuid)
+        lti_user = LegacyLTIUser.get_by_uuid_or_404(lti_user_uuid)
 
         require(MANAGE, User,
             title="User's LTI Account Links Unavailable",

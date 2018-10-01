@@ -6,7 +6,7 @@ from flask_restful import marshal, Resource
 
 from compair.core import db, event, abort, impersonation
 from compair.authorization import get_logged_in_user_permissions
-from compair.models import User, LTIUser, LTIResourceLink, LTIUserResourceLink, UserCourse, LTIContext, \
+from compair.models import User, LegacyLTIUser, LegacyLTIResourceLink, LegacyLTIUserResourceLink, UserCourse, LegacyLTIContext, \
     ThirdPartyUser, ThirdPartyType
 from compair.cas import get_cas_login_url, validate_cas_ticket, get_cas_logout_url
 from compair.saml import get_saml_login_url, get_saml_auth_response, get_saml_logout_url, _get_auth
@@ -41,16 +41,16 @@ def login():
     else:
         permissions = authenticate(user, login_method='ComPAIR Account')
 
-        if sess.get('LTI') and sess.get('lti_create_user_link'):
-            lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+        if sess.get('LegacyLTI') and sess.get('lti_create_user_link'):
+            lti_user = LegacyLTIUser.query.get_or_404(sess['lti_user'])
             lti_user.compair_user = user
             lti_user.upgrade_system_role()
             lti_user.update_user_profile()
             sess.pop('lti_create_user_link')
 
-        if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
-            lti_context = LTIContext.query.get_or_404(sess['lti_context'])
-            lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+        if sess.get('LegacyLTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
+            lti_context = LegacyLTIContext.query.get_or_404(sess['lti_context'])
+            lti_user_resource_link = LegacyLTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
             lti_context.update_enrolment(user.id, lti_user_resource_link.course_role)
 
         db.session.commit()
@@ -71,8 +71,8 @@ class Logout(Resource):
         logout_user()  # flask-login delete user info
         url = ""
 
-        if sess.get('LTI'):
-            lti_resource_link = LTIResourceLink.query.get(sess['lti_resource_link'])
+        if sess.get('LegacyLTI'):
+            lti_resource_link = LegacyLTIResourceLink.query.get(sess['lti_resource_link'])
             if lti_resource_link:
                 return_url = lti_resource_link.launch_presentation_return_url
                 if return_url != None and return_url.strip() != "":
@@ -122,7 +122,7 @@ def cas_auth():
         abort(403, title="Log In Failed",
             message="Please try an alternate way of logging in. The CWL login has been disabled by your system administrator.")
 
-    url = "/app/#/lti" if sess.get('LTI') else "/"
+    url = "/app/#/lti" if sess.get('LegacyLTI') else "/"
     error_message = None
     ticket = request.args.get("ticket")
 
@@ -169,8 +169,8 @@ def cas_auth():
             authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
             thirdpartyuser.params = validation_response.attributes
 
-            if sess.get('LTI') and sess.get('lti_create_user_link'):
-                lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+            if sess.get('LegacyLTI') and sess.get('lti_create_user_link'):
+                lti_user = LegacyLTIUser.query.get_or_404(sess['lti_user'])
                 lti_user.compair_user_id = thirdpartyuser.user_id
                 lti_user.upgrade_system_role()
                 lti_user.update_user_profile()
@@ -179,9 +179,9 @@ def cas_auth():
                 thirdpartyuser.upgrade_system_role()
                 thirdpartyuser.update_user_profile()
 
-            if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
-                lti_context = LTIContext.query.get_or_404(sess['lti_context'])
-                lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+            if sess.get('LegacyLTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
+                lti_context = LegacyLTIContext.query.get_or_404(sess['lti_context'])
+                lti_user_resource_link = LegacyLTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
                 lti_context.update_enrolment(thirdpartyuser.user_id, lti_user_resource_link.course_role)
 
             db.session.commit()
@@ -220,7 +220,7 @@ def saml_auth():
         abort(403, title="Not Logged In",
             message="Please use a valid way to log in. You are not able to use CWL login based on the current settings.")
 
-    url = "/app/#/lti" if sess.get('LTI') else "/"
+    url = "/app/#/lti" if sess.get('LegacyLTI') else "/"
     error_message = None
     auth = get_saml_auth_response(request)
     errors = auth.get_errors()
@@ -278,8 +278,8 @@ def saml_auth():
             authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
             thirdpartyuser.params = attributes
 
-            if sess.get('LTI') and sess.get('lti_create_user_link'):
-                lti_user = LTIUser.query.get_or_404(sess['lti_user'])
+            if sess.get('LegacyLTI') and sess.get('lti_create_user_link'):
+                lti_user = LegacyLTIUser.query.get_or_404(sess['lti_user'])
                 lti_user.compair_user_id = thirdpartyuser.user_id
                 lti_user.upgrade_system_role()
                 lti_user.update_user_profile()
@@ -288,9 +288,9 @@ def saml_auth():
                 thirdpartyuser.upgrade_system_role()
                 thirdpartyuser.update_user_profile()
 
-            if sess.get('LTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
-                lti_context = LTIContext.query.get_or_404(sess['lti_context'])
-                lti_user_resource_link = LTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
+            if sess.get('LegacyLTI') and sess.get('lti_context') and sess.get('lti_user_resource_link'):
+                lti_context = LegacyLTIContext.query.get_or_404(sess['lti_context'])
+                lti_user_resource_link = LegacyLTIUserResourceLink.query.get_or_404(sess['lti_user_resource_link'])
                 lti_context.update_enrolment(thirdpartyuser.user_id, lti_user_resource_link.course_role)
 
             db.session.commit()

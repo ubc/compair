@@ -56,7 +56,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
     @classmethod
     def calculate_grade(cls, assignment, user):
         from . import Answer, Comparison, CourseRole, \
-            AnswerComment, AnswerCommentType, LTIOutcome
+            AnswerComment, AnswerCommentType, LegacyLTIOutcome
 
         user_is_student = False
         group_id = None
@@ -131,12 +131,12 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
         db.session.add(assignment_grade)
         db.session.commit()
 
-        LTIOutcome.update_assignment_user_grade(assignment, user.id)
+        LegacyLTIOutcome.update_assignment_user_grade(assignment, user.id)
 
     @classmethod
     def calculate_group_grade(cls, assignment, group):
         from . import Answer, Comparison, CourseRole, \
-            AnswerComment, AnswerCommentType, LTIOutcome
+            AnswerComment, AnswerCommentType, LegacyLTIOutcome
 
         student_ids = [course_user.user_id
             for course_user in assignment.course.user_courses
@@ -253,12 +253,12 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
         db.session.add_all(assignment_grades + new_assignment_grades)
         db.session.commit()
 
-        LTIOutcome.update_assignment_users_grades(assignment, student_ids)
+        LegacyLTIOutcome.update_assignment_users_grades(assignment, student_ids)
 
     @classmethod
     def calculate_grades(cls, assignment):
         from . import Answer, CourseRole, Comparison, \
-            AnswerComment, AnswerCommentType, LTIOutcome
+            AnswerComment, AnswerCommentType, LegacyLTIOutcome
 
         student_ids = []
         group_ids = set()
@@ -277,7 +277,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
             AssignmentGrade.query \
                 .filter_by(assignment_id=assignment.id) \
                 .delete()
-            LTIOutcome.update_assignment_grades(assignment)
+            LegacyLTIOutcome.update_assignment_grades(assignment)
             return
 
         user_answer_counts = Answer.query \
@@ -393,7 +393,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
         db.session.add_all(assignment_grades + new_assignment_grades)
         db.session.commit()
 
-        LTIOutcome.update_assignment_grades(assignment)
+        LegacyLTIOutcome.update_assignment_grades(assignment)
 
 def _calculate_assignment_grade(assignment, answer_count, comparison_count, self_evaulation_count):
     grade = 0.0

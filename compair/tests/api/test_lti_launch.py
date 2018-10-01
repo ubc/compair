@@ -6,8 +6,8 @@ import mock
 from data.fixtures.test_data import SimpleAssignmentTestData, LTITestData, ThirdPartyAuthTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, UserCourse, \
-    LTIConsumer, LTIContext, LTIUser, LTIMembership, ThirdPartyUser, \
-    LTIResourceLink, LTIUserResourceLink, ThirdPartyType
+    LegacyLTIConsumer, LegacyLTIContext, LegacyLTIUser, LegacyLTIMembership, ThirdPartyUser, \
+    LegacyLTIResourceLink, LegacyLTIUserResourceLink, ThirdPartyType
 from compair.models.lti_models import MembershipInvalidRequestException, MembershipNoResultsException, \
     MembershipNoValidContextsException
 from compair.core import db
@@ -26,7 +26,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
         lti_context_id = self.lti_data.generate_context_id()
 
         # invalid request - invalid lti_consumer
-        invalid_lti_consumer = LTIConsumer(
+        invalid_lti_consumer = LegacyLTIConsumer(
             oauth_consumer_key=generate_token(),
             oauth_consumer_secret=generate_token()
         )
@@ -124,7 +124,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 user_id=lti_user_id, context_id=lti_context_id,
                 lis_person_contact_email_primary="test@email.com") as rv:
             self.assert200(rv)
-        lti_user = LTIUser.query \
+        lti_user = LegacyLTIUser.query \
             .filter_by(user_id=lti_user_id) \
             .first()
         self.assertIsNotNone(lti_user)
@@ -212,17 +212,17 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     follow_redirects=False) as rv:
                 self.assertRedirects(rv, '/app/#/lti')
 
-            lti_resource_link = LTIResourceLink.query.all()[-1]
+            lti_resource_link = LegacyLTIResourceLink.query.all()[-1]
             self.assertEqual(lti_resource_link.resource_link_id, lti_resource_link_id)
-            lti_user = LTIUser.query.all()[-1]
+            lti_user = LegacyLTIUser.query.all()[-1]
             self.assertEqual(lti_user.user_id, lti_user_id)
-            lti_context = LTIContext.query.all()[-1]
+            lti_context = LegacyLTIContext.query.all()[-1]
             self.assertEqual(lti_context.context_id, lti_context_id)
-            lti_user_resource_link = LTIUserResourceLink.query.all()[-1]
+            lti_user_resource_link = LegacyLTIUserResourceLink.query.all()[-1]
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -248,7 +248,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -270,7 +270,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -296,7 +296,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -327,7 +327,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -355,7 +355,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -382,7 +382,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -424,7 +424,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -449,7 +449,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -481,7 +481,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -505,15 +505,15 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     custom_puid=custom_puid) as rv:
                 self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
 
-            lti_user = LTIUser.query.all()[-1]
+            lti_user = LegacyLTIUser.query.all()[-1]
             self.assertEqual(lti_user.global_unique_identifier, custom_puid)
-            lti_user_resource_link = LTIUserResourceLink.query.all()[-1]
+            lti_user_resource_link = LegacyLTIUserResourceLink.query.all()[-1]
             user = User.query.all()[-1]
             self.assertEqual(user.global_unique_identifier, custom_puid)
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -537,7 +537,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -564,13 +564,13 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     custom_puid=custom_puid) as rv:
                 self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
 
-            lti_user = LTIUser.query.all()[-1]
+            lti_user = LegacyLTIUser.query.all()[-1]
             self.assertEqual(lti_user.user_id, lti_user_id)
-            lti_user_resource_link = LTIUserResourceLink.query.all()[-1]
+            lti_user_resource_link = LegacyLTIUserResourceLink.query.all()[-1]
 
             # check session
             with self.client.session_transaction() as sess:
-                self.assertTrue(sess.get('LTI'))
+                self.assertTrue(sess.get('LegacyLTI'))
                 self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
                 self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
                 self.assertEqual(lti_user.id, sess.get('lti_user'))
@@ -986,7 +986,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
                 # check session
                 with self.client.session_transaction() as sess:
-                    self.assertTrue(sess.get('LTI'))
+                    self.assertTrue(sess.get('LegacyLTI'))
 
                     # check that lti_create_user_link is None
                     self.assertIsNone(sess.get('lti_create_user_link'))
@@ -1023,7 +1023,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
                 # check session
                 with self.client.session_transaction() as sess:
-                    self.assertTrue(sess.get('LTI'))
+                    self.assertTrue(sess.get('LegacyLTI'))
 
                     # check that lti_create_user_link is None
                     self.assertIsNone(sess.get('lti_create_user_link'))
@@ -1081,7 +1081,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
                 # check session
                 with self.client.session_transaction() as sess:
-                    self.assertTrue(sess.get('LTI'))
+                    self.assertTrue(sess.get('LegacyLTI'))
 
                     # check that lti_create_user_link is None
                     self.assertIsNone(sess.get('lti_create_user_link'))
@@ -1112,7 +1112,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
                 # check session
                 with self.client.session_transaction() as sess:
-                    self.assertTrue(sess.get('LTI'))
+                    self.assertTrue(sess.get('LegacyLTI'))
 
                     # check that lti_create_user_link is None
                     self.assertIsNone(sess.get('lti_create_user_link'))
@@ -1169,7 +1169,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
                 # check session
                 with self.client.session_transaction() as sess:
-                    self.assertTrue(sess.get('LTI'))
+                    self.assertTrue(sess.get('LegacyLTI'))
 
                     # check that lti_create_user_link is None
                     self.assertIsNone(sess.get('lti_create_user_link'))
@@ -1206,7 +1206,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
                 # check session
                 with self.client.session_transaction() as sess:
-                    self.assertTrue(sess.get('LTI'))
+                    self.assertTrue(sess.get('LegacyLTI'))
 
                     # check that lti_create_user_link is None
                     self.assertIsNone(sess.get('lti_create_user_link'))
@@ -1257,7 +1257,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
                 # check session
                 with self.client.session_transaction() as sess:
-                    self.assertTrue(sess.get('LTI'))
+                    self.assertTrue(sess.get('LegacyLTI'))
 
                     # check that lti_create_user_link is None
                     self.assertIsNone(sess.get('lti_create_user_link'))
@@ -1288,7 +1288,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
                 # check session
                 with self.client.session_transaction() as sess:
-                    self.assertTrue(sess.get('LTI'))
+                    self.assertTrue(sess.get('LegacyLTI'))
 
                     # check that lti_create_user_link is None
                     self.assertIsNone(sess.get('lti_create_user_link'))

@@ -29,8 +29,8 @@ from .third_party_user import ThirdPartyUser
 from .xapi_log import XAPILog
 
 # LTI models
-from .lti_models import LTIConsumer, LTIContext, LTIMembership, \
-    LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce, LTIOutcome
+from .lti_models import LegacyLTIConsumer, LegacyLTIContext, LegacyLTIMembership, \
+    LegacyLTIResourceLink, LegacyLTIUser, LegacyLTIUserResourceLink, LegacyLTINonce, LegacyLTIOutcome
 
 from .kaltura_models import KalturaMedia
 

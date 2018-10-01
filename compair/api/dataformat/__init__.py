@@ -104,6 +104,15 @@ def get_user_courses():
 def get_lti_user():
     return {
         'id': fields.String(attribute="uuid"),
+        'lti_deployment_id': fields.String(attribute="lti_consumer_uuid"),
+        'lti_user_id': fields.String(attribute="user_id"),
+        'compair_user_id': fields.String(attribute="compair_user_uuid"),
+        'name': fields.String
+    }
+
+def get_legacy_lti_user():
+    return {
+        'id': fields.String(attribute="uuid"),
         'lti_consumer_id': fields.String(attribute="lti_consumer_uuid"),
         'lti_user_id': fields.String(attribute="user_id"),
         'compair_user_id': fields.String(attribute="compair_user_uuid"),

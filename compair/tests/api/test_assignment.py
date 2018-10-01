@@ -9,7 +9,7 @@ from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData
     TestFixture, LTITestData, AnswerFactory
 from data.factories import AssignmentFactory
 from compair.models import Assignment, Comparison, PairingAlgorithm, \
-    CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome, \
+    CourseGrade, AssignmentGrade, SystemRole, CourseRole, LegacyLTIOutcome, \
     AnswerCommentType, WinningAnswer
 from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 from compair.core import db
@@ -1791,8 +1791,8 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
         self.url = '/api/courses/' + self.fixtures.course.uuid + '/assignments'
         self.lti_data = LTITestData()
 
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_assignment_grades.run')
     def test_create(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         url = self.url
 
@@ -1861,8 +1861,8 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
             )
             mocked_update_course_grades_run.reset_mock()
 
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_assignment_grades.run')
     def test_edit(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         assignment = self.fixtures.assignment
         url = self.url + '/' + assignment.uuid
@@ -1968,8 +1968,8 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
                 )
                 mocked_update_course_grades_run.reset_mock()
 
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_assignment_grades.run')
     def test_delete(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         # add dumby Assignment
         self.fixtures.add_assignments(num_assignments=1)

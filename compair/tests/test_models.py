@@ -7,7 +7,7 @@ import uuid
 
 from compair import db
 from compair.models import User, Comparison, AnswerScore, \
-    AnswerCriterionScore, LTIOutcome, SystemRole
+    AnswerCriterionScore, LegacyLTIOutcome, SystemRole
 from compair.models.comparison import update_answer_scores, \
     update_answer_criteria_scores
 from compair.tests.test_compair import ComPAIRTestCase
@@ -115,10 +115,10 @@ class TestUtils(ComPAIRTestCase):
         scores = update_answer_criteria_scores([score], 1, criterion_comparison_results)
         self.assertEqual(len(scores), 4)
 
-class TestLTIOutcome(ComPAIRTestCase):
+class TestLegacyLTIOutcome(ComPAIRTestCase):
 
     def setUp(self):
-        super(TestLTIOutcome, self).setUp()
+        super(TestLegacyLTIOutcome, self).setUp()
         self.fixtures = TestFixture().add_course(num_students=30, num_groups=2, with_draft_student=True)
         self.lti_data = LTITestData()
         self.lti_consumer = self.lti_data.lti_consumer
@@ -158,7 +158,7 @@ class TestLTIOutcome(ComPAIRTestCase):
     @mock.patch('requests.post', mock.Mock(side_effect = mocked_requests_post))
     def test_post_replace_result(self):
         # no lis_outcome_service_url
-        result = LTIOutcome.post_replace_result(self.lti_consumer, self.lis_result_sourcedid, self.grade)
+        result = LegacyLTIOutcome.post_replace_result(self.lti_consumer, self.lis_result_sourcedid, self.grade)
         self.assertFalse(result)
 
         # add lis_outcome_service_url
@@ -166,17 +166,17 @@ class TestLTIOutcome(ComPAIRTestCase):
         db.session.commit()
 
         # no lis_result_sourcedid
-        result = LTIOutcome.post_replace_result(self.lti_consumer, "", self.grade)
+        result = LegacyLTIOutcome.post_replace_result(self.lti_consumer, "", self.grade)
         self.assertFalse(result)
 
         # garde < 0.0
-        result = LTIOutcome.post_replace_result(self.lti_consumer, self.lis_result_sourcedid, -0.1)
+        result = LegacyLTIOutcome.post_replace_result(self.lti_consumer, self.lis_result_sourcedid, -0.1)
         self.assertFalse(result)
 
         # garde > 1.0
-        result = LTIOutcome.post_replace_result(self.lti_consumer, self.lis_result_sourcedid,  30.0)
+        result = LegacyLTIOutcome.post_replace_result(self.lti_consumer, self.lis_result_sourcedid,  30.0)
         self.assertFalse(result)
 
         # success
-        result = LTIOutcome.post_replace_result(self.lti_consumer, self.lis_result_sourcedid, self.grade)
+        result = LegacyLTIOutcome.post_replace_result(self.lti_consumer, self.lis_result_sourcedid, self.grade)
         self.assertTrue(result)

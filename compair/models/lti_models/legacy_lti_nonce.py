@@ -8,23 +8,23 @@ from . import *
 
 from compair.core import db
 
-class LTINonce(DefaultTableMixin, WriteTrackingMixin):
-    __tablename__ = 'lti_nonce'
+class LegacyLTINonce(DefaultTableMixin, WriteTrackingMixin):
+    __tablename__ = 'legacy_lti_nonce'
 
     # table columns
-    lti_consumer_id = db.Column(db.Integer, db.ForeignKey("lti_consumer.id", ondelete="CASCADE"),
+    lti_consumer_id = db.Column(db.Integer, db.ForeignKey("legacy_lti_consumer.id", ondelete="CASCADE"),
         nullable=False)
     oauth_nonce = db.Column(db.String(255), nullable=False)
     oauth_timestamp = db.Column(db.TIMESTAMP, nullable=False)
 
     # relationships
-    # lti_consumer via LTIConsumer Model
+    # lti_consumer via LegacyLTIConsumer Model
 
     # hybrid and other functions
     @classmethod
     def is_valid_nonce(cls, oauth_consumer_key, oauth_nonce, oauth_timestamp):
-        from . import LTIConsumer
-        lti_consumer = LTIConsumer.get_by_consumer_key(oauth_consumer_key)
+        from . import LegacyLTIConsumer
+        lti_consumer = LegacyLTIConsumer.get_by_consumer_key(oauth_consumer_key)
 
         if lti_consumer == None:
             return False
@@ -32,7 +32,7 @@ class LTINonce(DefaultTableMixin, WriteTrackingMixin):
         try:
             # is valid if it is unique on consumer, nonce, and timestamp
             # validate based on insert passing the unique check or not
-            lti_nonce = LTINonce(
+            lti_nonce = LegacyLTINonce(
                 lti_consumer_id=lti_consumer.id,
                 oauth_nonce=oauth_nonce,
                 oauth_timestamp=datetime.fromtimestamp(float(oauth_timestamp))

@@ -292,8 +292,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
                     self.assertEqual(20, rv.json['per_page'])
                     self.assertEqual(len(expected), rv.json['total'])
 
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_assignment_grades.run')
     def test_create_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         for assignment in [self.assignment, self.group_assignment]:
             self.base_url = self._build_url(self.fixtures.course.uuid, assignment.uuid)
@@ -730,8 +730,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 self.assertEqual(answer.score.rank, rv.json['score']['rank'])
                 self.assertEqual(int(answer.score.normalized_score), rv.json['score']['normalized_score'])
 
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_assignment_grades.run')
     def test_edit_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         student = self.fixtures.students[0]
         draft_student = self.fixtures.draft_student
@@ -1034,8 +1034,8 @@ class AnswersAPITests(ComPAIRAPITestCase):
                     self.assert403(rv)
                     self.assertTrue(rv.json['disabled_by_impersonation'])
 
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_course_grades.run')
-    @mock.patch('compair.tasks.lti_outcomes.update_lti_assignment_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_course_grades.run')
+    @mock.patch('compair.tasks.legacy_lti_outcomes.update_lti_assignment_grades.run')
     def test_delete_answer(self, mocked_update_assignment_grades_run, mocked_update_course_grades_run):
         student = self.fixtures.students[0]
 

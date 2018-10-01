@@ -61,7 +61,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     grades = db.relationship("AssignmentGrade", backref="assignment", lazy='dynamic')
 
     # lti
-    lti_resource_links = db.relationship("LTIResourceLink", backref="compair_assignment", lazy='dynamic')
+    legacy_lti_resource_links = db.relationship("LegacyLTIResourceLink", backref="compair_assignment", lazy='dynamic')
 
     # hybrid and other functions
     course_uuid = association_proxy('course', 'uuid')
@@ -115,7 +115,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             .count()
 
     def clear_lti_links(self):
-        for lti_resource_link in self.lti_resource_links.all():
+        for lti_resource_link in self.legacy_lti_resource_links.all():
             lti_resource_link.compair_assignment_id = None
 
     @hybrid_property
@@ -300,7 +300,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @classmethod
     def __declare_last__(cls):
-        from . import UserCourse, CourseRole, LTIResourceLink, Group
+        from . import UserCourse, CourseRole, LegacyLTIResourceLink, Group
         super(cls, cls).__declare_last__()
 
         cls.answer_count = column_property(
@@ -435,8 +435,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.lti_resource_link_count = column_property(
-            select([func.count(LTIResourceLink.id)]).
-            where(LTIResourceLink.compair_assignment_id == cls.id),
+            select([func.count(LegacyLTIResourceLink.id)]).
+            where(LegacyLTIResourceLink.compair_assignment_id == cls.id),
             deferred=True,
             group="counts"
         )

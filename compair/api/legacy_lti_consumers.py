@@ -8,11 +8,11 @@ from six import text_type
 from . import dataformat
 from compair.core import event, db, abort
 from compair.authorization import require, allow
-from compair.models import LTIConsumer
+from compair.models import LegacyLTIConsumer
 from .util import new_restful_api, get_model_changes, pagination_parser
 
-lti_consumer_api = Blueprint('lti_consumer_api', __name__)
-api = new_restful_api(lti_consumer_api)
+legacy_lti_consumer_api = Blueprint('legacy_lti_consumer_api', __name__)
+api = new_restful_api(legacy_lti_consumer_api)
 
 def non_blank_text(value):
     if value is None:
@@ -44,20 +44,20 @@ on_consumer_create = event.signal('LTI_CONSUMER_CREATE')
 class ConsumerAPI(Resource):
     @login_required
     def get(self):
-        require(MANAGE, LTIConsumer,
+        require(MANAGE, LegacyLTIConsumer,
             title="Consumers Unavailable",
             message="Sorry, your system role does not allow you to view LTI consumers.")
 
         params = consumer_list_parser.parse_args()
 
-        query = LTIConsumer.query
+        query = LegacyLTIConsumer.query
 
         if params['orderBy']:
             if params['reverse']:
                 query = query.order_by(desc(params['orderBy']))
             else:
                 query = query.order_by(asc(params['orderBy']))
-        query = query.order_by(LTIConsumer.created)
+        query = query.order_by(LegacyLTIConsumer.created)
 
         page = query.paginate(params['page'], params['perPage'])
 
@@ -73,7 +73,7 @@ class ConsumerAPI(Resource):
     def post(self):
         params = new_consumer_parser.parse_args()
 
-        consumer = LTIConsumer()
+        consumer = LegacyLTIConsumer()
         require(CREATE, consumer,
             title="Consumer Not Saved",
             message="Sorry, your system role does not allow you to save LTI consumers.")
@@ -107,7 +107,7 @@ api.add_resource(ConsumerAPI, '')
 class ConsumerIdAPI(Resource):
     @login_required
     def get(self, consumer_uuid):
-        consumer = LTIConsumer.get_by_uuid_or_404(consumer_uuid)
+        consumer = LegacyLTIConsumer.get_by_uuid_or_404(consumer_uuid)
         require(READ, consumer,
             title="Consumer Unavailable",
             message="Sorry, your system role does not allow you to view LTI consumers.")
@@ -122,7 +122,7 @@ class ConsumerIdAPI(Resource):
 
     @login_required
     def post(self, consumer_uuid):
-        consumer = LTIConsumer.get_by_uuid_or_404(consumer_uuid)
+        consumer = LegacyLTIConsumer.get_by_uuid_or_404(consumer_uuid)
         require(EDIT, consumer,
             title="Consumer Not Saved",
             message="Sorry, your system role does not allow you to save LTI consumers.")

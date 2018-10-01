@@ -12,11 +12,11 @@ from .exceptions import MembershipNoValidContextsException, \
     MembershipInvalidRequestException, MembershipNoResultsException
 
 # models
-from .lti_consumer import LTIConsumer
-from .lti_context import LTIContext
-from .lti_membership import LTIMembership
-from .lti_resource_link import LTIResourceLink
-from .lti_user import LTIUser
-from .lti_user_resource_link import LTIUserResourceLink
-from .lti_nonce import LTINonce
-from .lti_outcome import LTIOutcome
+from .legacy_lti_consumer import LegacyLTIConsumer
+from .legacy_lti_context import LegacyLTIContext
+from .legacy_lti_membership import LegacyLTIMembership
+from .legacy_lti_resource_link import LegacyLTIResourceLink
+from .legacy_lti_user import LegacyLTIUser
+from .legacy_lti_user_resource_link import LegacyLTIUserResourceLink
+from .legacy_lti_nonce import LegacyLTINonce
+from .legacy_lti_outcome import LegacyLTIOutcome

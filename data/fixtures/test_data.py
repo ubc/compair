@@ -13,8 +13,8 @@ from data.factories import CourseFactory, UserFactory, UserCourseFactory, Assign
     AnswerFactory, CriterionFactory, ComparisonFactory, ComparisonCriterionFactory, \
     AnswerCommentFactory, AnswerScoreFactory, AnswerCriterionScoreFactory, \
     ComparisonExampleFactory, AssignmentCriterionFactory, FileFactory, \
-    LTIConsumerFactory, LTIContextFactory, LTIResourceLinkFactory, \
-    LTIUserFactory, LTIUserResourceLinkFactory, ThirdPartyUserFactory, \
+    LegacyLTIConsumerFactory, LegacyLTIContextFactory, LegacyLTIResourceLinkFactory, \
+    LegacyLTIUserFactory, LegacyLTIUserResourceLinkFactory, ThirdPartyUserFactory, \
     GroupFactory
 from data.fixtures import DefaultFixture
 
@@ -139,7 +139,7 @@ class BasicTestData:
 
 class LTITestData:
     def __init__(self):
-        self.lti_consumer = LTIConsumerFactory()
+        self.lti_consumer = LegacyLTIConsumerFactory()
 
         self.lti_consumers = [self.lti_consumer]
         self.lti_contexts = []
@@ -177,22 +177,22 @@ class LTITestData:
         return self.lti_consumer
 
     def generate_resource_link_id(self):
-        lti_resource_link = LTIResourceLinkFactory.stub()
+        lti_resource_link = LegacyLTIResourceLinkFactory.stub()
 
         return lti_resource_link.resource_link_id
 
     def generate_context_id(self):
-        lti_context = LTIContextFactory.stub()
+        lti_context = LegacyLTIContextFactory.stub()
 
         return lti_context.context_id
 
     def generate_user_id(self):
-        lti_user = LTIUserFactory.stub()
+        lti_user = LegacyLTIUserFactory.stub()
 
         return lti_user.user_id
 
     def create_consumer(self, **kwargs):
-        lti_consumer = LTIConsumerFactory(**kwargs)
+        lti_consumer = LegacyLTIConsumerFactory(**kwargs)
 
         self.lti_consumers.append(lti_consumer)
 
@@ -201,7 +201,7 @@ class LTITestData:
         return lti_consumer
 
     def create_resource_link(self, lti_consumer, lti_context=None, resource_link_id=None, compair_assignment=None):
-        lti_resource_link = LTIResourceLinkFactory(
+        lti_resource_link = LegacyLTIResourceLinkFactory(
             lti_consumer=lti_consumer,
             compair_assignment=compair_assignment
         )
@@ -217,7 +217,7 @@ class LTITestData:
         return lti_resource_link
 
     def create_context(self, lti_consumer, **kwargs):
-        lti_context = LTIContextFactory(
+        lti_context = LegacyLTIContextFactory(
             lti_consumer=lti_consumer,
             **kwargs
         )
@@ -229,7 +229,7 @@ class LTITestData:
         return lti_context
 
     def create_user(self, lti_consumer, system_role=SystemRole.instructor, compair_user=None):
-        lti_user = LTIUserFactory(
+        lti_user = LegacyLTIUserFactory(
             lti_consumer=lti_consumer,
             system_role=system_role,
             compair_user=compair_user
@@ -241,7 +241,7 @@ class LTITestData:
         return lti_user
 
     def create_user_resource_link(self, lti_user, lti_resource_link, course_role=CourseRole.instructor):
-        lti_user_resource_link = LTIUserResourceLinkFactory(
+        lti_user_resource_link = LegacyLTIUserResourceLinkFactory(
             lti_user=lti_user,
             lti_resource_link=lti_resource_link,
             course_role=course_role

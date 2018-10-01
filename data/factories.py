@@ -11,7 +11,7 @@ from compair.models import Course, User, CourseRole, SystemRole, Criterion, File
     UserCourse, AssignmentCriterion, Assignment, AnswerScore, AnswerCriterionScore, \
     Answer, AnswerComment, Comparison, ComparisonCriterion, \
     AnswerCommentType, ComparisonExample, EmailNotificationMethod, \
-    LTIConsumer, LTIContext, LTIResourceLink, LTIMembership, LTIUser, LTIUserResourceLink, \
+    LegacyLTIConsumer, LegacyLTIContext, LegacyLTIResourceLink, LegacyLTIMembership, LegacyLTIUser, LegacyLTIUserResourceLink, \
     ThirdPartyUser, ThirdPartyType, PairingAlgorithm, Group
 
 # suppress factory_boy debug logging (spits out a lot of text)
@@ -196,9 +196,9 @@ class GroupFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     name = factory.Sequence(lambda n: 'Group ü %d' % n)
 
-class LTIConsumerFactory(factory.alchemy.SQLAlchemyModelFactory):
+class LegacyLTIConsumerFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
-        model = LTIConsumer
+        model = LegacyLTIConsumer
         sqlalchemy_session = db.session
 
     oauth_consumer_key = factory.Sequence(lambda n: 'oauth_consumer_key_%d' % n)
@@ -206,35 +206,35 @@ class LTIConsumerFactory(factory.alchemy.SQLAlchemyModelFactory):
 
     lti_version = "LTI-1p0"
 
-class LTIContextFactory(factory.alchemy.SQLAlchemyModelFactory):
+class LegacyLTIContextFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
-        model = LTIContext
+        model = LegacyLTIContext
         sqlalchemy_session = db.session
 
     lti_consumer_id = 1
     context_id = factory.Sequence(lambda n: 'course-v1:LTI_%d' % n)
     context_title = factory.Sequence(lambda n: 'this is a title for lti context ü %d' % n)
 
-class LTIResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
+class LegacyLTIResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
-        model = LTIResourceLink
+        model = LegacyLTIResourceLink
         sqlalchemy_session = db.session
 
     lti_consumer_id = 1
     resource_link_id = factory.Sequence(lambda n: 'unique_resourse_link_id_%d' % n)
 
-class LTIUserFactory(factory.alchemy.SQLAlchemyModelFactory):
+class LegacyLTIUserFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
-        model = LTIUser
+        model = LegacyLTIUser
         sqlalchemy_session = db.session
 
     lti_consumer_id = 1
     user_id = factory.Sequence(lambda n: 'unique_user_id_%d' % n)
     system_role = SystemRole.student
 
-class LTIMembershipFactory(factory.alchemy.SQLAlchemyModelFactory):
+class LegacyLTIMembershipFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
-        model = LTIMembership
+        model = LegacyLTIMembership
         sqlalchemy_session = db.session
 
     lti_context_id = 1
@@ -242,9 +242,9 @@ class LTIMembershipFactory(factory.alchemy.SQLAlchemyModelFactory):
     roles = 'Student'
     course_role = CourseRole.student
 
-class LTIUserResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
+class LegacyLTIUserResourceLinkFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
-        model = LTIUserResourceLink
+        model = LegacyLTIUserResourceLink
         sqlalchemy_session = db.session
 
     lti_resource_link_id = 1

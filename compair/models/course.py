@@ -30,7 +30,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     groups = db.relationship("Group", backref="course", lazy='dynamic')
 
     # lti
-    lti_contexts = db.relationship("LTIContext", backref="compair_course", lazy='dynamic')
+    legacy_lti_contexts = db.relationship("LegacyLTIContext", backref="compair_course", lazy='dynamic')
 
     # hybrid and other functions
     @hybrid_property
@@ -80,7 +80,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         CourseGrade.calculate_grades(self)
 
     def clear_lti_links(self):
-        for lti_context in self.lti_contexts.all():
+        for lti_context in self.legacy_lti_contexts.all():
             lti_context.compair_course_id = None
         for assignment in self.assignments.all():
             assignment.clear_lti_links()
@@ -103,7 +103,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @classmethod
     def __declare_last__(cls):
-        from .lti_models import LTIContext, Assignment, \
+        from .lti_models import LegacyLTIContext, Assignment, \
             UserCourse, CourseRole
         super(cls, cls).__declare_last__()
 
@@ -133,8 +133,8 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.lti_context_count = column_property(
-            select([func.count(LTIContext.id)]).
-            where(LTIContext.compair_course_id == cls.id),
+            select([func.count(LegacyLTIContext.id)]).
+            where(LegacyLTIContext.compair_course_id == cls.id),
             deferred=True,
             group="counts"
         )

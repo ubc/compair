@@ -8,8 +8,8 @@ from six import text_type
 from . import dataformat
 from compair.core import event, db, abort
 from compair.authorization import require, allow
-from compair.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
-    LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
+from compair.models import User, Course, LegacyLTIConsumer, LegacyLTIContext, LegacyLTIMembership, \
+    LegacyLTIResourceLink, LegacyLTIUser, LegacyLTIUserResourceLink, LegacyLTINonce
 from compair.models.lti_models import MembershipNoValidContextsException, \
     MembershipNoResultsException, MembershipInvalidRequestException
 from .util import new_restful_api, get_model_changes, pagination_parser
@@ -34,23 +34,23 @@ on_lti_course_membership_status_get = event.signal('LTI_CONTEXT_COURSE_MEMBERSHI
 class LTICourseLinksRootAPI(Resource):
     @login_required
     def get(self):
-        require(READ, LTIContext,
+        require(READ, LegacyLTIContext,
             title="Course Links Unavailable",
             message="Sorry, your system role does not allow you to view LTI course links.")
 
         params = context_list_parser.parse_args()
 
-        query = LTIContext.query \
+        query = LegacyLTIContext.query \
             .join("lti_consumer") \
             .join("compair_course") \
-            .add_columns(LTIConsumer.oauth_consumer_key, Course.name)
+            .add_columns(LegacyLTIConsumer.oauth_consumer_key, Course.name)
 
         if params['orderBy']:
             if params['reverse']:
                 query = query.order_by(desc(params['orderBy']))
             else:
                 query = query.order_by(asc(params['orderBy']))
-        query = query.order_by(LTIContext.created)
+        query = query.order_by(LegacyLTIContext.created)
 
         if params['search']:
             # match each word of search
@@ -61,10 +61,10 @@ class LTICourseLinksRootAPI(Resource):
                         # course search
                         Course.name.like(search),
                         # consumer search
-                        LTIConsumer.oauth_consumer_key.like(search),
+                        LegacyLTIConsumer.oauth_consumer_key.like(search),
                         # context search
-                        LTIContext.context_id.like(search),
-                        LTIContext.context_title.like(search)
+                        LegacyLTIContext.context_id.like(search),
+                        LegacyLTIContext.context_title.like(search)
                     ))
 
         page = query.paginate(params['page'], params['perPage'])
@@ -99,7 +99,7 @@ class LTICourseLinkingAPI(Resource):
             title="Course Not Linked",
             message="Sorry, you do not have permission to link this course since you are not enrolled as an instructor in the course.")
 
-        if not sess.get('LTI'):
+        if not sess.get('LegacyLTI'):
             abort(400, title="Course Not Linked",
                 message="Sorry, your LTI session has expired. Please log in via LTI and try linking again.")
 
@@ -107,7 +107,7 @@ class LTICourseLinkingAPI(Resource):
             abort(400, title="Course Not Linked",
                 message="Sorry, your LTI link settings have no course context. Please edit your LTI link settings and try linking again.")
 
-        lti_context = LTIContext.query.get_or_404(sess.get('lti_context'))
+        lti_context = LegacyLTIContext.query.get_or_404(sess.get('lti_context'))
         lti_context.compair_course_id = course.id
         db.session.commit()
 
@@ -133,7 +133,7 @@ class LTICourseUnlinkAPI(Resource):
         unlink lti context from course
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
-        lti_context = LTIContext.get_by_uuid_or_404(lti_context_uuid)
+        lti_context = LegacyLTIContext.get_by_uuid_or_404(lti_context_uuid)
         require(DELETE, lti_context,
             title="Course Not Unlinked",
             message="Sorry, your system role does not allow you to unlink LTI courses.")
@@ -175,7 +175,7 @@ class LTICourseMembershipAPI(Resource):
                 message="Sorry, your LTI link settings have no course context. Please edit your LTI link settings and try linking again.")
 
         try:
-            LTIMembership.update_membership_for_course(course)
+            LegacyLTIMembership.update_membership_for_course(course)
         except MembershipNoValidContextsException as err:
             abort(400, title="Membership Not Updated",
                 message="The LTI link does not support the membership extension. Please edit your LTI link settings or contact your system administrator and try again.")
@@ -214,7 +214,7 @@ class LTICourseMembershipStatusAPI(Resource):
                 message="The course is not linked to an LTI context yet. Launch an LTI link to link this course first, then check the status.")
 
         valid_membership_contexts = [
-            lti_context for lti_context in course.lti_contexts \
+            lti_context for lti_context in course.legacy_lti_contexts \
             if lti_context.membership_enabled
         ]
 
@@ -223,11 +223,11 @@ class LTICourseMembershipStatusAPI(Resource):
         if enabled:
             lti_context_ids = [lti_context.id for lti_context in valid_membership_contexts]
 
-            pending = LTIMembership.query \
-                .join(LTIUser) \
+            pending = LegacyLTIMembership.query \
+                .join(LegacyLTIUser) \
                 .filter(and_(
-                    LTIUser.compair_user_id == None,
-                    LTIMembership.lti_context_id.in_(lti_context_ids)
+                    LegacyLTIUser.compair_user_id == None,
+                    LegacyLTIMembership.lti_context_id.in_(lti_context_ids)
                 )) \
                 .count()
 

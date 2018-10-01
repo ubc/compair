@@ -12,7 +12,7 @@ from data.fixtures import DefaultFixture, UserFactory, AssignmentFactory
 from data.fixtures.test_data import BasicTestData, LTITestData, ThirdPartyAuthTestData, ComparisonTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, AnswerComment, AnswerCommentType, Comparison, \
-    LTIContext, LTIUser, ThirdPartyUser, ThirdPartyType, WinningAnswer, EmailNotificationMethod
+    LegacyLTIContext, LegacyLTIUser, ThirdPartyUser, ThirdPartyType, WinningAnswer, EmailNotificationMethod
 from compair.core import db
 
 
@@ -370,7 +370,7 @@ class UsersAPITests(ComPAIRAPITestCase):
                 roles="Instructor") as lti_response:
             self.assert200(lti_response)
 
-            lti_context = LTIContext.query.all()[-1]
+            lti_context = LegacyLTIContext.query.all()[-1]
             course = self.data.create_course()
             lti_context.compair_course_id = course.id
             db.session.commit()
@@ -1100,7 +1100,7 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assert200(rv)
             self.assertEqual(rv.json['success'], True)
 
-            lti_users = LTIUser.query \
+            lti_users = LegacyLTIUser.query \
                 .filter_by(compair_user_id=student1.id) \
                 .all()
             self.assertEqual(len(lti_users), 1)

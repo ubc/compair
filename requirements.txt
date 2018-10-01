@@ -6,7 +6,7 @@ Flask-Script==2.0.5
 Flask-Testing==0.6.1
 Flask-Mail==0.9.1
 PyMySQL==0.6.6
-SQLAlchemy==1.2.8
+SQLAlchemy==1.2.12
 blinker==1.4
 bouncer==0.1.12
 factory_boy==2.7.0
@@ -17,7 +17,7 @@ python-dateutil==2.4.2
 six==1.10.0
 caslib.py==2.2.2
 python3-saml==1.4.1
-alembic==0.9.9
+alembic==1.0.0
 enum34==1.1.6
 SQLAlchemy-Enum34==1.0.1
 mock==2.0.0

@@ -9,8 +9,8 @@ from . import dataformat
 from compair.core import event, db, abort, display_name_generator
 from compair.authorization import require, allow
 from .login import authenticate
-from compair.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
-    LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
+from compair.models import User, Course, LegacyLTIConsumer, LegacyLTIContext, LegacyLTIMembership, \
+    LegacyLTIResourceLink, LegacyLTIUser, LegacyLTIUserResourceLink, LegacyLTINonce
 from compair.models.lti_models import MembershipNoValidContextsException, \
     MembershipNoResultsException, MembershipInvalidRequestException
 from .util import new_restful_api, get_model_changes, pagination_parser
@@ -57,7 +57,7 @@ class LTIAuthAPI(Resource):
         if tool_provider.lti_message_type != "basic-lti-launch-request":
             return _return_validation_error(tool_provider, "ComPAIR requires the LTI tool consumer to send a basic lti launch request.")
 
-        lti_consumer = LTIConsumer.get_by_tool_provider(tool_provider)
+        lti_consumer = LegacyLTIConsumer.get_by_tool_provider(tool_provider)
         params = lti_launch_parser.parse_args()
         # override custom_assignment if not set in launch body but is in querystring
         if not tool_provider.custom_assignment and params.get('assignment'):
@@ -67,21 +67,21 @@ class LTIAuthAPI(Resource):
         logout_user()
         sess.clear()
 
-        sess['LTI'] = True
+        sess['LegacyLTI'] = True
 
         sess['lti_consumer'] = lti_consumer.id
 
-        lti_user = LTIUser.get_by_tool_provider(lti_consumer, tool_provider)
+        lti_user = LegacyLTIUser.get_by_tool_provider(lti_consumer, tool_provider)
         sess['lti_user'] = lti_user.id
 
-        lti_context = LTIContext.get_by_tool_provider(lti_consumer, tool_provider)
+        lti_context = LegacyLTIContext.get_by_tool_provider(lti_consumer, tool_provider)
         if lti_context:
             sess['lti_context'] = lti_context.id
 
-        lti_resource_link = LTIResourceLink.get_by_tool_provider(lti_consumer, tool_provider, lti_context)
+        lti_resource_link = LegacyLTIResourceLink.get_by_tool_provider(lti_consumer, tool_provider, lti_context)
         sess['lti_resource_link'] = lti_resource_link.id
 
-        lti_user_resource_link = LTIUserResourceLink.get_by_tool_provider(lti_resource_link, lti_user, tool_provider)
+        lti_user_resource_link = LegacyLTIUserResourceLink.get_by_tool_provider(lti_resource_link, lti_user, tool_provider)
         sess['lti_user_resource_link'] = lti_user_resource_link.id
 
         setup_required = False
@@ -140,13 +140,13 @@ class LTIStatusAPI(Resource):
         the app as to what to do next, for a given state.
         """
 
-        if not sess.get('LTI'):
+        if not sess.get('LegacyLTI'):
             return { "status" : { 'valid': False } }
 
-        lti_resource_link = LTIResourceLink.query.get(sess.get('lti_resource_link'))
-        lti_context = LTIContext.query.get(sess.get('lti_context')) if sess.get('lti_context') else None
-        lti_user_resource_link = LTIUserResourceLink.query.get(sess.get('lti_user_resource_link'))
-        lti_user = LTIUser.query.get(sess.get('lti_user'))
+        lti_resource_link = LegacyLTIResourceLink.query.get(sess.get('lti_resource_link'))
+        lti_context = LegacyLTIContext.query.get(sess.get('lti_context')) if sess.get('lti_context') else None
+        lti_user_resource_link = LegacyLTIUserResourceLink.query.get(sess.get('lti_user_resource_link'))
+        lti_user = LegacyLTIUser.query.get(sess.get('lti_user'))
         status = {
             'valid' : True,
             'assignment': {
@@ -213,10 +213,10 @@ class ComPAIRRequestValidator(RequestValidator):
 
     def validate_timestamp_and_nonce(self, client_key, timestamp, nonce,
                                      request, request_token=None, access_token=None):
-        return LTINonce.is_valid_nonce(client_key, nonce, timestamp)
+        return LegacyLTINonce.is_valid_nonce(client_key, nonce, timestamp)
 
     def validate_client_key(self, client_key, request):
-        lti_consumer = LTIConsumer.query \
+        lti_consumer = LegacyLTIConsumer.query \
             .filter_by(
                 active=True,
                 oauth_consumer_key=client_key
@@ -226,7 +226,7 @@ class ComPAIRRequestValidator(RequestValidator):
         return lti_consumer != None
 
     def get_client_secret(self, client_key, request):
-        lti_consumer = LTIConsumer.query \
+        lti_consumer = LegacyLTIConsumer.query \
             .filter_by(
                 active=True,
                 oauth_consumer_key=client_key

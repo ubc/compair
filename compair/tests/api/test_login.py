@@ -8,8 +8,8 @@ from data.fixtures import DefaultFixture
 from data.fixtures.test_data import SimpleAssignmentTestData, ThirdPartyAuthTestData
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import User, SystemRole, CourseRole, UserCourse, \
-    LTIConsumer, LTIContext, LTIUser, LTIMembership,  \
-    LTIResourceLink, LTIUserResourceLink, ThirdPartyType, ThirdPartyUser
+    LegacyLTIConsumer, LegacyLTIContext, LegacyLTIUser, LegacyLTIMembership,  \
+    LegacyLTIResourceLink, LegacyLTIUserResourceLink, ThirdPartyType, ThirdPartyUser
 from compair.core import db
 
 class LoginAPITests(ComPAIRAPITestCase):

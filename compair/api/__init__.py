@@ -53,9 +53,9 @@ def register_api_blueprints(app):
         lti_course_api,
         url_prefix='/api/lti/course')
 
-    from .lti_consumers import lti_consumer_api
+    from .legacy_lti_consumers import legacy_lti_consumer_api
     app.register_blueprint(
-        lti_consumer_api,
+        legacy_lti_consumer_api,
         url_prefix='/api/lti/consumers')
 
     from .users import user_api
@@ -439,7 +439,7 @@ def log_events(log):
     on_lti_course_membership_status_get.connect(log)
 
     # lti consumer event
-    from .lti_consumers import on_consumer_create, on_consumer_get, \
+    from .legacy_lti_consumers import on_consumer_create, on_consumer_get, \
         on_consumer_list_get, on_consumer_update
     on_consumer_create.connect(log)
     on_consumer_get.connect(log)

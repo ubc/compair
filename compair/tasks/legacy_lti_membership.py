@@ -1,7 +1,7 @@
 import requests
 
 from compair.core import celery, db
-from compair.models import Course, LTIMembership
+from compair.models import Course, LegacyLTIMembership
 from compair.models.lti_models import MembershipNoValidContextsException, \
     MembershipNoResultsException, MembershipInvalidRequestException
 from flask import current_app
@@ -15,7 +15,7 @@ def update_lti_course_membership(self, course_id):
 
         # allow MembershipNoValidContextsException exceptions to occur without retrying job
         try:
-            LTIMembership.update_membership_for_course(course)
+            LegacyLTIMembership.update_membership_for_course(course)
         except MembershipNoValidContextsException as err:
             current_app.logger.warning("Error for LTI Membership update for course with id: "+str(course_id)+" named: "+course.name+". No valid lti contexts are linked to the course")
         except MembershipNoResultsException as err:
