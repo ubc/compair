@@ -13,6 +13,15 @@
     <rich-content ng-if="selfEvalComment" content="assignment.description" attachment="assignment.file"></rich-content>
 </div>
 
+<div class="row evaluate-screen" ng-if="selfEvalComment">
+    <div class="col-md-12" >
+        <div class="answer-choice clearfix">
+            <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Your Answer</h3>
+            <rich-content content="parent.content" attachment="parent.file"></rich-content>
+        </div>
+    </div>
+</div>
+
 <form name="commentForm" class="form" ng-submit="commentSubmit()" confirm-form-exit novalidate form-type="comment">
     <fieldset>
         <legend><span ng-if="answerComment || selfEvalComment">Feedback</span><span ng-if="!answerComment && !selfEvalComment">Comment</span><span ng-if="!selfEvalComment"> Details</span></legend>
