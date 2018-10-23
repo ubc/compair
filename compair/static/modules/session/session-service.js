@@ -173,10 +173,13 @@
                 if (this._impersonation) {
                     return $q.when(this._impersonation);
                 } else {
-                    var stored_impersonation = localStorageService.get('impersonation');
-                    if (stored_impersonation) {
-                        return $q.when(stored_impersonation);
-                    }
+                    // impersonation state is based on user info. make sure it is valid first
+                    return session_exports.getUser().then(function(user) {
+                        var stored_impersonation = localStorageService.get('impersonation');
+                        if (stored_impersonation) {
+                            return $q.when(stored_impersonation);
+                        }
+                    });
                 }
                 return $q.when({});
             },
@@ -228,6 +231,12 @@
                         $rootScope.$broadcast(IMPERSONATE_END_EVENT);
                     });
                 });
+            },
+            detect_page_reload_and_flush: function() {
+                if (performance && performance.navigation && performance.navigation.type == 1) {
+                    localStorageService.clearAll();
+                    session_exports.destroy();
+                }
             },
         };
 

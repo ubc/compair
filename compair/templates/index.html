@@ -96,7 +96,8 @@
                     UserSettings.allow_student_change_email = {{ 'true' if allow_student_change_email else 'false' }};
                 }]);
                 angular.module('ubc.ctlt.compair.session')
-                .run(['ImpersonationSettings', function(ImpersonationSettings) {
+                .run(['ImpersonationSettings', 'Session', function(ImpersonationSettings, Session) {
+                    Session.detect_page_reload_and_flush();
                     ImpersonationSettings.enabled = {{ 'true' if impersonation_enabled else 'false' }};
                 }]);
                 angular.module('ubc.ctlt.compair.common')
