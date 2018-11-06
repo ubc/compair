@@ -18,7 +18,7 @@
 
     <div class="row">
 
-        <h2 class="col-sm-6">Your {{courseFilters.period}} courses</h2>
+        <h2 class="col-sm-6"><span ng-if="!canManageUsers">Your</span> <span ng-if="canManageUsers">ComPAIR's</span> {{courseFilters.period}} <span ng-if="courseFilters.includeSandbox">sandbox</span> courses</h2>
 
         <form class="col-sm-6 search-courses text-right" role="search" ng-if="!canManageUsers && canAddCourse && (courses.length || courseFilters.search || courseFilters.period!==null)">
             <div class="input-group">
@@ -42,19 +42,23 @@
             </div>
         </form>
 
-        <form class="col-sm-6 search-courses text-right" role="search" ng-if="canManageUsers && canAddCourse && (courses.length || courseFilters.search || courseFilters.includeSandbox!==null)" style="padding-right:0;">
+        <form class="col-sm-6 search-courses text-right" role="search" ng-if="canManageUsers && canAddCourse && (courses.length || courseFilters.search || courseFilters.includeSandbox!==null || courseFilters.period!==null)" style="padding-right:0;">
             <div class="input-group">
                 <div class="input-group-btn" uib-dropdown>
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" uib-dropdown-toggle>
-                        <span ng-show="courseFilters.includeSandbox===null">All courses</span>
-                        <span ng-show="courseFilters.includeSandbox===false">Regular courses</span>
+                        <span ng-show="courseFilters.includeSandbox===null && courseFilters.period===null">All courses</span>
+                        <span ng-show="courseFilters.period=='upcoming'">Upcoming courses</span>
+                        <span ng-show="courseFilters.period=='active'">Active courses</span>
+                        <span ng-show="courseFilters.period=='past'">Past courses</span>
                         <span ng-show="courseFilters.includeSandbox===true">Sandbox courses</span>
                         <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu" role="menu">
-                        <li><a ng-click="courseFilters.includeSandbox=null">All courses</a></li>
-                        <li><a ng-click="courseFilters.includeSandbox=false">Regular courses</a></li>
-                        <li><a ng-click="courseFilters.includeSandbox=true">Sandbox courses</a></li>
+                        <li><a ng-click="courseFilters.includeSandbox=null; courseFilters.period=null">All courses</a></li>
+                        <li><a ng-click="courseFilters.period='upcoming'; courseFilters.includeSandbox=null">Upcoming courses</a></li>
+                        <li><a ng-click="courseFilters.period='active'; courseFilters.includeSandbox=null">Active courses</a></li>
+                        <li><a ng-click="courseFilters.period='past'; courseFilters.includeSandbox=null">Past courses</a></li>
+                        <li><a ng-click="courseFilters.period=null; courseFilters.includeSandbox=true">Sandbox courses</a></li>
                     </ul>
                 </div>
                 <input class="form-control" type="text" name="search" placeholder="Filter courses by keyword"
