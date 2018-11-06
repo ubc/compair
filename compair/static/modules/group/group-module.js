@@ -90,4 +90,16 @@ module.controller(
     }
 ]);
 
+module.controller(
+    'ManageGroupsModalController',
+    ["$rootScope", "$scope", "$uibModalInstance", "Toaster", "GroupResource",
+    function ($rootScope, $scope, $uibModalInstance, Toaster, GroupResource) {
+        $scope.group = {};
+        $scope.modalInstance = $uibModalInstance;
+        $scope.modalDone = function() {
+            $scope.modalInstance.dismiss();
+        };
+    }
+]);
+
 })();

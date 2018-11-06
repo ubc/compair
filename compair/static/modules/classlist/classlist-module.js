@@ -86,7 +86,8 @@ module.controller(
         $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
 
         $scope.groupAddOptions = Array( {'id':'-1',  'name':'--------------------', 'disabled':true},
-                                        {'id':'add', 'name':'Add new group'});
+                                        {'id':'add', 'name':'Add new group'},
+                                        {'id':'manage', 'name':'Manage group names'});
 
         if ($scope.course.lti_linked) {
             LTIResource.getMembershipStatus({id: $scope.courseId},
@@ -136,6 +137,20 @@ module.controller(
             }, function () {
                 xAPIStatementHelper.closed_modal("Edit Group");
             });
+        };
+        
+         $scope.manageGroups = function() {
+            var modalScope = $scope.$new();
+            modalScope.courseId = $scope.courseId;
+            
+            var modalInstance = $uibModal.open({
+                animation: true,
+                backdrop: 'static',
+                controller: "ManageGroupsModalController",
+                templateUrl: 'modules/group/groups-manage-modal-partial.html',
+                scope: modalScope
+            });
+        
         };
 
         $scope.addUsersToGroup = function(group_id) {
@@ -218,6 +233,9 @@ module.controller(
         $scope.updateGroup = function(user, reload, original_group_id) {
             if (user.group_id == 'add') {
                 $scope.addUserToNewGroup(user);
+                user.group_id = original_group_id;
+            } else if (user.group_id == 'manage') {
+                $scope.manageGroups();
                 user.group_id = original_group_id;
             } else if (user.group_id) {
                 GroupUserResource.add({'courseId': $scope.courseId, 'userId': user.id, 'groupId': user.group_id}, {},
