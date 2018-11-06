@@ -13,6 +13,16 @@
     <rich-content ng-if="selfEvalComment" content="assignment.description" attachment="assignment.file"></rich-content>
 </div>
 
+<div class="row evaluate-screen" ng-if="selfEvalComment">
+    <div class="col-md-12" >
+        <div class="answer-choice clearfix">
+            <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Your Answer</h3>
+            <rich-content content="parent.content" attachment="parent.file"></rich-content>
+        </div>
+    </div>
+</div>
+
+
 <form name="commentForm" class="form" ng-submit="commentSubmit()" confirm-form-exit novalidate form-type="comment">
     <fieldset>
         <legend><span ng-if="answerComment || selfEvalComment">Feedback</span><span ng-if="!answerComment && !selfEvalComment">Comment</span><span ng-if="!selfEvalComment"> Details</span></legend>
@@ -31,7 +41,7 @@
         </div>
     </fieldset>
     <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
-    <div class="form-group sub-step text-center" ng-show="comment.draft">
+    <div class="form-group sub-step text-center" ng-show="comment.draft || preview">
         <input type="submit" class="btn btn-default btn-lg" value="Save Draft"
             ng-click="comment.draft = true"
             ng-disabled="submitted" />
@@ -40,7 +50,7 @@
             ng-click="comment.draft = false"
             ng-disabled="commentForm.$invalid || submitted" />
     </div>
-    <div ng-show="!comment.draft">
+    <div ng-show="!comment.draft && !preview">
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
             ng-disabled="commentForm.$invalid || submitted" />
     </div>
