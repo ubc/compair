@@ -118,7 +118,7 @@
                     <tr ng-repeat="lti_user in lti_users">
                         <td class="nowrap">
                             <a title="Unlink this LTI account" href="" confirmation-needed="unlinkLTI(lti_user)" keyword="LTI account link" class="delete-lti-user" ng-if="canManageUsers">
-                                <i class="glyphicon glyphicon-trash"></i>
+                                Unlink
                             </a>
                         </td>
                         <td>{{lti_user.oauth_consumer_key}}</td>
@@ -156,7 +156,7 @@
                     <tr ng-repeat="third_party_user in third_party_users">
                         <td class="nowrap">
                             <a title="unlink this CWL account" href="" confirmation-needed="deleteThirdPartyUser(third_party_user)" keyword="CWL account link" class="delete-third-party-user" ng-if="canManageUsers">
-                                <i class="glyphicon glyphicon-trash"></i>
+                                Unlink
                             </a>
                         </td>
                         <td>{{third_party_user.third_party_type}}</a></td>

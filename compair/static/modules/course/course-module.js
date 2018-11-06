@@ -133,7 +133,7 @@ module.directive('courseMetadata', function() {
                                 }
                             },
                             'deleteLink' : {
-                                'label': '<i class="fa fa-trash-o"></i>',
+                                'label': 'Delete',
                                 'title' : "Delete",
                                 'confirmationNeeded' : 'deleteCourse(course)' ,
                                 'confirmationWarning': course.delete_warning,

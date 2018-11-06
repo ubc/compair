@@ -638,7 +638,7 @@ module.directive('assignmentMetadata', function() {
                                 }
                             },
                             'deleteLink' : {
-                                'label': '<i class="fa fa-trash-o"></i>',
+                                'label': 'Delete',
                                 'title' : "Delete",
                                 'confirmationNeeded' : 'deleteAssignment(assignment)' ,
                                 'confirmationWarning': assignment.delete_warning,
