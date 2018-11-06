@@ -94,15 +94,15 @@ module.controller(
         $scope.impersonationEnabled = ImpersonationSettings.enabled;
         $scope.getImpersonation = function() {
             Session.getImpersonation().then(function (impersonate_details) {
-                $scope.impersonating = impersonate_details.impersonating;
-                if (impersonate_details.impersonating &&
+                $scope.impersonating = impersonate_details && impersonate_details.impersonating;
+                if ($scope.impersonating &&
                     impersonate_details.original_user && impersonate_details.original_user.displayname) {
                     $scope.impersonate_original_user_name = impersonate_details.original_user.displayname;
                 } else {
                     $scope.impersonate_original_user_name = '';
                 }
 
-                if (impersonate_details.impersonating) {
+                if ($scope.impersonating) {
                     $scope.impersonate_as_user_name = '';
                     Session.getUser().then(function (user) {
                         $scope.impersonate_as_user_name = ((user.firstname || '') + ' ' + (user.lastname || '')).trim();
