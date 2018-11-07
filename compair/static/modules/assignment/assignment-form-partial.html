@@ -19,6 +19,9 @@
                 Copy?
             </a>
         </div>
+        <p class="instructional-text">
+            Allowed file types for attachments include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}, with a maximum file size of <strong>{{UploadValidator.getAttachmentUploadLimit() | filesize }}</strong>. Any files you upload will be attached when you <strong>save this assignment</strong> but not before.
+        </p>
 
         <compair-field-with-feedback form-control="assignmentForm.assignmentName">
             <label for="assignmentName" class="required-star">Short Name</label>
@@ -45,6 +48,7 @@
 
         <div>
             <label for="importFile">Related Attachment</label>
+            <p ng-show="!assignment.file && assignment.existingFile" class="alert alert-warning"><strong>Save this assignment to save changes made to your attachment</strong>, or leave this screen to keep the attachment that appeared when you started editing.</p>
             <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
 
             <div ng-repeat="item in uploader.queue">
@@ -84,11 +88,8 @@
                     <i class="fa fa-paperclip"></i> Attached File: <strong>{{assignment.file.alias}}</strong>
                 </div>
             </div>
-            <br>
         </div>
-        <p class="instructional-text">
-                Allowed file types include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}, with a maximum file size of <strong>{{UploadValidator.getAttachmentUploadLimit() | filesize }}</strong>. Any files you upload will be attached when you <strong>save this assignment</strong> but not before.
-        </p>
+        <br /><br />
         <div class="form-group">
             <label for="assignmentDescription">Additional Assignment Information</label>
             <textarea ckeditor="editorOptions" rows="8"
