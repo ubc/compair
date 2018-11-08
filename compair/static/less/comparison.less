@@ -20,6 +20,45 @@
   .sub-step {
     margin: 0 1.3em;
   }
+  
+  /* step divider */
+  hr {
+    margin: 2em 0;
+  }
+  
+  /* when support is available, make the answer pair sticky */
+  @supports(position:sticky) or (position:-webkit-sticky){
+    
+    /* but limit to larger screens */
+    @media (min-width: 993px) {
+    
+      .answer-pair {
+        
+        margin-bottom: 2em;
+        position: -webkit-sticky; /* Safari */
+        position: sticky;
+        top: -55px;
+        opacity: .99;
+        background: #fff;
+        z-index: 2000;
+      
+        .answer-choice {
+          margin-bottom: 1em;
+        }
+        
+      }//closes answer-pair
+      
+      .sticky-bar {
+        margin-bottom: 0;
+      }
+      
+      .sticky-hide {
+        display: none;
+      }
+      
+    }//closes 993px
+  
+  }//closes support sticky
 
   /* class for div surrounding each answer choice */
   .answer-choice {
@@ -46,11 +85,6 @@
     display: block;
     font-size: 1.15em;
     font-weight: normal;
-  }
-
-  /* step divider */
-  hr {
-    margin: 2em 0;
   }
 
   /* class for div containing each criterion */
@@ -141,4 +175,3 @@
     }
 
 }//closes evaluations-screen
-

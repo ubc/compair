@@ -54,14 +54,16 @@
                 <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum"></rich-content>
             </div>
         </div>
+        
+        <div class="col-md-12">
+            <hr class="sticky-bar" />
+        </div>
 
     </div>
 
     <form name="comparisonForm" ng-submit="comparisonSubmit(comparisonForm)" novalidate ng-hide="comparisonError" confirm-form-exit form-type="compare">
 
         <div>
-
-            <hr />
 
             <h3>1) Choose the answer that best meets the criteria below</h3>
 
@@ -126,7 +128,7 @@
                     Remember to make your comments&mdash;including criticisms&mdash;encouraging, respectful, and specific.
                 </div>
 
-                <p class="assignment-toggle"><a href="" ng-click="showAnswers = !showAnswers">
+                <p class="assignment-toggle sticky-hide"><a href="" ng-click="showAnswers = !showAnswers">
                     <i class="fa fa-chevron-down" ng-show="showAnswers"></i>
                     <i class="fa fa-chevron-right" ng-hide="showAnswers"></i>
                     Show answer pair again for Round {{current}}
