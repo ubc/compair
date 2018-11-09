@@ -10,6 +10,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from . import *
 
 from compair.core import db
+from compair.util import sql_utcnow
 
 class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'course'
@@ -114,8 +115,8 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                 Assignment.active == True,
                 Assignment.enable_group_answers == True,
                 or_(
-                    and_(Assignment.compare_start == None, Assignment.answer_end <= datetime.datetime.utcnow()),
-                    and_(Assignment.compare_start != None, Assignment.compare_start <= datetime.datetime.utcnow())
+                    and_(Assignment.compare_start == None, Assignment.answer_end <= sql_utcnow()),
+                    and_(Assignment.compare_start != None, Assignment.compare_start <= sql_utcnow())
                 )
             )),
             deferred=True,
@@ -154,7 +155,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 Assignment.course_id == cls.id,
                 Assignment.active == True,
-                Assignment.answer_start <= datetime.datetime.utcnow()
+                Assignment.answer_start <= sql_utcnow()
             )),
             deferred=True,
             group="counts"
