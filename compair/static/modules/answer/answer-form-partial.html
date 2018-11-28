@@ -134,7 +134,7 @@
         </div>
     </fieldset>
     <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
-    <div class="text-center" ng-show="answer.draft && (!canManageAssignment || answer.user_id == loggedInUserId)">
+    <div class="text-center" ng-show="!canManageAssignment && answer.draft && (!canManageAssignment || answer.user_id == loggedInUserId)">
         <input type="submit" class="btn btn-default btn-lg" value="Save Draft"
             ng-click="answerSubmit(true)"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
@@ -151,7 +151,7 @@
                 &nbsp; Saving draft...
         </p>
     </div>
-    <div ng-show="!answer.draft || (canManageAssignment && answer.user_id != loggedInUserId)" class="text-center">
+    <div ng-show="canManageAssignment || !answer.draft || (canMangeAssignment && answer.user_id != loggedInUserId)" class="text-center">
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
             ng-click="answerSubmit()"
             ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
