@@ -5,24 +5,30 @@
 
     <fieldset>
         <legend>Course Details</legend>
-        <compair-field-with-feedback form-control="courseForm.courseName">
+        <compair-field-with-feedback form-control="courseForm.courseName" is-date="false">
             <label for="courseName" class="required-star">Course Name</label>
             <input id="courseName" name="courseName" ng-model="course.name"
                     type="text" class="form-control" required maxlength="255" placeholder="e.g. BIOL 112 - Biology of the Cell" ng-model="course.name" auto-focus />
+            <!-- if the field is empty and a save attempted -->
+            <p ng-if="courseForm.courseName.$invalid && saveAttempted" class="alert alert-warning">What will you call this course?</p>
         </compair-field-with-feedback>
         <div class="row">
             <div class="col-md-6 form-group">
-                <compair-field-with-feedback form-control="courseForm.courseYear">
+                <compair-field-with-feedback form-control="courseForm.courseYear" is-date="false">
                     <label for="courseYear" class="required-star">Year</label>
                     <input id="courseYear" name="courseYear" ng-model="course.year"
-                    type="number" class="form-control" required min="1900" />
+                    type="number" class="form-control" required min="1900" max="9999" placeholder="YYYY" />
+                    <!-- if the field is empty or incomplete and a save attempted -->
+                    <p ng-if="courseForm.courseYear.$invalid && saveAttempted" class="alert alert-warning">What year does this course take place (YYYY)?</p>
                 </compair-field-with-feedback>
             </div>
             <div class="col-md-6 form-group">
-                <compair-field-with-feedback form-control="courseForm.courseTerm">
+                <compair-field-with-feedback form-control="courseForm.courseTerm" is-date="false">
                     <label for="courseTerm" class="required-star">Term/Semester</label>
                     <input id="courseTerm" name="courseTerm" ng-model="course.term"
                     type="text" class="form-control" required maxlength="255" placeholder="e.g. W1" />
+                    <!-- if the field is empty and a save attempted -->
+                    <p ng-if="courseForm.courseTerm.$invalid && saveAttempted" class="alert alert-warning">In which academic period does this course take place?</p>
                 </compair-field-with-feedback>
             </div>
         </div>
@@ -40,41 +46,55 @@
         <legend>Schedule</legend>
         <div class="instructional-text" ng-hide="status">
         <p>
-            <strong>Set the course dates</strong> during which enrolled students can see and access the course content when they log in. You may optionally leave the course end date blank so that the course would be accessible to students anytime after the course start date. (You will be able to set different dates for individual assignments when you create them.)
+            <strong>Set the course dates</strong> during which enrolled students can see and access the course content when they log in. You can leave the course end date blank, and then the course will be accessible to students indefinitely after the start date.
         </p>
         </div>
         <div class="row">
             <div class="col-md-6 form-group">
-                <label class="required-star">Course Begins</label><br />
-                <div class="assignment-date">
-                    <span class="input-group">
-                        <input type="text" class="form-control" required uib-datepicker-popup="{{format}}" ng-model="date.course_start.date" is-open="date.course_start.opened" datepicker-options="{ maxDate: date.course_end.date }" />
-                        <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.course_start)"><i class="glyphicon glyphicon-calendar"></i></button>
+                <compair-field-with-feedback form-control="courseForm.courseStart" is-date="true">
+                    <label class="required-star" for="courseStart">Course Begins</label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input id="courseStart" name="courseStart" placeholder="DD-Month-YYYY" type="text" class="form-control" required uib-datepicker-popup="{{format}}" ng-model="date.course_start.date" is-open="date.course_start.opened" datepicker-options="{ maxDate: date.course_end.date }" />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.course_start)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
                         </span>
-                    </span>
-                </div>
-                <div class="assignment-date">
-                    <div uib-timepicker ng-model="date.course_start.time" minute-step="1" mousewheel="false"></div>
-                </div>
+                    </div>
+                    <div class="assignment-date">
+                        <div uib-timepicker ng-model="date.course_start.time" minute-step="5" mousewheel="false" required></div>
+                    </div>
+                    <!-- if the field is empty or incomplete and a save attempted -->
+                    <p ng-if="courseForm.courseStart.$invalid && saveAttempted" class="alert alert-warning">When does this course start (DD-Month-YYYY)?</p>
+                    <!-- if dates provided + end is before the start date and a save attempted and message available -->
+                    <p ng-if="date.course_start.date && date.course_end.date && date.course_start.date > date.course_end.date && saveAttempted && datesMsg" class="alert alert-warning">{{datesMsg}}</p>
+                </compair-field-with-feedback>
             </div>
             <div class="col-md-6 form-group">
-                <label>Course Ends</label><br />
-                <div class="assignment-date">
-                    <span class="input-group">
-                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.course_end.date" is-open="date.course_end.opened" datepicker-options="{ minDate: date.course_start.date }" />
-                        <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.course_end)"><i class="glyphicon glyphicon-calendar"></i></button>
+                <compair-field-with-feedback form-control="courseForm.courseEnd" is-date="true">
+                    <label>Course Ends <span class="optional">(optional)</span></label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input id="courseEnd" name="courseEnd" placeholder="DD-Month-YYYY" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.course_end.date" is-open="date.course_end.opened" datepicker-options="{ minDate: date.course_start.date }" />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.course_end)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
                         </span>
-                    </span>
-                </div>
-                <div class="assignment-date">
-                    <div uib-timepicker ng-model="date.course_end.time" minute-step="1" mousewheel="false"></div>
-                </div>
+                    </div>
+                    <div class="assignment-date">
+                        <div uib-timepicker ng-model="date.course_end.time" minute-step="1" mousewheel="false"></div>
+                    </div>
+                    <!-- if the field is incomplete and a save attempted -->
+                    <p ng-if="courseForm.courseEnd.$invalid && saveAttempted" class="alert alert-warning">Make sure to use a DD-Month-YYYY format, if you set this.</p>
+                </compair-field-with-feedback>
             </div>
         </div>
     </fieldset>
-    <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
-    <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-            ng-disabled="courseForm.$invalid || submitted" />
+    
+    <!-- different helper messages for pre or post save attempts -->
+    <p class="text-center text-muted" ng-if="!saveAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    <p class="text-center text-warning" ng-if="saveAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
+    
+    <input type="submit" class="btn btn-success btn-lg center-block" ng-disabled="submitted" ng-click="showErrors($event, courseForm.$valid, date.course_start.date, date.course_end.date)" value="Save" />
+
 </form>

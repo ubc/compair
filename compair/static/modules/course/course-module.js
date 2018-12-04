@@ -563,6 +563,7 @@ module.controller(
         $scope.showAssignments = false;
         $scope.submitted = false;
         $scope.format = 'dd-MMMM-yyyy';
+        $scope.saveAttempted = false;
 
         $scope.setupDuplicateCourse = function() {
             $scope.duplicateCourse = {
@@ -598,9 +599,14 @@ module.controller(
             );
         };
 
-        $scope.canGoBack = function(theFormToCheck) {
-            return (theFormToCheck.$pristine || confirm('Are you sure you want to leave this page? Any dates you\'ve manually changed for assignments here will be lost.'));
-        }
+        $scope.canGoBack = function() {
+            if (confirm('Are you sure you want to leave this page? Any dates you\'ve manually changed for assignments here will be lost.')) {
+                $scope.showAssignments = false;
+                $scope.saveAttempted = false;
+            } else {
+                $scope.showAssignments = true;
+            }
+        };
 
         $scope.adjustDuplicateAssignmentDates = function() {
             // startPoint is original course start_date if set
@@ -705,6 +711,48 @@ module.controller(
             }, dates[0])).toDate();
         };
 
+        // show inline errors for course duplication form
+        //$scope.showErrors = function(step) {  
+        //    $scope.saveAttempted = true;
+        //    $scope.step = step;
+        //    Toaster.warning("Sorry, you weren't able to "+step+" yet,", "but you're almost there. Simply update the highlighted information and then try again.");
+        //}
+        
+        // check for validity on first step of duplication form
+        $scope.partialValidity = function(courseName, courseYear, courseTerm, courseStart, courseEnd) {
+            if (courseName !=false && courseYear !=false && courseTerm !=false && courseStart !=false && courseEnd !=false) {
+                return true;
+            } else {
+                // alert(courseName +' '+ courseYear +' '+ courseTerm +' '+ courseStart +' '+ courseEnd);
+                return false;
+            }
+        };
+        
+        // decide on showing inline errors for course duplication form
+        $scope.showFirstErrors = function($event, formValid, courseStart, courseEnd) {
+            if (!formValid || (courseEnd && courseStart > courseEnd)) {
+                
+                // decide on appropriate dates-related message
+                if (courseEnd && courseStart > courseEnd) {
+                    $scope.datesMsg = "Make sure this course starts before it ends...";
+                }
+                
+                // decide on helper text and Toast
+                $scope.helperMsg = "Sorry, you weren't able to go to the next step yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, you weren't able to go to the next step yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            } else {
+                Toaster.clear();
+                $scope.saveAttempted = false;
+                $scope.duplicateNext();
+            }
+        };
+        
         $scope.duplicateNext = function() {
             $scope.showAssignments = true;
             $scope.adjustDuplicateAssignmentDates();
@@ -728,11 +776,13 @@ module.controller(
             if ($scope.duplicateCourse.start_date == null) {
                 Toaster.warning('Course Not Saved', 'Please indicate the course start time and try again.');
                 $scope.submitted = false;
+                $scope.showErrors('duplicate the course');
                 return;
             }
             else if ($scope.duplicateCourse.start_date != null && $scope.duplicateCourse.end_date != null && $scope.duplicateCourse.start_date > $scope.duplicateCourse.end_date) {
                 Toaster.warning('Course Not Duplicated', 'Please set course end time after course start time and try again.');
                 $scope.submitted = false;
+                $scope.showErrors('duplicate the course');
                 return;
             }
 
@@ -747,26 +797,40 @@ module.controller(
                     compare_start: combineDateTime(assignment.date.cstart),
                     compare_end: combineDateTime(assignment.date.cend),
                     enable_self_evaluation: assignment.enable_self_evaluation,
-                    self_eval_start: assignment.enable_self_evaluation && assignment.selfEvalCheck? combineDateTime(assignment.date.sestart) : null,
-                    self_eval_end: assignment.enable_self_evaluation && assignment.selfEvalCheck? combineDateTime(assignment.date.seend) : null,
+                    self_eval_start: assignment.enable_self_evaluation && assignment.selfEvalCheck ? combineDateTime(assignment.date.sestart) : null,
+                    self_eval_end: assignment.enable_self_evaluation && assignment.selfEvalCheck ? combineDateTime(assignment.date.seend) : null,
                 }
 
                 // answer end datetime has to be after answer start datetime
                 if (assignment_submit.answer_start >= assignment_submit.answer_end) {
-                    Toaster.warning('Assignment Not Duplicated', 'Please set answer end time after answer start time and try again.');
+                    Toaster.warning('Course Not Duplicated', 'Please set answer end time for '+assignment_submit.name+' after answer start time and try again.');
                     $scope.submitted = false;
+                    $scope.showErrors('duplicate the course');
                     return;
                 } else if (assignment.availableCheck && assignment_submit.answer_start > assignment_submit.compare_start) {
-                    Toaster.warning('Assignment Not Duplicated', 'Please double-check the answer and comparison start and end times for mismatches and try again.');
+                    Toaster.warning('Course Not Duplicated', 'Please set comparison start time for "'+assignment_submit.name+'" after answer start time and try again.');
                     $scope.submitted = false;
+                    $scope.showErrors('duplicate the course');
                     return;
                 } else if (assignment.availableCheck && assignment_submit.compare_start >= assignment_submit.compare_end) {
-                    Toaster.warning('Assignment Not Duplicated', 'Please set comparison end time after comparison start time and try again.');
+                    Toaster.warning('Course Not Duplicated', 'Please set comparison end time for "'+assignment_submit.name+'" after comparison start time and try again.');
                     $scope.submitted = false;
+                    $scope.showErrors('duplicate the course');
+                    return;
+                } else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start > assignment_submit.answer_start) {
+                    Toaster.warning('Course Not Duplicated', 'Please set self-evaluation start time for "'+assignment_submit.name+'" after answer start time and try again.');
+                    $scope.submitted = false;
+                    $scope.showErrors('duplicate the course');
+                    return;
+                } else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start > assignment_submit.compare_start) {
+                    Toaster.warning('Course Not Duplicated', 'Please set self-evaluation start time for "'+assignment_submit.name+'" after comparison start time and try again.');
+                    $scope.submitted = false;
+                    $scope.showErrors('duplicate the course');
                     return;
                 } else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start >= assignment_submit.self_eval_end) {
-                    Toaster.warning('Assignment Not Duplicated', 'Please set self-evaluation end time after self-evaluation start time and try again.');
+                    Toaster.warning('Course Not Duplicated', 'Please set self-evaluation end time for "'+assignment_submit.name+'" after self-evaluation start time and try again.');
                     $scope.submitted = false;
+                    $scope.showErrors('duplicate the course');
                     return;
                 }
 
@@ -800,6 +864,7 @@ module.controller(
 
             }).$promise.finally(function() {
                 $scope.submitted = false;
+                $scope.saveAttempted = false;
             });
         };
 
@@ -835,6 +900,7 @@ module.controller(
         $scope.course = resolvedData.course || {};
         $scope.loggedInUserId = resolvedData.loggedInUser.id;
         $scope.editorOptions = EditorOptions.basic;
+        $scope.saveAttempted = false;
 
         $scope.method = $scope.course.id ? "edit" : "create";
         // unlike for assignments, course dates initially blank
@@ -860,6 +926,30 @@ module.controller(
 
             object.opened = true;
         };
+        
+        // decide on showing inline errors for course add/edit form
+        $scope.showErrors = function($event, formValid, courseStart, courseEnd) {
+            if (!formValid || (courseEnd && courseStart > courseEnd)) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // decide on appropriate dates-related message
+                if (courseEnd && courseStart > courseEnd) {
+                    $scope.datesMsg = "Make sure this course starts before it ends...";
+                }
+                
+                // decide on helper text and Toast
+                $scope.helperMsg = "Sorry, this course couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this course couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            }
+        };
 
         $scope.save = function() {
             $scope.submitted = true;
@@ -879,15 +969,18 @@ module.controller(
             if ($scope.course.start_date == null) {
                 Toaster.warning('Course Not Saved', 'Please indicate the course start time and save again.');
                 $scope.submitted = false;
+                $scope.saveAttempted = true;
                 return;
             }
             else if ($scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
                 Toaster.warning('Course Not Saved', 'Please set course end time after course start time and save again.');
                 $scope.submitted = false;
+                $scope.saveAttempted = true;
                 return;
             }
 
             CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
+                $scope.saveAttempted = false;
                 Toaster.success("Course Saved");
 
                 // refresh permissions

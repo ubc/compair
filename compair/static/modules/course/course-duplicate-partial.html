@@ -2,28 +2,34 @@
 
     <h1>Duplicate: {{originalCourse.name}}</h1>
     <br />
-    <p class="intro-text">Please provide the required fields below to duplicate your course and its assignments. All assignments will be editable after duplication. This process will <em>not</em> copy enrolled students, submitted answers, or comparisons.</p>
+    <p class="intro-text">Please provide the information below to duplicate your course and its assignments. All assignments will be editable after duplication. And don't worry, this process will <em>not</em> copy enrolled students or submitted answers, comparisons, or self-evaluations.</p>
 
     <fieldset ng-show="!showAssignments">
         <legend>Course Details</legend>
-        <compair-field-with-feedback form-control="duplicateCourseForm.courseName">
+        <compair-field-with-feedback form-control="duplicateCourseForm.courseName" is-date="false">
             <label for="courseName" class="required-star">Course Name</label>
-            <input id="courseName" name="courseName" ng-model="duplicateCourse.name"
+            <input id="courseName" name="courseName" ng-model="duplicateCourse.name" placeholder="e.g. BIOL 112 - Biology of the Cell"
                 type="text" class="form-control" required maxlength="255" />
+            <!-- if the field is empty and a save attempted -->
+            <p ng-if="duplicateCourseForm.courseName.$invalid && saveAttempted" class="alert alert-warning">What will you call this course?</p>
         </compair-field-with-feedback>
         <div class="row">
             <div class="col-md-6 form-group">
-                <compair-field-with-feedback form-control="duplicateCourseForm.courseYear">
+                <compair-field-with-feedback form-control="duplicateCourseForm.courseYear" is-date="false">
                     <label for="courseYear" class="required-star">Year</label>
                     <input id="courseYear" name="courseYear" ng-model="duplicateCourse.year"
-                    type="number" class="form-control" required min="1900" />
+                    type="number" class="form-control" required min="1900" max="9999" placeholder="YYYY" />
+                    <!-- if the field is empty or incomplete and a save attempted -->
+                    <p ng-if="duplicateCourseForm.courseYear.$invalid && saveAttempted" class="alert alert-warning">What year does this course take place (YYYY)?</p>
                 </compair-field-with-feedback>
             </div>
             <div class="col-md-6 form-group">
-                <compair-field-with-feedback form-control="duplicateCourseForm.courseTerm">
+                <compair-field-with-feedback form-control="duplicateCourseForm.courseTerm" is-date="false">
                     <label for="courseTerm" class="required-star">Term/Semester</label>
-                    <input id="courseTerm" name="courseTerm" ng-model="duplicateCourse.term"
+                    <input id="courseTerm" name="courseTerm" placeholder="e.g. W1" ng-model="duplicateCourse.term"
                     type="text" class="form-control" required maxlength="255" />
+                    <!-- if the field is empty and a save attempted -->
+                    <p ng-if="duplicateCourseForm.courseTerm.$invalid && saveAttempted" class="alert alert-warning">In which academic period does this course take place?</p>
                 </compair-field-with-feedback>
             </div>
         </div>
@@ -41,46 +47,54 @@
         <legend>Schedule</legend>
         <div class="row">
             <div class="col-md-6 form-group">
-                <label class="required-star">Course Begins</label><br />
-                <div class="assignment-date">
-                    <span class="input-group">
-                        <input type="text" class="form-control" required uib-datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_start.date"
-                            is-open="duplicateCourse.date.course_start.opened"
-                            datepicker-options="{ maxDate: duplicateCourse.date.course_end.date }" />
-                        <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, duplicateCourse.date.course_start)"><i class="glyphicon glyphicon-calendar"></i></button>
+                <compair-field-with-feedback form-control="duplicateCourseForm.courseStart" is-date="true">
+                    <label class="required-star" for="courseStart">Course Begins</label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input id="courseStart" name="courseStart" placeholder="DD-Month-YYYY" type="text" class="form-control" required uib-datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_start.date" is-open="duplicateCourse.date.course_start.opened" datepicker-options="{ maxDate: duplicateCourse.date.course_end.date }" />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, duplicateCourse.date.course_start)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
                         </span>
-                    </span>
-                </div>
-                <div class="assignment-date">
-                    <div uib-timepicker ng-model="duplicateCourse.date.course_start.time" minute-step="1" mousewheel="false"></div>
-                </div>
+                    </div>
+                    <div class="assignment-date">
+                        <div uib-timepicker ng-model="duplicateCourse.date.course_start.time" minute-step="1" mousewheel="false"></div>
+                    </div>
+                    <!-- if the field is empty or incomplete and a save attempted -->
+                    <p ng-if="duplicateCourseForm.courseStart.$invalid && saveAttempted" class="alert alert-warning">When does this course start (DD-Month-YYYY)?</p>
+                    <!-- if dates provided + end is before the start date and a save attempted -->
+                    <p ng-if="duplicateCourse.date.course_start.date && duplicateCourse.date.course_end.date && duplicateCourse.date.course_start.date > duplicateCourse.date.course_end.date && saveAttempted && datesMsg" class="alert alert-warning">{{datesMsg}}</p>
+                </compair-field-with-feedback>
             </div>
             <div class="col-md-6 form-group">
-                <label>Course Ends</label><br />
-                <div class="assignment-date">
-                    <span class="input-group">
-                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_end.date"
-                            is-open="duplicateCourse.date.course_end.opened"
-                            datepicker-options="{ minDate: duplicateCourse.date.course_start.date }" />
-                        <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, duplicateCourse.date.course_end)"><i class="glyphicon glyphicon-calendar"></i></button>
+                <compair-field-with-feedback form-control="duplicateCourseForm.courseEnd" is-date="true">
+                    <label>Course Ends <span class="optional">(optional)</span></label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input id="courseEnd" name="courseEnd" placeholder="DD-Month-YYYY" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="duplicateCourse.date.course_end.date"
+                                is-open="duplicateCourse.date.course_end.opened"
+                                datepicker-options="{ minDate: duplicateCourse.date.course_start.date }" />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, duplicateCourse.date.course_end)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
                         </span>
-                    </span>
-                </div>
-                <div class="assignment-date">
-                    <div uib-timepicker ng-model="duplicateCourse.date.course_end.time" minute-step="1" mousewheel="false"></div>
-                </div>
+                    </div>
+                    <div class="assignment-date">
+                        <div uib-timepicker ng-model="duplicateCourse.date.course_end.time" minute-step="1" mousewheel="false"></div>
+                    </div>
+                    <!-- if the field is incomplete and a save attempted -->
+                    <p ng-if="duplicateCourseForm.courseEnd.$invalid && saveAttempted" class="alert alert-warning">Make sure to use a DD-Month-YYYY format, if you set this.</p>
+                </compair-field-with-feedback>
             </div>
         </div>
     </fieldset>
-
+    
     <fieldset ng-show="showAssignments">
         <legend>Assignment Dates</legend>
 
         <div class="instructional-text">
             <p>
-                You are <strong>duplicating {{duplicateAssignments.length}} assignments</strong> with this course. You can update the assignment dates manually in bulk below or update them after duplication by editing each individual assignment.
+                You are <strong>duplicating {{duplicateAssignments.length}} assignments</strong> with this course. You can update the assignment dates manually in bulk below now or update them after duplication by editing each individual assignment. Note that assignment dates must fall within the course dates you set.
             </p>
         </div>
 
@@ -93,103 +107,137 @@
             <h3 class="media-heading">
                 Assignment: "{{assignment.name}}"
             </h3>
-            <div class="form-group">
-                <input id="availableCheck-{{assignment.id}}" type="checkbox" ng-model="assignment.availableCheck">
-                <label for="availableCheck-{{assignment.id}}">Set a comparison period for this assignment below<span ng-show="assignment.availableCheck">:</span></label>
-            </div>
+            <br /><br />
 
             <div class="row">
                 <div class="col-md-6 form-group">
-                    <label class="required-star">
-                        Answering Begins
-                        <span ng-if="duplicateCourse.date.course_start.date">
-                            (in course week #{{(assignment.date.astart.date | amDifference : duplicateCourse.date.course_start.date : 'weeks') + 1 }})
-                        </span>
-                    </label><br />
-                    <div class="assignment-date">
-                        <span class="input-group">
-                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.astart.date"
-                                is-open="assignment.date.astart.opened" required
-                                datepicker-options="{ minDate: datePickerMinDate(duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(assignment.date.aend.date, duplicateCourse.date.course_end.date) }"
-                                />
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.astart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                     <compair-field-with-feedback form-control="duplicateCourseForm['answer' + ($index+1) + 'Start']" is-date="true">
+                        <label class="required-star">
+                            Answering Begins
+                            <span ng-if="duplicateCourse.date.course_start.date && assignment.date.astart.date" class="text-muted">
+                                (currently in course week #{{(assignment.date.astart.date | amDifference : duplicateCourse.date.course_start.date : 'weeks') + 1 }})
                             </span>
-                        </span>
-                    </div>
-                    <div class="assignment-date">
-                        <div uib-timepicker ng-model="assignment.date.astart.time" minute-step="1" mousewheel="false"></div>
-                    </div>
+                        </label><br />
+                        <div class="assignment-date">
+                            <span class="input-group">
+                                <input id="answer{{$index+1}}Start" name="answer{{$index+1}}Start" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.astart.date"
+                                    is-open="assignment.date.astart.opened" required placeholder="DD-Month-YYYY"
+                                    datepicker-options="{ minDate: datePickerMinDate(duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(assignment.date.aend.date, duplicateCourse.date.course_end.date) }"
+                                    />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.astart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="assignment-date">
+                            <div uib-timepicker ng-model="assignment.date.astart.time" minute-step="1" mousewheel="false"></div>
+                        </div>
+                        <!-- if the field is empty or incomplete and a save attempted -->
+                        <p ng-if="duplicateCourseForm['answer' + ($index+1) + 'Start'].$invalid && saveAttempted" class="alert alert-warning">When can students start answering (DD-Month-YYYY)?</p>
+                        <!-- if dates provided + end is before the start date OR start before course start and a save attempted -->
+                        <p ng-if="(assignment.date.astart.date && assignment.date.aend.date && (assignment.date.astart.date > assignment.date.aend.date ||  duplicateCourse.date.course_start.date > assignment.date.astart.date) && saveAttempted)" class="alert alert-warning">
+                            Make sure answering starts
+                            <span ng-if="assignment.date.astart.date > assignment.date.aend.date">before it ends</span><span ng-if="duplicateCourse.date.course_start.date <= assignment.date.astart.date">...</span>
+                            <span ng-if="assignment.date.astart.date > assignment.date.aend.date && duplicateCourse.date.course_start.date > assignment.date.astart.date"> and </span>
+                            <span ng-if="duplicateCourse.date.course_start.date > assignment.date.astart.date">after the course starts ({{duplicateCourse.date.course_start.date | date:'dd-MMMM-yyyy'}}).</span>
+                        </p>
+                    </compair-field-with-feedback>
                 </div>
                 <div class="col-md-6 form-group">
-                    <label class="required-star">
-                        Answering Ends
-                        <!-- <span ng-if="duplicateCourse.date.course_start.date">
-                            (Course week #{{assignment.date.aend.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
-                        </span> -->
-                    </label><br />
-                    <div class="assignment-date">
-                        <span class="input-group">
-                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.aend.date"
-                                is-open="assignment.date.aend.opened" required
-                                datepicker-options="{ minDate: datePickerMinDate(assignment.date.astart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(duplicateCourse.date.course_end.date) }"
-                                />
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.aend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                    <compair-field-with-feedback form-control="duplicateCourseForm['answer' + ($index+1) + 'End']" is-date="true">
+                        <label class="required-star">
+                            Answering Ends
+                            <!-- <span ng-if="duplicateCourse.date.course_start.date">
+                                (Course week #{{assignment.date.aend.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
+                            </span> -->
+                        </label><br />
+                        <div class="assignment-date">
+                            <span class="input-group">
+                                <input id="answer{{$index+1}}End" name="answer{{$index+1}}End" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.aend.date"
+                                    is-open="assignment.date.aend.opened" required placeholder="DD-Month-YYYY"
+                                    datepicker-options="{ minDate: datePickerMinDate(assignment.date.astart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(duplicateCourse.date.course_end.date) }"
+                                    />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.aend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
                             </span>
-                        </span>
-                    </div>
-                    <div class="assignment-date">
-                        <div uib-timepicker ng-model="assignment.date.aend.time" minute-step="1" mousewheel="false"></div>
-                    </div>
+                        </div>
+                        <div class="assignment-date">
+                            <div uib-timepicker ng-model="assignment.date.aend.time" minute-step="1" mousewheel="false"></div>
+                        </div>
+                        <!-- if the field is incomplete and a save attempted -->
+                        <p ng-if="duplicateCourseForm['answer' + ($index+1) + 'End'].$invalid && saveAttempted" class="alert alert-warning">When must students finish answering (DD-Month-YYYY)?</p>
+                    </compair-field-with-feedback>
                 </div>
+            </div>
+            
+            <div class="form-group">
+                <input id="availableCheck-{{assignment.id}}" type="checkbox" ng-model="assignment.availableCheck">
+                <label class="not-bold" for="availableCheck-{{assignment.id}}">Manually set when students compare answers<span ng-show="assignment.availableCheck">:</span></label>
             </div>
 
             <div class="row" ng-show="assignment.availableCheck">
-                <div class="col-md-6 form-group">
-                    <label class="required-star">
-                        Comparing Begins
-                        <span ng-if="duplicateCourse.date.course_start.date">
-                            (in course week #{{(assignment.date.cstart.date | amDifference : duplicateCourse.date.course_start.date : 'weeks') + 1 }})
-                        </span>
-                    </label><br />
-                    <div class="assignment-date">
-                        <span class="input-group">
-                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.cstart.date"
-                                is-open="assignment.date.cstart.opened" ng-required="assignment.availableCheck"
-                                datepicker-options="{ minDate: datePickerMinDate(assignment.date.astart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(assignment.date.cend.date, duplicateCourse.date.course_end.date) }"
-                                />
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.cstart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                <div class="col-md-1"></div>
+                <div class="col-md-5 form-group">
+                    <compair-field-with-feedback form-control="duplicateCourseForm['compare' + ($index+1) + 'Start']" is-date="true">
+                        <label class="required-star">
+                            Comparing Begins
+                            <span ng-if="duplicateCourse.date.course_start.date" class="text-muted">
+                                (currently in course week #{{(assignment.date.cstart.date | amDifference : duplicateCourse.date.course_start.date : 'weeks') + 1 }})
                             </span>
-                        </span>
-                    </div>
-                    <div class="assignment-date">
-                        <div uib-timepicker ng-model="assignment.date.cstart.time" minute-step="1" mousewheel="false"></div>
-                    </div>
-                </div>
-                <div class="col-md-6 form-group">
-                    <label class="required-star">
-                        Comparing Ends
-                        <!-- <span ng-if="duplicateCourse.date.course_start.date">
-                            (Course week #{{assignment.date.cend.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
-                        </span> -->
-                    </label><br />
-                    <div class="assignment-date">
-                        <span class="input-group">
-                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.cend.date"
-                                is-open="assignment.date.cend.opened" ng-required="assignment.availableCheck"
-                                datepicker-options="{ minDate: datePickerMinDate(assignment.date.cstart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(duplicateCourse.date.course_end.date) }"
-                                />
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.cend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                        </label><br />
+                        <div class="assignment-date">
+                            <span class="input-group">
+                                <input id="compare{{$index+1}}Start" name="compare{{$index+1}}Start" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.cstart.date"
+                                    is-open="assignment.date.cstart.opened" ng-required="assignment.availableCheck" placeholder="DD-Month-YYYY"
+                                    datepicker-options="{ minDate: datePickerMinDate(assignment.date.astart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(assignment.date.cend.date, duplicateCourse.date.course_end.date) }"
+                                    />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.cstart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
                             </span>
-                        </span>
-                    </div>
-                    <div class="assignment-date">
-                        <div uib-timepicker ng-model="assignment.date.cend.time" minute-step="1" mousewheel="false"></div>
-                    </div>
+                        </div>
+                        <div class="assignment-date">
+                            <div uib-timepicker ng-model="assignment.date.cstart.time" minute-step="1" mousewheel="false"></div>
+                        </div>
+                        <!-- if the field is empty or incomplete and a save attempted -->
+                        <p ng-if="duplicateCourseForm['compare' + ($index+1) + 'Start'].$invalid && saveAttempted" class="alert alert-warning">When can students start comparing (DD-Month-YYYY)?</p>
+                        <!-- if dates provided + end is before the start date OR dates provided + start is before answer start OR start is before course start and a save attempted -->
+                        <p ng-if="(assignment.date.cstart.date && ((assignment.date.cend.date && assignment.date.cstart.date > assignment.date.cend.date) || (assignment.date.astart.date && assignment.date.astart.date > assignment.date.cstart.date) || (duplicateCourse.date.course_start.date > assignment.date.cstart.date)) && saveAttempted" class="alert alert-warning">
+                            Make sure comparing starts
+                            <span ng-if="assignment.date.cstart.date > assignment.date.cend.date">before it ends<span ng-if="assignment.date.astart.date <= assignment.date.cstart.date && duplicateCourse.date.course_start.date  assignment.date.cstart.date">...</span></span>
+                            <span ng-if="assignment.date.cstart.date > assignment.date.cend.date && assignment.date.astart.date > assignment.date.cstart.date"> and </span>
+                            <span ng-if="assignment.date.astart.date > assignment.date.cstart.date">after answering starts ({{assignment.date.astart.date | date:'dd-MMMM-yyyy'}}).</span>
+                        </p>
+                    </compair-field-with-feedback>
                 </div>
+                <div class="col-md-5 form-group">
+                    <compair-field-with-feedback form-control="duplicateCourseForm['compare' + ($index+1) + 'End']" is-date="true">
+                        <label class="required-star">
+                            Comparing Ends
+                            <!-- <span ng-if="duplicateCourse.date.course_start.date">
+                                (Course week #{{assignment.date.cend.date | amDifference : duplicateCourse.date.course_start.date : 'weeks' }})
+                            </span> -->
+                        </label><br />
+                        <div class="assignment-date">
+                            <span class="input-group">
+                                <input id="compare{{$index+1}}End" name="compare{{$index+1}}End" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.cend.date"
+                                    is-open="assignment.date.cend.opened" ng-required="assignment.availableCheck" placeholder="DD-Month-YYYY"
+                                    datepicker-options="{ minDate: datePickerMinDate(assignment.date.cstart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(duplicateCourse.date.course_end.date) }"
+                                    />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.cend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="assignment-date">
+                            <div uib-timepicker ng-model="assignment.date.cend.time" minute-step="1" mousewheel="false"></div>
+                        </div>
+                        <!-- if the field is incomplete and a save attempted -->
+                        <p ng-if="duplicateCourseForm['compare' + ($index+1) + 'End'].$invalid && saveAttempted" class="alert alert-warning">When must students finish comparing (DD-Month-YYYY)?</p>
+                    </compair-field-with-feedback>
+                </div>
+                <div class="col-md-1"></div>
             </div>
             <div class="row">
                 <div class="col-md-12 form-group">
@@ -210,61 +258,90 @@
             <div class="row" ng-show="assignment.enable_self_evaluation">
                 <div class="col-md-12 form-group">
                     <input type="checkbox" ng-model="assignment.selfEvalCheck">
-                    <label for="selfEvalCheck">Manually set when students self-evaluate<span ng-show="assignment.selfEvalCheck">:</span></label>
+                    <label class="not-bold" for="selfEvalCheck">Manually set when students self-evaluate<span ng-show="assignment.selfEvalCheck">:</span></label>
                     <br /><br />
 
                     <div ng-show="assignment.selfEvalCheck">
                         <div class="row">
-                            <div class="col-md-6 form-group">
-                                <label class="required-star">Self-Evaluation Begins</label><br />
-                                <div class="assignment-date">
-                                    <span class="input-group">
-                                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.sestart.date"
-                                            is-open="assignment.date.sestart.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck"
-                                            datepicker-options="{ minDate: datePickerMinDate(assignment.date.sestart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(assignment.date.seend.date, duplicateCourse.date.course_end.date) }"
-                                            />
-                                        <span class="input-group-btn">
-                                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.sestart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            <div class="col-md-1"></div>
+                            <div class="col-md-5 form-group">
+                                <compair-field-with-feedback form-control="duplicateCourseForm['selfeval' + ($index+1) + 'Start']" is-date="true">
+                                    <label class="required-star">Self-Evaluation Begins</label><br />
+                                    <div class="assignment-date">
+                                        <span class="input-group">
+                                            <input id="selfeval{{$index+1}}Start" name="selfeval{{$index+1}}Start" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.sestart.date"
+                                                is-open="assignment.date.sestart.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck" placeholder="DD-Month-YYYY"
+                                                datepicker-options="{ minDate: datePickerMinDate(assignment.date.sestart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(assignment.date.seend.date, duplicateCourse.date.course_end.date) }"
+                                                />
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.sestart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                            </span>
                                         </span>
-                                    </span>
-                                </div>
-                                <div class="assignment-date">
-                                    <div uib-timepicker ng-model="assignment.date.sestart.time" minute-step="1" mousewheel="false"></div>
-                                </div>
+                                    </div>
+                                    <div class="assignment-date">
+                                        <div uib-timepicker ng-model="assignment.date.sestart.time" minute-step="1" mousewheel="false"></div>
+                                    </div>
+                                    <!-- if the field is empty or incomplete and a save attempted -->
+                                    <p ng-if="duplicateCourseForm['selfeval' + ($index+1) + 'Start'].$invalid && saveAttempted" class="alert alert-warning">When can students start self-evaluating (DD-Month-YYYY)?</p>
+                                    <!-- if an end date is provided + is before the start date OR a start date is provided + is before answer start and a save attempted -->
+                                    <p ng-if="((assignment.date.sestart.date && assignment.date.seend.date && assignment.date.sestart.date > assignment.date.seend.date) || (assignment.date.sestart.date && ((assignment.date.astart.date && assignment.date.sestart.date < assignment.date.astart.date) || (assignment.date.cstart.date && assignment.date.sestart.date < assignment.date.cstart.date))) && saveAttempted" class="alert alert-warning">
+                                        Make sure start date falls
+                                        <span ng-if="assignment.date.sestart.date > assignment.date.csend.date">before end date<span ng-if="!(assignment.date.sestart.date < assignment.date.astart.date)">...</span></span>
+                                        <span ng-if="assignment.date.sestart.date > assignment.date.seend.date && (assignment.date.sestart.date < assignment.date.astart.date || assignment.date.sestart.date < assignment.date.cstart.date)"> and </span>
+                                        <span ng-if="assignment.date.sestart.date < assignment.date.astart.date">after the start date for answering ({{assignment.date.astart.date | date:'dd-MMMM-yyyy'}})<span ng-if="!(assignment.date.sestart.date < assignment.date.cstart.date)">.</span></span>
+                                        <span ng-if="assignment.date.sestart.date < assignment.date.astart.date && assignment.date.sestart.date < assignment.date.cstart.date"> and </span>
+                                        <span ng-if="assignment.date.sestart.date < assignment.date.cstart.date)">after the start date for comparing ({{assignment.date. start.date | date:'dd-MMMM-yyyy'}}).</span>
+                                    </p>
+                                </compair-field-with-feedback>
                             </div>
-                            <div class="col-md-6 form-group">
-                                <label class="required-star">Self-Evaluation Ends</label><br />
-                                <div class="assignment-date">
-                                    <span class="input-group">
-                                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.seend.date"
-                                            is-open="assignment.date.seend.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck"
-                                            datepicker-options="{ minDate: datePickerMinDate(assignment.date.sestart.date, assignment.date.sestart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(duplicateCourse.date.course_end.date) }"
-                                            />
-                                        <span class="input-group-btn">
-                                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.seend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            <div class="col-md-5 form-group">
+                                <compair-field-with-feedback form-control="duplicateCourseForm['selfeval' + ($index+1) + 'End']" is-date="true">
+                                    <label class="required-star">Self-Evaluation Ends</label><br />
+                                    <div class="assignment-date">
+                                        <span class="input-group">
+                                            <input id="selfeval{{$index+1}}End" name="selfeval{{$index+1}}End" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.seend.date"
+                                                is-open="assignment.date.seend.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck" placeholder="DD-Month-YYYY"
+                                                datepicker-options="{ minDate: datePickerMinDate(assignment.date.sestart.date, assignment.date.sestart.date, duplicateCourse.date.course_start.date), maxDate: datePickerMaxDate(duplicateCourse.date.course_end.date) }"
+                                                />
+                                            <span class="input-group-btn">
+                                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, assignment.date.seend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                            </span>
                                         </span>
-                                    </span>
-                                </div>
-                                <div class="assignment-date">
-                                    <div uib-timepicker ng-model="assignment.date.seend.time" minute-step="1" mousewheel="false"></div>
-                                </div>
+                                    </div>
+                                    <div class="assignment-date">
+                                        <div uib-timepicker ng-model="assignment.date.seend.time" minute-step="1" mousewheel="false"></div>
+                                    </div>
+                                    <!-- if the field is incomplete and a save attempted -->
+                                    <p ng-if="duplicateCourseForm['selfeval' + ($index+1) + 'End'].$invalid && saveAttempted" class="alert alert-warning">When must students finish self-evaluating (DD-Month-YYYY)?</p>
+                                </compair-field-with-feedback>
                             </div>
+                            <div class="col-md-1"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </fieldset>
-    <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    
+    <!-- different helper messages for pre or post save attempts -->
+    <p class="text-center text-muted" ng-if="!saveAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    <p class="text-center text-warning" ng-if="saveAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
+
+
     <div class="form-group text-center">
-        <a class="btn btn-success btn-lg" value="Next" ng-click="duplicateCourseForm.$invalid || duplicateNext()"
-            ng-disabled="duplicateCourseForm.$invalid" ng-show="!showAssignments">Next &raquo;</a>
-        <a class="btn btn-default btn-lg mirror-submit" value="Back" ng-click="showAssignments= canGoBack(duplicateCourseForm) ? !showAssignments : showAssignments;"
-            ng-show="showAssignments">&laquo; Back</a>
+       
+        <input type="button" class="btn btn-success btn-lg mirror-submit" value="Next &raquo;" ng-click="showFirstErrors($event, partialValidity(duplicateCourseForm.courseName.$valid && duplicateCourseForm.courseYear.$valid && duplicateCourseForm.courseTerm.$valid && duplicateCourseForm.courseStart.$valid && duplicateCourseForm.courseEnd.$valid), duplicateCourse.date.course_start.date, duplicateCourse.date.course_end.date)"
+            ng-if="!showAssignments" />
+        
+        <input type="button" class="btn btn-default btn-lg mirror-submit" value="&laquo; Back" ng-click="canGoBack();"
+            ng-if="showAssignments" />
         &nbsp; &nbsp;
-        <input type="submit" class="btn btn-success btn-lg" value="Duplicate"
-            ng-disabled="duplicateCourseForm.$invalid || submitted" ng-show="showAssignments" />
+        <input type="button" class="btn btn-success btn-lg mirror-submit" value="Duplicate" ng-click="showErrors('duplicate the course')"
+            ng-if="showAssignments
+            && duplicateCourseForm.$invalid" />
+        <input type="submit" class="btn btn-success btn-lg mirror-submit" value="Duplicate (REAL)"
+            ng-if="showAssignments
+            && duplicateCourseForm.$valid" ng-disabled="submitted"/>
     </div>
-    <br />
 
 </form>
