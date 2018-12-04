@@ -155,7 +155,7 @@
                             Your private feedback for Answer {{firstAnsNum}}'s author
                             <i class="fa fa-arrow-down"></i>
                         </label>
-                        <textarea id="answer1_feedback" ng-if="comparison.id"
+                        <textarea id="answer1_feedback" ng-if="comparison.id || preview"
                             ng-model="answer1_feedback.content" rows="8" ckeditor="editor1Options" ng-required="{{!canManageAssignment}}">
                         </textarea>
                     </div>
@@ -165,7 +165,7 @@
                             Your private feedback for Answer {{secondAnsNum}}'s author
                             <i class="fa fa-arrow-down"></i>
                         </label>
-                        <textarea id="answer2_feedback" ng-if="comparison.id"
+                        <textarea id="answer2_feedback" ng-if="comparison.id || preview"
                             ng-model="answer2_feedback.content" rows="8" ckeditor="editor2Options" ng-required="{{!canManageAssignment}}">
                         </textarea>
                     </div>

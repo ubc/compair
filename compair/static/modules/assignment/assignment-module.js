@@ -122,12 +122,13 @@ module.directive(
 module.directive('comparisonPreview', function() {
     return {
         /* this template is our simple text with button to launch the preview */
-        templateUrl: 'modules/assignment/preview-inline-template.html',
+        templateUrl: 'modules/assignment/preview-inline-template-comparison.html',
         controller:
                 ["$scope", "$uibModal", "xAPIStatementHelper",
                 function ($scope, $uibModal, xAPIStatementHelper) {
             /* need to pass to comparison template all expected properties to complete the preview */
-            $scope.previewPopup = function() {
+            $scope.previewComparisonPopup = function() {
+                $scope.preview = true;
                 /* set current round #, answer #s, and total round # for preview */
                 $scope.current = 1;
                 $scope.firstAnsNum = 1;
@@ -145,11 +146,11 @@ module.directive('comparisonPreview', function() {
                 }
                 /* answer pair shown is dummy content, no files */
                 $scope.answer1 = {
-                    content: "<p>The first student answer in the pair will appear here.</p>",
+                    content: "<p>The first student answer in the pair will appear here, in text and/or file attachment, depending on how the answer was originally submitted.</p>",
                     file: null
                 }
                 $scope.answer2 = {
-                    content: "<p>The second student answer in the pair will appear here.</p>",
+                    content: "<p>The second student answer in the pair will appear here, in text and/or file attachment, depending on how the answer was originally submitted.</p>",
                     file: null
                 }
                 $scope.comparison = {
@@ -178,6 +179,33 @@ module.directive('comparisonPreview', function() {
         }]
     };
 });
+
+module.directive('selfEvalPreview', function() {
+    return {
+        /* this template is our simple text with button to launch the preview */
+        templateUrl: 'modules/assignment/preview-inline-template-self-eval.html',
+        controller:
+                ["$scope", "$uibModal", "xAPIStatementHelper",
+                function ($scope, $uibModal, xAPIStatementHelper) {
+            /* need to pass to self-eval template all expected properties to complete the preview */
+            $scope.previewSelfEvalPopup = function() {
+                $scope.selfEvalComment = true;
+                $scope.preview = true;
+                $scope.instructions = $scope.assignment.self_eval_instructions ? $scope.assignment.self_eval_instructions:"Now write an evaluation of your own answer and <strong>give feedback to yourself</strong>, considering the other answers you've seen. What did you do well? Where might you improve?";
+                $scope.parent = {
+                    content: "The student's own answer will be provided here, in text and/or file attachment, depending on how the answer was originally submitted."
+                }
+                /* student view preview is self-eval template */
+                $scope.modalInstance = $uibModal.open({
+                    animation: true,
+                    templateUrl: 'modules/comparison/comparison-self_evaluation-partial.html',
+                    scope: $scope
+                });
+            }
+        }]
+    };
+});
+
 
 module.directive('assignmentActionButton', function() {
 
