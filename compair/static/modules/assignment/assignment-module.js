@@ -640,6 +640,7 @@ module.directive('assignmentMetadata', function() {
                             'deleteLink' : {
                                 'label': 'Delete',
                                 'title' : "Delete",
+                                'class' : 'pointer',
                                 'confirmationNeeded' : 'deleteAssignment(assignment)' ,
                                 'confirmationWarning': assignment.delete_warning,
                                 'keyword' : "assignment",

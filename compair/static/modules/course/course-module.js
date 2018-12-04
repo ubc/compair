@@ -134,6 +134,7 @@ module.directive('courseMetadata', function() {
                             },
                             'deleteLink' : {
                                 'label': 'Delete',
+                                'class': 'pointer',
                                 'title' : "Delete",
                                 'confirmationNeeded' : 'deleteCourse(course)' ,
                                 'confirmationWarning': course.delete_warning,
