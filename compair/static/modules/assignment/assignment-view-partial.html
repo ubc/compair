@@ -184,7 +184,7 @@
                                 Score: {{answer.score.normalized_score}}%
                             </span>
                             <a title="Delete this answer" href="" confirmation-needed="deleteAnswer(answer)" keyword="instructor answer">
-                                <i class="fa fa-trash-o"></i>
+                                Delete
                             </a>
                             <a href="" title="Edit this answer" ng-click="editAnswer(answer)">
                                 Edit
@@ -250,7 +250,7 @@
                                     <i class="fa fa-star"></i>
                                 </a>
                                 <a href="" title="Delete this answer" confirmation-needed="deleteAnswer(answer)" keyword="answer">
-                                    <i class="fa fa-trash-o"></i>
+                                    Delete
                                 </a>
                                 <a href="" title="Edit this answer" ng-click="editAnswer(answer)">
                                     Edit
@@ -298,7 +298,7 @@
                                 <div class="manager-actions pull-right"
                                      ng-if="canManageAssignment || ((comment.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id)) && (comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private))">
                                     <a href="" title="Delete this feedback" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="feedback">
-                                        <i class="fa fa-trash-o"></i>
+                                        Delete
                                     </a>
                                     <a href="" title="Edit this feedback" ng-click="editAnswerComment(answer, comment)">
                                         Edit
@@ -365,7 +365,7 @@
                         <strong>answered</strong> on {{answer.submission_date | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right" ng-if="canManageAssignment || ((answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id)) && assignment.answer_period && !assignment.compare_period)">
                             <a href="" title="Delete this answer" confirmation-needed="deleteAnswer(answer)" keyword="answer">
-                                <i class="fa fa-trash-o"></i>
+                                Delete
                             </a>
                             <a href="" title="Edit this answer" ng-click="editAnswer(answer)">
                                 Edit
@@ -407,7 +407,7 @@
                                 <div class="manager-actions pull-right"
                                      ng-if="canManageAssignment || (comment.user_id == loggedInUserId && (comment.comment_type == AnswerCommentType.private || comment.comment_type == AnswerCommentType.public))">
                                     <a href="" title="Delete this feedback" confirmation-needed="deleteReply(answer, commentKey, courseId, assignment.id, answer.id, comment.id)" keyword="feedback">
-                                        <i class="fa fa-trash-o"></i>
+                                        Delete
                                     </a>
                                     <a href="" title="Edit this feedback" ng-click="editAnswerComment(answer, comment)">
                                         Edit
