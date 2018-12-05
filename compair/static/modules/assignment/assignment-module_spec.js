@@ -1031,7 +1031,8 @@ describe('assignment-module', function () {
                     rank_display_limit: null,
                     answer_grade_weight: 1,
                     comparison_grade_weight: 1,
-                    self_evaluation_grade_weight: 1
+                    self_evaluation_grade_weight: 1,
+                    existingFile: false
                 });
                 expect($rootScope.recommended_comparisons).toEqual(3);
                 expect($rootScope.availableCriteria).toEqual(otherCriteria);
