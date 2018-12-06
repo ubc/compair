@@ -15,6 +15,10 @@ class LTIOutcome(object):
         from compair.models import CourseRole, AssignmentGrade
         from compair.tasks import update_lti_assignment_grades
 
+        # don't update until passed the answer start date
+        if not compair_assignment.available:
+            return
+
         lti_resource_links = compair_assignment.lti_resource_links.all()
 
         # nothing to update if assignment not linked to any lti resources
