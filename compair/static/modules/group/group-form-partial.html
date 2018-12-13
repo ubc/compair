@@ -3,6 +3,9 @@
 <ng-form name="groupForm" class="form">
     <fieldset>
         <legend>Group Details</legend>
+        <div class="instructional-text">
+            <p>Note that group names will be visible to students after comparing completes, so it is best to <strong>keep these names anonymous</strong> (i.e., do not include any identifying information like names or student numbers).</p>
+        </div>
         <compair-field-with-feedback form-control="groupForm.name">
             <label class="required-star" for="criterionName">Group Name</label>
             <input type="text" maxlength="255" ng-model="group.name" id="name" name="name" class="form-control" required/>
