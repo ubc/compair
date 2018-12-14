@@ -25,4 +25,4 @@ curl -X POST \
      -F "variables[BUILD_NUMBER]=$TRAVIS_BUILD_NUMBER" \
      -F "variables[app__image__tag]=$TAG" \
      -F "variables[worker__image__tag]=$TAG" \
-     https://repo.code.ubc.ca/api/v3/projects/366/trigger/builds
+     https://repo.code.ubc.ca/api/v4/projects/366/trigger/pipeline
