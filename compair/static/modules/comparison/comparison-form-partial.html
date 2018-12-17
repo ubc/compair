@@ -19,58 +19,69 @@
         <rich-content content="assignment.description" attachment="assignment.file"></rich-content>
     </div>
 
-    <div class="row answer-pair">
+    <div class="answer-pair">
 
-        <hr />
-
-        <div class="h3 text-center" ng-show="showCountDown && !comparisonError">
-            <timer end-time="assignment.compare_end">
-                <span ng-show="minutes > 0 || seconds > 0" title="Official time remaining until deadline" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> {{minutes}} minutes {{seconds}} seconds left</span>
-                <span ng-show="minutes == 0 && seconds == 0" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> DEADLINE REACHED</span>
-            </timer>
-            <br /><br />
-            <span class="h4">(Comparison must be submitted before deadline to be accepted)</span>
-        </div>
-
-        <h2 class="col-md-6">Answer pair</h2>
-        <h2 class="col-md-6 text-right rounds"><span ng-hide="comparisonError" class="label label-warning">
-            Round {{current}} <span ng-if="!canManageAssignment">/ {{total}}</span>
-        </h2>
-
-        <div ng-show="comparisonError" class="alert alert-info" role="alert">
-            <p><strong>Break time!</strong> You've compared the currently available answer pairs. Please check back later to compare new pairs after more answers have been submitted.</p>
-        </div>
-
-        <div class="col-md-6" ng-hide="comparisonError">
-            <div class="answer-choice clearfix">
-                <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{firstAnsNum}}</h3>
-                <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum"></rich-content>
+        <div class="row">
+            <hr />
+            <div class="h3 text-center col-md-12" ng-show="showCountDown && !comparisonError">
+                <timer end-time="assignment.compare_end">
+                    <span ng-show="minutes > 0 || seconds > 0" title="Official time remaining until deadline" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> {{minutes}} minutes {{seconds}} seconds left</span>
+                    <span ng-show="minutes == 0 && seconds == 0" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> DEADLINE REACHED</span>
+                </timer>
+                <br /><br />
+                <span class="h4">(Comparison must be submitted before deadline to be accepted)</span>
             </div>
         </div>
 
-        <div class="col-md-6" ng-hide="comparisonError">
-            <div class="answer-choice clearfix">
-                <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{secondAnsNum}}</h3>
-                <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum"></rich-content>
+        <div class="row">
+            <h2 class="col-md-6">Answer pair</h2>
+            <h2 class="col-md-6 text-right rounds"><span ng-hide="comparisonError" class="label label-warning">
+                Round {{current}} <span ng-if="!canManageAssignment">/ {{total}}</span>
+            </h2>
+        </div>
+
+        <br />
+
+        <div class="row">
+            <div ng-show="comparisonError" class="alert alert-info col-md-12" role="alert">
+                <p><strong>Break time!</strong> You've compared the currently available answer pairs. Please check back later to compare new pairs after more answers have been submitted.</p>
             </div>
         </div>
 
+        <div class="row">
+            <div class="col-md-6 scrollable-answer" ng-hide="comparisonError">
+                <div class="answer-choice clearfix">
+                    <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{firstAnsNum}}</h3>
+                    <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum"></rich-content>
+                </div>
+            </div>
+    
+            <div class="col-md-6 scrollable-answer"ng-hide="comparisonError">
+                <div class="answer-choice clearfix">
+                    <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{secondAnsNum}}</h3>
+                    <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum"></rich-content>
+                </div>
+            </div>
+        </div>
+       
     </div>
+    
+    <br />
 
     <form name="comparisonForm" ng-submit="comparisonSubmit(comparisonForm)" novalidate ng-hide="comparisonError" confirm-form-exit form-type="compare">
 
-        <div>
-
-            <hr />
-
-            <h3>1) Choose the answer that best meets the criteria below</h3>
-
-            <div ng-if="assignment.criteria.length == 0" class="text-center">
-                <p>No criteria have been set for this assignment yet. Please select one or more criteria.</p>
-                <br />
+        <div class="scrollable-form row">
+            
+            <div class="col-md-12">
+                <h3>1) Choose the answer that best meets the criteria below</h3>
+    
+                <div ng-if="assignment.criteria.length == 0" class="text-center">
+                    <p>No criteria have been set for this assignment yet. Please select one or more criteria.</p>
+                    <br />
+                </div>
             </div>
 
-            <div class="form-group sub-step" ng-repeat="comparison_criterion in comparison.comparison_criteria">
+            <div class="form-group sub-step col-md-12" ng-repeat="comparison_criterion in comparison.comparison_criteria">
 
                 <div class="each-criterion">
                     <fieldset>
@@ -112,9 +123,9 @@
 
             <hr />
 
-            <h3>2) Give detailed feedback to the author of each answer</h3>
+            <h3 class="col-md-12">2) Give detailed feedback to the author of each answer</h3>
 
-            <div class="row sub-step">
+            <div class="col-md-12 sub-step">
 
                 <div class="intro-text" ng-if="assignment.peer_feedback_prompt">
                     <div mathjax hljs ng-bind-html="assignment.peer_feedback_prompt"></div>
@@ -125,67 +136,77 @@
                     <strong>What did the author do well? Where might the author improve?</strong>
                     Remember to make your comments&mdash;including criticisms&mdash;encouraging, respectful, and specific.
                 </div>
-
-                <p class="assignment-toggle"><a href="" ng-click="showAnswers = !showAnswers">
-                    <i class="fa fa-chevron-down" ng-show="showAnswers"></i>
-                    <i class="fa fa-chevron-right" ng-hide="showAnswers"></i>
-                    Show answer pair again for Round {{current}}
-                </a></p>
-
-                <div class="col-md-6">
-                    <div ng-show="showAnswers" class="answer-choice clearfix">
-                        <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{firstAnsNum}}</h3>
-                        <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum"></rich-content>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div ng-show="showAnswers" class="answer-choice clearfix">
+                            <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{firstAnsNum}}</h3>
+                            <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum"></rich-content>
+                        </div>
+                    </div>
+    
+                    <div class="col-md-6">
+                        <div ng-show="showAnswers" class="answer-choice clearfix">
+                            <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{secondAnsNum}}</h3>
+                            <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum"></rich-content>
+                        </div>
                     </div>
                 </div>
-
-                <div class="col-md-6">
-                    <div ng-show="showAnswers" class="answer-choice clearfix">
-                        <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{secondAnsNum}}</h3>
-                        <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum"></rich-content>
-                    </div>
-                </div>
+                
             </div>
 
-            <div class="row sub-step">
+            <div class="col-md-12 sub-step">
                 <fieldset>
                     <legend>Peer Feedback</legend>
-                    <div class="col-md-6">
-                        <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
-                            Your private feedback for Answer {{firstAnsNum}}'s author
-                            <i class="fa fa-arrow-down"></i>
-                        </label>
-                        <textarea id="answer1_feedback" ng-if="comparison.id"
-                            ng-model="answer1_feedback.content" rows="8" ckeditor="editor1Options" ng-required="{{!canManageAssignment}}">
-                        </textarea>
-                    </div>
-
-                    <div class="col-md-6">
-                        <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
-                            Your private feedback for Answer {{secondAnsNum}}'s author
-                            <i class="fa fa-arrow-down"></i>
-                        </label>
-                        <textarea id="answer2_feedback" ng-if="comparison.id"
-                            ng-model="answer2_feedback.content" rows="8" ckeditor="editor2Options" ng-required="{{!canManageAssignment}}">
-                        </textarea>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
+                                Your private feedback for Answer {{firstAnsNum}}'s author
+                                <i class="fa fa-arrow-down"></i>
+                            </label>
+                            <textarea id="answer1_feedback" ng-if="comparison.id"
+                                ng-model="answer1_feedback.content" rows="8" ckeditor="editor1Options" ng-required="{{!canManageAssignment}}">
+                            </textarea>
+                        </div>
+    
+                        <div class="col-md-6">
+                            <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
+                                Your private feedback for Answer {{secondAnsNum}}'s author
+                                <i class="fa fa-arrow-down"></i>
+                            </label>
+                            <textarea id="answer2_feedback" ng-if="comparison.id"
+                                ng-model="answer2_feedback.content" rows="8" ckeditor="editor2Options" ng-required="{{!canManageAssignment}}">
+                            </textarea>
+                        </div>
                     </div>
                 </fieldset>
             </div>
         </div>
-        <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>      
-        <div class="form-group sub-step text-center">
-            <input ng-disabled="submitted" type="submit"
-                ng-click="isDraft = true"
-                value="Save Draft" class="btn btn-default btn-lg" />
-            &nbsp; &nbsp;
-            <!-- button to submit and refresh page IF evaluations remain for user -->
-            <input ng-disabled="comparisonForm.$invalid || submitted" type="submit"
-                ng-click="isDraft = false"
-                value="Submit" class="btn btn-success btn-lg" />
-            <p ng-if="submitted">
-                <i class="fa fa-spin fa-spinner"></i>
-                &nbsp; Saving comparison...
-            </p>
+        
+        <div class="row">
+            
+            <div class="col-md-12">
+                <br />
+                <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>    
+            </div>
+
+        </div>
+        
+        <div class="form-group sub-step text-center row">
+            <div class="col-md-12">
+                <input ng-disabled="submitted" type="submit"
+                    ng-click="isDraft = true"
+                    value="Save Draft" class="btn btn-default btn-lg" />
+                &nbsp; &nbsp;
+                <!-- button to submit and refresh page IF evaluations remain for user -->
+                <input ng-disabled="comparisonForm.$invalid || submitted" type="submit"
+                    ng-click="isDraft = false"
+                    value="Submit" class="btn btn-success btn-lg" />
+                <p ng-if="submitted">
+                    <i class="fa fa-spin fa-spinner"></i>
+                    &nbsp; Saving comparison...
+                </p>
+            </div>
         </div>
 
     </form>
