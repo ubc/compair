@@ -1343,6 +1343,7 @@ module.controller("AssignmentWriteController",
         $scope.recommended_comparisons = Math.floor(required_rounds / 2);
 
         $scope.canSupportPreview = attachService.canSupportPreview;
+        $scope.assignment.rotated = false;
 
         // download the file and inject it to uploader
         $scope.reuploadAssignmentFile = function(file) {

@@ -22,6 +22,7 @@ module.directive('imageViewer', ['$window', '$q',
             restrict: 'AE',
             replace: true,
             scope: {
+                rotated: "=",
                 src: '@?ngSrc',         // Can specify image as source URL...
                 imgFile: '=?ngModel',   // ... or File / Blob object...
                 onLoadCallback: '&?'    // callback when image loaded
@@ -243,6 +244,11 @@ module.directive('imageViewer', ['$window', '$q',
                                 newFile.rotateDirty = scope.imgFile.rotateDirty;
                             }
                             scope.imgFile = newFile;
+                            if (scope.orientation.rotate !== 0) {
+                                scope.rotated = true;
+                            } else {
+                                scope.rotated = false;
+                            }
                             scope.$apply();
                         }, function() {
                             // do nothing if failed. use original image as-is

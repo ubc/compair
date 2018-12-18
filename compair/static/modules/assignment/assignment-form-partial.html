@@ -48,7 +48,7 @@
 
         <div>
             <label for="importFile">Related Attachment</label>
-            <p ng-show="!assignment.file && assignment.existingFile" class="alert alert-warning"><strong>Save this assignment to save changes made to your attachment</strong>, or leave this screen to keep the attachment that appeared when you started editing.</p>
+            <p ng-show="((uploader.queue.length && !assignment.existingFile) || (!assignment.file && assignment.existingFile) || (assignment.rotated && assignment.existingFile))" class="alert alert-warning"><strong>Save this assignment to save changes made to your attachment</strong>, or leave this screen to revert to the attachment that appeared when you started editing.</p>
             <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
 
             <div ng-repeat="item in uploader.queue">
@@ -69,7 +69,7 @@
                     <div class="col-md-12">
                         <div ng-if="canSupportPreview(item)">
                             <!-- trigger upload once preview is loaded -->
-                            <image-viewer ng-model="item._file" on-load-callback="item.upload()"/>
+                            <image-viewer rotated="assignment.rotated" ng-model="item._file" on-load-callback="item.upload()"/>
                         </div>
                     </div>
                 </div>

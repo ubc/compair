@@ -124,6 +124,7 @@ module.controller(
         // the default value of submitAsInstructorOrTA is based on canManageAssignment
         $scope.selectedIsStudent = false;
         $scope.isImpersonating = Session.isImpersonating();
+        $scope.answer.rotated = false;
 
         if ($scope.method == "create") {
             $scope.answer = {

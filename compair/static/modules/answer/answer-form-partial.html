@@ -38,7 +38,7 @@
 
         <div class="instructional-text">
                 <p ng-if="canManageAssignment && !comparison_example">Answers submitted as an instructor or TA <strong>will be included</strong> in comparisons unless this option is unchecked below. All answers will appear to students when the assignment completes.</p>
-                <p>Allowed file types for attachments include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}, with a maximum file size of <strong>{{UploadValidator.getAttachmentUploadLimit() | filesize }}</strong>. Any files you upload will be attached when you <strong>save or submit this answer</strong> but not before.</p>
+                <p>Allowed file types for attachments include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}, with a maximum file size of <strong>{{UploadValidator.getAttachmentUploadLimit() | filesize }}</strong>. Any file changes will be saved when you <strong>save or submit this answer</strong> but not before.</p>
         </div>
 
         <div class="form-group" ng-if="!assignment.enable_group_answers && canManageAssignment && answer.draft && comparison_example !== true">
@@ -83,7 +83,7 @@
 
         <div>
             <label class="required-star" for="importFile">Answer Attachment and/or Text</label>
-            <p ng-show="!answer.file && answer.existingFile" class="alert alert-warning"><strong>Save<span ng-show="answer.draft"> or submit</span> this answer to save changes made to your attachment</strong>, or cancel this window to keep the attachment that appeared when you started editing.</p>
+            <p ng-show="((uploader.queue.length && !answer.existingFile) || (!answer.file && answer.existingFile) || (answer.rotated && answer.existingFile))" class="alert alert-warning"><strong>Save<span ng-show="answer.draft"> or submit</span> this answer to save changes made to your attachment</strong>, or cancel this window to revert to the attachment that appeared when you started editing.</p>
             <input type="file" nv-file-select uploader="uploader" ng-click="answerForm.$setDirty()" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
             <br />
             <div ng-repeat="item in uploader.queue">
@@ -107,7 +107,7 @@
                     <div class="col-md-12">
                         <div ng-if="canSupportPreview(item)">
                             <!-- trigger upload once preview is loaded -->
-                            <image-viewer ng-model="item._file" on-load-callback="item.upload()"/>
+                            <image-viewer rotated="answer.rotated" ng-model="item._file" on-load-callback="item.upload()"/>
                         </div>
                     </div>
                 </div>
