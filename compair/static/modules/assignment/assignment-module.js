@@ -1372,6 +1372,7 @@ module.controller("AssignmentWriteController",
         $scope.recommended_comparisons = Math.floor(required_rounds / 2);
 
         $scope.canSupportPreview = attachService.canSupportPreview;
+        $scope.assignment.rotated = false;
 
         // download the file and inject it to uploader
         $scope.reuploadAssignmentFile = function(file) {
@@ -1431,7 +1432,8 @@ module.controller("AssignmentWriteController",
                 rank_display_limit: null,
                 answer_grade_weight: 1,
                 comparison_grade_weight: 1,
-                self_evaluation_grade_weight: 1
+                self_evaluation_grade_weight: 1,
+                existingFile: false
             }
 
             // no default date set when creating a new assignment
@@ -1445,6 +1447,7 @@ module.controller("AssignmentWriteController",
         } else if ($scope.method == "edit") {
             if ($scope.assignment.file) {
                 $scope.assignment.uploadedFile = true;
+                $scope.assignment.existingFile = true;
             }
 
             $scope.date.astart.date = new Date($scope.assignment.answer_start);
@@ -1644,6 +1647,7 @@ module.controller("AssignmentWriteController",
             if (criterion.default) {
                 $scope.availableCriteria.push(criterion);
             }
+            $scope.droppedCriteria = true;
         };
 
         $scope.changeCriterion = function(criterion) {

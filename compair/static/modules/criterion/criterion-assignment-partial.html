@@ -1,5 +1,5 @@
 <label class="required-star">Comparison Criteria</label>
-
+<p ng-show="droppedCriteria && (method != 'create' && method != 'copy')" class="alert alert-warning"><strong>Save this assignment to save changes made to your criteria</strong>, or leave this screen to keep the criteria that appeared when you started editing.</p>
 <div ng-repeat="(key, criterion) in assignment.criteria" class="row">
     <div class="col-sm-2">
         <hr class="visible-xs" />
@@ -17,7 +17,7 @@
     </div>
     <div class="col-sm-2">
         <p>
-            <a href="" confirmation-needed="remove(key)" keyword="criterion" ng-if="!assignment.compared">
+            <a href="" ng-click="remove(key)" ng-if="!assignment.compared">
                 Drop <i class="visible-xs fa fa-arrow-down"></i>
             </a>
             <span ng-if="assignment.compared" class="text-muted">(cannot drop)</span>

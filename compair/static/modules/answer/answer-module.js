@@ -107,6 +107,7 @@ module.controller(
     {
         if ($scope.answer.file) {
             $scope.answer.uploadedFile = true;
+            $scope.answer.existingFile = true;
         }
         $scope.method = $scope.answer.id ? 'edit' : 'create';
         $scope.preventExit = true; // user should be warned before leaving page by default
@@ -123,13 +124,15 @@ module.controller(
         // the default value of submitAsInstructorOrTA is based on canManageAssignment
         $scope.selectedIsStudent = false;
         $scope.isImpersonating = Session.isImpersonating();
+        $scope.answer.rotated = false;
 
         if ($scope.method == "create") {
             $scope.answer = {
                 draft: true,
                 course_id: $scope.courseId,
                 assignment_id: $scope.assignmentId,
-                comparable: true
+                comparable: true,
+                existingFile: false
             };
 
             if ($scope.canManageAssignment) {
@@ -284,6 +287,7 @@ module.controller(
 
                         if (ret.draft) {
                             Toaster.success("Answer Draft Saved", "Remember to submit your answer before the deadline.");
+                            if (saveDraft && answer.file) { $scope.answer.existingFile = true; }
                         } else {
                             if (wasDraft) {
                                 Toaster.success("Answer Submitted");
@@ -329,9 +333,11 @@ module.controller(
         $scope.canSupportPreview = answerAttachService.canSupportPreview;
 
         if ($scope.method == 'create') {
+            $scope.answer.existingFile = false;
             // if answer is new, pre-populate the file upload area if needed
             if ($scope.answer.file) {
                 $scope.answer.uploadedFile = true;
+                $scope.answer.existingFile = true;
                 if (answerAttachService.canSupportPreview($scope.answer.file)) {
                     answerAttachService.reuploadFile($scope.answer.file, $scope.uploader);
                 }
@@ -344,6 +350,7 @@ module.controller(
                     $scope.answer = ret;
                     if (ret.file) {
                         $scope.answer.uploadedFile = true;
+                        $scope.answer.existingFile = true;
                         if (answerAttachService.canSupportPreview(ret.file)) {
                             answerAttachService.reuploadFile(ret.file, $scope.uploader);
                         }
@@ -366,7 +373,7 @@ module.controller(
                 var file = answerAttachService.getFile();
                 if (file) {
                     $scope.answer.file = file;
-                    $scope.answer.file_id = file.id
+                    $scope.answer.file_id = file.id;
                 } else if ($scope.answer.file) {
                     $scope.answer.file_id = $scope.answer.file.id;
                 } else {
