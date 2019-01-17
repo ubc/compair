@@ -274,11 +274,11 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                 return (False, "Self-evaluation end time must be before the course end time.")
 
             # if comparison period defined: compare start < self_eval start
-            if compare_start != None and compare_start >= self_eval_start:
+            if compare_start != None and compare_start > self_eval_start:
                 return (False, "Self-evaluation start time must be after the compare start time.")
             # else: answer end < self_eval start
-            elif compare_start == None and answer_end >= self_eval_start:
-                return (False, "Self-evaluation start time must be after the answer end time.")
+            # elif compare_start == None and answer_end >= self_eval_start:
+            #     return (False, "Self-evaluation start time must be after the answer end time.")
 
         return (True, None)
 
