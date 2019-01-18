@@ -1,46 +1,59 @@
 <h1>Download Reports</h1>
 
-<p class="intro-text">Run a report for your course, then download the data as a CSV (comma-separated values) file. You can run reports for the course as a whole or for individual assignments. To run a full course report, select "All Assignments" from the assignment drop-down below.</p>
-<p class="intro-text"><strong>To see class participation without downloading a report:</strong> Access your course page, click any assignment, and select the "Participation" tab.</p>
+<p class="intro-text">Run a report for your course, then download the data as a CSV (comma-separated values) file. You can run reports for the course as a whole or for individual assignments. <strong>To see class participation without downloading a report:</strong> Access your course page, click any assignment, and select the "Participation" tab.</p>
 
 <form name="reportForm" class="form" ng-submit="reportSubmit()" novalidate>
     <fieldset>
         <legend>Report Details</legend>
-        <div class="form-group">
-            <label for="reportCourseId" class="required-star">Course</label>
-            <select class="form-control" ng-model="report.course_id" name="reportCourseId" ng-change="getAssignments()"
-                    ng-options="c.id as c.name for c in courses | orderBy: 'name'" required>
-                <option value="">- Select course -</option>
-            </select>
-        </div>
-        <div class="form-group" ng-if="groups.length > 0">
-            <label for="reportGroup" class="required-star">Student Group</label>
-            <select class="form-control" ng-model="report.group_id" name="reportCourseId" ng-change="changeReport()"
-                    ng-options="group.id as group.name for group in groups" required>
-                <option value="">- Select group -</option>
-            </select>
-        </div>
         <div class="form-group">
             <label for="reportType" class="required-star">Report Type</label>
             <select class="form-control" ng-model="report.type" name="reportType" required
                     ng-options="t.id as t.name for t in types" ng-change="changeReport()">
                 <option value="">- Select report -</option>
             </select>
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="(reportForm.report.type.$invalid || !report.type) && saveAttempted" class="alert alert-warning">Which type of report do you want to run?</p>
+        </div>
+        <div class="form-group">
+            <label for="reportCourseId" class="required-star">Course</label>
+            <select class="form-control" ng-model="report.course_id" name="reportCourseId" ng-change="getGroupsAssignments()"
+                    ng-options="c.id as c.name for c in courses | orderBy: 'name'" required>
+                <option value="">{{ courses.length < 1 ? '(no courses to select)' : '- Select course -' }}</option>
+            </select>
+            <!-- if no courses available AND a save attempted -->
+            <p ng-if="courses.length < 1 && saveAttempted" class="alert alert-warning">Please create at least one course to select here before running a report.</p>
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="(reportForm.report.course_id.$invalid || !report.course_id) && saveAttempted" class="alert alert-warning">Which course do you want a report in?</p>
+        </div>
+        <div class="form-group">
+            <label for="reportGroup" ng-class="{'required-star' : groups.length > 0}">Student Group</label>
+            <select ng-disabled="groups.length < 1" class="form-control" ng-model="report.group_id" name="reportCourseId" ng-change="changeReport()"
+                    ng-options="group.id as group.name for group in groups" ng-required="groups.length > 0">
+                <option value="">{{ groups.length < 1 ? '(no groups to select)' : '- Select group -' }}</option>
+            </select>
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="groups.length > 0 && (reportForm.report.group_id.$invalid || !report.group_id) && saveAttempted" class="alert alert-warning">Which student group(s) do you want to see?</p>
         </div>
         <div class="form-group">
             <label for="reportAssignment" class="required-star">Assignment</label>
             <select class="form-control" ng-disabled="assignments.length < 1" ng-model="report.assignment" name="reportAssignment"
                     ng-options="a.id as a.name for a in assignments" ng-change="changeReport()" required>
-                <option value="">- Select assignment -</option>
+                <option value="">{{ assignments.length < 1 ? '(no assignments to select)' : '- Select assignment -' }}</option>
             </select>
+            <!-- if no assignments available AND a save attempted -->
+            <p ng-if="report.course_id && assignments.length < 1 && saveAttempted" class="alert alert-warning">Please create at least one assignment to select here before running a report.</p>
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="assignments.length > 0 && (reportForm.report.assignment.$invalid || !report.assignment) && saveAttempted" class="alert alert-warning">Which assignment(s) do you want to see?</p>
         </div>
     </fieldset>
-    <p class="text-center text-muted" ng-show="!reportFile"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    <!-- different helper messages for pre or post save attempts -->
+    <p class="text-center text-muted" ng-if="!saveAttempted && !reportFile"><span class="required-star"></span> = required (please make sure these areas are filled in)</p>
+    <p class="text-center text-warning" ng-if="saveAttempted && !reportFile"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
     <div class="alert alert-success text-center" ng-show="reportFile">
-        <p class="h4">Report Complete</p>
-        <p>Your report is ready for <strong><a href="{{ reportFile }}">download <i class="fa fa-file-excel-o"></i></a></strong> now.</p>
+        <p class="h4">Report Complete</p><br />
+        <p>Your report is ready to <a class="btn btn-success" href="{{ reportFile }}">Download</a></p>
         <p>Run <a href="" ng-click="changeReport()">another report</a>?</p>
         <br />
     </div>
-    <input type="submit" class="btn btn-success btn-lg center-block" value="Run" ng-disabled="reportForm.$invalid || submitted" ng-show="!reportFile"/>
+    <input type="submit" class="btn btn-success btn-lg center-block" value="Run" ng-click="showErrors($event, reportForm.$valid, assignments.length < 1)" ng-disabled="submitted" ng-show="!reportFile"/>
 </form>
