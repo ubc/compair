@@ -24,13 +24,13 @@
             <p ng-if="consumerForm.oauth_consumer_secret.$invalid && saveAttempted" class="alert alert-warning">What secret did you get from the LTI consumer? (This should be at least 10 characters long.)</p>
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="consumerForm.global_unique_identifier_param">
-            <label for="global_unique_identifier_param">Global Unique Identifier Parameter <span class="optional">(optional)</span></label>
+            <label for="global_unique_identifier_param">Global Unique Identifier Parameter <a href="" uib-tooltip="In most cases, this should be 'lis_person_sourcedid', but depending on the consumer settings, you may wish to customize. This parameter makes automatic ComPAIR account creation with login work smoothly." tooltip-trigger tooltip-animation="false" tooltip-placement="right"> <i class="fa fa-question-circle"></i></a> <span class="optional">(optional)</span></label>
             <input class="form-control" id="global_unique_identifier_param" type="text"
                 name="global_unique_identifier_param" ng-model="consumer.global_unique_identifier_param"
                 ng-maxlength="255" />
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="consumerForm.student_number_param">
-            <label for="student_number_param">Student Number Parameter <span class="optional">(optional)</span></label>
+            <label for="student_number_param">Student Number Parameter <a href="" uib-tooltip="LTI doesn't have a built-in varaiable to send student numbers, so you can create a custom variable for it, or the consumer might have some default custom variable to enter here." tooltip-trigger tooltip-animation="false" tooltip-placement="right"> <i class="fa fa-question-circle"></i></a> <span class="optional">(optional)</span></label>
             <input class="form-control" id="student_number_param" type="text"
                 name="student_number_param" ng-model="consumer.student_number_param"
                 ng-maxlength="255" />
