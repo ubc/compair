@@ -2,6 +2,7 @@
 <h1 ng-if="method == 'edit'">Edit LTI Consumer</h1>
 
 <form name="consumerForm" class="form" ng-submit="save()" novalidate>
+    
     <fieldset>
         <legend>Consumer Details</legend>
         <compair-field-with-feedback form-control="consumerForm.oauth_consumer_key">
@@ -10,6 +11,8 @@
                 name="oauth_consumer_key" ng-model="consumer.oauth_consumer_key"
                 ng-minlength="10" ng-maxlength="255"
                 required />
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="consumerForm.oauth_consumer_key.$invalid && saveAttempted" class="alert alert-warning">What key did you get from the LTI consumer? (This should be at least 10 characters long.)</p>
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="consumerForm.oauth_consumer_secret">
             <label for="oauth_consumer_secret" class="required-star">Consumer Secret</label>
@@ -17,25 +20,32 @@
                 name="oauth_consumer_secret" ng-model="consumer.oauth_consumer_secret"
                 ng-minlength="10" ng-maxlength="255"
                 required />
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="consumerForm.oauth_consumer_secret.$invalid && saveAttempted" class="alert alert-warning">What secret did you get from the LTI consumer? (This should be at least 10 characters long.)</p>
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="consumerForm.global_unique_identifier_param">
-            <label for="global_unique_identifier_param">Global Unique Identifier Param</label>
+            <label for="global_unique_identifier_param">Global Unique Identifier Parameter <span class="optional">(optional)</span></label>
             <input class="form-control" id="global_unique_identifier_param" type="text"
                 name="global_unique_identifier_param" ng-model="consumer.global_unique_identifier_param"
                 ng-maxlength="255" />
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="consumerForm.student_number_param">
-            <label for="student_number_param">Student Number Param</label>
+            <label for="student_number_param">Student Number Parameter <span class="optional">(optional)</span></label>
             <input class="form-control" id="student_number_param" type="text"
                 name="student_number_param" ng-model="consumer.student_number_param"
                 ng-maxlength="255" />
         </compair-field-with-feedback>
-        <compair-field-with-feedback form-control="consumerForm.active" ng-if="method == 'edit'">
+        <compair-field-with-feedback form-control="consumerForm.active">
             <input id="active" type="checkbox" ng-model="consumer.active">
-            <label class="not-bold" for="active">Active</label>
+            <label class="not-bold" for="active">This consumer is actively being used</label>
         </compair-field-with-feedback>
     </fieldset>
-    <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>          
-    <input type="submit" class="btn btn-success center-block btn-lg" value="Save"
-        ng-disabled="consumerForm.$invalid || submitted" />
+
+    <!-- different helper messages for pre or post save attempts -->
+    <p class="text-center text-muted" ng-if="!saveAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    <p class="text-center text-warning" ng-if="saveAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
+    
+    <input type="submit" class="btn btn-success center-block btn-lg" value="Save" ng-click="showErrors($event, consumerForm.$valid)"
+        ng-disabled="submitted" />
+    
 </form>
