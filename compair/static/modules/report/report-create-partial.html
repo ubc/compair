@@ -5,7 +5,7 @@
 <form name="reportForm" class="form" ng-submit="reportSubmit()" novalidate>
     <fieldset>
         <legend>Report Details</legend>
-        <div class="form-group">
+        <div class="form-group" ng-class="{'has-error':!report.type}">
             <label for="reportType" class="required-star">Report Type</label>
             <select class="form-control" ng-model="report.type" name="reportType" required
                     ng-options="t.id as t.name for t in types" ng-change="changeReport()">
@@ -14,7 +14,7 @@
             <!-- if the field is empty AND a save attempted -->
             <p ng-if="(reportForm.report.type.$invalid || !report.type) && saveAttempted" class="alert alert-warning">Which type of report do you want to run?</p>
         </div>
-        <div class="form-group">
+        <div class= form-group ng-class="{'has-error':!report.course_id}">
             <label for="reportCourseId" class="required-star">Course</label>
             <select class="form-control" ng-model="report.course_id" name="reportCourseId" ng-change="getGroupsAssignments()"
                     ng-options="c.id as c.name for c in courses | orderBy: 'name'" required>
@@ -25,7 +25,7 @@
             <!-- if the field is empty AND a save attempted -->
             <p ng-if="(reportForm.report.course_id.$invalid || !report.course_id) && saveAttempted" class="alert alert-warning">Which course do you want a report in?</p>
         </div>
-        <div class="form-group">
+        <div class="form-group" ng-class="{'has-error':!report.group_id && groups.length > 0}">
             <label for="reportGroup" ng-class="{'required-star' : groups.length > 0}">Student Group</label>
             <select ng-disabled="groups.length < 1" class="form-control" ng-model="report.group_id" name="reportCourseId" ng-change="changeReport()"
                     ng-options="group.id as group.name for group in groups" ng-required="groups.length > 0">
@@ -34,7 +34,7 @@
             <!-- if the field is empty AND a save attempted -->
             <p ng-if="groups.length > 0 && (reportForm.report.group_id.$invalid || !report.group_id) && saveAttempted" class="alert alert-warning">Which student group(s) do you want to see?</p>
         </div>
-        <div class="form-group">
+        <div class="form-group" ng-class="{'has-error':!report.assignment && assignments.length > 0}">
             <label for="reportAssignment" class="required-star">Assignment</label>
             <select class="form-control" ng-disabled="assignments.length < 1" ng-model="report.assignment" name="reportAssignment"
                     ng-options="a.id as a.name for a in assignments" ng-change="changeReport()" required>
