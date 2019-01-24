@@ -49,7 +49,8 @@ class GroupRootAPI(Resource):
         group_name_exists = Group.query \
             .filter(
                 Group.course_id == course.id,
-                Group.name == new_group.name
+                Group.name == new_group.name,
+                Group.active == True
             ) \
             .first()
 
@@ -109,12 +110,14 @@ class GroupIdAPI(Resource):
 
         params = existing_group_parser.parse_args()
 
-        # check if group name is unique
+        # check if group name is unique. a race condition may cause duplicate group name,
+        # but assuming the chance is small and impact is minimal
         group_name_exists = Group.query \
             .filter(
                 Group.id != group.id,
                 Group.course_id == group.course_id,
-                Group.name == params.get("name", group.name)
+                Group.name == params.get("name", group.name),
+                Group.active == True
             ) \
             .first()
 
@@ -147,16 +150,7 @@ class GroupIdAPI(Resource):
             message="Sorry, your role in this course does not allow you to delete groups.")
 
         # check if group has submitted any answers
-        group_answer_exists = Answer.query \
-            .filter_by(
-                group_id=group.id,
-                practice=False,
-                active=True,
-                draft=False
-            ) \
-            .first()
-
-        if group_answer_exists:
+        if group.group_answer_exists:
             abort(400, title="Group Not Deleted",
                 message="Sorry, you cannot remove groups that have submitted answers.")
 

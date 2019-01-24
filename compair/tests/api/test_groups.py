@@ -215,6 +215,12 @@ class GroupsAPITests(ComPAIRAPITestCase):
             rv = self.client.delete(url)
             self.assert404(rv)
 
+            # the group answer flags should be false
+            rv = self.client.get('/api/courses/'+self.fixtures.course.uuid+'/groups')
+            self.assert200(rv)
+            for the_group in [g for g in rv.json['objects']]:
+                self.assertFalse(the_group['group_answer_exists'])
+
             # test cannot delete group if it has an answer
             self.fixtures.add_answers()
             group = self.fixtures.groups[1]
@@ -223,3 +229,18 @@ class GroupsAPITests(ComPAIRAPITestCase):
             self.assert400(rv)
             self.assertEqual(rv.json['title'], "Group Not Deleted")
             self.assertEqual(rv.json['message'], "Sorry, you cannot remove groups that have submitted answers.")
+
+            # verify the group answer exists flag
+            rv = self.client.get('/api/courses/'+self.fixtures.course.uuid+'/groups')
+            self.assert200(rv)
+            the_group = [g for g in rv.json['objects'] if g['id'] == group.uuid]
+            self.assertEqual(len(the_group), 1)
+            self.assertTrue(the_group[0]['group_answer_exists'])
+
+            # verfiy that after group is deleted, can re-create it with same name
+            deleted_group = self.fixtures.groups[0]
+            new_group = {
+                'name': deleted_group.name,
+            }
+            rv = self.client.post('/api/courses/'+self.fixtures.course.uuid+'/groups', data=json.dumps(new_group), content_type='application/json')
+            self.assert200(rv)

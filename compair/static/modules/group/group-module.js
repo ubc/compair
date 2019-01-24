@@ -63,14 +63,17 @@ module.controller(
     'AddGroupModalController',
     ["$rootScope", "$scope", "$uibModalInstance", "$filter", "Toaster", "GroupResource",
     function ($rootScope, $scope, $uibModalInstance, $filter, Toaster, GroupResource) {
-        $scope.group = {};
+        if ($scope.createNewGroup) {
+            $scope.group = {};
+        }
         $scope.modalInstance = $uibModalInstance;
         $scope.submitted = false;
 
         $scope.groupSubmit = function () {
             $scope.submitted = true;
 
-            var groupNameExists = $filter('filter')($scope.groups, {'name':$scope.group.name}, true).length > 0;
+            var groupNameExists = $filter('filter')($scope.groups, {'name':$scope.group.name, 'id': "!"+$scope.group.id}, true).length > 0;
+            groupNameExists = false;
 
             if (groupNameExists) {
                 Toaster.warning("Group Not Added", "The group name you have entered already exists. Please enter another group name and press Save.");
@@ -86,18 +89,81 @@ module.controller(
                     $scope.submitted = false;
                 });
             }
+        };
+
+        $scope.groupCancelEdit = function() {
+            $scope.modalInstance.dismiss();
         }
     }
 ]);
 
 module.controller(
     'ManageGroupsModalController',
-    ["$rootScope", "$scope", "$uibModalInstance", "Toaster", "GroupResource",
-    function ($rootScope, $scope, $uibModalInstance, Toaster, GroupResource) {
+    ["$rootScope", "$scope", "$uibModalInstance", "Toaster", "$uibModal", "GroupResource", "xAPIStatementHelper",
+    function ($rootScope, $scope, $uibModalInstance, Toaster, $uibModal, GroupResource, xAPIStatementHelper) {
         $scope.group = {};
         $scope.modalInstance = $uibModalInstance;
         $scope.modalDone = function() {
             $scope.modalInstance.dismiss();
+        };
+
+        $scope.groupDelete = function(group_id) {
+            $scope.submitted = true;
+            GroupResource.delete({'courseId': $scope.courseId, 'groupId': group_id}).$promise
+                .then(function(ret) {
+                    return GroupResource.get({'courseId': $scope.courseId}).$promise;
+                }, function(ret) {
+                    return GroupResource.get({'courseId': $scope.courseId}).$promise;
+                })
+                .then(function(ret) {
+                    $scope.groups = ret.objects;
+                })
+                .finally(function() {
+                   $scope.submitted = false;
+                });
+        };
+
+        $scope.groupEdit = function(group_id) {
+            var modalScope = $scope.$new();
+            var targetGroup = modalScope.groups.filter(function(group) {
+                return group.id === group_id;
+            });
+            if (targetGroup.length == 0) {
+                Toaster.warning("Group Not Found", "Problem editing the group.  Please reload the page and try again later.");
+                return;
+            }
+
+            modalScope.courseId = $scope.courseId;
+            modalScope.createNewGroup = false;
+            // deep clone instead of using the same copy.
+            // otherwise the group name will change behind the modal dialog as the user types the new name
+            modalScope.group = $.extend(true, {}, targetGroup[0]);
+
+            var modalInstance = $uibModal.open({
+                animation: true,
+                backdrop: 'static',
+                controller: "AddGroupModalController",
+                templateUrl: 'modules/group/group-modal-partial.html',
+                scope: modalScope
+            });
+            var parentModal = $('.modal-content');
+
+            modalInstance.opened.then(function() {
+                parentModal.addClass('hidden');
+                xAPIStatementHelper.opened_modal("Edit Group");
+            });
+            modalInstance.result.then(function (group_id) {
+                // refresh groups
+                GroupResource.get({'courseId': $scope.courseId}).$promise
+                    .then(function(ret) {
+                        $scope.groups = ret.objects;
+                    });
+                parentModal.removeClass('hidden');
+                xAPIStatementHelper.closed_modal("Edit Group");
+            }, function () {
+                parentModal.removeClass('hidden');
+                xAPIStatementHelper.closed_modal("Edit Group");
+            });
         };
     }
 ]);
