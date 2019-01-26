@@ -29,6 +29,7 @@ services:
       - DB_NAME=compair
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_ALWAYS_EAGER=0
       #- GA_TRACKING_ID=12345
       - ENFORCE_SSL=0
       - MAIL_NOTIFICATION_ENABLED=1
@@ -46,7 +47,7 @@ services:
       - SAML_ATTRIBUTE_EMAIL=urn:oid:1.3.6.1.4.1.5923.1.1.1.6
       - SAML_ATTRIBUTE_STUDENT_NUMBER=
       - SAML_SETTINGS_FILE=/code/deploy/development/dev_saml_settings.json
-      - SAML_METADATA_URL=https://www.testshib.org/metadata/testshib-providers.xml
+      - SAML_METADATA_URL=https://idp.testshib.org/metadata/testshib-providers.xml
       - SAML_METADATA_ENTITY_ID=https://idp.testshib.org/idp/shibboleth
       - SAML_EXPOSE_METADATA_ENDPOINT=true
     volumes:
@@ -69,6 +70,7 @@ services:
       - DB_NAME=compair
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
+      - CELERY_ALWAYS_EAGER=0
       - ENFORCE_SSL=0
       - MAIL_NOTIFICATION_ENABLED=1
       - MAIL_SERVER=mail
