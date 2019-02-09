@@ -4,3 +4,4 @@ from .lti_membership import update_lti_course_membership
 from .lti_outcomes import update_lti_course_grades, update_lti_assignment_grades
 from .send_mail import send_message, send_messages
 from .user_password import set_passwords
+from .assignment_notification import check_assignment_period_ending

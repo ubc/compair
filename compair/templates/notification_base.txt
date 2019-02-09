@@ -4,4 +4,4 @@
 
 --
 Unsubscribe from ComPAIR email notifications by using the following url:
-{{ url_for('route_app', _external=True, _anchor='/user/'+user.uuid+'/edit') }}
+{{ compair_app_url_base+'/user/'+user.uuid+'/edit' }}

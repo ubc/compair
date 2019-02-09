@@ -164,3 +164,6 @@ ALLOW_STUDENT_CHANGE_EMAIL = True
 
 # Allow impersonation
 IMPERSONATION_ENABLED = True
+
+# Feature to notify students on assignment answering / comparing period ending soon
+NOTIFICATION_ASSIGNMENT_ENDING_ENABLED = False

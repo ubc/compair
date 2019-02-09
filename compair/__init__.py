@@ -23,7 +23,7 @@ from .api import register_api_blueprints, log_events, \
     register_demo_api_blueprints, log_demo_events, \
     register_learning_record_api_blueprints, impersonation as impersonation_api
 from compair.learning_records import capture_events
-from compair.notifications import capture_notification_events
+from compair.notifications import capture_notification_events, capture_assignment_ending_soon_events
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
@@ -125,8 +125,6 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
             # Skip if requests does not have InsecureRequestWarning
             pass
 
-    app.logger.debug("Application Configuration: " + str(app.config))
-
     # setup celery scheduled tasks
     if app.config.get('DEMO_INSTALLATION', False):
         #each day at 3am
@@ -141,7 +139,15 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
             'task': "compair.tasks.emit_learning_record.resend_learning_records",
             'schedule': crontab(hour='*/6', minute=0)
         }
+    if not app.config.get('TESTING', False) and \
+            app.config.get('NOTIFICATION_ASSIGNMENT_ENDING_ENABLED', False) and \
+            app.config.get('MAIL_NOTIFICATION_ENABLED', False):
+        app.config.setdefault('CELERYBEAT_SCHEDULE', {})['check-assignment-ending-soon-hourly'] = {
+            'task': "compair.tasks.assignment_notification.check_assignment_period_ending",
+            'schedule': crontab(minute='*/2')   # TODO run every 2 minutes for dev. change before deploy
+        }
 
+    app.logger.debug("Application Configuration: " + str(app.config))
 
     db.init_app(app)
 
@@ -159,6 +165,10 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         app.config.update(assets)
         prefix = get_asset_prefix(app)
         app.config.update(prefix)
+
+    if app.config.get('MAIL_NOTIFICATION_ENABLED', False) and \
+            app.config.get('NOTIFICATION_ASSIGNMENT_ENDING_ENABLED', False):
+        capture_assignment_ending_soon_events()
 
     if not skip_endpoints:
         # Flask-Login initialization

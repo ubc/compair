@@ -19,6 +19,7 @@ services:
   app: &app
     image: "ubcctlt/compair-app:${COMPAIR_VERSION:-latest}"
     environment:
+      - SERVER_NAME=localhost:8080
       - DB_DRIVER=mysql+pymysql
       - DB_USERNAME=compair
       - DB_PASSWORD=compair
@@ -38,6 +39,7 @@ services:
     <<: *app
     command: celery worker --app=celery_worker.celery --loglevel=INFO
     environment:
+      - SERVER_NAME=localhost:8080
       - DB_DRIVER=mysql+pymysql
       - DB_USERNAME=compair
       - DB_PASSWORD=compair

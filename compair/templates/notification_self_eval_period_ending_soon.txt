@@ -1,0 +1,8 @@
+{% extends "notification_base.txt" %}
+{% block body %}
+The self-evaluation period of the following assignment is ending soon: {{assignment.name}}
+
+You can view it at:
+{{ compair_app_url_base+'/course/'+course.uuid+'/assignment/'+assignment.uuid }}
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "notification_base.html" %}
+
+{% block body %}
+<div class="standalone-assignment">
+    <!-- Assignment -->
+    <p class="intro-text">
+        The answer period of the following assignment is ending soon: <strong>{{assignment.name}}</strong>
+        <br />
+        <a href="{{ compair_app_url_base+'/course/'+course.uuid+'/assignment/'+assignment.uuid }}">View in ComPAIR</a>
+    </p>
+</div>
+
+<div class="content">{{ clean_html(assignment.description) | safe }}</div>
+{% endblock %}

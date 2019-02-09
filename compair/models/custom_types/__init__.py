@@ -1,4 +1,5 @@
 from .answer_comment_type import AnswerCommentType
+from .assignment_notification_type import AssignmentNotificationType
 from .course_role import CourseRole
 from .email_notification_method import EmailNotificationMethod
 from .pairing_algorithm import PairingAlgorithm

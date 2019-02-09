@@ -11,6 +11,10 @@ with open(os.getcwd() +'/deploy/development/dev_saml_settings.json', 'r') as jso
     saml_settings = json.load(json_data_file)
 
 test_app_settings = {
+    # Set SERVER_NAME to localhost for LTI tests.
+    # flask may warn that server name without "." may cause problem with sub-domain cookies.
+    # But it should be fine for our test cases.
+    'SERVER_NAME': 'localhost',
     'DEBUG': False,
     'TESTING': True,
     #'PRESERVE_CONTEXT_ON_EXCEPTION': False,
@@ -20,6 +24,7 @@ test_app_settings = {
     'PASSLIB_CONTEXT': 'plaintext',
     'ENFORCE_SSL': False,
     'CELERY_ALWAYS_EAGER': True,
+    'task_always_eager': True,
     'XAPI_ENABLED': False,
     'CALIPER_ENABLED': False,
     'DEMO_INSTALLATION': False,
@@ -33,5 +38,6 @@ test_app_settings = {
     'ALLOW_STUDENT_CHANGE_STUDENT_NUMBER': False,
     'ALLOW_STUDENT_CHANGE_EMAIL': False,
     'MAIL_NOTIFICATION_ENABLED': True,
-    'MAIL_DEFAULT_SENDER': 'compair@example.com'
+    'MAIL_DEFAULT_SENDER': 'compair@example.com',
+    'NOTIFICATION_ASSIGNMENT_ENDING_ENABLED': True
 }

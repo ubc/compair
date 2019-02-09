@@ -324,7 +324,7 @@ class SimpleAssignmentTestData(BasicTestData):
 
     def create_assignment_in_answer_period(self, course, author, **kwargs):
         answer_start = datetime.datetime.now() - datetime.timedelta(days=1)
-        answer_end = datetime.datetime.now() + datetime.timedelta(days=1)
+        answer_end = datetime.datetime.now() + datetime.timedelta(days=2)
         return self.create_assignment(course, author, answer_start, answer_end, **kwargs)
 
     def create_assignment(self, course, author, answer_start, answer_end, **kwargs):
@@ -610,6 +610,34 @@ class ComparisonTestData(CriterionTestData):
         db.session.add(assignment)
         db.session.commit()
         return assignment
+
+class AnswerPeriodEndingSoonTestData(SimpleAnswersTestData):
+
+    def create_assignment_in_answer_period(self, course, author, **kwargs):
+        answer_start = datetime.datetime.now() - datetime.timedelta(days=1)
+        answer_end = datetime.datetime.now() + datetime.timedelta(hours=10)
+        return self.create_assignment(course, author, answer_start, answer_end, **kwargs)
+
+class ComparePeriodEndingSoonTestData(ComparisonTestData):
+
+    def create_assignment_in_comparison_period(self, course, author, **kwargs):
+        answer_start = datetime.datetime.now() - datetime.timedelta(days=3)
+        answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
+        kwargs['compare_start'] = datetime.datetime.now() - datetime.timedelta(days=1)
+        kwargs['compare_end'] = datetime.datetime.now() + datetime.timedelta(hours=12)
+        return self.create_assignment(course, author, answer_start, answer_end,  **kwargs)
+
+class SelfEvalEndingSoonTestData(ComparisonTestData):
+
+    def create_assignment_in_comparison_period(self, course, author, **kwargs):
+        answer_start = datetime.datetime.now() - datetime.timedelta(days=3)
+        answer_end = datetime.datetime.now() - datetime.timedelta(days=1)
+        kwargs['compare_start'] = datetime.datetime.now() - datetime.timedelta(days=1)
+        kwargs['compare_end'] = datetime.datetime.now() + datetime.timedelta(hours=2)
+        kwargs['enable_self_evaluation'] = True
+        kwargs['self_eval_start'] = datetime.datetime.now() - datetime.timedelta(days=1)
+        kwargs['self_eval_end'] = datetime.datetime.now() + datetime.timedelta(hours=12)
+        return self.create_assignment(course, author, answer_start, answer_end,  **kwargs)
 
 class TestFixture:
     def __init__(self):

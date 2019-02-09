@@ -68,10 +68,18 @@ class ImpersonationAPITests(ComPAIRAPITestCase):
         with self.login(self.instructor_main_course.username):
             self.assert403(self._start_impersonation(DefaultFixture.ROOT_USER))
 
-    def test_admin_can_impersonate_students_but_not_instructors(self):
+    def test_instructor_cannot_impersonate_another_instructor(self):
+        with self.login(self.instructor_main_course.username):
+            self.assert403(self._start_impersonation(self.instructor_second_course))
+
+    def test_admin_can_impersonate_anyone(self):
         with self.login(DefaultFixture.ROOT_USER.username):
             self.assert200(self._start_impersonation(self.student_main_course))
-            self.assert403(self._start_impersonation(self.instructor_main_course))
+            self.assert200(self._end_impersonation())
+            self._is_not_impersonating()
+            self.assert200(self._start_impersonation(self.instructor_main_course))
+            self._verify_impersonation(original=DefaultFixture.ROOT_USER, pretending=self.instructor_main_course)
+            self.assert200(self._end_impersonation())
 
     def test_end_impersonation(self):
         # Impersonation will block non-GET traffic, but should allow end impersonation (a DELETE call)

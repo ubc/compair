@@ -5,7 +5,7 @@ from .mixins import ActiveMixin, AttemptMixin, DefaultTableMixin, \
 # enums
 from .custom_types import AnswerCommentType, CourseRole, PairingAlgorithm, \
     ScoringAlgorithm, SystemRole, ThirdPartyType, WinningAnswer, \
-    EmailNotificationMethod
+    EmailNotificationMethod, AssignmentNotificationType
 
 # models
 from .activity_log import ActivityLog
@@ -17,6 +17,7 @@ from .comparison_criterion import ComparisonCriterion
 from .comparison_example import ComparisonExample
 from .assignment_grade import AssignmentGrade
 from .assignment import Assignment
+from .assignment_notification import AssignmentNotification
 from .course_grade import CourseGrade
 from .course import Course
 from .criterion import Criterion

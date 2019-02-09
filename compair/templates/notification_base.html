@@ -16,7 +16,7 @@
         </div>
         <footer class="footer">
             <div class="container text-center text-muted small">
-                <a href="{{ url_for('route_app', _external=True, _anchor='/user/'+user.uuid+'/edit') }}">Unsubscribe</a> from ComPAIR email notifications.
+                <a href="{{ compair_app_url_base+'/user/'+user.uuid }}">Unsubscribe</a> from ComPAIR email notifications.
             </div>
         </footer>
     </body>

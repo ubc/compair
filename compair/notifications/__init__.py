@@ -1,2 +1,2 @@
-from .capture_events import capture_notification_events
+from .capture_events import capture_notification_events, capture_assignment_ending_soon_events
 from .notification import Notification
