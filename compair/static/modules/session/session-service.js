@@ -30,9 +30,9 @@
      */
     module.factory('Session',
             ["$rootScope",  "$http", "$q", "localStorageService", "$log", "UserResource",
-            "$route", "$window", "$location", "ImpersonateResource",
+            "$route", "$window", "$location", "$cacheFactory", "ImpersonateResource",
             function ($rootScope, $http, $q, localStorageService, $log, UserResource,
-                $route, $window, $location, ImpersonateResource) {
+                $route, $window, $location, $cacheFactory, ImpersonateResource) {
         var PERMISSION_REFRESHED_EVENT = "event:Session-refreshPermissions";
         var IMPERSONATE_START_EVENT = "event:Session-startImpersonation";
         var IMPERSONATE_END_EVENT = "event:Session-endImpersonation";
@@ -199,6 +199,13 @@
                     // Destroy the session first. In case the refresh failed (e.g. network issue), 
                     // a success reload of the page will show the correct student view.
                     session_exports.destroy();
+                    // clear angularjs cache
+                    _.each(['$http', 'classlist'], function(id) {
+                        var cache = $cacheFactory.get(id);
+                        if (cache) {
+                            cache.removeAll();
+                        }
+                    });
                     return session_exports.refresh(false).then(function () {
                         if (courseId) {
                             var newPath = '/course/' + courseId;
@@ -217,6 +224,13 @@
             stop_impersonate: function(courseId) {
                 return ImpersonateResource.stop_impersonate({}).$promise.then(function(ret) {
                     session_exports.destroy();
+                    // clear angularjs cache
+                    _.each(['$http', 'classlist'], function(id) {
+                        var cache = $cacheFactory.get(id);
+                        if (cache) {
+                            cache.removeAll();
+                        }
+                    });
                     session_exports.refresh(false).then(function () {
                         if (courseId) {
                             var newPath = '/course/' + courseId;
