@@ -213,10 +213,10 @@
                 <div class="each-answer clearfix" ng-repeat="answer in answers.objects | notScoredEnd | excludeInstr:allInstructors as results" ng-if="(see_answers || canManageAssignment)">
                     <!-- Student Answer Metadata Header -->
                     <div class="each-header clearfix">
-                        <compair-answer-avatar answer="answer"
+                        <compair-answer-avatar answer="answer" skip-name="answerFilters.anonymous"
                             me="!canManageAssignment && (answer.user_id == loggedInUserId || (currentUserGroup && answer.group_id == currentUserGroup.id))"
                             ></compair-answer-avatar>
-                        <span ng-show="answerFilters.anonymous">Student</span>
+                        <span ng-show="answerFilters.anonymous && !isInstructor(answer.user_id)">Student</span>
                         <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>
                         <strong>answered</strong> on {{answer.submission_date | amDateFormat: 'MMM D @ h:mm a'}}:
                         <div class="manager-actions pull-right">
