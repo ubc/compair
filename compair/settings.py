@@ -48,6 +48,7 @@ CELERY_BROKER_URL = None
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 CELERY_IMPORTS = ['compair.tasks']
 CELERY_TIMEZONE = 'America/Vancouver'
+CELERY_ALWAYS_EAGER = True # By default, execute tasks locally
 BROKER_TRANSPORT_OPTIONS = {
     'fanout_prefix': True,
     'fanout_patterns': True

@@ -172,12 +172,32 @@ Use these settings to control the actor information sent to the LRS. This requir
 
 Note: Both `LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER` and `LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE` need to be configured and the user must have a `global_unique_identifier` or else the default ComPAIR actor will be sent.
 
-(Optional) Setting up Background Tasks
+Setting up Background Tasks
 ---------------------------
+
+ComPAIR has the following tasks defined under the package `compair.tasks`:
+
+- `reset_demo` - For demo site only.  This task resets the database with default data.
+- `update_lti_course_membership` - updates enrollment for the course based on LTI membership
+- `update_lti_course_grades` and `update_lti_assignment_grades` - update the course grade and assingment grades respecitvely for LTI consumers
+- `send_messages` and `send_message` - send out email messages e.g. students can turn on notification for feedbacks given to their answers
+- `set_passwords` - (bulk) updates user passwords e.g. when importing users
+- `send_lrs_statement` - sends xAPI statements to Learning Record Store
+
+By default (`CELERY_ALWAYS_EAGER=1`), these Celery tasks are executed locally by blocking until the task returns. To improve performance, you can configure them as background tasks to run asynchronously.
+
+### Enable tasks to run in background
+To run tasks asynchronously, you need to:
+
+- Set up a [Celery broker](http://docs.celeryproject.org/en/latest/getting-started/brokers/) (e.g. Redis, RabbitMQ)
+- Set up Celery workers to run the tasks. A worker can be started by running `celery worker --app=celery_worker.celery`. If the work runs in a separate container or virtual machine, remember to apply the same environment variables as the ComPAIR app.
+- Set `CELERY_BROKER_URL` according to your broker setup
+- Set `CELERY_ALWAYS_EAGER` to `0` (zero). See below for details
 
 ### Settings
 
-`CELERY_ALWAYS_EAGER`: Set to 1 to disable background tasks (off by default)
+`CELERY_ALWAYS_EAGER`: Set to `0` to enable background tasks (`1` by default). 
+**Note:** although ComPAIR uses Celery 4.x, it is **not** using `CELERY_TASK_ALWAYS_EAGER` nor `task_always_eager` as described [in the document](http://docs.celeryproject.org/en/latest/userguide/configuration.html#new-lowercase-settings).
 
 `CELERY_BROKER_URL`: Set the url for the broker tool to be used (ex: redis or rabbitmq instance url)
 
@@ -185,12 +205,7 @@ Note: Both `LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER` and `LRS_ACTOR_ACCOU
 
 `CELERY_TIMEZONE`: Set the timezone used for cron jobs. Currently only used for demo installations ('America/Vancouver' by default)
 
-Workers will need to be restarted after any changes to them.
-
-if `CELERY_ALWAYS_EAGER` is on, then all background task calls will run locally and block until completed (effectively disabling background tasks).
-See the [Celery CELERY_ALWAYS_EAGER docs](http://docs.celeryproject.org/en/latest/configuration.html?highlight=CELERY_BROKER_URL#celery-always-eager).
-
-Restart server after making any changes to settings
+**Restart server after making any changes to settings**
 
 User Authentication Settings
 ---------------------------

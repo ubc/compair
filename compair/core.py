@@ -33,8 +33,8 @@ impersonation = Impersonation()
 
 # initialize celery
 celery = Celery(
-    broker=config.get("CELERY_RESULT_BACKEND"),
-    backend=config.get("CELERY_BROKER_URL")
+    backend=config.get("CELERY_RESULT_BACKEND"),
+    broker=config.get("CELERY_BROKER_URL")
 )
 
 # initialize Flask-Mail
