@@ -43,16 +43,16 @@ gulp.task('bowerInstall', function() {
 });
 
 // insert tags into index.html to include the libs downloaded by bower
-gulp.task('bowerWiredep', ['bowerInstall'], function () {
-    return gulp.src('./compair/static/index.html')
+gulp.task('bowerWiredep', gulp.series('bowerInstall', function () {
+    return gulp.src('./compair/static/index.html', {allowEmpty: true})
         .pipe(wiredep({directory: './compair/static/lib'}))
         .pipe(gulp.dest('./compair/static/'));
-});
+}));
 
-gulp.task('copy_pdf_viewer_html_template', ['bowerInstall'], function() {
+gulp.task('copy_pdf_viewer_html_template', gulp.series('bowerInstall', function() {
     return gulp.src(['./compair/static/lib/pdf.js-viewer/viewer.html'])
         .pipe(gulp.dest('./compair/templates/static'));
-});
+}));
 
 // compile css
 gulp.task('less', function () {
@@ -60,12 +60,12 @@ gulp.task('less', function () {
         .pipe(less())
         .pipe(gulp.dest('./compair/static/build'));
 });
-gulp.task('prod_compile_minify_css', ['less'], function() {
+gulp.task('prod_compile_minify_css', gulp.series('less', function() {
     return gulp.src(cssFilenames)
         .pipe(cleanCss())
         .pipe(concat(targetCssFilename))
         .pipe(gulp.dest('./compair/static/build'));
-});
+}));
 
 /*!
  * Bootstrap v3.3.7 (http://getbootstrap.com)
@@ -80,12 +80,12 @@ gulp.task('email_less', function () {
         .pipe(less())
         .pipe(gulp.dest('./compair/static/build'));
 });
-gulp.task('prod_compile_email_css', ['email_less'], function() {
+gulp.task('prod_compile_email_css', gulp.series('email_less', function() {
     return gulp.src('./compair/static/build/email.css')
         .pipe(cleanCss())
         .pipe(concat(targetEmailCssFilename))
         .pipe(gulp.dest('./compair/templates/static'));
-});
+}));
 // don't sort bower files as bower handles order and dependency
 gulp.task('prod_minify_js_libs', function() {
     return gulp.src(mainBowerFiles({"filter": /.*\.js/}))
@@ -114,19 +114,19 @@ gulp.task('prod_copy_images', function () {
     return gulp.src(['bower_components/chosen/*.png', './compair/static/img/*.png', './compair/static/img/*.ico'])
         .pipe(gulp.dest('compair/static/dist/'));
 });
-gulp.task('prod_minify_js', ['prod_templatecache'], function() {
+gulp.task('prod_minify_js', gulp.series('prod_templatecache', function() {
     var libs = gulp.src([
         './compair/static/compair-config.js',
         './compair/static/build/templates.js',
         // ckeditor plugins
-        './bower_components/ckeditor/plugins/codesnippet/plugin.js',
-        './bower_components/ckeditor/plugins/codesnippet/dialogs/codesnippet.js',
-        './bower_components/ckeditor/plugins/codesnippet/lang/en.js',
+        //'./bower_components/ckeditor/plugins/codesnippet/plugin.js',
+        //'./bower_components/ckeditor/plugins/codesnippet/dialogs/codesnippet.js',
+        //'./bower_components/ckeditor/plugins/codesnippet/lang/en.js',
         './compair/static/lib_extension/ckeditor/plugins/combinedmath/plugin.js',
         './compair/static/lib_extension/ckeditor/plugins/combinedmath/dialogs/combinedmath.js',
-        './bower_components/ckeditor/plugins/widget/plugin.js',
-        './bower_components/ckeditor/plugins/widget/lang/en.js',
-        './bower_components/ckeditor/plugins/lineutils/plugin.js'
+        //'./bower_components/ckeditor/plugins/widget/plugin.js',
+        //'./bower_components/ckeditor/plugins/widget/lang/en.js',
+        //'./bower_components/ckeditor/plugins/lineutils/plugin.js'
     ]);
     // we need to sort to generate a stable order so that we have a stable hash
     var modules = gulp.src('./compair/static/modules/**/*-module.js');
@@ -143,7 +143,7 @@ gulp.task('prod_minify_js', ['prod_templatecache'], function() {
         .pipe(concat(jsFilename))
         .pipe(uglify())
         .pipe(gulp.dest('./compair/static/build'));
-});
+}));
 gulp.task('prod_pdf_viewer_files', function() {
     return gulp.src([
             './compair/static/lib/pdf.js-viewer/pdf.js',
@@ -155,8 +155,8 @@ gulp.task('prod_pdf_viewer_files', function() {
         ], {base: './compair/static/lib/pdf.js-viewer/'})
         .pipe(gulp.dest('./compair/static/dist/pdf.js-viewer'));
 });
-gulp.task('prod', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_compile_email_css',
-        'prod_minify_js', 'prod_copy_fonts', 'prod_copy_images', 'prod_pdf_viewer_files'], function() {
+gulp.task('prod', gulp.series('prod_minify_js_libs', 'prod_compile_minify_css', 'prod_compile_email_css',
+        'prod_minify_js', 'prod_copy_fonts', 'prod_copy_images', 'prod_pdf_viewer_files', function() {
     return gulp.src([
             './compair/static/build/*.css',
             './compair/static/build/*.js',
@@ -166,7 +166,7 @@ gulp.task('prod', ['prod_minify_js_libs', 'prod_compile_minify_css', 'prod_compi
         .pipe(gulp.dest('./compair/static/dist'))
         .pipe(rev.manifest())
         .pipe(gulp.dest('./compair/static/build'));
-});
+}));
 
 /**
  * Watch for file changes and re-run tests on each change
@@ -178,9 +178,17 @@ gulp.task('tdd', function (done) {
 });
 
 /**
+ * Downloads the selenium webdriver
+ */
+gulp.task('webdriver_update', function(done) {
+    var webdriver_update = require('gulp-protractor').webdriver_update;
+    webdriver_update({}, done);
+});
+
+/**
  * Behavior driven development. This task runs acceptance tests
  */
-gulp.task('bdd', ['webdriver_update'], function (done) {
+gulp.task('bdd', gulp.series('webdriver_update', function (done) {
     var protractor = require('gulp-protractor').protractor;
     var connect = require('gulp-connect');
     gulp.src(["compair/static/test/features/*.feature"])
@@ -196,7 +204,7 @@ gulp.task('bdd', ['webdriver_update'], function (done) {
             connect.serverClose();
             done();
         });
-});
+}));
 
 /**
  * Run test once and exit
@@ -233,75 +241,9 @@ gulp.task('delete_index', function() {
 });
 
 /**
- * Run acceptance tests
- */
-gulp.task('test:acceptance', ['server:frontend', 'bdd'], function() {
-
-});
-
-/**
- * Run tests on ci
- */
-gulp.task('test:ci', ['server:frontend', '_test:ci']);
-gulp.task('_test:ci', function (done) {
-    var protractor = require('gulp-protractor').protractor;
-    var connect = require('gulp-connect');
-    gulp.src(["compair/static/test/features/*.feature"])
-        .pipe(protractor({
-            configFile: "compair/static/test/config/protractor_saucelab.js"
-            // baseUrl is set through environment variable
-            //args: ['--baseUrl', 'http://127.0.0.1:8000']
-        }))
-        .on('error', function (e) {
-            throw e
-        })
-        .on('end', function() {
-            connect.serverClose();
-            done();
-        });
-});
-
-
-/**
- * Run acceptance tests
- */
-gulp.task('test:acceptance:sauce', ['server:frontend', '_test:acceptance:sauce']);
-gulp.task('_test:acceptance:sauce', ['sauce:connect'], function(done) {
-    var protractor = require('gulp-protractor').protractor;
-    var connect = require('gulp-connect');
-    var sauceConnectLauncher = require('sauce-connect-launcher');
-    gulp.src(["compair/static/test/features/*.feature"])
-        .pipe(protractor({
-            configFile: "compair/static/test/config/protractor_saucelab_local.js",
-            args: ['--baseUrl', 'http://127.0.0.1:8000']
-        }))
-        .on('error', function (e) {
-            throw e
-        })
-        .on('end', function() {
-            connect.serverClose();
-            sauceConnectLauncher.clean();
-            done();
-        });
-});
-
-/**
- * Run backend server
- */
-gulp.task('server:backend', function() {
-    var proc = exec('PYTHONUNBUFFERED=1 python manage.py runserver -h 0.0.0.0');
-    proc.stderr.on('data', function (data) {
-        process.stderr.write(data);
-    });
-    proc.stdout.on('data', function (data) {
-        process.stdout.write(data);
-    });
-});
-
-/**
  * Run frontend server
  */
-gulp.task('server:frontend', ['generate_index'], function(done) {
+gulp.task('server:frontend', gulp.series('generate_index', function(done) {
     var connect = require('gulp-connect');
     app = connect.server({
         port: 8700,
@@ -323,7 +265,36 @@ gulp.task('server:frontend', ['generate_index'], function(done) {
         gulp.start('delete_index');
         done();
     });
+}));
+
+/**
+ * Run acceptance tests
+ */
+gulp.task('test:acceptance', gulp.series('server:frontend', 'bdd', function() {
+
+}));
+
+/**
+ * Run tests on ci
+ */
+gulp.task('_test:ci', function (done) {
+    var protractor = require('gulp-protractor').protractor;
+    var connect = require('gulp-connect');
+    gulp.src(["compair/static/test/features/*.feature"])
+        .pipe(protractor({
+            configFile: "compair/static/test/config/protractor_saucelab.js"
+            // baseUrl is set through environment variable
+            //args: ['--baseUrl', 'http://127.0.0.1:8000']
+        }))
+        .on('error', function (e) {
+            throw e
+        })
+        .on('end', function() {
+            connect.serverClose();
+            done();
+        });
 });
+gulp.task('test:ci', gulp.series('server:frontend', '_test:ci'));
 
 /**
  * Run sauce connect
@@ -344,15 +315,42 @@ gulp.task('sauce:connect', function(done) {
     });
 });
 
-
+/**
+ * Run acceptance tests
+ */
+gulp.task('_test:acceptance:sauce', gulp.series('sauce:connect', function(done) {
+    var protractor = require('gulp-protractor').protractor;
+    var connect = require('gulp-connect');
+    var sauceConnectLauncher = require('sauce-connect-launcher');
+    gulp.src(["compair/static/test/features/*.feature"])
+        .pipe(protractor({
+            configFile: "compair/static/test/config/protractor_saucelab_local.js",
+            args: ['--baseUrl', 'http://127.0.0.1:8000']
+        }))
+        .on('error', function (e) {
+            throw e
+        })
+        .on('end', function() {
+            connect.serverClose();
+            sauceConnectLauncher.clean();
+            done();
+        });
+}));
+gulp.task('test:acceptance:sauce', gulp.series('server:frontend', '_test:acceptance:sauce'));
 
 /**
- * Downloads the selenium webdriver
+ * Run backend server
  */
-gulp.task('webdriver_update', function(done) {
-    var webdriver_update = require('gulp-protractor').webdriver_update;
-    webdriver_update({}, done);
+gulp.task('server:backend', function() {
+    var proc = exec('PYTHONUNBUFFERED=1 python manage.py runserver -h 0.0.0.0');
+    proc.stderr.on('data', function (data) {
+        process.stderr.write(data);
+    });
+    proc.stdout.on('data', function (data) {
+        process.stdout.write(data);
+    });
 });
+
 
 /**
  * Start the standalone selenium server
@@ -365,4 +363,6 @@ gulp.task('webdriver_standalone', function(done) {
 });
 
 
-gulp.task("default", ['bowerInstall', 'bowerWiredep', 'copy_pdf_viewer_html_template'], function(){});
+gulp.task("default", gulp.series('bowerInstall', 'bowerWiredep', 'copy_pdf_viewer_html_template', function(done){
+    done();
+}));
