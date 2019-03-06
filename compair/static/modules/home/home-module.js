@@ -7,7 +7,7 @@
 var module = angular.module('ubc.ctlt.compair.home',
     [
         'ngSanitize',
-        'ubc.ctlt.compair.common.xapi',
+        'ubc.ctlt.compair.learning_records.learning_record',
         'ubc.ctlt.compair.authentication',
         'ubc.ctlt.compair.authorization',
         'ubc.ctlt.compair.course',
@@ -24,9 +24,9 @@ var module = angular.module('ubc.ctlt.compair.home',
 module.controller(
     'HomeController',
     ["$rootScope", "$scope", "AssignmentResource", "Authorize", "CourseResource",
-     "Toaster", "UserResource", "$uibModal", "xAPIStatementHelper", "resolvedData",
+     "Toaster", "UserResource", "$uibModal", "LearningRecordStatementHelper", "resolvedData",
     function ($rootScope, $scope, AssignmentResource, Authorize, CourseResource,
-              Toaster, UserResource, $uibModal, xAPIStatementHelper, resolvedData)
+              Toaster, UserResource, $uibModal, LearningRecordStatementHelper, resolvedData)
     {
         $scope.totalNumCourses = 0;
         $scope.courseFilters = {
@@ -96,7 +96,7 @@ module.controller(
             if(newValue.search === "") {
                 $scope.courseFilters.search = null;
             }
-            xAPIStatementHelper.filtered_page($scope.courseFilters);
+            LearningRecordStatementHelper.filtered_page($scope.courseFilters);
             $scope.updateCourseList();
         };
 

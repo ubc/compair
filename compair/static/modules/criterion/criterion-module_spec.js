@@ -79,7 +79,10 @@ describe('course-module', function () {
         $httpBackend = $injector.get('$httpBackend');
         sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
         $httpBackend.when('GET', '/api/users/' + id).respond(mockUser);
-        $httpBackend.whenPOST(/\/api\/statements$/).respond(function(method, url, data, headers) {
+        $httpBackend.whenPOST(/\/api\/learning_records\/xapi\/statements$/).respond(function(method, url, data, headers) {
+            return [200, { 'success':true }, {}];
+        });
+        $httpBackend.whenPOST(/\/api\/learning_records\/caliper\/events$/).respond(function(method, url, data, headers) {
             return [200, { 'success':true }, {}];
         });
     }));

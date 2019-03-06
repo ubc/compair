@@ -25,6 +25,9 @@ on_save_file = event.signal('FILE_CREATE')
 on_get_kaltura_token = event.signal('FILE_GET_KALTURA_TOKEN')
 on_save_kaltura_file = event.signal('FILE_CREATE_KALTURA_FILE')
 
+on_attach_file = event.signal('FILE_ATTACH')
+on_detach_file = event.signal('FILE_DETACH')
+
 # /
 class FileAPI(Resource):
     @login_required

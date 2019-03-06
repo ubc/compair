@@ -80,7 +80,7 @@ services:
       - MAIL_DEFAULT_SENDER=compair@example.com
   worker_scheduler:
     <<: *worker
-    command: celery beat --app=celery_worker.celery --loglevel=DEBUG
+    command: bash -c "rm -f celerybeat.pid && celery beat --app=celery_worker.celery --loglevel=DEBUG"
   web:
     image: nginx:1.11
     volumes:

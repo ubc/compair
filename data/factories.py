@@ -109,6 +109,9 @@ class AnswerFactory(factory.alchemy.SQLAlchemyModelFactory):
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
     submission_date = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
+    attempt_started = datetime.datetime.now() - datetime.timedelta(minutes=10)
+    attempt_ended = datetime.datetime.now() - datetime.timedelta(minutes=5)
+
 class AnswerScoreFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = AnswerScore
@@ -143,6 +146,9 @@ class AnswerCommentFactory(factory.alchemy.SQLAlchemyModelFactory):
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
 
+    attempt_started = datetime.datetime.now() - datetime.timedelta(minutes=10)
+    attempt_ended = datetime.datetime.now() - datetime.timedelta(minutes=5)
+
 
 class ComparisonFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
@@ -153,6 +159,9 @@ class ComparisonFactory(factory.alchemy.SQLAlchemyModelFactory):
     user = factory.SubFactory(UserFactory)
     # Make sure created dates are unique.
     created = factory.Sequence(lambda n: datetime.datetime.fromtimestamp(1404768528 - n))
+
+    attempt_started = datetime.datetime.now() - datetime.timedelta(minutes=10)
+    attempt_ended = datetime.datetime.now() - datetime.timedelta(minutes=5)
 
 
 class ComparisonCriterionFactory(factory.alchemy.SQLAlchemyModelFactory):

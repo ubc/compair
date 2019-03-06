@@ -1,3 +1,18 @@
+# v1.2.2
+
+## Breaking changes
+
+* xAPI statements emitted changed to more closely match Caliper events
+* Renamed `XAPI_APP_BASE_URL` to `LRS_APP_BASE_URL`
+* Renamed `LRS_STATEMENT_ENDPOINT` to `LRS_XAPI_STATEMENT_ENDPOINT`
+* Renamed `LRS_AUTH` to `LRS_XAPI_AUTH`
+* Renamed `LRS_USERNAME` to `LRS_XAPI_USERNAME`
+* Renamed `LRS_PASSWORD` to `LRS_XAPI_PASSWORD`
+
+## Notable changes
+
+* Added support for transmitting Caliper events
+
 # v1.2
 
 ## Breaking changes

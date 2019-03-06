@@ -29,15 +29,12 @@ new_answer_parser.add_argument('comparable', type=bool, default=True)
 new_answer_parser.add_argument('content', default=None)
 new_answer_parser.add_argument('file_id', default=None)
 new_answer_parser.add_argument('draft', type=bool, default=False)
+new_answer_parser.add_argument('attempt_uuid', default=None)
+new_answer_parser.add_argument('attempt_started', default=None)
+new_answer_parser.add_argument('attempt_ended', default=None)
 
-existing_answer_parser = RequestParser()
-existing_answer_parser.add_argument('id', required=True, nullable=False, help="Answer id is required.")
-existing_answer_parser.add_argument('user_id', default=None)
-existing_answer_parser.add_argument('group_id', default=None)
-existing_answer_parser.add_argument('comparable', type=bool, default=True)
-existing_answer_parser.add_argument('content', default=None)
-existing_answer_parser.add_argument('file_id', default=None)
-existing_answer_parser.add_argument('draft', type=bool, default=False)
+existing_answer_parser = new_answer_parser.copy()
+existing_answer_parser.add_argument('id', required=True, help="Answer id is required.")
 
 answer_list_parser = pagination_parser.copy()
 answer_list_parser.add_argument('group', required=False, default=None)
@@ -48,7 +45,6 @@ answer_list_parser.add_argument('ids', required=False, default=None)
 
 user_answer_list_parser = RequestParser()
 user_answer_list_parser.add_argument('draft', type=bool, required=False, default=False)
-user_answer_list_parser.add_argument('unsaved', type=bool, required=False, default=False)
 
 top_answer_parser = RequestParser()
 top_answer_parser.add_argument(
@@ -65,6 +61,8 @@ on_answer_create = event.signal('ANSWER_CREATE')
 on_answer_delete = event.signal('ANSWER_DELETE')
 on_set_top_answer = event.signal('SET_TOP_ANSWER')
 on_user_answer_get = event.signal('USER_ANSWER_GET')
+
+from compair.api.file import on_attach_file, on_detach_file
 
 # /
 class AnswerRootAPI(Resource):
@@ -220,6 +218,7 @@ class AnswerRootAPI(Resource):
         answer.draft = params.get("draft")
 
         file_uuid = params.get('file_id')
+        attachment = None
         if file_uuid:
             attachment = File.get_by_uuid_or_404(file_uuid)
             answer.file_id = attachment.id
@@ -309,6 +308,12 @@ class AnswerRootAPI(Resource):
         if not answer.draft and not answer.submission_date:
             answer.submission_date = datetime.datetime.utcnow()
 
+        answer.update_attempt(
+            params.get('attempt_uuid'),
+            params.get('attempt_started', None),
+            params.get('attempt_ended', None)
+        )
+
         db.session.add(answer)
         db.session.commit()
 
@@ -317,7 +322,17 @@ class AnswerRootAPI(Resource):
             event_name=on_answer_create.name,
             user=current_user,
             course_id=course.id,
+            answer=answer,
             data=marshal(answer, dataformat.get_answer(restrict_user)))
+
+        if attachment:
+            on_attach_file.send(
+                self,
+                event_name=on_attach_file.name,
+                user=current_user,
+                course_id=course.id,
+                file=attachment,
+                data={'answer_id': answer.id, 'file_id': attachment.id})
 
         # update course & assignment grade for user if answer is fully submitted
         if not answer.draft:
@@ -371,6 +386,9 @@ class AnswerIdAPI(Resource):
             abort(403, title="Answer Not Submitted", message="Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.")
 
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
+
+        old_file = answer.file
+
         require(EDIT, answer,
             title="Answer Not Saved",
             message="Sorry, your role in this course does not allow you to save this answer.")
@@ -464,6 +482,7 @@ class AnswerIdAPI(Resource):
             answer.draft = params.get("draft")
 
         file_uuid = params.get('file_id')
+        attachment=None
         if file_uuid:
             attachment = File.get_by_uuid_or_404(file_uuid)
             answer.file_id = attachment.id
@@ -478,6 +497,12 @@ class AnswerIdAPI(Resource):
         if not answer.draft and not answer.submission_date:
             answer.submission_date = datetime.datetime.utcnow()
 
+        answer.update_attempt(
+            params.get('attempt_uuid'),
+            params.get('attempt_started', None),
+            params.get('attempt_ended', None)
+        )
+
         model_changes = get_model_changes(answer)
         db.session.add(answer)
         db.session.commit()
@@ -488,8 +513,26 @@ class AnswerIdAPI(Resource):
             user=current_user,
             course_id=course.id,
             answer=answer,
-            assignment=assignment,
             data=model_changes)
+
+        if old_file and (not attachment or old_file.id != attachment.id):
+            on_detach_file.send(
+                self,
+                event_name=on_detach_file.name,
+                user=current_user,
+                course_id=course.id,
+                file=old_file,
+                answer=answer,
+                data={'answer_id': answer.id, 'file_id': old_file.id})
+
+        if attachment and (not old_file or old_file.id != attachment.id):
+            on_attach_file.send(
+                self,
+                event_name=on_attach_file.name,
+                user=current_user,
+                course_id=course.id,
+                file=attachment,
+                data={'answer_id': answer.id, 'file_id': attachment.id})
 
         # update course & assignment grade for user if answer is fully submitted
         if not answer.draft:
@@ -586,9 +629,6 @@ class AnswerUserIdAPI(Resource):
         # get just individual answers for user
         else:
             query = query.filter(Answer.user_id == current_user.id)
-
-        if params.get('unsaved'):
-            query = query.filter(not_(Answer.saved))
 
         answers = query.all()
 

@@ -13,7 +13,7 @@ var myApp = angular.module('myApp', [
     'angular-loading-bar',
     'ngPromiseExtras',
     'ubc.ctlt.compair.common',
-    'ubc.ctlt.compair.common.xapi',
+    'ubc.ctlt.compair.learning_records.learning_record',
     'ubc.ctlt.compair.rich.content',
     'ubc.ctlt.compair.answer',
     'ubc.ctlt.compair.attachment',
@@ -248,11 +248,6 @@ myApp.factory('RouteResolves',
             var courseId = $route.current.params.courseId;
             var assignmentId = $route.current.params.assignmentId;
             return AnswerResource.user({'courseId': courseId, 'assignmentId': assignmentId}).$promise;
-        },
-        answerUnsaved: function() {
-            var courseId = $route.current.params.courseId;
-            var assignmentId = $route.current.params.assignmentId;
-            return AnswerResource.userUnsaved({'courseId': courseId, 'assignmentId': assignmentId}).$promise;
         },
         userLTIs: function() {
             if (AuthTypesEnabled.lti) {

@@ -7,7 +7,7 @@ var module = angular.module('ubc.ctlt.compair.classlist',
     [
         'ngResource',
         'ubc.ctlt.compair.attachment',
-        'ubc.ctlt.compair.common.xapi',
+        'ubc.ctlt.compair.learning_records.learning_record',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.interceptor',
         'ubc.ctlt.compair.course',
@@ -65,10 +65,10 @@ module.controller(
     'ClassViewController',
     ["$scope", "$routeParams", "$route", "ClassListResource", "CourseResource", "GroupUserResource",
              "CourseRole", "GroupResource", "Toaster", "FileSaver", "Blob", "LTIResource",
-             "UserResource", "$uibModal", "xAPIStatementHelper", "resolvedData",
+             "UserResource", "$uibModal", "LearningRecordStatementHelper", "resolvedData",
     function($scope, $routeParams, $route, ClassListResource, CourseResource, GroupUserResource,
              CourseRole, GroupResource, Toaster, FileSaver, Blob, LTIResource,
-             UserResource, $uibModal, xAPIStatementHelper, resolvedData)
+             UserResource, $uibModal, LearningRecordStatementHelper, resolvedData)
     {
 
         $scope.courseId = $routeParams.courseId;
@@ -128,13 +128,13 @@ module.controller(
             });
 
             modalInstance.opened.then(function() {
-                xAPIStatementHelper.opened_modal("Edit Group");
+                LearningRecordStatementHelper.opened_modal("Edit Group");
             });
-            modalInstance.result.then(function (group_id) {
-                $scope.addUsersToGroup(group_id);
-                xAPIStatementHelper.closed_modal("Edit Group");
+            modalInstance.result.then(function (groupName) {
+                $scope.addUsersToGroup(groupName);
+                LearningRecordStatementHelper.closed_modal("Edit Group");
             }, function () {
-                xAPIStatementHelper.closed_modal("Edit Group");
+                LearningRecordStatementHelper.closed_modal("Edit Group");
             });
         };
 
@@ -291,7 +291,7 @@ module.controller(
             $scope.reverse = $scope.predicate == predicate && !$scope.reverse;
             $scope.predicate = predicate;
             var orderBy = $scope.predicate + " " + ($scope.reverse ? "desc" : "asc");
-            xAPIStatementHelper.sorted_page_section("classlist table", orderBy);
+            LearningRecordStatementHelper.sorted_page_section("classlist table", orderBy);
         };
         $scope.resetSelected();
     }

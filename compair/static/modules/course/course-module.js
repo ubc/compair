@@ -31,7 +31,7 @@ var module = angular.module('ubc.ctlt.compair.course',
         'ngRoute',
         'ui.bootstrap',
         'ubc.ctlt.compair.comment',
-        'ubc.ctlt.compair.common.xapi',
+        'ubc.ctlt.compair.learning_records.learning_record',
         'ubc.ctlt.compair.common.form',
         'ubc.ctlt.compair.common.interceptor',
         'ubc.ctlt.compair.comparison',
@@ -263,9 +263,9 @@ module.factory( "CoursePermissions", function (){
 module.controller(
     'CourseAssignmentsController',
     ["$scope", "$routeParams", "CourseResource", "AssignmentResource", "AssignmentPermissions",
-    "AnswerResource", "moment", "resolvedData", "Toaster", "xAPIStatementHelper", "$uibModal",
+    "AnswerResource", "moment", "resolvedData", "Toaster", "LearningRecordStatementHelper", "$uibModal",
    function($scope, $routeParams, CourseResource, AssignmentResource, AssignmentPermissions,
-            AnswerResource, moment, resolvedData, Toaster, xAPIStatementHelper, $uibModal)
+            AnswerResource, moment, resolvedData, Toaster, LearningRecordStatementHelper, $uibModal)
     {
         // get course info
         $scope.courseId = $routeParams.courseId;
@@ -297,7 +297,6 @@ module.controller(
             modalScope.answer = {};
             modalScope.loggedInUserId = resolvedData.loggedInUser.id;
             modalScope.canManageAssignment = resolvedData.canManageAssignment;
-            modalScope.answerUnsaved = resolvedData.answerUnsaved;
 
             if ($args.answerId) {
                 modalScope.answerId = $args.answerId;
@@ -441,7 +440,7 @@ module.controller(
 
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
-            xAPIStatementHelper.filtered_page({
+            LearningRecordStatementHelper.filtered_page({
                 display: $scope.filter
             });
         };
@@ -452,9 +451,9 @@ module.controller(
 module.controller(
     'CourseSelectModalController',
     ["$rootScope", "$scope", "$uibModalInstance", "AssignmentResource",
-     "Session", "CourseResource", "Toaster", "UserResource", "LTI", "xAPIStatementHelper",
+     "Session", "CourseResource", "Toaster", "UserResource", "LTI", "LearningRecordStatementHelper",
     function ($rootScope, $scope, $uibModalInstance, AssignmentResource,
-              Session, CourseResource, Toaster, UserResource, LTI, xAPIStatementHelper) {
+              Session, CourseResource, Toaster, UserResource, LTI, LearningRecordStatementHelper) {
 
         $scope.submitted = false;
         $scope.totalNumCourses = 0;
@@ -546,7 +545,7 @@ module.controller(
         var filterWatcher = function(newValue, oldValue) {
             if (angular.equals(newValue, oldValue)) return;
             $scope.updateCourseList();
-            xAPIStatementHelper.filtered_modal("Select Course", $scope.courseFilters);
+            LearningRecordStatementHelper.filtered_modal("Select Course", $scope.courseFilters);
         };
         $scope.$watchCollection('courseFilters', filterWatcher);
         $scope.updateCourseList();

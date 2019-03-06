@@ -21,6 +21,8 @@ class LTIContext(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     custom_context_memberships_url = db.Column(db.Text, nullable=True)
     compair_course_id = db.Column(db.Integer, db.ForeignKey("course.id", ondelete="CASCADE"),
         nullable=True)
+    lis_course_offering_sourcedid = db.Column(db.String(255), nullable=True)
+    lis_course_section_sourcedid = db.Column(db.String(255), nullable=True)
 
     # relationships
     # compair_course via Course Model
@@ -98,6 +100,18 @@ class LTIContext(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         lti_context.context_title = tool_provider.context_title
         lti_context.ext_ims_lis_memberships_id = tool_provider.ext_ims_lis_memberships_id
         lti_context.ext_ims_lis_memberships_url = tool_provider.ext_ims_lis_memberships_url
+
+        if tool_provider.lis_course_offering_sourcedid:
+            lti_context.lis_course_offering_sourcedid = tool_provider.lis_course_offering_sourcedid
+        # lis_course_offering_sourcedid might not be available. if not, then check custom parameter
+        elif tool_provider.custom_lis_course_offering_sourcedid:
+            lti_context.lis_course_offering_sourcedid = tool_provider.custom_lis_course_offering_sourcedid
+
+        if tool_provider.lis_course_section_sourcedid:
+            lti_context.lis_course_section_sourcedid = tool_provider.lis_course_section_sourcedid
+        # lis_course_section_sourcedid might not be available. if not, then check custom parameter
+        elif tool_provider.custom_lis_course_section_sourcedid:
+            lti_context.lis_course_section_sourcedid = tool_provider.custom_lis_course_section_sourcedid
 
         if tool_provider.custom_context_memberships_url:
             lti_context.custom_context_memberships_url = tool_provider.custom_context_memberships_url

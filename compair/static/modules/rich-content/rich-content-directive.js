@@ -4,7 +4,7 @@ var module = angular.module('ubc.ctlt.compair.rich.content',
     [
         'Kaltura.directives',
         'ui.bootstrap',
-        'ubc.ctlt.compair.common.xapi',
+        'ubc.ctlt.compair.learning_records.learning_record',
         'ubc.ctlt.compair.rich.content.mathjax',
         'ubc.ctlt.compair.rich.content.highlightjs',
         'ubc.ctlt.compair.rich.content.twttr',
@@ -230,8 +230,8 @@ app.directive('dynamicRichContent',
 
 //
 module.directive('richContent',
-    ["xAPIStatementHelper", "$uibModal", "embeddableRichContent", "$sanitize",
-    function (xAPIStatementHelper, $uibModal, embeddableRichContent, $sanitize)
+    ["$filter", "LearningRecordStatementHelper", "$uibModal", "embeddableRichContent", "$sanitize",
+    function ($filter, LearningRecordStatementHelper, $uibModal, embeddableRichContent, $sanitize)
     {
         return {
             restrict: 'E',
@@ -260,10 +260,10 @@ module.directive('richContent',
                         scope: modalScope
                     });
                     modalScope.modalInstance.opened.then(function() {
-                        xAPIStatementHelper.opened_attachment_modal(content.url);
+                        LearningRecordStatementHelper.opened_attachment_modal(content.url);
                     });
                     modalScope.modalInstance.result.finally(function() {
-                        xAPIStatementHelper.closed_attachment_modal(content.url);
+                        LearningRecordStatementHelper.closed_attachment_modal(content.url);
                     });
                 };
 
@@ -276,10 +276,10 @@ module.directive('richContent',
                         scope: modalScope
                     });
                     modalScope.modalInstance.opened.then(function() {
-                        xAPIStatementHelper.opened_embeddable_content_modal(content.url);
+                        LearningRecordStatementHelper.opened_embeddable_content_modal(content.url);
                     });
                     modalScope.modalInstance.result.finally(function() {
-                        xAPIStatementHelper.closed_embeddable_content_modal(content.url);
+                        LearningRecordStatementHelper.closed_embeddable_content_modal(content.url);
                     });
                 };
 

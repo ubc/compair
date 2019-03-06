@@ -30,6 +30,9 @@ api = new_restful_api(comparison_api)
 update_comparison_parser = RequestParser()
 update_comparison_parser.add_argument('comparison_criteria', type=list, required=True, nullable=False, location='json')
 update_comparison_parser.add_argument('draft', type=bool, default=False)
+update_comparison_parser.add_argument('attempt_uuid', default=None)
+update_comparison_parser.add_argument('attempt_started', default=None)
+update_comparison_parser.add_argument('attempt_ended', default=None)
 
 # events
 on_comparison_get = event.signal('COMPARISON_GET')
@@ -66,7 +69,6 @@ class CompareRootAPI(Resource):
                 message="More comparisons aren't available, since you've finished your comparisons for this assignment. Good job!")
 
         # check if user has a comparison they have not completed yet
-        new_pair = False
         comparison = Comparison.query \
             .options(joinedload('comparison_criteria')) \
             .filter_by(
@@ -88,7 +90,6 @@ class CompareRootAPI(Resource):
             try:
                 comparison = Comparison.create_new_comparison(assignment.id, current_user.id,
                     skip_comparison_examples=allow(MANAGE, assignment))
-                new_pair = True
 
                 on_comparison_create.send(
                     self,
@@ -124,7 +125,6 @@ class CompareRootAPI(Resource):
         return {
             'comparison': marshal(comparison, dataformat.get_comparison(restrict_user,
                 include_answer_author=False, include_score=False, with_feedback=True)),
-            'new_pair': new_pair,
             'current': comparison_count+1
         }
 
@@ -243,6 +243,12 @@ class CompareRootAPI(Resource):
         else:
             # ensure that the comparison is 'touched' when saving a draft
             comparison.modified = datetime.datetime.utcnow()
+
+        comparison.update_attempt(
+            params.get('attempt_uuid'),
+            params.get('attempt_started', None),
+            params.get('attempt_ended', None)
+        )
 
         db.session.commit()
 

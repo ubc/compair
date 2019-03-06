@@ -38,8 +38,8 @@ function($resource, Interceptors)
 }]);
 
 module.controller('LTIContextListController',
-    ['$scope', 'LTIContextLinkResource', 'Toaster', 'xAPIStatementHelper',
-    function($scope, LTIContextLinkResource, Toaster, xAPIStatementHelper)
+    ['$scope', 'LTIContextLinkResource', 'Toaster', 'LearningRecordStatementHelper',
+    function($scope, LTIContextLinkResource, Toaster, LearningRecordStatementHelper)
     {
         $scope.course = null;
 
@@ -91,7 +91,7 @@ module.controller('LTIContextListController',
             if(newValue.search === "") {
                 $scope.contextFilters.search = null;
             }
-            xAPIStatementHelper.filtered_page($scope.contextFilters);
+            LearningRecordStatementHelper.filtered_page($scope.contextFilters);
             $scope.updateContextList();
         };
         $scope.$watchCollection('contextFilters', filterWatcher);

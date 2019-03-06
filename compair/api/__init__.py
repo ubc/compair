@@ -144,7 +144,8 @@ def register_api_blueprints(app):
                 allow_student_change_email=app.config['ALLOW_STUDENT_CHANGE_EMAIL'],
                 notifications_enabled=app.config['MAIL_NOTIFICATION_ENABLED'],
                 xapi_enabled=app.config['XAPI_ENABLED'],
-                xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
+                caliper_enabled=app.config['CALIPER_ENABLED'],
+                lrs_app_base_url=app.config.get('LRS_APP_BASE_URL'),
                 demo=app.config.get('DEMO_INSTALLATION'),
                 impersonation_enabled=app.config['IMPERSONATION_ENABLED'],
             )
@@ -179,7 +180,8 @@ def register_api_blueprints(app):
             allow_student_change_email=app.config['ALLOW_STUDENT_CHANGE_EMAIL'],
             notifications_enabled=app.config['MAIL_NOTIFICATION_ENABLED'],
             xapi_enabled=app.config['XAPI_ENABLED'],
-            xapi_app_base_url=app.config.get('XAPI_APP_BASE_URL'),
+            caliper_enabled=app.config['CALIPER_ENABLED'],
+            lrs_app_base_url=app.config.get('LRS_APP_BASE_URL'),
             demo=app.config.get('DEMO_INSTALLATION'),
             impersonation_enabled=app.config['IMPERSONATION_ENABLED'],
         )
@@ -263,7 +265,7 @@ def register_api_blueprints(app):
         if not os.path.exists(file_path):
             return make_response('invalid file name', 404)
 
-        # TODO: add bouncer
+        # TODO: add bouncer for reports
         mimetype, encoding = mimetypes.guess_type(file_name)
         attachment_filename = None
         as_attachment = False
@@ -285,11 +287,11 @@ def register_api_blueprints(app):
 
     return app
 
-def register_statement_api_blueprints(app):
-    from .statements import statement_api
+def register_learning_record_api_blueprints(app):
+    from .learning_records import learning_record_api
     app.register_blueprint(
-        statement_api,
-        url_prefix='/api/statements')
+        learning_record_api,
+        url_prefix='/api/learning_records')
 
     return app
 
@@ -422,10 +424,13 @@ def log_events(log):
     on_export_report.connect(log)
 
     # file attachment event
-    from .file import on_save_file, on_get_kaltura_token, on_save_kaltura_file
+    from .file import on_save_file, on_get_kaltura_token, on_save_kaltura_file, \
+        on_attach_file, on_detach_file
     on_save_file.connect(log)
     on_get_kaltura_token.connect(log)
     on_save_kaltura_file.connect(log)
+    on_attach_file.connect(log)
+    on_detach_file.connect(log)
 
     # gradebook event
     from .gradebook import on_gradebook_get

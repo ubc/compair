@@ -79,12 +79,13 @@
                     {% endif %}
                     UploadSettings.attachmentPreviewExtensions = {{ attachment_preview_extensions|string|safe if attachment_preview_extensions else [] }};
                 }]);
-                angular.module('ubc.ctlt.compair.common.xapi')
-                .run( ['$location', 'xAPISettings', function($location, xAPISettings) {
-                    xAPISettings.enabled = {{ 'true' if xapi_enabled else 'false' }};
-                    var baseUrl = '{{xapi_app_base_url if xapi_app_base_url else ''}}';
+                angular.module('ubc.ctlt.compair.learning_records.learning_record')
+                .run( ['$location', 'LearningRecordSettings', function($location, LearningRecordSettings) {
+                    LearningRecordSettings.xapi_enabled = {{ 'true' if xapi_enabled else 'false' }};
+                    LearningRecordSettings.caliper_enabled = {{ 'true' if caliper_enabled else 'false' }};
+                    var baseUrl = '{{lrs_app_base_url if lrs_app_base_url else ''}}';
                     if (baseUrl == '') { baseUrl = $location.absUrl().replace("app/#"+$location.url(), ""); }
-                    xAPISettings.baseUrl = baseUrl;
+                    LearningRecordSettings.baseUrl = baseUrl;
                 }]);
                 angular.module('ubc.ctlt.compair.user')
                 .run( ['UserSettings', function(UserSettings) {

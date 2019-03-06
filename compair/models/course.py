@@ -39,6 +39,21 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         return self.lti_context_count > 0
 
     @hybrid_property
+    def lti_has_sis_data(self):
+        return self.lti_context_sis_count > 0
+
+    @hybrid_property
+    def lti_sis_data(self):
+        sis_data = {}
+        for lti_context in self.lti_contexts.all():
+            sis_course_id = lti_context.lis_course_offering_sourcedid
+            sis_section_id = lti_context.lis_course_section_sourcedid
+            if not sis_course_id or not sis_section_id:
+                continue
+            sis_data.setdefault(sis_course_id, []).append(sis_section_id)
+        return sis_data
+
+    @hybrid_property
     def available(self):
         now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
 
@@ -136,6 +151,17 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         cls.lti_context_count = column_property(
             select([func.count(LTIContext.id)]).
             where(LTIContext.compair_course_id == cls.id),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.lti_context_sis_count = column_property(
+            select([func.count(LTIContext.id)]).
+            where(and_(
+                LTIContext.compair_course_id == cls.id,
+                LTIContext.lis_course_offering_sourcedid != None,
+                LTIContext.lis_course_section_sourcedid != None,
+            )),
             deferred=True,
             group="counts"
         )

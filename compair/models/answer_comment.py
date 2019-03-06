@@ -9,7 +9,7 @@ from importlib import import_module
 
 from compair.core import db
 
-class AnswerComment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
+class AnswerComment(DefaultTableMixin, UUIDMixin, AttemptMixin, ActiveMixin, WriteTrackingMixin):
     __tablename__ = 'answer_comment'
 
     # table columns
