@@ -133,6 +133,25 @@ module.controller(
                 $scope.preventExit = false; //no work done. its safe to exit
             }
         );
+        
+        // default to showing answer pair at 50-50 split
+        $scope.expand = "none";
+        $scope.expandAnswer = function(whichOne) {
+            
+            //show the left or right answer full-width or go back to 50-50 default
+            switch (whichOne) {
+                case 'left':
+                    $scope.expand = "left";
+                    break;
+                case 'right':
+                    $scope.expand = "right";
+                    break;
+                default:
+                    $scope.expand = "none";
+                    break;
+            }
+            
+        };
 
         $scope.trackExited = function() {
             LearningRecordStatementHelper.exited_comparison_question(

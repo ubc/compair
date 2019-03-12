@@ -18,9 +18,24 @@
 
   /* class for divs underneath each step (indented a bit more) */
   .sub-step {
-    margin: 0 1.3em;
+    
+    margin: 0 1.2em;
+    padding-left: 2.2em;
+    border-left: 1px dashed @link-blue;
+    
+    fieldset {
+      margin-top: 1em;
+    }
+    
   }
 
+  /* hide answer pair display button options, instructions for scrollable box, and close links */
+  .pair-display,
+  .scrollable-instructions,
+  .close-link {
+    display: none;
+  }
+  
   /* class for div surrounding each answer choice */
   .answer-choice {
 
@@ -79,6 +94,28 @@
   
   @media (min-width: 993px) {
    
+    /* show answer pair display button options, instructions for scrollable box, and close links */
+    .pair-display,
+    .scrollable-instructions,
+    .close-link {
+      display: block;
+    }
+    
+    .close-link {
+      margin-top: 1.2em;
+    }
+    
+    /* selected answer expands to full width */
+    .expanded {
+      width: 100%;
+    }
+    
+    /* non-selected answer does not display */
+    .collapsed {
+      display: none;
+    }
+    
+    /* styles to restrain answer to scrollable box */
     .scrollable-answer {
       padding: 0 2em 2em 2em;
       height: 300px;
@@ -87,12 +124,18 @@
       border: 2px solid @border-gray; 
     }
    
+    /* styles to restrain comparison from to scrollable box */
     .scrollable-form {
       padding: 2em;
       height: 400px;
       overflow: auto;
       box-shadow: 2px 2px 20px 2px #efefef inset;
       border: 2px solid @border-gray; 
+    }
+    
+    /* feedback fieldset when scrollable has addtional margin */
+    .scrollable-feedback {
+      margin-bottom: 2em;
     }
   
   }//closes 993px
