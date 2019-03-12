@@ -148,7 +148,7 @@ module.service('EditorOptions', function() {
 
         linkShowTargetTab: false,
 
-        height: "150px",
+        height: "200px",
 
         // enable custom plugin that combines ASCIIMath and LaTeX math input and code highlighting
         extraPlugins: 'codesnippet,combinedmath,autolink'
