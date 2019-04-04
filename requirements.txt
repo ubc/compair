@@ -1,4 +1,4 @@
-Flask==0.12
+Flask==1.0.2
 Flask-Login==0.3.2
 Flask-Restful==0.3.5
 Flask-SQLAlchemy==2.3.2

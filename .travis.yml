@@ -1,6 +1,6 @@
 language: python
 
-dist: trusty
+dist: xenial
 
 sudo: required
 
@@ -9,7 +9,7 @@ services:
   - mysql
 
 addons:
-  mariadb: '5.5'
+  mariadb: '10.0'
 
 cache:
   apt: true
@@ -24,6 +24,8 @@ before_cache:
 python:
   - "2.7"
   - "3.6"
+  # there is no binary wheels for 3.7 and compiling it from source will fail
+  #- "3.7"
 
 stages:
   - test
@@ -54,7 +56,7 @@ jobs:
       - docker-compose -f deploy/docker/docker-compose.yml up -d; sleep 10;
       - curl -sSL http://localhost > /dev/null && curl -sS http://localhost/api/healthz > /dev/null
       # copy assets from docker image for s3 deployment
-      - docker cp docker_app_1:/code/compair/static/dist compair/static/dist
+      - docker cp $(docker ps -q --filter "label=com.docker.compose.project=docker" --filter "label=com.docker.compose.service=app"):/code/compair/static/dist compair/static/dist
       after_success:
       - ./scripts/deploy_dockerhub.sh
       - ./scripts/deploy.sh
