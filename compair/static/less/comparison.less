@@ -32,7 +32,8 @@
   /* hide answer pair display button options, instructions for scrollable box, and close links */
   .pair-display,
   .scrollable-instructions,
-  .close-link {
+  .close-link,
+  .height-control {
     display: none;
   }
   
@@ -83,6 +84,12 @@
       padding: .6em 2em;
       font-weight: bold;
     }
+    
+    /* increase contrast of selected button */
+    .btn-primary.active {
+      background-color: #204d74;
+      border-color: #122b40;
+    }
 
     /* hide the actual answer inputs (radio buttons) */
     .hideRadio {
@@ -94,13 +101,19 @@
   
   @media (min-width: 993px) {
    
-    /* show answer pair display button options, instructions for scrollable box, and close links */
-    .pair-display,
-    .scrollable-instructions,
-    .close-link {
-      display: block;
+    /* hide answer pair toggle */
+    .answer-toggle,
+    .lower-pair-display {
+      display: none;
     }
     
+    /* show answer pair display button options, instructions for scrollable box, close links */
+    .pair-display,
+    .scrollable-instructions,
+    .close-link,
+    .height-control {
+      display: block;
+    }
     .close-link {
       margin-top: 1.2em;
     }
@@ -115,10 +128,16 @@
       display: none;
     }
     
+    /* increase contrast of selected button */
+    .pair-display .btn-info.active {
+      background-color: #269abc;
+      border-color: #1b6d85;
+    }
+    
     /* styles to restrain answer to scrollable box */
     .scrollable-answer {
       padding: 0 2em 2em 2em;
-      height: 300px;
+      height: 350px;
       overflow: auto;
       box-shadow: 2px 2px 20px 2px #efefef inset;
       border: 2px solid @border-gray; 

@@ -24,7 +24,7 @@
         <div class="row">
             <hr />
             <div class="h3 text-center col-md-12" ng-show="showCountDown && !comparisonError">
-                <timer end-time="assignment.compare_end">
+                <timer end-time="assignment.compare_end" interval="1000">
                     <span ng-show="minutes > 0 || seconds > 0" title="Official time remaining until deadline" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> {{minutes}} minutes {{seconds}} seconds left</span>
                     <span ng-show="minutes == 0 && seconds == 0" class="bg-danger alert text-danger"><i class="glyphicon glyphicon-time"></i> DEADLINE REACHED</span>
                 </timer>
@@ -52,26 +52,35 @@
             <div class="pair-display col-md-12 text-center">
                 <div class="btn-group" role="group" aria-label="Answer Pair Display Options">
                     <button type="button" class="btn btn-info btn-sm" ng-class="{'active' : expand == 'left'}" ng-click="expandAnswer('left')">Expand Answer {{firstAnsNum}}</button>
-                    <button type="button" class="btn btn-info btn-sm" ng-class="{'active' : expand == 'none'}" ng-click="expandAnswer()">See Split Screen</button>
-                    <button type="button" class="btn btn-info btn-sm" ng-class="{'active' : expand == 'right'}"" ng-click="expandAnswer('right')">Expand Answer {{secondAnsNum}}</button>
+                    <button type="button" class="btn btn-info btn-sm" ng-class="{'active' : expand == 'none'}" ng-click="expandAnswer()">Show Both Answers</button>
+                    <button type="button" class="btn btn-info btn-sm" ng-class="{'active' : expand == 'right'}" ng-click="expandAnswer('right')">Expand Answer {{secondAnsNum}}</button>
                 </div>
             </div>
         </div>
 
         <div class="row">
-            <div class="col-md-6 scrollable-answer" ng-hide="comparisonError" ng-class="{'expanded' : expand == 'left', 'collapsed' : expand == 'right', '' : expand == 'none'}">
+            <div class="col-md-6 scrollable-answer" ng-style="adjustHeight" ng-hide="comparisonError" ng-class="{'expanded' : expand == 'left', 'collapsed' : expand == 'right', '' : expand == 'none'}">
                 <p class="text-right close-link" ng-click="expandAnswer()" ng-class="{'' : expand == 'left', 'collapsed' : expand == 'right', 'collapsed' : expand == 'none'}"><a href="">Close</a></p>
                 <div class="answer-choice clearfix">
                     <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{firstAnsNum}}</h3>
-                    <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum"></rich-content>
+                    <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum" display-inline="true"></rich-content>
                 </div>
             </div>
     
-            <div class="col-md-6 scrollable-answer"ng-hide="comparisonError" ng-class="{'collapsed' : expand == 'left', 'expanded' : expand == 'right', '' : expand == 'none'}">
+            <div class="col-md-6 scrollable-answer" ng-style="adjustHeight" ng-hide="comparisonError" ng-class="{'collapsed' : expand == 'left', 'expanded' : expand == 'right', '' : expand == 'none'}">
                 <p class="text-right close-link" ng-click="expandAnswer()" ng-class="{'collapsed' : expand == 'left', '' : expand == 'right', 'collapsed' : expand == 'none'}"><a href="">Close</a></p>
                 <div class="answer-choice clearfix"s>
                     <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{secondAnsNum}}</h3>
-                    <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum"></rich-content>
+                    <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum" display-inline="true"></rich-content>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="height-control col-md-12 text-center">
+                <div class="btn-group" role="group" aria-label="Answer Pair Height Controller">
+                    <button type="button" ng-disabled="noShrink" value="increase answer height" class="btn btn-info btn-sm" ng-click="changeHeight('down')"><i class="fa fa-chevron-up"></i> less</button>
+                    <button type="button" ng-disabled="noGrow" value="decrease answer height" class="btn btn-info btn-sm" ng-click="changeHeight('up')">more <i class="fa fa-chevron-down"></i></button>
                 </div>
             </div>
         </div>
@@ -155,18 +164,24 @@
                     Remember to make your comments&mdash;including criticisms&mdash;encouraging, respectful, and specific.
                 </div>
                 
-                <div class="row">
+                <p class="answer-toggle"><a href="" ng-click="showAnswers = !showAnswers">
+                    <i class="fa fa-chevron-down" ng-show="showAnswers"></i>
+                    <i class="fa fa-chevron-right" ng-hide="showAnswers"></i>
+                    Show answer pair again for Round {{current}}
+                </a></p>
+                
+                <div class="row lower-pair-display">
                     <div class="col-md-6">
                         <div ng-show="showAnswers" class="answer-choice clearfix">
                             <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{firstAnsNum}}</h3>
-                            <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum"></rich-content>
+                            <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum" display-inline="true"></rich-content>
                         </div>
                     </div>
     
                     <div class="col-md-6">
                         <div ng-show="showAnswers" class="answer-choice clearfix">
                             <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{secondAnsNum}}</h3>
-                            <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum"></rich-content>
+                            <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum" display-inline="true"></rich-content>
                         </div>
                     </div>
                 </div>
@@ -179,7 +194,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
-                                Your private feedback for Answer {{firstAnsNum}}'s author
+                                Your private feedback for <strong>Answer {{firstAnsNum}}</strong>'s author
                                 <i class="fa fa-arrow-down"></i>
                             </label>
                             <textarea id="answer1_feedback" ng-if="comparison.id"
@@ -189,7 +204,7 @@
     
                         <div class="col-md-6">
                             <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
-                                Your private feedback for Answer {{secondAnsNum}}'s author
+                                Your private feedback for <strong>Answer {{secondAnsNum}}</strong>'s author
                                 <i class="fa fa-arrow-down"></i>
                             </label>
                             <textarea id="answer2_feedback" ng-if="comparison.id"

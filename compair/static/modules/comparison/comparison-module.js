@@ -84,7 +84,7 @@ module.controller(
             }
         }
 
-        // get an comparisons to be compared from the server
+        // get a comparison to be compared from the server
         $scope.comparisonError = false;
         $scope.answer1 = {};
         $scope.answer1_feedback = {};
@@ -170,6 +170,45 @@ module.controller(
                     break;
             }
             
+        };
+        
+        /* enable answer pair height buttons to start */
+        $scope.noShrink = false;
+        $scope.noGrow = false;
+        
+        /* to change answer pair height, find current height and add or substract set amount */
+        $scope.changeHeight = function(direction) {
+            
+            var answersList = document.getElementsByClassName('scrollable-answer');
+            angular.forEach(answersList, function(elem) {
+                
+                var style = window.getComputedStyle(elem, null);
+                var currentHeight = (style.getPropertyValue('height')).slice(0, -2);
+                var growBy = 150;
+                
+                if (direction == "up") {
+                    newHeight = parseInt(currentHeight)+growBy;
+                    $scope.adjustHeight = { "height": newHeight + "px" };
+                }
+                if (direction == "down" && currentHeight > 200) {
+                    newHeight = parseInt(currentHeight)-growBy;
+                    $scope.adjustHeight = { "height": newHeight + "px" };
+                }
+                
+                /* area cannot be less than 200px or more than 950p */
+                if (newHeight <= 200) {
+                    $scope.noShrink = true;
+                    $scope.noGrow = false;
+                } else {
+                    $scope.noShrink = false;
+                    $scope.noGrow = false;
+                }
+                if (newHeight >= 950) {
+                    $scope.noGrow = true;
+                }
+           
+            });
+        
         };
 
         $scope.trackExited = function() {
