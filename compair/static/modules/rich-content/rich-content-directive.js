@@ -164,12 +164,12 @@ module.factory("embeddableRichContent",
                     return embeddableLink;
                 }
             },
-            generateAttachmentContent: function(file, downloadName) {
+            generateAttachmentContent: function(file, downloadName, displayInline) {
                 var content = {
                     type: 'attachment', // default type, should be overwritten below
                     title: file.name,
-                    displayInline: false
-                }
+                    displayInline: displayInline ? displayInline : false
+                };
                 if (file.kaltura_media) {
                     content.id = file.id;
                     content.service_url = file.kaltura_media.service_url;
@@ -239,6 +239,7 @@ module.directive('richContent',
                 content: '=',
                 attachment: '=?',
                 downloadName: '=?',
+                displayInline: '=?'
                 //attachments: '=?',
             },
             templateUrl: 'modules/rich-content/rich-content-template.html',
@@ -340,7 +341,7 @@ module.directive('richContent',
                     $scope.attachmentContent = [];
                     if ($scope.attachment) {
                         $scope.attachmentContent.push(
-                            embeddableRichContent.generateAttachmentContent($scope.attachment, $scope.downloadName)
+                            embeddableRichContent.generateAttachmentContent($scope.attachment, $scope.downloadName, $scope.displayInline)
                         );
                     }
                 };
