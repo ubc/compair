@@ -65,7 +65,7 @@ Feature: Edit Course Users
   Scenario: Removing user from group in course as instructor
     Given I'm an Instructor
     And I'm on 'edit course user' page for course with id '1abcABC123-abcABC123_Z'
-    When I set the second user's group to '- None -'
+    When I set the second user's group to '( none )'
     Then I should see a success message
 
 
