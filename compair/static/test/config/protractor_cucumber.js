@@ -5,6 +5,7 @@ exports.config = {
     //seleniumAddress: 'http://localhost:4444/wd/hub',
     //seleniumServerJar: '../../../../node_modules/protractor/selenium/selenium-server-standalone-2.47.1.jar',
     specs: ['../features/**/*.feature'],
+    directConnect: true,
     framework: 'custom',
     frameworkPath: require.resolve('protractor-cucumber-framework'),
     cucumberOpts: {
