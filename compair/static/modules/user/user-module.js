@@ -92,6 +92,9 @@ module.controller("UserWriteController",
              UserSettings, EmailNotificationMethod, $uibModal)
     {
         $scope.userId = $routeParams.userId;
+        $scope.saveAttempted = false;
+        $scope.duplicateUsername = false;
+        $scope.duplicateStudentNumber = false;
 
         $scope.user = resolvedData.user || {};
         $scope.canManageUsers = resolvedData.canManageUsers;
@@ -120,6 +123,27 @@ module.controller("UserWriteController",
             $scope.user.system_role = SystemRole.student;
         }
 
+        $scope.showErrors = function($event, formValid) {
+
+            // show error if invalid form or missing times or course start/end date/time mismatch
+            if (!formValid) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this user couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this user couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            }
+            
+        };
+        
         $scope.save = function() {
             $scope.submitted = true;
 
@@ -134,9 +158,30 @@ module.controller("UserWriteController",
                     Session.refresh();
                 }
                 $location.path('/user/' + ret.id);
-            }).$promise.finally(function() {
+            }).$promise.then(function() {
                 $scope.submitted = false;
+            }, function(ret) {
+                $scope.submitted = false;
+                if (ret.status == "409") {
+                    
+                    // handle cases where username is a duplicate
+                    if (ret.data.message.includes("username")) {
+                        $scope.problemUsername = $scope.user.username;
+                        $scope.duplicateUsername = true;
+                    }
+                    
+                    // handle cases where student number is a duplicate
+                    if (ret.data.message.includes("student number")) {
+                        $scope.problemStudentNumber = $scope.user.student_number;
+                        $scope.duplicateStudentNumber = true;
+                    }
+                    
+                    $scope.saveAttempted = true;
+                    $scope.helperMsg = "Sorry, this user couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+
+                }
             });
+            
         };
 
         $scope.showPasswordModal = function() {
@@ -162,6 +207,29 @@ module.controller(
         $scope.modalInstance = $uibModalInstance;
         $scope.submitted = false;
         $scope.password = {};
+        $scope.saveModalAttempted = false;
+        $scope.incorrectPassword = false;
+        
+        $scope.showErrors = function($event, formValid) {
+
+            // show error if invalid form or missing times or course start/end date/time mismatch
+            if (!formValid) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this password couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this password couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveModalAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            }
+            
+        };
 
         $scope.changePassword = function() {
             $scope.submitted = true;
@@ -169,8 +237,21 @@ module.controller(
                 Toaster.success("Password Saved");
                 $scope.modalInstance.close();
                 $scope.password = {};
-            }).$promise.finally(function() {
+            }).$promise.then(function() {
                 $scope.submitted = false;
+            }, function(ret) {
+                $scope.submitted = false;
+                if (ret.status == "400") {
+                    
+                    // handle cases where old password is incorrect
+                    if (ret.data.message.includes("not correct")) {
+                        $scope.problemPassword = $scope.password.oldpassword;
+                        $scope.incorrectPassword = true;
+                    }
+                    
+                    $scope.saveModalAttempted = true;
+                    $scope.helperMsg = "Sorry, this password couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                }
             });
         };
     }]
