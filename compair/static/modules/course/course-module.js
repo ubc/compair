@@ -725,10 +725,9 @@ module.controller(
         
         // check for validity on first step of duplication form
         $scope.partialValidity = function(courseName, courseYear, courseTerm, courseStart, courseEnd) {
-            if (courseName !=false && courseYear !=false && courseTerm !=false && courseStart !=false && courseEnd !=false) {
+            if (courseName !==false && courseYear !==false && courseTerm !==false && courseStart !==false && courseEnd !==false) {
                 return true;
             } else {
-                // alert(courseName +' '+ courseYear +' '+ courseTerm +' '+ courseStart +' '+ courseEnd);
                 return false;
             }
         };

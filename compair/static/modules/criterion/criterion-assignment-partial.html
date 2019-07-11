@@ -52,7 +52,7 @@
 <comparison-preview ng-show="assignment.criteria.length > 0"></comparison-preview>
 
 <div ng-show="assignment.criteria.length < 1">
-    <p>No criteria added yet for this assignment. Please select or create a new one below.</p>
+    <p class="alert alert-warning">No criteria added yet for this assignment. Please select or create a new one below.</p>
 </div>
 
 <div ng-if="!assignment.compared">
@@ -73,7 +73,7 @@
         <div class="form-group col-sm-6">
             <select id="select-default-criteria" class="form-control" ng-model="selected"
                     ng-options="key as c.name for (key, c) in availableCriteria">
-                <option value="">- Select a default criterion -</option>
+                <option value="">- Select one of your default criteria -</option>
             </select>
         </div>
         <div class="col-sm-3">

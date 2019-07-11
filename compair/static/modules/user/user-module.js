@@ -212,7 +212,7 @@ module.controller(
         
         $scope.showErrors = function($event, formValid) {
 
-            // show error if invalid form or missing times or course start/end date/time mismatch
+            // show errors if invalid form
             if (!formValid) {
                 
                 // don't submit

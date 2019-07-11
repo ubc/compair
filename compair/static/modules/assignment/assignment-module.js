@@ -1343,6 +1343,7 @@ module.controller("AssignmentWriteController",
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId || undefined;
+        $scope.saveAttempted = false;
 
         $scope.course = resolvedData.course;
         $scope.assignment = resolvedData.assignment || {};
@@ -1738,6 +1739,55 @@ module.controller("AssignmentWriteController",
             }
             return (weight * 100) / total;
         };
+        
+        
+        // decide on showing inline errors
+        $scope.showErrors = function($event, formValid, existingCriteria) {
+            
+            // assume no practice answers missing
+            $scope.missingPracticeAnswers = false;
+            
+            // check for practice answers, if this option is selected
+            if ($scope.assignment.addPractice) {
+                
+                var answer1 = $scope.comparison_example.answer1;
+                var answer2 = $scope.comparison_example.answer2;
+
+                if ((!answer1.content || answer1.content.trim() === "") && !answer1.file && (!answer1.file_alias || answer1.file_alias === "")) {
+                    $scope.missingPracticeAnswers = true;
+                    $scope.whichMissingAnswer = "Answer A";
+                }
+                
+                if ((!answer2.content || answer2.content.trim() === "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias === "")) {
+                    $scope.missingPracticeAnswers = true;
+                    $scope.whichMissingAnswer = "Answer B";
+                }
+                
+                if ( ((!answer1.content || answer1.content.trim() === "") && !answer1.file && (!answer1.file_alias || answer1.file_alias === "")) && ((!answer2.content || answer2.content.trim() === "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias === "")) ) {
+                    $scope.missingPracticeAnswers = true;
+                    $scope.whichMissingAnswer = "both answers";
+                }
+
+            }//closes if addPractice
+
+            // show errors if invalid form or no criteria set
+            if (!formValid || existingCriteria === 0) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this assignment couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this assignment couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            }
+            
+        };//closes showErrors
 
         $scope.assignmentSubmit = function () {
             $scope.submitted = true;
@@ -1795,27 +1845,6 @@ module.controller("AssignmentWriteController",
                 Toaster.warning("Assignment Not Saved", 'Please set self-evaluation end time after self-evaluation start time and save again.');
                 $scope.submitted = false;
                 return;
-            }
-
-            if ($scope.assignment.addPractice) {
-                var answer1 = $scope.comparison_example.answer1;
-                var answer2 = $scope.comparison_example.answer2;
-
-               if ( ((!answer1.content || answer1.content.trim() == "") && !answer1.file && (!answer1.file_alias || answer1.file_alias == "")) && ((!answer2.content || answer2.content.trim() == "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias == "")) ) {
-                    Toaster.warning("Assignment Not Saved", 'Please add content for answers in your practice pair and save again.');
-                    $scope.submitted = false;
-                    return;
-                }
-                if ((!answer1.content || answer1.content.trim() == "") && !answer1.file && (!answer1.file_alias || answer1.file_alias == "")) {
-                    Toaster.warning("Assignment Not Saved", 'Please add content for the first answer in your practice pair and save again.');
-                    $scope.submitted = false;
-                    return;
-                }
-                if ((!answer2.content || answer2.content.trim() == "") && !answer2.file  && (!answer2.file_alias || answer2.file_alias == "")) {
-                    Toaster.warning("Assignment Not Saved", 'Please add content for the second answer in your practice pair and save again.');
-                    $scope.submitted = false;
-                    return;
-                }
             }
 
             var promises = [];

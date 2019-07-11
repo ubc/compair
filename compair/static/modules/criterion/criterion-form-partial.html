@@ -12,8 +12,9 @@
         <legend>Criterion Details</legend>
         <compair-field-with-feedback form-control="criterionForm.criterionName">
             <label class="required-star" for="criterionName">Criterion Question</label>
-            <input type="text" maxlength="255" placeholder="e.g. Which answer is better?"
+            <input type="text" ng-maxlength="255" placeholder="e.g. Which answer is better?"
                    ng-model="criterion.name" id="criterionName" name="criterionName" class="form-control" required/>
+            <p ng-if="criterionForm.criterionName.$invalid && saveModalAttempted" class="alert alert-warning">What short question <span ng-if="criterionForm.criterionName.$error.maxlength">(maximum 255 characters)</span> should students consider for this criterion?</p>
         </compair-field-with-feedback>
         <div class="form-group">
             <label for="criterionDescription">Instructions for Students When Comparing</label>
@@ -22,14 +23,18 @@
             </textarea>
         </div>
         <div class="form-group">
-            <input type="checkbox" ng-model="criterion.default" name="criterionDefault" id="criterionDefault" />
+            <input type="checkbox" ng-model="criterion.default" name="criterionDefault" id="criterionDefault"  />
             <label for="criterionDefault">Include this criterion in my list of default criteria (to re-use it in other assignments)</label>
         </div>
     </fieldset>
-    <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
-    <div class="text-center">
-        <input type="submit" ng-click="criterionSubmit()" class="btn btn-success btn-lg" value="Save" ng-disabled="criterionForm.$invalid || submitted" />
-    </div>
+    
+    <!-- different helper messages for pre or post save attempts -->
+    <p class="text-center text-muted" ng-if="!saveModalAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    <p class="text-center text-warning" ng-if="saveModalAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
+        
+    <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
+        ng-disabled="submitted"
+        ng-click="showErrors($event, criterionForm.$valid)" />
 
     <br />
 
