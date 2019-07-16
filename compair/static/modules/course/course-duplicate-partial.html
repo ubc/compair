@@ -333,7 +333,7 @@
 
     <div class="form-group text-center">
        
-        <input type="button" class="btn btn-success btn-lg mirror-submit" value="Next &raquo;" ng-click="showFirstErrors(partialValidity(duplicateCourseForm.courseName.$valid && duplicateCourseForm.courseYear.$valid && duplicateCourseForm.courseTerm.$valid && duplicateCourseForm.courseStart.$valid && duplicateCourseForm.courseEnd.$valid), duplicateCourse.date.course_start, duplicateCourse.date.course_end)"
+        <input type="button" class="btn btn-success btn-lg mirror-submit" value="Next &raquo;" ng-click="showFirstErrors(partialValidity(duplicateCourseForm.courseName.$valid, duplicateCourseForm.courseYear.$valid, duplicateCourseForm.courseTerm.$valid, duplicateCourseForm.courseStart.$valid, duplicateCourseForm.courseEnd.$valid), duplicateCourse.date.course_start, duplicateCourse.date.course_end)"
             ng-if="!showAssignments" />
         
         <input type="button" class="btn btn-default btn-lg mirror-submit" value="&laquo; Back" ng-click="canGoBack();"

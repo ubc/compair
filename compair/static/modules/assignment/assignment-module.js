@@ -1729,7 +1729,13 @@ module.controller("AssignmentWriteController",
             $scope.assignment.criteria.forEach(function(criterion) {
                 total += criterion.weight;
             });
-            return (weight * 100) / total;
+            var calculatedPercentage = (weight * 100) / total;
+            if (calculatedPercentage) {
+                var passedPercentage = calculatedPercentage;
+            } else {
+                var passedPercentage = 0;
+            }
+            return passedPercentage;
         }
 
         $scope.getGradeWeightAsPercent = function(weight) {
@@ -1737,7 +1743,13 @@ module.controller("AssignmentWriteController",
             if ($scope.assignment.enable_self_evaluation) {
                 total += $scope.assignment.self_evaluation_grade_weight;
             }
-            return (weight * 100) / total;
+            var calculatedPercentage = (weight * 100) / total;
+            if (calculatedPercentage) {
+                var passedPercentage = calculatedPercentage;
+            } else {
+                var passedPercentage = 0;
+            }
+            return passedPercentage;
         };
         
         
@@ -1747,7 +1759,7 @@ module.controller("AssignmentWriteController",
             // need to match the formats between database and form inputs
             switch (firstNewOrCombined) {
                 case 'new':
-                    firstDate = new Date(firstDate);
+                    firstDate = firstDate ? new Date(firstDate) : null; //course end date is optional
                     break;
                 case 'combined':
                     firstDate = combineDateTime(firstDate);
@@ -1755,10 +1767,9 @@ module.controller("AssignmentWriteController",
                 default:
                     break;
             }
-            
             switch (secondNewOrCombined) {
                 case 'new':
-                    secondDate = new Date(secondDate);
+                    secondDate = secondDate ? new Date(secondDate) : null; //course end date is optional
                     break;
                 case 'combined':
                     secondDate = combineDateTime(secondDate);
@@ -1807,12 +1818,16 @@ module.controller("AssignmentWriteController",
         // decide on showing other inline errors
         $scope.showErrors = function($event, formValid) {
             
+            // check for number of criteria entered
             existingCriteria = $scope.assignment.criteria.length;
+            
+            // assume no date errors, no practice answers missing
             $scope.dateError = false;
+            $scope.missingPracticeAnswers = false;
             
             // need to match the formats between database and form inputs
             course_sdate = new Date($scope.course.start_date);
-            course_edate = new Date($scope.course.end_date);
+            course_edate = $scope.course.end_date ? new Date($scope.course.end_date): null; //course end is optional
             answer_sdate = $scope.date.astart.date ? combineDateTime($scope.date.astart) : null;
             answer_edate = $scope.date.aend.date ? combineDateTime($scope.date.aend) : null;
             compare_sdate = $scope.date.cstart.date ? combineDateTime($scope.date.cstart) : null;
@@ -1845,8 +1860,7 @@ module.controller("AssignmentWriteController",
             // self-eval starts before answer starts or
             // self-eval starts before compare starts or
             // self-eval ends after the course ends
-            if ( (answer_sdate && !$scope.date.astart.time) ||
-                 (answer_edate && !$scope.date.aend.time) ||
+            if ( (answer_sdate && !$scope.date.astart.time) || (answer_edate && !$scope.date.aend.time) ||
                  (answer_sdate && answer_edate &&
                    ( Date.parse(answer_sdate) > Date.parse(answer_edate) ||
                      (answer_sdate.toDateString() === answer_edate.toDateString() && answer_sdate.toTimeString().split(' ')[0] >= answer_edate.toTimeString().split(' ')[0]) ) )  ||
@@ -1856,8 +1870,7 @@ module.controller("AssignmentWriteController",
                  (answer_edate && course_edate &&
                    ( Date.parse(answer_edate) > Date.parse(course_edate) ||
                      (answer_edate.toDateString() === course_edate.toDateString() && $scope.date.aend.time.toTimeString().split(' ')[0] > course_edate.toTimeString().split(' ')[0]) ) ) ||
-                 (compare_sdate && !$scope.date.cstart.time) ||
-                 (compare_edate && !$scope.date.cend.time) ||
+                 (compare_sdate && !$scope.date.cstart.time) || (compare_edate && !$scope.date.cend.time) ||
                  (compare_sdate && compare_edate &&
                    ( Date.parse(compare_sdate) > Date.parse(compare_edate) ||
                      (compare_sdate.toDateString() === compare_edate.toDateString() && compare_sdate.toTimeString().split(' ')[0] >= compare_edate.toTimeString().split(' ')[0]) ) ) ||
@@ -1867,8 +1880,7 @@ module.controller("AssignmentWriteController",
                  (course_edate && compare_edate &&
                    ( Date.parse(compare_edate) > Date.parse(course_edate) ||
                      (compare_edate.toDateString() === course_edate.toDateString() && compare_edate.toTimeString().split(' ')[0] > course_edate.toTimeString().split(' ')[0]) ) ) ||
-                 (selfeval_sdate && !$scope.date.sestart.time) ||
-                 (selfeval_edate && !$scope.date.seend.time) ||
+                 (selfeval_sdate && !$scope.date.sestart.time) || (selfeval_edate && !$scope.date.seend.time) ||
                  (selfeval_sdate && selfeval_edate &&
                    ( Date.parse(selfeval_sdate) > Date.parse(selfeval_edate) ||
                      (selfeval_sdate.toDateString() === selfeval_edate.toDateString() && selfeval_sdate.toTimeString().split(' ')[0] >= selfeval_edate.toTimeString().split(' ')[0]) ) ) ||
@@ -1883,10 +1895,7 @@ module.controller("AssignmentWriteController",
                      (selfeval_edate.toDateString() === course_edate.toDateString() && selfeval_edate.toTimeString().split(' ')[0] > course_edate.toTimeString().split(' ')[0]) ) )
                ) {
                     $scope.dateError = true;
-            }
-            
-            // assume no practice answers missing
-            $scope.missingPracticeAnswers = false;
+            }//closes if dateError
             
             // check for practice answers, if this option is selected
             if ($scope.assignment.addPractice) {
@@ -1911,15 +1920,21 @@ module.controller("AssignmentWriteController",
 
             }//closes if addPractice
 
-            // show errors if invalid form or no criteria set or date error found
-            if (!formValid || existingCriteria === 0 || dateError) {
+            // show errors if invalid form (includes checking for practice answers) or no criteria set or date error found
+            if (!formValid || existingCriteria === 0 || $scope.dateError === true) {
                 
                 // don't submit
                 $event.preventDefault();
                 
+                // set which action to use in messages
+                var actionTaken = "saved";
+                if ($scope.method == "copy") {
+                    actionTaken = "duplicated";
+                }
+                
                 // set helper text and Toast
-                $scope.helperMsg = "Sorry, this assignment couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
-                $scope.helperTstrTitle = "Sorry, this assignment couldn't be saved yet";
+                $scope.helperMsg = "Sorry, this assignment couldn't be "+actionTaken+" yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this assignment couldn't be "+actionTaken+" yet";
                 $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
                 
                 // display messages
@@ -1933,12 +1948,12 @@ module.controller("AssignmentWriteController",
         $scope.assignmentSubmit = function () {
             $scope.submitted = true;
 
-            if ($scope.date.astart.date == null || $scope.date.astart.time == null ||
-                $scope.date.aend.date == null || $scope.date.aend.time == null) {
-                Toaster.warning('Assignment Not Saved', 'Please specify the start date and end date of answering period.');
-                $scope.submitted = false;
-                return;
-            }
+            //if ($scope.date.astart.date == null || $scope.date.astart.time == null ||
+            //    $scope.date.aend.date == null || $scope.date.aend.time == null) {
+            //    Toaster.warning('Assignment Not Saved', 'Please specify the start date and end date of answering period.');
+            //    $scope.submitted = false;
+            //    return;
+            //}
 
             $scope.assignment.answer_start = combineDateTime($scope.date.astart);
             $scope.assignment.answer_end = combineDateTime($scope.date.aend);
@@ -1962,31 +1977,31 @@ module.controller("AssignmentWriteController",
             }
 
             // answer end datetime has to be after answer start datetime
-            if ($scope.assignment.answer_start >= $scope.assignment.answer_end) {
-                Toaster.warning('Assignment Not Saved', 'Please set answer end time after answer start time and save again.');
-                $scope.submitted = false;
-                return;
-            } else if ($scope.assignment.availableCheck && $scope.assignment.answer_start > $scope.assignment.compare_start) {
-                Toaster.warning("Assignment Not Saved", 'Please double-check the answer and comparison start and end times for mismatches and save again.');
-                $scope.submitted = false;
-                return;
-            } else if ($scope.assignment.availableCheck && $scope.assignment.compare_start >= $scope.assignment.compare_end) {
-                Toaster.warning("Assignment Not Saved", 'Please set comparison end time after comparison start time and save again.');
-                $scope.submitted = false;
-                return;
-            } else if ($scope.assignment.availableCheck && $scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start <= $scope.assignment.compare_start) {
-                Toaster.warning("Assignment Not Saved", 'Please set self-evaluation start time after compare start time and save again.');
-                $scope.submitted = false;
-                return;
-            } else if (!$scope.assignment.availableCheck && $scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start <= $scope.assignment.answer_end) {
-                Toaster.warning("Assignment Not Saved", 'Please set self-evaluation start time after answer end time and save again.');
-                $scope.submitted = false;
-                return;
-            } else if ($scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start >= $scope.assignment.self_eval_end) {
-                Toaster.warning("Assignment Not Saved", 'Please set self-evaluation end time after self-evaluation start time and save again.');
-                $scope.submitted = false;
-                return;
-            }
+            //if ($scope.assignment.answer_start >= $scope.assignment.answer_end) {
+            //    Toaster.warning('Assignment Not Saved', 'Please set answer end time after answer start time and save again.');
+            //    $scope.submitted = false;
+            //    return;
+            //} else if ($scope.assignment.availableCheck && $scope.assignment.answer_start > $scope.assignment.compare_start) {
+            //    Toaster.warning("Assignment Not Saved", 'Please double-check the answer and comparison start and end times for mismatches and save again.');
+            //    $scope.submitted = false;
+            //    return;
+            //} else if ($scope.assignment.availableCheck && $scope.assignment.compare_start >= $scope.assignment.compare_end) {
+            //    Toaster.warning("Assignment Not Saved", 'Please set comparison end time after comparison start time and save again.');
+            //    $scope.submitted = false;
+            //    return;
+            //} else if ($scope.assignment.availableCheck && $scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start <= $scope.assignment.compare_start) {
+            //    Toaster.warning("Assignment Not Saved", 'Please set self-evaluation start time after compare start time and save again.');
+            //    $scope.submitted = false;
+            //    return;
+            //} else if (!$scope.assignment.availableCheck && $scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start <= $scope.assignment.answer_end) {
+            //    Toaster.warning("Assignment Not Saved", 'Please set self-evaluation start time after answer end time and save again.');
+            //    $scope.submitted = false;
+            //    return;
+            //} else if ($scope.assignment.selfEvalCheck && $scope.assignment.self_eval_start >= $scope.assignment.self_eval_end) {
+            //    Toaster.warning("Assignment Not Saved", 'Please set self-evaluation end time after self-evaluation start time and save again.');
+            //    $scope.submitted = false;
+            //    return;
+            //}
 
             var promises = [];
             // save duplicate version of public criteria for new assignments

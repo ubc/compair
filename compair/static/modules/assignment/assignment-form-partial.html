@@ -409,7 +409,7 @@
                 <label class="required-star">Comparisons Required from Each Student</label>
                 <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" maxlength="4" required placeholder="number of comparisons required from each student">
                 <!-- if the field is invalid AND a save attempted -->
-                <p ng-if="assignmentForm.number_of_comparisons.$invalid && saveAttempted" class="alert alert-warning">How many comparisons (minimum 1) will you require of each student, entered in numerical characters?</p>
+                <p ng-if="assignmentForm.number_of_comparisons.$invalid && saveAttempted" class="alert alert-warning">How many comparisons (minimum 1) will you require of each student, entered as a number?</p>
             </compair-field-with-feedback>
         </div>
 
@@ -529,7 +529,7 @@
                 </div>
             </div>
             <!-- if one or more fields invalid AND a save attempted -->
-            <p ng-if="(assignmentForm.answer_grade_weight.$invalid || assignmentForm.comparison_grade_weight.$invalid || assignmentForm.self_evaluation_grade_weight.$invalid) && saveAttempted" class="alert alert-warning">What relative weight (minimum 0) should each phase of the assignment receive, entered in numerical characters?</p>
+            <p ng-if="(assignmentForm.answer_grade_weight.$invalid || assignmentForm.comparison_grade_weight.$invalid || assignmentForm.self_evaluation_grade_weight.$invalid) && saveAttempted" class="alert alert-warning">What relative weight (minimum 0) should each phase of the assignment receive, entered as a number?</p>
         </div>
     </fieldset>
     

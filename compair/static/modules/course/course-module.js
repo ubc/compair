@@ -723,7 +723,7 @@ module.controller(
             }, dates[0])).toDate();
         };
         
-        // check for validity on first step of duplication form
+        // check for validity on first step of duplication form (need to pass in individual fields to check for partial validity)
         $scope.partialValidity = function(courseName, courseYear, courseTerm, courseStart, courseEnd) {
             if (courseName !==false && courseYear !==false && courseTerm !==false && courseStart !==false && courseEnd !==false) {
                 return true;
@@ -781,12 +781,11 @@ module.controller(
              
             // show error if invalid form or missing times or course start/end date/time mismatch
             if (!formValid ||
-                (courseStart.date !== null && !courseStart.time) ||
-                (courseEnd.date !== null && !courseEnd.time) ||
-                (courseStart.date && courseEnd.date &&
-                  ( (courseStart.date > courseEnd.date && courseStart.date.toDateString() != courseEnd.date.toDateString()) ||
-                    (courseStart.date.toDateString() === courseEnd.date.toDateString() && courseStart.time.toTimeString().split(' ')[0] >= courseEnd.time.toTimeString().split(' ')[0]) )) ) {
-                
+                 (courseStart.date !== null && !courseStart.time) || (courseEnd.date !== null && !courseEnd.time) ||
+                 (courseStart.date && courseEnd.date &&
+                   ( (courseStart.date > courseEnd.date && courseStart.date.toDateString() != courseEnd.date.toDateString()) ||
+                     (courseStart.date.toDateString() === courseEnd.date.toDateString() && courseStart.time.toTimeString().split(' ')[0] >= courseEnd.time.toTimeString().split(' ')[0]) )) ) {
+
                 // set helper text and Toast
                 $scope.helperMsg = "Sorry, you weren't able to go to the next step yet, but you're almost there. Simply update any highlighted information above and then try again.";
                 $scope.helperTstrTitle = "Sorry, you weren't able to go to the next step yet";
@@ -1081,11 +1080,11 @@ module.controller(
         if ($scope.method == "create") {
             $scope.course.year = new Date().getFullYear();
         } else if ($scope.method == "edit") {
-            // dates may be left blank
-            $scope.date.course_start.date = $scope.course.start_date != null ? new Date($scope.course.start_date) : null;
-            $scope.date.course_end.date = $scope.course.end_date != null ? new Date($scope.course.end_date) : null;
+            // end date may be left blank
+            $scope.date.course_start.date = new Date($scope.course.start_date);
+            $scope.date.course_end.date = $scope.course.end_date ? new Date($scope.course.end_date) : null;
             $scope.date.course_start.time = new Date($scope.course.start_date);
-            $scope.date.course_end.time = new Date($scope.course.end_date);
+            $scope.date.course_end.time = $scope.course.end_date ? new Date($scope.course.end_date) : null;
         }
 
         $scope.datePickerOpen = function($event, object) {
@@ -1144,8 +1143,7 @@ module.controller(
 
             // show error if invalid form or missing times or course start/end date/time mismatch
             if (!formValid ||
-                (courseStart.date !== null && !courseStart.time) ||
-                (courseEnd.date !== null && !courseEnd.time) ||
+                (courseStart.date && !courseStart.time) || (courseEnd.date && !courseEnd.time) ||
                 (courseStart.date && courseEnd.date &&
                   ( (courseStart.date > courseEnd.date && courseStart.date.toDateString() != courseEnd.date.toDateString()) ||
                     (courseStart.date.toDateString() === courseEnd.date.toDateString() && courseStart.time.toTimeString().split(' ')[0] >= courseEnd.time.toTimeString().split(' ')[0]) )) ) {
@@ -1180,19 +1178,6 @@ module.controller(
             } else {
                 $scope.course.end_date = null;
             }
-
-            //if ($scope.course.start_date === null) {
-            //    Toaster.warning('Course Not Saved', 'Please indicate the course start time and save again.');
-            //    $scope.submitted = false;
-            //    $scope.saveAttempted = true;
-            //    return;
-            //}
-            //else if ($scope.course.end_date !== null && $scope.course.start_date > $scope.course.end_date) {
-            //    Toaster.warning('Course Not Saved', 'Please set course end time after course start time and save again.');
-            //    $scope.submitted = false;
-            //    $scope.saveAttempted = true;
-            //    return;
-            //}
 
             CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
                 $scope.saveAttempted = false;
