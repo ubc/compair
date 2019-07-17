@@ -50,7 +50,7 @@
         </p>
         </div>
         <div class="row">
-            <div class="col-md-6 form-group">
+            <div class="col-lg-6 form-group">
                 <compair-field-with-feedback form-control="courseForm.courseStart" is-date="true">
                     <label class="required-star" for="courseStart">Course Begins</label><br />
                     <div class="assignment-date">
@@ -70,7 +70,7 @@
                     <p ng-if="dateMismatch(date.course_start, date.course_end, false) && saveAttempted" class="alert alert-warning">Make sure this course starts before it ends...</p>
                 </compair-field-with-feedback>
             </div>
-            <div class="col-md-6 form-group">
+            <div class="col-lg-6 form-group">
                 <compair-field-with-feedback form-control="courseForm.courseEnd" is-date="true">
                     <label>Course Ends <span class="optional">(optional)</span></label><br />
                     <div class="assignment-date">
@@ -85,7 +85,7 @@
                         <div uib-timepicker ng-model="date.course_end.time" minute-step="1" mousewheel="false"></div>
                     </div>
                     <!-- if the field is incomplete AND save attempted -->
-                    <p ng-if="(courseForm.courseEnd.$invalid || !date.course_end.time) && saveAttempted" class="alert alert-warning">Make sure to fill in a day (DD-Month-YYYY) and time, if you set this.</p>
+                    <p ng-if="(courseForm.courseEnd.$invalid || (date.course_end.date && !date.course_end.time)) && saveAttempted" class="alert alert-warning">Make sure to fill in a day (DD-Month-YYYY) and time, if you set this.</p>
                 </compair-field-with-feedback>
             </div>
         </div>

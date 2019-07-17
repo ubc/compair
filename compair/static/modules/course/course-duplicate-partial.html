@@ -83,7 +83,7 @@
                         <div uib-timepicker ng-model="duplicateCourse.date.course_end.time" minute-step="1" mousewheel="false"></div>
                     </div>
                     <!-- if the field is incomplete AND a next attempted -->
-                    <p ng-if="(duplicateCourseForm.courseEnd.$invalid || !duplicateCourse.date.course_end.time) && saveAttempted" class="alert alert-warning">Make sure to fill in a day (DD-Month-YYYY) and time, if you set this.</p>
+                    <p ng-if="(duplicateCourseForm.courseEnd.$invalid || (duplicateCourse.date.course_end.date && !duplicateCourse.date.course_end.time)) && saveAttempted" class="alert alert-warning">Make sure to fill in a day (DD-Month-YYYY) and time, if you set this.</p>
                 </compair-field-with-feedback>
             </div>
         </div>
@@ -102,7 +102,7 @@
         <div ng-show="duplicateAssignments.length" class="each-assignment" ng-class="{'first-child': $first}"
             ng-repeat="assignment in duplicateAssignments | orderBy:'':true">
 
-            <hr ng-hide="$first" />
+            <hr ng-hide="$first" class="assignment-divider" />
 
             <h3 class="media-heading">
                 Assignment: "{{assignment.name}}"
@@ -172,6 +172,8 @@
                     </compair-field-with-feedback>
                 </div>
             </div>
+            
+            <hr />
             
             <div class="form-group">
                 <input id="availableCheck-{{assignment.id}}" type="checkbox" ng-model="assignment.availableCheck">
@@ -243,6 +245,9 @@
                 </div>
                 <div class="col-md-1"></div>
             </div>
+            
+            <hr />
+            
             <div class="row">
                 <div class="col-md-12 form-group">
                     <label class="required-star">Self-Evaluation</label>
@@ -259,6 +264,7 @@
                     </label>
                 </div>
             </div>
+            
             <div class="row" ng-show="assignment.enable_self_evaluation">
                 <div class="col-md-12 form-group">
                     <input id="selfEvalCheck-{{assignment.id}}" type="checkbox" ng-model="assignment.selfEvalCheck">
@@ -270,7 +276,7 @@
                             <div class="col-md-1"></div>
                             <div class="col-md-5 form-group">
                                 <compair-field-with-feedback form-control="duplicateCourseForm['selfeval' + ($index+1) + 'Start']" is-date="true">
-                                    <label class="required-star">Self-Evaluation Begins {{assignment.date.astart.time.toTimeString()}} {{assignment.date.cstart.time.toTimeString()}} {{assignment.date.sestart.time.toTimeString()}}</label><br />
+                                    <label class="required-star">Self-Evaluation Begins</label><br />
                                     <div class="assignment-date">
                                         <span class="input-group">
                                             <input id="selfeval{{$index+1}}Start" name="selfeval{{$index+1}}Start" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="assignment.date.sestart.date"
@@ -325,6 +331,9 @@
                 </div>
             </div>
         </div>
+        <div ng-show="duplicateAssignments.length === 0">
+            <p>(No assignments for you to manage dates for here, as your duplicated course did not have any.  Simply click "Duplicate" below and you will be good to go!)</p>
+        </div>
     </fieldset>
     
     <!-- different helper messages for pre or post save attempts -->
@@ -333,7 +342,7 @@
 
     <div class="form-group text-center">
        
-        <input type="button" class="btn btn-success btn-lg mirror-submit" value="Next &raquo;" ng-click="showFirstErrors(partialValidity(duplicateCourseForm.courseName.$valid, duplicateCourseForm.courseYear.$valid, duplicateCourseForm.courseTerm.$valid, duplicateCourseForm.courseStart.$valid, duplicateCourseForm.courseEnd.$valid), duplicateCourse.date.course_start, duplicateCourse.date.course_end)"
+        <input type="button" class="btn btn-default btn-lg mirror-submit" value="Next &raquo;" ng-click="showFirstErrors(partialValidity(duplicateCourseForm.courseName.$valid, duplicateCourseForm.courseYear.$valid, duplicateCourseForm.courseTerm.$valid, duplicateCourseForm.courseStart.$valid, duplicateCourseForm.courseEnd.$valid), duplicateCourse.date.course_start, duplicateCourse.date.course_end)"
             ng-if="!showAssignments" />
         
         <input type="button" class="btn btn-default btn-lg mirror-submit" value="&laquo; Back" ng-click="canGoBack();"

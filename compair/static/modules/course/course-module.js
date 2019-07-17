@@ -491,6 +491,76 @@ module.controller(
             object.opened = true;
         };
 
+        // check dates against one another for inline error display
+        $scope.dateMismatch = function(firstDate, secondDate, canBeEqual) {
+          
+            if (firstDate !== undefined && secondDate !== undefined) {
+               
+                if (firstDate.date && secondDate.date && firstDate.time && secondDate.time) {
+                   
+                    // is the date the same?
+                    if (firstDate.date.toDateString() === secondDate.date.toDateString()) {
+
+                            // can the start and end time be the same?
+                            if (canBeEqual) {
+                                // does the end time follow or equal the start time?
+                                if (firstDate.time.toTimeString().split(' ')[0] <= secondDate.time.toTimeString().split(' ')[0]) {
+                                    return false; 
+                                } else {
+                                    return true; // show errors
+                                }
+                            } else {
+                                // does the end time follow the start time?
+                                if (firstDate.time.toTimeString().split(' ')[0] < secondDate.time.toTimeString().split(' ')[0]) {
+                                    return false;
+                                } else {
+                                    return true; // show errors
+                                }
+                            }
+                            
+                    } else {
+                            
+                            // does the end date follow the start date?
+                            if (firstDate.date < secondDate.date) {
+                                return false;
+                            } else {
+                                return true; // show errors
+                            }
+
+                    }//closes if equal
+                
+                }//closes if date/time
+            
+            }//closes if undefined
+       
+        };
+        
+        // decide on showing inline errors for course add/edit form
+        $scope.showErrors = function($event, formValid, courseStart, courseEnd) {
+
+            // show error if invalid form or missing times or course start/end date/time mismatch
+            if (!formValid ||
+                (courseStart.date && !courseStart.time) || (courseEnd.date && !courseEnd.time) ||
+                (courseStart.date && courseEnd.date &&
+                  ( (courseStart.date > courseEnd.date && courseStart.date.toDateString() != courseEnd.date.toDateString()) ||
+                    (courseStart.date.toDateString() === courseEnd.date.toDateString() && courseStart.time.toTimeString().split(' ')[0] >= courseEnd.time.toTimeString().split(' ')[0]) )) ) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this course couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this course couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            }
+            
+        };
+        
         $scope.save = function() {
             $scope.submitted = true;
 
@@ -503,17 +573,6 @@ module.controller(
                 $scope.course.end_date = combineDateTime($scope.date.course_end);
             } else {
                 $scope.course.end_date = null;
-            }
-
-            if ($scope.course.start_date == null) {
-                Toaster.warning('Course Not Saved', 'Please indicate the course start time and save again.');
-                $scope.submitted = false;
-                return;
-            }
-            else if ($scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
-                Toaster.warning('Course Not Saved', 'Please set course end time after course start time and save again.');
-                $scope.submitted = false;
-                return;
             }
 
             CourseResource.save({}, $scope.course, function (ret) {
