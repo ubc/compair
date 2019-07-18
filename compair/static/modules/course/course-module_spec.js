@@ -674,7 +674,7 @@ describe('course-module', function () {
 
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please set answer end time after answer start time and try again.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Course Not Duplicated', 'Please set answer end time for "'+$rootScope.duplicateAssignments[0].name+'" after answer start time and try again.');
                     expect($location.path()).toEqual('');
                 });
 
@@ -685,7 +685,7 @@ describe('course-module', function () {
 
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please double-check the answer and comparison start and end times for mismatches and try again.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Course Not Duplicated', 'Please set comparison start time for "'+$rootScope.duplicateAssignments[0].name+'" after answer start time and try again.');
                     expect($location.path()).toEqual('');
                 });
 
@@ -698,7 +698,7 @@ describe('course-module', function () {
 
                     $rootScope.duplicate();
                     expect($rootScope.submitted).toBe(false);
-                    expect(toaster.warning).toHaveBeenCalledWith('Assignment Not Duplicated', 'Please set comparison end time after comparison start time and try again.');
+                    expect(toaster.warning).toHaveBeenCalledWith('Course Not Duplicated', 'Please set comparison end time for "'+$rootScope.duplicateAssignments[0].name+'" after comparison start time and try again.');
                     expect($location.path()).toEqual('');
                 });
 
