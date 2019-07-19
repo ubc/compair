@@ -14,7 +14,7 @@ Feature: Edit LTI Consumers
     And I fill form item 'consumer.oauth_consumer_secret' in with 'new_consumer_secret_1'
     And I fill form item 'consumer.global_unique_identifier_param' in with 'new_global_unique_identifier_param'
     And I fill form item 'consumer.student_number_param' in with 'new_student_number_param'
-    And I toggle the 'Active' checkbox
+    And I toggle the 'This consumer is actively being used' checkbox
     And I submit form with the 'Save' button
     Then I should be on the 'manage lti' page
     And I should see '3' consumers listed

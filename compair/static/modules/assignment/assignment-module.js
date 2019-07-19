@@ -1756,62 +1756,62 @@ module.controller("AssignmentWriteController",
         // check dates against one another for inline error display
         $scope.dateMismatch = function(firstDate, secondDate, canBeEqual, firstNewOrCombined, secondNewOrCombined) {
             
-            // need to match the formats between database and form inputs
-            switch (firstNewOrCombined) {
-                case 'new':
-                    firstDate = firstDate ? new Date(firstDate) : null; //course end date is optional
-                    break;
-                case 'combined':
-                    firstDate = combineDateTime(firstDate);
-                    break;
-                default:
-                    break;
-            }
-            switch (secondNewOrCombined) {
-                case 'new':
-                    secondDate = secondDate ? new Date(secondDate) : null; //course end date is optional
-                    break;
-                case 'combined':
-                    secondDate = combineDateTime(secondDate);
-                    break;
-                default:
-                    break;
-            }
-          
-            if (firstDate !== undefined && secondDate !== undefined) {
-                   
-                    // is the date the same?
-                    if (firstDate.toDateString() === secondDate.toDateString()) {
-
-                            // can the start and end time be the same?
-                            if (canBeEqual) {
-                                // does the end time follow or equal the start time?
-                                if (firstDate.toTimeString().split(' ')[0] <= secondDate.toTimeString().split(' ')[0]) {
-                                    return false; 
-                                } else {
-                                    return true; // show errors
-                                }
-                            } else {
-                                // does the end time follow the start time?
-                                if (firstDate.toTimeString().split(' ')[0] < secondDate.toTimeString().split(' ')[0]) {
-                                    return false;
-                                } else {
-                                    return true; // show errors
-                                }
-                            }
-                            
-                    } else {
-                            
-                            // does the end date follow the start date?
-                            if (Date.parse(firstDate) < Date.parse(secondDate)) {
-                                return false;
-                            } else {
-                                return true; // show errors
-                            }
-        
-                    }//closes if equal
+            if (firstDate && firstDate !== undefined && secondDate && secondDate !== undefined) {
                 
-                }//closes if date/time
+                // need to match the formats between database and form inputs
+                switch (firstNewOrCombined) {
+                    case 'new':
+                        firstDate = firstDate ? new Date(firstDate) : null; //course end date is optional
+                        break;
+                    case 'combined':
+                        firstDate = combineDateTime(firstDate);
+                        break;
+                    default:
+                        break;
+                }
+                switch (secondNewOrCombined) {
+                    case 'new':
+                        secondDate = secondDate ? new Date(secondDate) : null; //course end date is optional
+                        break;
+                    case 'combined':
+                        secondDate = combineDateTime(secondDate);
+                        break;
+                    default:
+                        break;
+                }
+                
+                // is the date the same?
+                if (firstDate.toDateString() === secondDate.toDateString()) {
+
+                    // can the start and end time be the same?
+                    if (canBeEqual) {
+                        // does the end time follow or equal the start time?
+                        if (firstDate.toTimeString().split(' ')[0] <= secondDate.toTimeString().split(' ')[0]) {
+                            return false; 
+                        } else {
+                            return true; // show errors
+                        }
+                    } else {
+                        // does the end time follow the start time?
+                        if (firstDate.toTimeString().split(' ')[0] < secondDate.toTimeString().split(' ')[0]) {
+                            return false;
+                        } else {
+                            return true; // show errors
+                        }
+                    }
+                         
+                } else {
+                         
+                    // does the end date follow the start date?
+                    if (Date.parse(firstDate) < Date.parse(secondDate)) {
+                        return false;
+                    } else {
+                        return true; // show errors
+                    }
+     
+                }//closes if equal
+             
+            }//closes if date/time
             
         };
         

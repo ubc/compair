@@ -494,7 +494,7 @@ module.controller(
         // check dates against one another for inline error display
         $scope.dateMismatch = function(firstDate, secondDate, canBeEqual) {
           
-            if (firstDate !== undefined && secondDate !== undefined) {
+            if (firstDate && firstDate !== undefined && secondDate && secondDate !== undefined) {
                
                 if (firstDate.date && secondDate.date && firstDate.time && secondDate.time) {
                    
@@ -806,7 +806,7 @@ module.controller(
         // check dates against one another for inline error display
         $scope.dateMismatch = function(firstDate, secondDate, canBeEqual) {
           
-            if (firstDate !== undefined && secondDate !== undefined ) {
+            if (firstDate && firstDate !== undefined && secondDate && secondDate !== undefined ) {
                
                 if (firstDate.date && secondDate.date && firstDate.time && secondDate.time) {
                    
@@ -1159,7 +1159,7 @@ module.controller(
         // check dates against one another for inline error display
         $scope.dateMismatch = function(firstDate, secondDate, canBeEqual) {
           
-            if (firstDate !== undefined && secondDate !== undefined) {
+            if (firstDate && firstDate !== undefined && secondDate && secondDate !== undefined) {
                
                 if (firstDate.date && secondDate.date && firstDate.time && secondDate.time) {
                    
