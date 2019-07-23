@@ -86,7 +86,10 @@ module.controller(
         $scope.course_roles = [CourseRole.student, CourseRole.teaching_assistant, CourseRole.instructor];
 
         $scope.groupAddOptions = Array( {'id':'-1',  'name':'--------------------', 'disabled':true},
-                                        {'id':'add', 'name':'Add new group'});
+                                        {'id':'add', 'name':'Add new group'},
+                                        {'id':'manage', 'name':'Manage group names'});
+        $scope.bulkGroupAddOptions = Array( {'id':'-1',  'name':'--------------------', 'disabled':true},
+                                            {'id':'manage', 'name':'Manage group names'});
 
         if ($scope.course.lti_linked) {
             LTIResource.getMembershipStatus({id: $scope.courseId},
@@ -118,6 +121,7 @@ module.controller(
         $scope.addUsersToNewGroup = function() {
             var modalScope = $scope.$new();
             modalScope.courseId = $scope.courseId;
+            modalScope.createNewGroup = true;
 
             var modalInstance = $uibModal.open({
                 animation: true,
@@ -135,6 +139,31 @@ module.controller(
                 LearningRecordStatementHelper.closed_modal("Edit Group");
             }, function () {
                 LearningRecordStatementHelper.closed_modal("Edit Group");
+            });
+        };
+
+         $scope.manageGroups = function() {
+            var modalScope = $scope.$new();
+            modalScope.courseId = $scope.courseId;
+
+            var modalInstance = $uibModal.open({
+                animation: true,
+                backdrop: 'static',
+                controller: "ManageGroupsModalController",
+                templateUrl: 'modules/group/groups-manage-modal-partial.html',
+                scope: modalScope
+            });
+
+            modalInstance.opened.then(function() {
+                xAPIStatementHelper.opened_modal("Edit Group");
+            });
+            modalInstance.result.finally(function () {
+                // refresh groups
+                GroupResource.get({'courseId': modalScope.courseId}).$promise
+                    .then(function(ret) {
+                        $scope.groups = ret.objects;
+                    });
+                xAPIStatementHelper.closed_modal("Edit Group");
             });
         };
 
@@ -166,6 +195,13 @@ module.controller(
             }
         };
 
+        $scope.bulkGroupSelected = function(group_id) {
+            if (group_id == 'manage') {
+                $scope.selectedGroup = "";
+                $scope.manageGroups();
+            }
+        };
+
         $scope.updateUsers = function(courseRole) {
             var selectedUserIds = $scope.classlist.filter(function(user) {
                 return user.selected;
@@ -194,6 +230,7 @@ module.controller(
             var modalScope = $scope.$new();
             modalScope.courseId = $scope.courseId;
             modalScope.groups = $scope.groups;
+            modalScope.createNewGroup = true;
 
             var modalInstance = $uibModal.open({
                 animation: true,
@@ -217,7 +254,11 @@ module.controller(
 
         $scope.updateGroup = function(user, reload, original_group_id) {
             if (user.group_id == 'add') {
+                $scope.createNewGroup = true;
                 $scope.addUserToNewGroup(user);
+                user.group_id = original_group_id;
+            } else if (user.group_id == 'manage') {
+                $scope.manageGroups();
                 user.group_id = original_group_id;
             } else if (user.group_id) {
                 GroupUserResource.add({'courseId': $scope.courseId, 'userId': user.id, 'groupId': user.group_id}, {},

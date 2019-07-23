@@ -1,0 +1,32 @@
+<modal-cancel-button modal-instance="modalInstance" ng-show="modalInstance !== undefined">
+</modal-cancel-button>
+<h1>Manage Group Names</h1>
+<p class="intro-text">Edit or delete existing group names, provided they have not already been used in a group-based assignment. Deleting a group will not delete any students assigned to the group. These students will simply be assigned to no group.</p>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Actions</th>
+                <th>
+                    Group Name
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr ng-repeat="group in groups">
+                <td class="nowrap">
+                    <a href="" data-ng-click="groupEdit(group.id)" target="_blank">Edit</a>
+                    <span>&nbsp;|&nbsp;</span>
+                    <a href="" ng-if="!group.group_answer_exists" confirmation-needed="groupDelete(group.id)" keyword="group name and assign the students in it to no group">Delete</a>
+                    <span ng-if="group.group_answer_exists" uib-tooltip="You cannot remove groups that have submitted answers.">&nbsp;&nbsp;—&nbsp;&nbsp;</span>
+                </td>
+                <td>{{group.name}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<br />
+<div class="text-center">
+    <input type="submit" ng-click="modalDone()" class="btn btn-success btn-lg" value="Done" />
+</div>

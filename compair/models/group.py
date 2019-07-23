@@ -2,8 +2,9 @@ import hashlib
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import func, select, and_, or_, exists
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import column_property
 
 from . import *
 
@@ -57,7 +58,14 @@ class Group(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     def __declare_last__(cls):
         super(cls, cls).__declare_last__()
 
-    __table_args__ = (
-        db.UniqueConstraint('course_id', 'name', name='uq_course_and_group_name'),
-        DefaultTableMixin.default_table_args
-    )
+        cls.group_answer_exists = column_property(
+            exists([1]).
+            where(and_(
+                Answer.group_id == cls.id,
+                Answer.practice == False,
+                Answer.active == True,
+                Answer.draft == False
+            )),
+            deferred=True,
+            group="answer_associates"
+        )

@@ -68,13 +68,14 @@
             </div>
             <div class="form-group col-sm-4">
                 <select id="select-group" class="form-control" ng-model="selectedGroup"
-                    ng-options="group.id as group.name for group in groups" ng-disabled="!groups.length">
+                    ng-options="group.id as group.name disable when group.disabled for group in groups.concat(bulkGroupAddOptions)"
+                    ng-disabled="!groups.length" ng-change="bulkGroupSelected(selectedGroup)">
                     <option value="">- Select existing group -</option>
                 </select>
             </div>
             <div class="col-sm-3">
                 <button id="add-select-group" class="btn btn-sm btn-success" ng-click="addUsersToGroup(selectedGroup)"
-                    ng-disabled="!selectedGroup">Apply</button>
+                    ng-disabled="!selectedGroup || selectedGroup=='manage'">Apply</button>
             </div>
         </div>
         <div class="col-sm-9" ng-show="bulkActions == 'drop'">

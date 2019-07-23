@@ -133,6 +133,7 @@ def get_group():
         'course_id': fields.String(attribute="course_uuid"),
         'name': fields.String,
         'avatar': fields.String,
+        'group_answer_exists': fields.Boolean,
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))
     }
