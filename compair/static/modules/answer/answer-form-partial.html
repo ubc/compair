@@ -41,7 +41,7 @@
                 <p>Allowed file types for attachments include {{ UploadValidator.getAttachmentExtensionsForDisplay() }}, with a maximum file size of <strong>{{UploadValidator.getAttachmentUploadLimit() | filesize }}</strong>. Any file changes will be saved when you <strong>save or submit this answer</strong> but not before.</p>
         </div>
 
-        <div class="form-group" ng-if="!assignment.enable_group_answers && canManageAssignment && answer.draft && comparison_example !== true">
+        <div class="form-group" ng-class="{'has-error':!answer.user_id}" ng-if="!assignment.enable_group_answers && canManageAssignment && answer.draft && comparison_example !== true">
             <label class="required-star" for="user_id">Submit As</label>
             <select id="user_id" name="user_id" required
                     ng-model="answer.user_id" class="form-control" chosen width="'100%'"
@@ -50,28 +50,35 @@
                 <option value="">- Select a user -</option>
             </select>
         </div>
+        
+        <div class="row">
 
-        <div class="form-group" ng-if="assignment.enable_group_answers && canManageAssignment && answer.draft && comparison_example !== true">
-            <label class="required-star" for="user_id">Submit As Instructor/Teaching Assistant</label>
-            <select id="user_id" name="user_id" required-if="!answer.group_id"
-                    ng-model="answer.user_id" class="form-control" chosen width="'100%'"
-                    ng-options="user.id as user.name for user in instructors"
-                    ng-change="submitAsUserChanged(answer.user_id)">
-                <option value="">- Select a user -</option>
-            </select>
+            <div class="form-group col-md-6" ng-class="{'has-error':!answer.user_id && !answer.group_id}" ng-if="assignment.enable_group_answers && canManageAssignment && answer.draft && comparison_example !== true">
+                <label class="required-star" for="user_id">Submit As Instructor/Teaching Assistant</label>
+                <select id="user_id" name="user_id" required-if="!answer.group_id"
+                        ng-model="answer.user_id" class="form-control" chosen width="'100%'"
+                        ng-options="user.id as user.name for user in instructors"
+                        ng-change="submitAsUserChanged(answer.user_id)">
+                    <option value="">- Select a user -</option>
+                </select>
+            </div>
+    
+            <div class="form-group col-md-6" ng-class="{'has-error':!answer.user_id && !answer.group_id}" ng-if="assignment.enable_group_answers && groups.length > 0 && canManageAssignment && answer.draft && comparison_example !== true">
+                <label class="required-star" for="group_id">Or As Student Group</label>
+                <select id="group_id" name="group_id" required-if="!answer.user_id"
+                        ng-model="answer.group_id" class="form-control" chosen width="'100%'"
+                        ng-options="group.id as group.name for group in groups"
+                        ng-change="submitAsGroupChanged()">
+                    <option value="">- Select a group -</option>
+                </select>
+            </div>
+        
         </div>
+        
+        <!--if not a student/example AND no one credited AND save attempted -->
+        <p class="alert alert-warning" ng-if="canManageAssignment && comparison_example !== true && (!answer.user_id && !answer.group_id) && saveAnswerAttempted">Who should be credited with this answer?</p>
 
-        <div class="form-group" ng-if="assignment.enable_group_answers && groups.length > 0 && canManageAssignment && answer.draft && comparison_example !== true">
-            <label class="required-star" for="group_id">Or As Group</label>
-            <select id="group_id" name="group_id" required-if="!answer.user_id"
-                    ng-model="answer.group_id" class="form-control" chosen width="'100%'"
-                    ng-options="group.id as group.name for group in groups"
-                    ng-change="submitAsGroupChanged()">
-                <option value="">- Select a group -</option>
-            </select>
-        </div>
-
-        <div class="form-group" ng-if="canManageAssignment && !selectedIsStudent && comparison_example !== true">
+        <div class="form-group" ng-if="canManageAssignment && !selectedIsStudent && comparison_example !== true && answer.user_id == loggedInUserId">
             <label for="comparable" ng-class="!answer.draft ? 'text-muted not-bold' : ''">
                 <input type="checkbox" id="comparable" name="comparable"
                     ng-model="answer.comparable"
@@ -128,21 +135,29 @@
             </div>
             <br />
         </div>
+        
+        <!-- if no answer content provided AND save attempted -->
+        <p class="alert alert-warning" ng-if="(!answer.content && uploader.queue.length < 1) && saveAnswerAttempted">Please add content in the form of a file upload (above) or rich text (below) to save or submit this answer.</p>
+        
         <div class="form-group">
             <textarea ng-model="answer.content" id="answerContent"
                 class="form-control" rows="8" ckeditor="editorOptions" ng-required="!(uploader.queue.length || uploadedFile || answer.file)">
             </textarea>
         </div>
     </fieldset>
-    <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    
+    <!-- different helper messages for pre or post save attempts -->
+    <p class="text-center text-muted" ng-if="!saveAnswerAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    <p class="text-center text-warning" ng-if="saveAnswerAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
+
     <div class="text-center" ng-show="answer.draft && (!canManageAssignment || answer.user_id == loggedInUserId)">
-        <input type="submit" ng-show="!canManageAssignment" class="btn btn-default btn-lg" value="Save Draft"
-            ng-click="answerSubmit(true)"
-            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+        <input type="submit" class="btn btn-default btn-lg" value="Save Draft" ng-show="!canManageAssignment"
+            ng-click="showErrors($event, answerForm.$valid, answer.content, uploader.queue.length, true)"
+            ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
         &nbsp; &nbsp;
         <input type="submit" class="btn btn-success btn-lg" value="Submit"
-            ng-click="answerSubmit()"
-            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+            ng-click="showErrors($event, answerForm.$valid, answer.content, uploader.queue.length, false)"
+            ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
         <p ng-if="submitted && !saveDraft && !isImpersonating">
                 <i class="fa fa-spin fa-spinner"></i>
                 &nbsp; Submitting answer...
@@ -154,8 +169,8 @@
     </div>
     <div ng-show="!answer.draft || (canManageAssignment && answer.user_id != loggedInUserId)" class="text-center">
         <input type="submit" class="btn btn-success btn-lg center-block" value="Save"
-            ng-click="answerSubmit()"
-            ng-disabled="answerForm.$invalid || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+            ng-click="showErrors($event, answerForm.$valid, answer.content, uploader.queue.length, false)"
+            ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
         <p ng-if="submitted">
                 <i class="fa fa-spin fa-spinner"></i>
                 &nbsp; Saving answer...

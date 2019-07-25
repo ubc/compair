@@ -119,6 +119,7 @@ module.controller(
         $scope.selectedIsStudent = false;
         $scope.isImpersonating = Session.isImpersonating();
         $scope.answer.rotated = false;
+        $scope.saveAnswerAttempted = false;
 
         if ($scope.method == "create") {
             $scope.answer = {
@@ -205,6 +206,36 @@ module.controller(
             $scope.answer.comparable = true;
             $scope.answer.user_id = null;
         }
+        
+        // decide on showing inline errors
+        $scope.showErrors = function($event, formValid, answerContent, existingFile, saveOnly) {
+
+            // show errors if invalid form and no answer content written or uploaded
+            if (!formValid && (!answerContent && existingFile < 1)) {
+
+                // don't save/submit
+                $event.preventDefault();
+
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this answer couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this answer couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+
+                // display messages
+                $scope.saveAnswerAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+
+            } else {
+                
+                if (saveOnly) {
+                    $scope.answerSubmit(true); // save draft
+                } else {
+                    $scope.answerSubmit(false); // submit answer
+                }
+                
+            }//closes if valid
+
+        };//closes showErrors
 
         $scope.answerSubmit = function (saveDraft) {
             $scope.submitted = true;
@@ -282,6 +313,7 @@ module.controller(
         $scope.uploader = answerAttachService.getUploader();
         $scope.resetFileUploader = answerAttachService.reset;
         $scope.canSupportPreview = answerAttachService.canSupportPreview;
+        $scope.saveAnswerAttempted = false;
 
         if ($scope.method == 'create') {
             $scope.answer.existingFile = false;
@@ -315,6 +347,36 @@ module.controller(
             $scope.answer.uploadedFile = false;
         };
 
+        // decide on showing inline errors
+        $scope.showErrors = function($event, formValid, answerContent, existingFile, saveOnly) {
+
+            // show errors if invalid form and no answer content written or uploaded
+            if (!formValid && (!answerContent && existingFile < 1)) {
+
+                // don't save/submit
+                $event.preventDefault();
+
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this answer couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this answer couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+
+                // display messages
+                $scope.saveAnswerAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+
+            } else {
+                
+                if (saveOnly) {
+                    $scope.answerSubmit(true); // save draft
+                } else {
+                    $scope.answerSubmit(false); // submit answer
+                }
+                
+            }//closes if valid
+
+        };//closes showErrors
+        
         $scope.answerSubmit = function (saveDraft) {
             $scope.saveDraft = saveDraft;
             $scope.submitted = true;
