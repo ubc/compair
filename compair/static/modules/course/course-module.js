@@ -804,44 +804,44 @@ module.controller(
         };
         
         // check dates against one another for inline error display
-        $scope.dateMismatch = function(firstDate, secondDate, canBeEqual) {
+        $scope.dateMismatch = function(firstDate, secondDate, canBeEqual) {          
           
             if (firstDate && firstDate !== undefined && secondDate && secondDate !== undefined ) {
-               
-                if (firstDate.date && secondDate.date && firstDate.time && secondDate.time) {
-                   
-                    // is the date the same?
-                    if (firstDate.date.toDateString() === secondDate.date.toDateString()) {
-
-                            // can the start and end time be the same?
-                            if (canBeEqual) {
-                                // does the end time follow or equal the start time?
-                                if (firstDate.time.toTimeString().split(' ')[0] <= secondDate.time.toTimeString().split(' ')[0]) {
-                                    return false; 
-                                } else {
-                                    return true; // show errors
-                                }
-                            } else {
-                                // does the end time follow the start time?
-                                if (firstDate.time.toTimeString().split(' ')[0] < secondDate.time.toTimeString().split(' ')[0]) {
-                                    return false;
-                                } else {
-                                    return true; // show errors
-                                }
-                            }
-                            
-                    } else {
-                            
-                            // does the end date follow the start date?
-                            if (firstDate.date < secondDate.date) {
-                                return false;
-                            } else {
-                                return true; // show errors
-                            }
-
-                    }//closes if equal
                 
-                }//closes if date/time
+                // combine date and time
+                firstDate = combineDateTime(firstDate);
+                secondDate = combineDateTime(secondDate);
+         
+                // is the date the same?
+                if (firstDate.toDateString() === secondDate.toDateString()) {
+
+                    // can the start and end time be the same?
+                    if (canBeEqual) {
+                        // does the end time follow or equal the start time?
+                        if (firstDate.toTimeString().split(' ')[0] <= secondDate.toTimeString().split(' ')[0]) {
+                            return false; 
+                        } else {
+                            return true; // show errors
+                        }
+                    } else {
+                        // does the end time follow the start time?
+                        if (firstDate.toTimeString().split(' ')[0] < secondDate.toTimeString().split(' ')[0]) {
+                            return false;
+                        } else {
+                            return true; // show errors
+                        }
+                    }
+                        
+                } else {
+                        
+                    // does the end date follow the start date?
+                    if (Date.parse(firstDate) < Date.parse(secondDate)) {
+                        return false;
+                    } else {
+                        return true; // show errors
+                    }
+
+                }//closes if equal
             
             }//closes if undefined
        
@@ -1043,7 +1043,7 @@ module.controller(
                     compare_end: assignment.availableCheck ? combineDateTime(assignment.date.cend) : null,
                     enable_self_evaluation: assignment.enable_self_evaluation,
                     self_eval_start: assignment.enable_self_evaluation && assignment.selfEvalCheck ? combineDateTime(assignment.date.sestart) : null,
-                    self_eval_end: assignment.enable_self_evaluation && assignment.selfEvalCheck ? combineDateTime(assignment.datea.seend) : null,
+                    self_eval_end: assignment.enable_self_evaluation && assignment.selfEvalCheck ? combineDateTime(assignment.date.seend) : null,
                 }
 
                 // second-tier error catching
@@ -1060,14 +1060,14 @@ module.controller(
                     Toaster.warning('Course Not Duplicated', 'Please set comparison end time for "'+assignment_submit.name+'" after comparison start time and try again.');
                     $scope.submitted = false;
                     return;
-                } else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start > assignment_submit.answer_start) {
+                } else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start < assignment_submit.answer_start) {
                     Toaster.warning('Course Not Duplicated', 'Please set self-evaluation start time for "'+assignment_submit.name+'" after answer start time and try again.');
                     $scope.submitted = false;
                     return;
-                } else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start > assignment_submit.compare_start) {
-                    Toaster.warning('Course Not Duplicated', 'Please set self-evaluation start time for "'+assignment_submit.name+'" after comparison start time and try again.');
-                    $scope.submitted = false;
-                    return;
+                //} else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start < assignment_submit.compare_start) {
+                //    Toaster.warning('Course Not Duplicated', 'Please set self-evaluation start time for "'+assignment_submit.name+'" after comparison start time and try again.');
+                //    $scope.submitted = false;
+                //    return;
                 } else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start >= assignment_submit.self_eval_end) {
                     Toaster.warning('Course Not Duplicated', 'Please set self-evaluation end time for "'+assignment_submit.name+'" after self-evaluation start time and try again.');
                     $scope.submitted = false;
