@@ -119,10 +119,12 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- if no answer chosen AND save attempted -->
+                        <p class="alert alert-warning" ng-if="!comparison_criterion.winner && saveAttempted">Which answer do you think better meets this criterion? Choose below.</p>
                         <div class="row">
                             <div class="col-sm-12 text-center">
                                 <p class="required-star"><strong>Select Your Choice</strong></p>
-                                <div class="btn-group">
+                                <div class="btn-group" ng-class="{'has-error': !comparison_criterion.winner && saveAttempted}">
                                     <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer1 }">
                                         <img ng-src="img/white-scale-icon-16x16.png" alt="ComPAIR Scale Logo"><input type="radio" class="hideRadio"
                                             name="answer{{answer1.id}}" required
@@ -144,8 +146,7 @@
                 </div>
 
             </div>
-
-            <br />
+            
             <hr />
 
             <h3 class="col-md-12">2) Give detailed feedback to the author of each answer</h3>
@@ -189,15 +190,19 @@
             <div class="col-md-12 sub-step scrollable-feedback">
                 <fieldset>
                     <legend>Peer Feedback</legend>
+                    <!-- if missing feedback AND save attempted -->
+                    <p class="alert alert-warning" ng-if="(!answer1_feedback.content || !answer2_feedback.content) && saveAttempted">What do you want to say in response to <span ng-if="!answer1_feedback.content">Answer {{firstAnsNum}}</span><span ng-if="!answer1_feedback.content && !answer2_feedback.content"> and </span><span ng-if="!answer2_feedback.content">Answer {{secondAnsNum}}</span>?</p>
                     <div class="row">
                         <div class="col-md-6">
                             <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
                                 Your private feedback for <strong>Answer {{firstAnsNum}}</strong>'s author
                                 <i class="fa fa-arrow-down"></i>
                             </label>
-                            <textarea id="answer1_feedback" ng-if="comparison.id"
-                                ng-model="answer1_feedback.content" rows="12" ckeditor="editor1Options" ng-required="{{!canManageAssignment}}">
-                            </textarea>
+                            <div ng-class="{'has-error': !answer1_feedback.content && saveAttempted}">
+                                <textarea id="answer1_feedback" ng-if="comparison.id"
+                                    ng-model="answer1_feedback.content" rows="12" ckeditor="editor1Options" ng-required="{{!canManageAssignment}}">
+                                </textarea>
+                            </div>
                         </div>
     
                         <div class="col-md-6">
@@ -205,9 +210,11 @@
                                 Your private feedback for <strong>Answer {{secondAnsNum}}</strong>'s author
                                 <i class="fa fa-arrow-down"></i>
                             </label>
-                            <textarea id="answer2_feedback" ng-if="comparison.id"
-                                ng-model="answer2_feedback.content" rows="12" ckeditor="editor2Options" ng-required="{{!canManageAssignment}}">
-                            </textarea>
+                            <div ng-class="{'has-error': !answer2_feedback.content && saveAttempted}">
+                                <textarea id="answer2_feedback" ng-if="comparison.id"
+                                    ng-model="answer2_feedback.content" rows="12" ckeditor="editor2Options" ng-required="{{!canManageAssignment}}">
+                                </textarea>
+                            </div>
                         </div>
                     </div>
                 </fieldset>
@@ -218,7 +225,9 @@
             
             <div class="col-md-12">
                 <br />
-                <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>    
+                <!-- different helper messages for pre or post save attempts -->
+                <p class="text-center text-muted" ng-if="!saveAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+                <p class="text-center text-warning" ng-if="saveAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
             </div>
 
         </div>
@@ -230,8 +239,8 @@
                     value="Save Draft" class="btn btn-default btn-lg" />
                 &nbsp; &nbsp;
                 <!-- button to submit and refresh page IF evaluations remain for user -->
-                <input ng-disabled="comparisonForm.$invalid || submitted" type="submit"
-                    ng-click="isDraft = false"
+                <input ng-disabled="submitted" type="submit"
+                    ng-click="showErrors($event, comparisonForm.$valid); isDraft = false"
                     value="Submit" class="btn btn-success btn-lg" />
                 <p ng-if="submitted">
                     <i class="fa fa-spin fa-spinner"></i>

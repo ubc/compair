@@ -30,9 +30,11 @@
         <div class="form-group">
             <label ng-if="!selfEvalComment" class="required-star">Your feedback to <span ng-if="parent.user.id != loggedInUserId">this author</span><span ng-if="parent.user.id == loggedInUserId">your own answer</span></label>
             <label ng-if="selfEvalComment" class="required-star">Your private feedback to yourself</label>
-            <textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8"
-                      ckeditor="editorOptions" required>
-            </textarea>
+            <div ng-class="{'has-error': !comment.content && saveFeedbackAttempted}">
+                <textarea ng-model="comment.content" id="commentContent" class="form-control" rows="8"
+                          ckeditor="editorOptions" required>
+                </textarea>
+            </div>
         </div>
         <div class="form-group" ng-if="answerComment">
             <input id="comment_type" type="checkbox" ng-model="comment.comment_type" ng-disabled="!(comment.comment_type == AnswerCommentType.public || comment.comment_type == AnswerCommentType.private)"

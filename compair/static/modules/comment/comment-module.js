@@ -131,7 +131,7 @@ module.controller(
         // decide on showing inline errors
         $scope.showErrors = function($event, commentContent) {
 
-            // show errors if invalid form and no answer content written or uploaded
+            // show errors if no feedback written
             if (!commentContent) {
 
                 // don't save

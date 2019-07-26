@@ -51,6 +51,7 @@ module.controller(
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId;
+        $scope.saveAttempted = false;
 
         $scope.course = resolvedData.course;
         $scope.assignment = resolvedData.assignment;
@@ -197,6 +198,32 @@ module.controller(
                 $scope.assignment, $scope.tracking
             );
         };
+        
+        // decide on showing inline errors
+        $scope.showErrors = function($event, formValid) {
+
+            // show errors if invalid form
+            if (!formValid) {
+
+                // don't save
+                $event.preventDefault();
+
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this comparison couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this comparison couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+
+            } else {
+                
+                $scope.comparisonSubmit();
+                
+            }//closes if valid
+
+        };//closes showErrors
 
         // save comparison to server
         $scope.comparisonSubmit = function(comparisonForm) {
@@ -354,7 +381,7 @@ module.controller(
         // decide on showing inline errors
         $scope.showErrors = function($event, commentContent) {
 
-            // show errors if invalid form and no self-eval content written or uploaded
+            // show errors if no self-eval content written
             if (!commentContent) {
 
                 // don't save
