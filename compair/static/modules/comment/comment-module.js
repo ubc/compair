@@ -94,6 +94,7 @@ module.controller(
         $scope.editorOptions = EditorOptions.basic;
         $scope.answerComment = true;
         $scope.AnswerCommentType = AnswerCommentType;
+        $scope.saveFeedbackAttempted = false;
 
         if ($scope.method == 'create') {
             $scope.comment = {
@@ -127,6 +128,32 @@ module.controller(
             'answerId': $scope.answerId
         });
 
+        // decide on showing inline errors
+        $scope.showErrors = function($event, commentContent) {
+
+            // show errors if invalid form and no answer content written or uploaded
+            if (!commentContent) {
+
+                // don't save
+                $event.preventDefault();
+
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this feedback couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this feeback couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+
+                // display messages
+                $scope.saveFeedbackAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+
+            } else {
+                
+                $scope.commentSubmit();
+                
+            }//closes if valid
+
+        };//closes showErrors
+        
         $scope.commentSubmit = function () {
             $scope.submitted = true;
 
