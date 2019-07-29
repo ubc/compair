@@ -654,9 +654,11 @@ module.controller(
             if ($scope.originalCourse.start_date) {
                 var weekDelta = getWeeksDelta(moment(), $scope.originalCourse.start_date);
                 $scope.duplicateCourse.date.course_start.date = getNewDuplicateDate($scope.originalCourse.start_date, weekDelta).toDate();
+                $scope.duplicateCourse.date.course_start.time = moment($scope.duplicateCourse.date.course_start.time).toDate();
 
                 if ($scope.originalCourse.end_date) {
                     $scope.duplicateCourse.date.course_end.date = getNewDuplicateDate($scope.originalCourse.end_date, weekDelta).toDate();
+                    $scope.duplicateCourse.date.course_end.time = moment($scope.duplicateCourse.date.course_end.time).toDate();
                 }
                 
             } else {
