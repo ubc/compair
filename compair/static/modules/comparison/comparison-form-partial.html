@@ -51,9 +51,9 @@
         <div class="row">
             <div class="pair-display col-md-12 text-center">
                 <div class="btn-group" role="group" aria-label="Answer Pair Display Options">
-                    <button type="button" class="btn btn-info btn-sm" ng-class="{'active' : expand == 'left'}" ng-click="expandAnswer('left')">Expand Answer {{firstAnsNum}}</button>
+                    <button type="button" class="btn btn-info btn-sm" ng-class="{'active' : expand == 'left'}" ng-click="expandAnswer('left')">Expand Answer {{answer1.evaluation_number}}</button>
                     <button type="button" class="btn btn-info btn-sm" ng-class="{'active' : expand == 'none'}" ng-click="expandAnswer()">Show Both Answers</button>
-                    <button type="button" class="btn btn-info btn-sm" ng-class="{'active' : expand == 'right'}" ng-click="expandAnswer('right')">Expand Answer {{secondAnsNum}}</button>
+                    <button type="button" class="btn btn-info btn-sm" ng-class="{'active' : expand == 'right'}" ng-click="expandAnswer('right')">Expand Answer {{answer2.evaluation_number}}</button>
                 </div>
             </div>
         </div>
@@ -62,16 +62,16 @@
             <div class="col-md-6 scrollable-answer" ng-style="adjustHeight" ng-hide="comparisonError" ng-class="{'expanded' : expand == 'left', 'collapsed' : expand == 'right', '' : expand == 'none'}">
                 <p class="text-right close-link" ng-click="expandAnswer()" ng-class="{'' : expand == 'left', 'collapsed' : expand == 'right', 'collapsed' : expand == 'none'}"><a href="">Close</a></p>
                 <div class="answer-choice clearfix">
-                    <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{firstAnsNum}}</h3>
-                    <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum" display-inline="true"></rich-content>
+                    <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{answer1.evaluation_number}}</h3>
+                    <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+answer1.evaluation_number" display-inline="true"></rich-content>
                 </div>
             </div>
     
             <div class="col-md-6 scrollable-answer" ng-style="adjustHeight" ng-hide="comparisonError" ng-class="{'collapsed' : expand == 'left', 'expanded' : expand == 'right', '' : expand == 'none'}">
                 <p class="text-right close-link" ng-click="expandAnswer()" ng-class="{'collapsed' : expand == 'left', '' : expand == 'right', 'collapsed' : expand == 'none'}"><a href="">Close</a></p>
                 <div class="answer-choice clearfix"s>
-                    <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{secondAnsNum}}</h3>
-                    <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum" display-inline="true"></rich-content>
+                    <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{answer2.evaluation_number}}</h3>
+                    <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+answer2.evaluation_number" display-inline="true"></rich-content>
                 </div>
             </div>
         </div>
@@ -172,15 +172,15 @@
                 <div class="row lower-pair-display">
                     <div class="col-md-6">
                         <div ng-show="showAnswers" class="answer-choice clearfix">
-                            <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{firstAnsNum}}</h3>
-                            <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+firstAnsNum" display-inline="true"></rich-content>
+                            <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{answer1.evaluation_number}}</h3>
+                            <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+answer1.evaluation_number" display-inline="true"></rich-content>
                         </div>
                     </div>
     
                     <div class="col-md-6">
                         <div ng-show="showAnswers" class="answer-choice clearfix">
-                            <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{secondAnsNum}}</h3>
-                            <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+secondAnsNum" display-inline="true"></rich-content>
+                            <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{answer2.evaluation_number}}</h3>
+                            <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+answer2.evaluation_number" display-inline="true"></rich-content>
                         </div>
                     </div>
                 </div>
@@ -191,11 +191,11 @@
                 <fieldset>
                     <legend>Peer Feedback</legend>
                     <!-- if missing feedback AND save attempted -->
-                    <p class="alert alert-warning" ng-if="(!answer1_feedback.content || !answer2_feedback.content) && saveAttempted">What do you want to say in response to <span ng-if="!answer1_feedback.content">Answer {{firstAnsNum}}</span><span ng-if="!answer1_feedback.content && !answer2_feedback.content"> and </span><span ng-if="!answer2_feedback.content">Answer {{secondAnsNum}}</span>?</p>
+                    <p class="alert alert-warning" ng-if="(!answer1_feedback.content || !answer2_feedback.content) && saveAttempted">What do you want to say in response to <span ng-if="!answer1_feedback.content">Answer {{answer1.evaluation_number}}</span><span ng-if="!answer1_feedback.content && !answer2_feedback.content"> and </span><span ng-if="!answer2_feedback.content">Answer {{answer2.evaluation_number}}</span>?</p>
                     <div class="row">
                         <div class="col-md-6">
                             <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
-                                Your private feedback for <strong>Answer {{firstAnsNum}}</strong>'s author
+                                Your private feedback for <strong>Answer {{answer1.evaluation_number}}</strong>'s author
                                 <i class="fa fa-arrow-down"></i>
                             </label>
                             <div ng-class="{'has-error': !answer1_feedback.content && saveAttempted}">
@@ -207,7 +207,7 @@
     
                         <div class="col-md-6">
                             <label class="cke-label" ng-class="{'required-star': !canManageAssignment}">
-                                Your private feedback for <strong>Answer {{secondAnsNum}}</strong>'s author
+                                Your private feedback for <strong>Answer {{answer2.evaluation_number}}</strong>'s author
                                 <i class="fa fa-arrow-down"></i>
                             </label>
                             <div ng-class="{'has-error': !answer2_feedback.content && saveAttempted}">
