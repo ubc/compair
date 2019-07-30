@@ -156,6 +156,7 @@ module.directive('comparisonPreview', function() {
                 $scope.comparison = {
                     comparison_criteria: []
                 };
+                $scope.comparison.id = '123';
                 angular.forEach($scope.assignment.criteria, function(criterion) {
                     $scope.comparison.comparison_criteria.push({
                         'criterion_id': criterion.id,
@@ -163,6 +164,65 @@ module.directive('comparisonPreview', function() {
                         'content': ''
                     });
                 });
+
+                // default to showing answer pair at 50-50 split
+                $scope.expand = "none";
+                $scope.expandAnswer = function(whichOne) {
+                    
+                    //show the left or right answer full-width or go back to 50-50 default
+                    switch (whichOne) {
+                        case 'left':
+                            $scope.expand = "left";
+                            break;
+                        case 'right':
+                            $scope.expand = "right";
+                            break;
+                        default:
+                            $scope.expand = "none";
+                            break;
+                    }
+                    
+                };
+                
+                /* enable answer pair height buttons to start */
+                $scope.noShrink = false;
+                $scope.noGrow = false;
+                
+                /* to change answer pair height, find current height and add or substract set amount */
+                $scope.changeHeight = function(direction) {
+                    
+                    var answersList = document.getElementsByClassName('scrollable-answer');
+                    angular.forEach(answersList, function(elem) {
+                        
+                        var style = window.getComputedStyle(elem, null);
+                        var currentHeight = (style.getPropertyValue('height')).slice(0, -2);
+                        var growBy = 150;
+                        
+                        if (direction == "up") {
+                            newHeight = parseInt(currentHeight)+growBy;
+                            $scope.adjustHeight = { "height": newHeight + "px" };
+                        }
+                        if (direction == "down" && currentHeight > 200) {
+                            newHeight = parseInt(currentHeight)-growBy;
+                            $scope.adjustHeight = { "height": newHeight + "px" };
+                        }
+                        
+                        /* area cannot be less than 200px or more than 950p */
+                        if (newHeight <= 200) {
+                            $scope.noShrink = true;
+                            $scope.noGrow = false;
+                        } else {
+                            $scope.noShrink = false;
+                            $scope.noGrow = false;
+                        }
+                        if (newHeight >= 950) {
+                            $scope.noGrow = true;
+                        }
+                   
+                    });
+                
+                };
+
                 /* student view preview is comparison template */
                 $scope.modalInstance = $uibModal.open({
                     animation: true,
