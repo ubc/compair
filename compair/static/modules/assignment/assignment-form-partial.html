@@ -49,7 +49,7 @@
 
         <div>
             <label for="importFile">Related Attachment</label>
-            <p ng-show="((uploader.queue.length && !assignment.existingFile) || (!assignment.file && assignment.existingFile) || (assignment.rotated && assignment.existingFile))" class="alert alert-warning"><strong>Save this assignment to save changes made to your attachment</strong>, or leave this screen to revert to the attachment that appeared when you started editing.</p>
+            <p ng-show="((uploader.queue.length && !assignment.existingFile) || (!assignment.file && assignment.existingFile) || (assignment.rotated && assignment.existingFile))" class="alert alert-info"><strong>Save this assignment to save changes made to your attachment</strong>, or leave this screen to revert to the attachment that appeared when you started editing.</p>
             <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
 
             <div ng-repeat="item in uploader.queue">
