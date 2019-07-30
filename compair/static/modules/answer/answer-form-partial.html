@@ -90,7 +90,7 @@
 
         <div>
             <label class="required-star" for="importFile">Answer Attachment and/or Text</label>
-            <p ng-show="((uploader.queue.length && !answer.existingFile) || (!answer.file && answer.existingFile) || (answer.rotated && answer.existingFile))" class="alert alert-warning"><strong>Save<span ng-show="answer.draft"> or submit</span> this answer to save changes made to your attachment</strong>, or cancel this window to revert to the attachment that appeared when you started editing.</p>
+            <p ng-show="((uploader.queue.length && !answer.existingFile) || (!answer.file && answer.existingFile) || (answer.rotated && answer.existingFile))" class="alert alert-info"><strong>Save<span ng-show="answer.draft"> or submit</span> this answer to save changes made to your attachment</strong>, or cancel this window to revert to the attachment that appeared when you started editing.</p>
             <input type="file" nv-file-select uploader="uploader" ng-click="answerForm.$setDirty()" id="importFile" ng-hide="(uploader.queue.length) || (answer.file && answer.uploadedFile)" multiple/>
             <br />
             <div ng-repeat="item in uploader.queue">
