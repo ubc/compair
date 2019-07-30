@@ -1,14 +1,17 @@
-<p class="assignment-toggle"><a href="" ng-click="showAssignment = !showAssignment">
-    <i class="fa fa-chevron-down" ng-show="showAssignment "></i>
-    <i class="fa fa-chevron-right" ng-hide="showAssignment "></i>
-    Show <span ng-if="answerComment && parent.user.id != loggedInUserId">answer by {{parent.user.displayname}} you're leaving feedback for</span><span ng-if="selfEvalComment || parent.user.id == loggedInUserId">your answer</span>
-</a></p>
-
-<div ng-show="showAssignment" class="standalone-assignment">
-    <!--<h2 ng-if="parent.name"><i class="fa fa-comments"></i> {{parent.name}}</h2>
-    <rich-content ng-if="parent.name" content="parent.description" attachment="parent.file"></rich-content> -->
-    <h2><i class="fa fa-user"></i> <span ng-if="answerComment && parent.user.id != loggedInUserId">{{parent.user.displayname}}'s Answer</span><span ng-if="selfEvalComment || parent.user.id == loggedInUserId">Your Answer</span></h2> 
-    <rich-content content="parent.content" attachment="parent.file"></rich-content>
+<div class="row">
+    <div class="col-md-12">
+        <p class="assignment-toggle"><a href="" ng-click="showAssignment = !showAssignment">
+            <i class="fa fa-chevron-down" ng-show="showAssignment "></i>
+            <i class="fa fa-chevron-right" ng-hide="showAssignment "></i>
+            Show <span ng-if="answerComment && parent.user.id != loggedInUserId">answer by {{parent.user.displayname}} you're leaving feedback for</span><span ng-if="answerComment && parent.user.id == loggedInUserId">your answer</span><span ng-if="selfEvalComment">description for assignment "{{parent.name}}"</span>
+        </a></p>
+        <div ng-show="showAssignment" class="standalone-assignment comment-form">
+            <h2 ng-if="selfEvalComment"><i class="fa fa-comments"></i> {{parent.name}}</h2>
+            <rich-content ng-if="selfEvalComment" content="parent.description" attachment="parent.file"></rich-content>
+            <h2 ng-if="answerComment"><i class="fa fa-user"></i> <span ng-if="answerComment && parent.user.id != loggedInUserId">{{parent.user.displayname}}'s Answer</span><span ng-if="answerComment && parent.user.id == loggedInUserId">Your Answer</span></h2> 
+            <rich-content ng-if="answerComment" content="parent.content" attachment="parent.file"></rich-content>
+        </div>
+    </div>
 </div>
 
 <div class="row evaluate-screen" ng-if="selfEvalComment">

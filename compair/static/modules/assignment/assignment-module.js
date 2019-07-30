@@ -245,14 +245,16 @@ module.directive('selfEvalPreview', function() {
         /* this template is our simple text with button to launch the preview */
         templateUrl: 'modules/assignment/preview-inline-template-self-eval.html',
         controller:
-                ["$scope", "$uibModal", "xAPIStatementHelper",
-                function ($scope, $uibModal, xAPIStatementHelper) {
+                ["$scope", "$uibModal", "LearningRecordStatementHelper",
+                function ($scope, $uibModal, LearningRecordStatementHelper) {
             /* need to pass to self-eval template all expected properties to complete the preview */
             $scope.previewSelfEvalPopup = function() {
                 $scope.selfEvalComment = true;
                 $scope.preview = true;
                 $scope.instructions = $scope.assignment.self_eval_instructions ? $scope.assignment.self_eval_instructions:"Now write an evaluation of your own answer and <strong>give feedback to yourself</strong>, considering the other answers you've seen. What did you do well? Where might you improve?";
                 $scope.parent = {
+                    name: $scope.assignment.name ? $scope.assignment.name : "Assignment name will go here",
+                    description: $scope.assignment.description ? $scope.assignment.description : "Assignment description will go here",
                     content: "The student's own answer will be provided here, in text and/or file attachment, depending on how the answer was originally submitted."
                 }
                 /* student view preview is self-eval template */
