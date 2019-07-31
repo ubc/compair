@@ -132,7 +132,7 @@
                                             ng-value="WinningAnswer.answer1">
                                         Answer {{answer1.evaluation_number}}
                                     </label>
-                                    <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer2 && && comparison_criterion.winner !== undefined}">
+                                    <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer2 && comparison_criterion.winner !== undefined}">
                                         <img ng-src="img/white-scale-icon-flipped-16x16.png" alt="ComPAIR Scale Logo"><input type="radio" class="hideRadio"
                                             name="answer{{answer2.id}}" required
                                             ng-model="comparison_criterion.winner"
