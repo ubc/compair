@@ -23,7 +23,7 @@
             <!-- if no courses available AND a save attempted -->
             <p ng-if="courses.length < 1 && saveAttempted" class="alert alert-warning">Please create at least one course to select here before running a report.</p>
             <!-- if the field is empty AND a save attempted -->
-            <p ng-if="(reportForm.report.course_id.$invalid || !report.course_id) && saveAttempted" class="alert alert-warning">Which course do you want a report in?</p>
+            <p ng-if="courses.length > 0 && (reportForm.report.course_id.$invalid || !report.course_id) && saveAttempted" class="alert alert-warning">Which course do you want a report for?</p>
         </div>
         <div class="form-group" ng-class="{'has-error':!report.group_id && groups.length > 0}">
             <label for="reportGroup" ng-class="{'required-star' : groups.length > 0}">Student Group</label>
@@ -32,7 +32,7 @@
                 <option value="">{{ groups.length < 1 ? '(no groups to select)' : '- Select group -' }}</option>
             </select>
             <!-- if the field is empty AND a save attempted -->
-            <p ng-if="groups.length > 0 && (reportForm.report.group_id.$invalid || !report.group_id) && saveAttempted" class="alert alert-warning">Which student group(s) do you want to see?</p>
+            <p ng-if="groups.length > 0 && (reportForm.report.group_id.$invalid || !report.group_id) && saveAttempted" class="alert alert-warning">Which student group(s) do you want to see in the report?</p>
         </div>
         <div class="form-group" ng-class="{'has-error':!report.assignment && assignments.length > 0}">
             <label for="reportAssignment" class="required-star">Assignment</label>
@@ -43,7 +43,7 @@
             <!-- if no assignments available AND a save attempted -->
             <p ng-if="report.course_id && assignments.length < 1 && saveAttempted" class="alert alert-warning">Please create at least one assignment to select here before running a report.</p>
             <!-- if the field is empty AND a save attempted -->
-            <p ng-if="assignments.length > 0 && (reportForm.report.assignment.$invalid || !report.assignment) && saveAttempted" class="alert alert-warning">Which assignment(s) do you want to see?</p>
+            <p ng-if="assignments.length > 0 && (reportForm.report.assignment.$invalid || !report.assignment) && saveAttempted" class="alert alert-warning">Which assignment(s) do you want to see in the report?</p>
         </div>
     </fieldset>
     <!-- different helper messages for pre or post save attempts -->
