@@ -30,13 +30,24 @@ group_table = sa.table('group',
 )
 
 def upgrade():
+    # drop the foreign key / indexes on course_id and recreate them.
+    # otherwise may encounter issues when dropping unique constraint.
+    # seems the unittest/demo site/prod are using diff naming convention for the foreign key,
+    # use try-except to drop the key
+    foreign_key_name = 'group_ibfk_1'
+    try:
+        with op.batch_alter_table('group', naming_convention=convention) as batch_op:
+            batch_op.drop_index('course_id')
+            batch_op.drop_constraint(foreign_key_name, type_='foreignkey')
+    except ValueError:
+        with op.batch_alter_table('group', naming_convention=convention) as batch_op:
+            foreign_key_name = 'fk_group_course_id_course'
+            batch_op.drop_constraint(foreign_key_name, type_='foreignkey')
+
     with op.batch_alter_table('group', naming_convention=convention) as batch_op:
-        # drop the foreign key / indexes on course_id and recreate them. otherwise may encounter issues when dropping unique constraint
-        batch_op.drop_constraint('group_ibfk_1', type_='foreignkey')
-        batch_op.drop_index('course_id')
         batch_op.drop_constraint('uq_course_and_group_name', type_='unique')
         batch_op.create_index('course_id', ['course_id'])
-        batch_op.create_foreign_key('group_ibfk_1', 'course', ['course_id'], ['id'], ondelete='CASCADE')
+        batch_op.create_foreign_key(foreign_key_name, 'course', ['course_id'], ['id'], ondelete='CASCADE')
 
 def downgrade():
     connection = op.get_bind()
