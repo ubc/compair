@@ -31,7 +31,10 @@ group_table = sa.table('group',
 
 def upgrade():
     with op.batch_alter_table('group', naming_convention=convention) as batch_op:
+        # drop the foreign key on course_id and recreate it later. otherwise may encounter issues when dropping unique constraint
+        batch_op.drop_constraint('fk_group_course_id_course', type_='foreignkey')
         batch_op.drop_constraint('uq_course_and_group_name', type_='unique')
+        batch_op.create_foreign_key('fk_group_course_id_course', 'course', ['course_id'], ['id'], ondelete='CASCADE')
 
 def downgrade():
     connection = op.get_bind()
