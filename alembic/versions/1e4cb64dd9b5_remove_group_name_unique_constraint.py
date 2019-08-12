@@ -30,14 +30,13 @@ group_table = sa.table('group',
 )
 
 def upgrade():
-    # drop the foreign key / indexes on course_id and recreate them.
+    # drop the foreign key on course_id and recreate them.
     # otherwise may encounter issues when dropping unique constraint.
     # seems the unittest/demo site/prod are using diff naming convention for the foreign key,
     # use try-except to drop the key
     foreign_key_name = 'group_ibfk_1'
     try:
         with op.batch_alter_table('group', naming_convention=convention) as batch_op:
-            batch_op.drop_index('course_id')
             batch_op.drop_constraint(foreign_key_name, type_='foreignkey')
     except ValueError:
         with op.batch_alter_table('group', naming_convention=convention) as batch_op:
@@ -46,7 +45,7 @@ def upgrade():
 
     with op.batch_alter_table('group', naming_convention=convention) as batch_op:
         batch_op.drop_constraint('uq_course_and_group_name', type_='unique')
-        batch_op.create_index('course_id', ['course_id'])
+    with op.batch_alter_table('group', naming_convention=convention) as batch_op:
         batch_op.create_foreign_key(foreign_key_name, 'course', ['course_id'], ['id'], ondelete='CASCADE')
 
 def downgrade():
