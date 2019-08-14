@@ -155,7 +155,7 @@ module.controller(
             });
 
             modalInstance.opened.then(function() {
-                xAPIStatementHelper.opened_modal("Edit Group");
+                LearningRecordStatementHelper.opened_modal("Edit Group");
             });
             modalInstance.result.finally(function () {
                 // refresh groups
@@ -163,7 +163,7 @@ module.controller(
                     .then(function(ret) {
                         $scope.groups = ret.objects;
                     });
-                xAPIStatementHelper.closed_modal("Edit Group");
+                LearningRecordStatementHelper.closed_modal("Edit Group");
             });
         };
 
@@ -241,14 +241,14 @@ module.controller(
             });
 
             modalInstance.opened.then(function() {
-                xAPIStatementHelper.opened_modal("Edit Group");
+                LearningRecordStatementHelper.opened_modal("Edit Group");
             });
             modalInstance.result.then(function (group_id) {
                 user.group_id = group_id;
                 $scope.updateGroup(user, true);
-                xAPIStatementHelper.closed_modal("Edit Group");
+                LearningRecordStatementHelper.closed_modal("Edit Group");
             }, function () {
-                xAPIStatementHelper.closed_modal("Edit Group");
+                LearningRecordStatementHelper.closed_modal("Edit Group");
             });
         };
 

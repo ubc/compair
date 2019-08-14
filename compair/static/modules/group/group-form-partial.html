@@ -1,8 +1,11 @@
 <h1 data-ng-if="createNewGroup">Add Group</h1>
 <h1 data-ng-if="!createNewGroup">Edit Group</h1>
+
 <p class="intro-text" data-ng-if="createNewGroup">Add a group and then add any users from your course to it. Groups can be used to <strong>give group-based assignments</strong> (where students submit one answer per group but complete comparisons and self-evaluations individually) and <strong>filter completed student answers and comparisons into smaller subsets</strong> to help with grading.</p>
 <p class="intro-text" data-ng-if="!createNewGroup">Edit the group name below and it will be updated for all users assigned to it. Groups can be used to <strong>give group-based assignments</strong> (where students submit one answer per group but complete comparisons and self-evaluations individually) and <strong>filter completed student answers and comparisons into smaller subsets</strong> to help with grading.</p>
+
 <ng-form name="groupForm" class="form">
+    
     <fieldset>
         <legend>Group Details</legend>
         <div class="instructional-text">
@@ -10,16 +13,27 @@
         </div>
         <compair-field-with-feedback form-control="groupForm.name">
             <label class="required-star" for="criterionName">Group Name</label>
-            <input type="text" maxlength="255" ng-model="group.name" id="name" name="name" class="form-control" required/>
+            <input type="text" maxlength="255" ng-model="group.name" id="name" name="name" class="form-control" required placeholder="e.g., Group 101" />
         </compair-field-with-feedback>
+        
+        <!-- if the field is empty AND a save attempted -->
+        <p ng-if="groupForm.name.$invalid && saveGroupAttempted" class="alert alert-warning">What would you like to call this group?</p>
+        <!-- if the group name is a duplicate AND a save attempted -->
+        <p ng-if="groupForm.name.$valid && duplicateGroupName && saveGroupAttempted && problemGroupName == group.name" class="alert alert-warning">The group name "{{problemGroupName}}" already exists, and group names must be unique in each course. Please enter another.</p>
     </fieldset>
-    <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+   
+    <!-- different helper messages for pre or post save attempts -->
+    <p class="text-center text-muted" ng-if="!saveGroupAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    <p class="text-center text-warning" ng-if="saveGroupAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
+    
     <div class="text-center">
+
         <input data-ng-if="!createNewGroup" type="submit" ng-click="groupCancelEdit()" class="btn btn-default btn-lg"
-               value="&laquo; Back" ng-disabled="groupForm.$invalid || submitted" />
+               value="&laquo; Back" ng-disabled="submitted" />
         &nbsp;&nbsp;
-        <input type="submit" ng-click="groupSubmit()" class="btn btn-success btn-lg"
-               value="Save" ng-disabled="groupForm.$invalid || submitted" />
+        <input type="submit" class="btn btn-success btn-lg"
+               value="Save" ng-disabled="submitted" ng-click="showErrors($event, groupForm.$valid)" />
+
     </div>
-    <br />
+    
 </ng-form>
