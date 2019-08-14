@@ -89,6 +89,12 @@ legend {
   content: ' *';
 }
 
+/* for optional text after labels */
+.optional {
+  font-style: italic;
+  font-weight: normal;
+}
+
 /* checkbox inputs */
 input[type=checkbox] {
   margin: 0 0.4em 0 0;
@@ -126,6 +132,31 @@ input[type=checkbox] {
 /* fix placement of bootstrap form feedback icons */
 .has-feedback .form-control-feedback {
   top: 25px;
+  z-index: 200;
+}
+
+/* date fields don't get error icons */
+.has-feedback.is-date .form-control {
+  padding-right: 12px;
+}
+
+/* inputs above inline error messages */
+.has-feedback input {
+  position: relative;
+  z-index: 100;
+}
+
+/* inline error messages */
+.has-feedback .alert {
+  margin-top: -6px;
+  margin-left: 6px;
+  padding: 12px;
+  width: 90%;
+}
+
+/* lighten placeholder text */
+.form-control::placeholder {
+   color: #ccc;
 }
 
 /* dl used for examples on import screen */

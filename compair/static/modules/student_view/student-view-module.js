@@ -33,6 +33,32 @@ module.controller(
             }
         }
         $scope.getClassList();
+        $scope.saveViewAttempted = false;;
+        
+        // decide on showing inline errors
+        $scope.showErrors = function($event, formValid) {
+
+            // show error if invalid form
+            if (!formValid) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this student view couldn't be loaded yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this student view couldn't be loaded yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveViewAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            } else {
+                
+                $scope.studentViewSubmit();
+            
+            }
+            
+        };
 
         $scope.studentViewSubmit = function() {
             $scope.submitted = true;

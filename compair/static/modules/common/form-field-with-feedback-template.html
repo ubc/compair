@@ -1,11 +1,6 @@
 <div class="form-group has-feedback" ng-class="{
     'has-error': formControl.$invalid,
-    'has-success': formControl.$valid && formControl.$dirty}">
+	'is-date': isDate}">
     <span ng-transclude></span>
-    <span ng-show="formControl.$valid && formControl.$dirty"
-        class="glyphicon glyphicon-ok form-control-feedback">
-        </span>
-    <span ng-show="formControl.$invalid"
-        class="glyphicon glyphicon-flag form-control-feedback">
-        </span>
+    <span ng-show="formControl.$invalid && !isDate" class="glyphicon glyphicon-pencil form-control-feedback"></span>
 </div>

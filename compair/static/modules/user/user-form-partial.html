@@ -10,7 +10,10 @@
             <label for="system_role" class="required-star">Application Role </label>
             <select class="form-control" id="system_role" name="system_role"
                 ng-model="user.system_role" required
-                ng-options="system_role as system_role for system_role in system_roles"></select>
+                ng-options="system_role as system_role for system_role in system_roles">
+            </select>
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="userForm.system_role.$invalid && saveAttempted" class="alert alert-warning">Which role should this user have?</p>
         </div>
         <compair-field-with-feedback form-control="userForm.displayName">
             <label for="displayName" class="required-star">Display Name</label>
@@ -18,6 +21,8 @@
                 name="displayName" ng-model="user.displayname"
                 required placeholder="the name you want others to see"
                 ng-disabled="loggedInUserIsStudent && !UserSettings.allow_student_change_display_name" />
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="userForm.displayName.$invalid && saveAttempted" class="alert alert-warning">What name should others see for this user?</p>
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="userForm.firstName">
             <label for="firstName">First Name </label>
@@ -36,12 +41,16 @@
             <input class="form-control" id="student_number" type="text"
                 name="student_number" ng-model="user.student_number"
                 ng-disabled="loggedInUserIsStudent && !UserSettings.allow_student_change_student_number" />
+            <!-- if the student number is a duplicate AND a save attempted -->
+            <p ng-if="duplicateStudentNumber && saveAttempted && problemStudentNumber == user.student_number" class="alert alert-warning">The student number "{{problemStudentNumber}}" already exists, and student numbers must be unique in ComPAIR. Please enter another.</p>    
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="userForm.email" ng-if="canManageUsers || UserSettings.expose_email_to_instructor || user.id == loggedInUser.id">
             <label for="email">Email </label>
             <input class="form-control" id="email" type="email"
                 name="email" ng-model="user.email"
                 ng-disabled="loggedInUserIsStudent && !UserSettings.allow_student_change_email" />
+            <!-- if the field is empty or email invalid AND a save attempted -->
+            <p ng-if="userForm.email.$invalid && saveAttempted" class="alert alert-warning">If you provide an email, please make sure it is a valid address.</p>
         </compair-field-with-feedback>
         <compair-field-with-feedback form-control="userForm.email_notification_method" ng-if="(canManageUsers || UserSettings.expose_email_to_instructor || user.id == loggedInUser.id) && UserSettings.notifications">
             <input type="checkbox" ng-show="!user.email" disabled />
@@ -62,6 +71,10 @@
             <input class="form-control" id="username" type="text"
                 name="username" ng-model="user.username"
                 ng-required="user.uses_compair_login" />
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="userForm.username.$invalid && saveAttempted" class="alert alert-warning">What name should this user log in under?</p>
+            <!-- if the username is a duplicate AND a save attempted -->
+            <p ng-if="userForm.username.$valid && duplicateUsername && saveAttempted && problemUsername == user.username" class="alert alert-warning">The username "{{problemUsername}}" already exists, and usernames must be unique in ComPAIR. Please enter another.</p>
         </compair-field-with-feedback>
         <div ng-if="method == 'create'">
             <compair-field-with-feedback form-control="userForm.password">
@@ -69,12 +82,16 @@
                 <input class="form-control" id="password" type="password"
                     name="password" ng-model="user.password"
                     ng-minlength="4" required />
+                <!-- if the field is empty AND a save attempted -->
+                <p ng-if="userForm.password.$invalid && saveAttempted" class="alert alert-warning">What password (minimum 4 characters) should this user log in with?</p>
             </compair-field-with-feedback>
             <compair-field-with-feedback form-control="userForm.verifyPassword">
                 <label for="verifyPassword" class="required-star">Verify Password </label>
                 <input class="form-control" id="verifyPassword" type="password"
                     name="verifyPassword" ng-model="user.verifyPassword"
-                    ng-minlength="4" required pw-match="password" />
+                    required pw-match="password" />
+                <!-- if the field is empty/not matching AND a save attempted -->
+                <p ng-if="userForm.verifyPassword.$invalid && saveAttempted" class="alert alert-warning">Please make sure this matches with the password above.</p>
             </compair-field-with-feedback>
         </div>
         <div ng-if="method != 'create' && ((ownProfile || canManageUsers) && user.uses_compair_login)">
@@ -83,7 +100,11 @@
         </div>
 
     </fieldset>
-    <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
-    <input type="submit" class="btn btn-success center-block btn-lg" value="Save"
-        ng-disabled="userForm.$invalid || submitted" />
+    
+    <!-- different helper messages for pre or post save attempts -->
+    <p class="text-center text-muted" ng-if="!saveAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    <p class="text-center text-warning" ng-if="saveAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
+    
+    <input type="submit" class="btn btn-success btn-lg center-block" ng-disabled="submitted" ng-click="showErrors($event, userForm.$valid)" value="Save" />
+    
 </form>

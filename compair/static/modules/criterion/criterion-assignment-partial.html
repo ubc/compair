@@ -1,48 +1,53 @@
 <label class="required-star">Comparison Criteria</label>
-<p ng-show="droppedCriteria && (method != 'create' && method != 'copy')" class="alert alert-warning"><strong>Save this assignment to save changes made to your criteria</strong>, or leave this screen to keep the criteria that appeared when you started editing.</p>
-<div ng-repeat="(key, criterion) in assignment.criteria" class="row">
-    <div class="col-sm-2">
-        <hr class="visible-xs" />
-        <p>
-            <!-- Can edit: Public criteria on new assignments (will create duplicate) or Non public criteria if system admin or owner of criterion -->
-            <a href=""
-                ng-click="changeCriterion(criterion)"
-                ng-if="(criterion.public == true && !assignment.id) || (criterion.public == false && (canManageAssignment || criterion.user_id==loggedInUserId))">
-                Edit
-            </a>
-            <span ng-if="criterion.public == true && assignment.id" class="text-muted">
-                (not editable)
-            </span>
-        </p>
-    </div>
-    <div class="col-sm-2">
-        <p>
-            <a href="" ng-click="remove(key)" ng-if="!assignment.compared">
-                Drop <i class="visible-xs fa fa-arrow-down"></i>
-            </a>
-            <span ng-if="assignment.compared" class="text-muted">(cannot drop)</span>
-        </p><!-- disable from assignment / add to dropdown -->
-    </div>
-    <div ng-class="{
-            'col-sm-6': assignment.criteria.length > 1,
-            'col-sm-8': assignment.criteria.length <= 1
-        }">
-        <strong>{{ key + 1 }}. {{ criterion.name }}</strong>
-        <div mathjax hljs ng-bind-html="criterion.description"></div>
-    </div>
-    <div class="col-sm-2" ng-if="assignment.criteria.length > 1">
-        <div ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive || assignment.pairing_algorithm == PairingAlgorithm.adaptive_min_delta">
-            <span class="text-muted">Score Weight = {{getCriterionWeightAsPercent(criterion.weight)|number:2}}%</span>
-            <div ng-if="!assignment.compared">
-                <input class="form-control" type="number" min="0" ng-pattern="onlyNumbers" required
-                    name="criterion_weight" ng-model="criterion.weight">
+
+<div ng-repeat="(key, criterion) in assignment.criteria">
+    <div class="row">
+        <div class="col-sm-2">
+            <hr class="visible-xs" />
+            <p>
+                <!-- Can edit: Public criteria on new assignments (will create duplicate) or Non public criteria if system admin or owner of criterion -->
+                <a href=""
+                    ng-click="changeCriterion(criterion)"
+                    ng-if="(criterion.public == true && !assignment.id) || (criterion.public == false && (canManageAssignment || criterion.user_id==loggedInUserId))">
+                    Edit
+                </a>
+                <span ng-if="criterion.public == true && assignment.id" class="text-muted">
+                    (not editable)
+                </span>
+            </p>
+        </div>
+        <div class="col-sm-2">
+            <p>
+                <a href="" confirmation-needed="remove(key)" keyword="criterion" ng-if="!assignment.compared">
+                    Drop <i class="visible-xs fa fa-arrow-down"></i>
+                </a>
+                <span ng-if="assignment.compared" class="text-muted">(cannot drop)</span>
+            </p><!-- disable from assignment / add to dropdown -->
+        </div>
+        <div ng-class="{
+                'col-sm-6': assignment.criteria.length > 1,
+                'col-sm-8': assignment.criteria.length <= 1
+            }">
+            <strong>{{ key + 1 }}. {{ criterion.name }}</strong>
+            <div mathjax hljs ng-bind-html="criterion.description"></div>
+        </div>
+        <div class="col-sm-2" ng-if="assignment.criteria.length > 1">
+            <compair-field-with-feedback form-control="assignmentForm['criterion_weight' + ($index+1)]" is-date="true">
+                <div ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive || assignment.pairing_algorithm == PairingAlgorithm.adaptive_min_delta">
+                    <span class="text-muted">Score Weight <span ng-if="assignmentForm['criterion_weight' + ($index+1)].$valid">({{getCriterionWeightAsPercent(criterion.weight)|number:2}}%)</span></span>
+                    <div ng-if="!assignment.compared">
+                        <input class="form-control" type="number" min="0" ng-pattern="onlyNumbers" required placeholder="#"
+                            name="criterion_weight{{$index+1}}" id="criterion_weight{{$index+1}}" ng-model="criterion.weight">
+                    </div>
+                </div>
+            </compair-field-with-feedback>
+            <div ng-if="assignment.pairing_algorithm == PairingAlgorithm.random">
+                <span class="text-muted">Score Weight N/A<br / ><em>Scoring not used</em></span>
             </div>
         </div>
-        <div ng-if="assignment.pairing_algorithm == PairingAlgorithm.random">
-            <span class="text-muted">Score Weight N/A<br / ><em>Scoring not used</em></span>
-        </div>
-        <br /><br />
     </div>
+    <p class="alert alert-warning" ng-if="assignmentForm['criterion_weight' + ($index+1)].$invalid && saveAttempted">What relative weight (minimum 0) should this criterion receive, entered as a number above?</p>
+    <br /><br />
 </div>
 
 <!--<p class="alert alert-info" ng-if="(assignment.pairing_algorithm == PairingAlgorithm.adaptive || assignment.pairing_algorithm == PairingAlgorithm.adaptive_min_delta) && criteriaCanDraw()">
@@ -52,7 +57,7 @@
 <comparison-preview ng-show="assignment.criteria.length > 0"></comparison-preview>
 
 <div ng-show="assignment.criteria.length < 1">
-    <p>No criteria added yet for this assignment. Please select or create a new one below.</p>
+    <p class="alert alert-warning">No criteria added yet for this assignment. Please select or create a new one below.</p>
 </div>
 
 <div ng-if="!assignment.compared">
@@ -73,7 +78,7 @@
         <div class="form-group col-sm-6">
             <select id="select-default-criteria" class="form-control" ng-model="selected"
                     ng-options="key as c.name for (key, c) in availableCriteria">
-                <option value="">- Select a default criterion -</option>
+                <option value="">- Select one of your default criteria -</option>
             </select>
         </div>
         <div class="col-sm-3">

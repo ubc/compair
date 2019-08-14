@@ -28,7 +28,8 @@
             <input class="form-control" id="assignmentName" type="text"
                 name="assignmentName" ng-model="assignment.name" placeholder="short question or title that will link to the assignment"
                 required ng-maxlength="255" auto-focus />
-            <span ng-if="assignmentForm.assignmentName.$error.maxlength" class="help-block has-error">Maximum length is 255 characters</span>
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="assignmentForm.assignmentName.$invalid && saveAttempted" class="alert alert-warning">What short name <span ng-if="assignmentForm.assignmentName.$error.maxlength">(maximum 255 characters)</span> would you like displayed for this assignment?</p>
         </compair-field-with-feedback>
 
         <label class="required-star">Self-Evaluation</label>
@@ -48,7 +49,7 @@
 
         <div>
             <label for="importFile">Related Attachment</label>
-            <p ng-show="((uploader.queue.length && !assignment.existingFile) || (!assignment.file && assignment.existingFile) || (assignment.rotated && assignment.existingFile))" class="alert alert-warning"><strong>Save this assignment to save changes made to your attachment</strong>, or leave this screen to revert to the attachment that appeared when you started editing.</p>
+            <p ng-show="((uploader.queue.length && !assignment.existingFile) || (!assignment.file && assignment.existingFile) || (assignment.rotated && assignment.existingFile))" class="alert alert-info"><strong>Save this assignment to save changes made to your attachment</strong>, or leave this screen to revert to the attachment that appeared when you started editing.</p>
             <input type="file" nv-file-select uploader="uploader" id="importFile" ng-hide="(uploader.queue.length) || (assignment.file && assignment.uploadedFile)" multiple/>
 
             <div ng-repeat="item in uploader.queue">
@@ -111,89 +112,123 @@
     <fieldset>
         <legend>Schedule</legend>
         <div class="instructional-text">
-            <p><strong>Students can submit and edit their answers only during the answering dates and times you set below.</strong> Students do not see an assignment in the application until the answer period begins. Students can read all answers only <em>after</em> the answer period ends <em>and</em> they have completed the required number of comparisons.</p>
-            <p><strong>By default, students can compare answers after the answer period ends<span ng-if="assignment.enable_self_evaluation">, and self-evaluate after comparing</span>.</strong> You may instead set specific dates and times for the comparison<span ng-if="assignment.enable_self_evaluation"> and self-evaluation</span> period<span ng-if="assignment.enable_self_evaluation">s</span>. Note that if you manually set a comparison period, students can read all answers only <em>after</em> the answer <em>and</em> comparison periods end.</p>
+            <p><strong>Students can submit and edit their answers only during the answering dates and times you set below.</strong> Students do not see an assignment in the application until the answer period begins. Students can read all answers only <em>after</em> the answer period ends <em>and</em> they have completed the required number of comparisons (or any manually set comparison period ends).</p>
+            <p><strong>By default, students can compare answers after the answer period ends<span ng-if="assignment.enable_self_evaluation">, and self-evaluate after comparing</span>.</strong> You may instead set specific dates and times for the comparison<span ng-if="assignment.enable_self_evaluation"> and self-evaluation</span> period<span ng-if="assignment.enable_self_evaluation">s</span>.</p>
         </div>
 
         <div class="row">
             <div class="col-md-6 form-group">
-                <label class="required-star">Answering Begins</label><br />
-                <div class="assignment-date">
-                    <span class="input-group">
-                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.astart.date"
-                            is-open="date.astart.opened" required
-                            datepicker-options="{ minDate: datePickerMinDate(course.start_date), maxDate: datePickerMaxDate(date.aend.date, course.end_date) }"
-                            />
-                        <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.astart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                <compair-field-with-feedback form-control="assignmentForm.answerStart" is-date="true">
+                    <label class="required-star">Answering Begins</label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input name="answerStart" id="answerStart" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.astart.date"
+                                is-open="date.astart.opened" required placeholder="DD-Month-YYYY"
+                                datepicker-options="{ minDate: datePickerMinDate(course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
+                                />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.astart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
                         </span>
-                    </span>
-                </div>
-                <div class="assignment-date">
-                    <div uib-timepicker ng-model="date.astart.time" minute-step="1" mousewheel="false"></div>
-                </div>
+                    </div>
+                    <div class="assignment-date">
+                        <div uib-timepicker ng-model="date.astart.time" minute-step="1" mousewheel="false"></div>
+                    </div>
+                    <!-- if the field is empty/incomplete AND save attempted -->
+                    <p ng-if="(assignmentForm.answerStart.$invalid || !date.astart.time) && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time can students start answering?</p>
+                    <!-- if assignment start/end mismatch OR course/assignment start mismatch AND save attempted -->
+                    <p ng-if="(assignmentForm.answerStart.$valid && date.astart.time) && (dateMismatch(date.astart, date.aend, false, 'combined', 'combined') || dateMismatch(course.start_date, date.astart, true, 'new', 'combined')) && saveAttempted" class="alert alert-warning">
+                        Make sure answering starts
+                        <span ng-if="dateMismatch(date.astart, date.aend, false, 'combined', 'combined')">before it ends<span ng-if="!dateMismatch(course.start_date, date.astart, true, 'new', 'combined')">...</span></span>
+                        <span ng-if="dateMismatch(date.astart, date.aend, false, 'combined', 'combined') && dateMismatch(course.start_date, date.astart, true, 'new', 'combined')"> and </span>
+                        <span ng-if="dateMismatch(course.start_date, date.astart, true, 'new', 'combined')">after the course starts ({{course.start_date | date:'dd-MMMM-yyyy'}} at {{course.start_date | date:'h:mm a'}}).</span>
+                    </p>
+                </compair-field-with-feedback>
             </div>
             <div class="col-md-6 form-group">
-                <label class="required-star">Answering Ends</label><br />
-                <div class="assignment-date">
-                    <span class="input-group">
-                        <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.aend.date"
-                            is-open="date.aend.opened" required
-                            datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
-                            />
-                        <span class="input-group-btn">
-                            <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.aend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                <compair-field-with-feedback form-control="assignmentForm.answerEnd" is-date="true">
+                    <label class="required-star">Answering Ends</label><br />
+                    <div class="assignment-date">
+                        <span class="input-group">
+                            <input name="answerEnd" id="answerEnd" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.aend.date"
+                                is-open="date.aend.opened" required placeholder="DD-Month-YYYY"
+                                datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
+                                />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.aend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
                         </span>
-                    </span>
-                </div>
-                <div class="assignment-date">
-                    <div uib-timepicker ng-model="date.aend.time" minute-step="1" mousewheel="false"></div>
-                </div>
+                    </div>
+                    <div class="assignment-date">
+                        <div uib-timepicker ng-model="date.aend.time" minute-step="1" mousewheel="false"></div>
+                    </div>
+                     <!-- if the field is empty/incomplete AND save attempted -->
+                    <p ng-if="(assignmentForm.answerEnd.$invalid || !date.aend.time) && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time must students finish answering?</p>
+                    <!-- if course/assignment end mismatch AND save attempted -->
+                        <p ng-if="(assignmentForm.answerEnd.$valid && date.aend.time) && dateMismatch(date.aend, course.end_date, true, 'combined', 'new') && saveAttempted" class="alert alert-warning">Make sure answering ends before the course ends ({{course.end_date | date:'dd-MMMM-yyyy'}} at {{course.end_date | date:'h:mm a'}}).</p>
+                </compair-field-with-feedback>
             </div>
         </div>
 
         <hr />
 
         <input id="availableCheck" type="checkbox" ng-model="assignment.availableCheck">
-        <label for="availableCheck">Manually set when students compare answers<span ng-show="assignment.availableCheck">:</span></label>
+        <label for="availableCheck">Manually set when students compare answers<span ng-show="!assignment.availableCheck" class="not-bold"> (currently available after answering ends<span ng-show="date.aend.date"> on {{date.aend.date.toDateString()}}</span>, with no end date)</span><span ng-show="assignment.availableCheck">:</span></label>
         <br /><br />
 
         <div ng-show="assignment.availableCheck">
 
             <div class="row">
                 <div class="col-md-6 form-group">
-                    <label class="required-star">Comparing Begins</label><br />
-                    <div class="assignment-date">
-                        <span class="input-group">
-                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cstart.date"
-                                is-open="date.cstart.opened" ng-required="assignment.availableCheck"
-                                datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(date.cend.date, course.end_date) }"
-                                />
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.cstart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                    <compair-field-with-feedback form-control="assignmentForm.compareStart" is-date="true">
+                        <label class="required-star">Comparing Begins</label><br />
+                        <div class="assignment-date">
+                            <span class="input-group">
+                                <input name="compareStart" id="compareStart" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cstart.date"
+                                    is-open="date.cstart.opened" ng-required="assignment.availableCheck" placeholder="DD-Month-YYYY"
+                                    datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
+                                    />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.cstart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
                             </span>
-                        </span>
-                    </div>
-                    <div class="assignment-date">
-                        <div uib-timepicker ng-model="date.cstart.time" minute-step="1" mousewheel="false"></div>
-                    </div>
+                        </div>
+                        <div class="assignment-date">
+                            <div uib-timepicker ng-model="date.cstart.time" minute-step="1" mousewheel="false"></div>
+                        </div>
+                        <!-- if the field is empty/incomplete AND comparing enabled AND save attempted -->
+                        <p ng-if="(assignmentForm.compareStart.$invalid || !date.cstart.time) && assignment.availableCheck && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time can students start comparing?</p>
+                        <!-- if end is before the start date OR start is before answer start AND comparing enabled AND save attempted -->
+                        <p ng-if="(assignmentForm.compareStart.$valid && date.cstart.time) && (dateMismatch(date.cstart, date.cend, false, 'combined',  'combined') || dateMismatch(date.astart, date.cstart, true, 'combined',  'combined')) && assignment.availableCheck && saveAttempted" class="alert alert-warning">
+                            Make sure comparing starts
+                            <span ng-if="dateMismatch(date.cstart, date.cend, false, 'combined', 'combined')">before it ends<span ng-if="!dateMismatch(date.astart, date.cstart, true, 'combined', 'combined')">...</span></span>
+                            <span ng-if="dateMismatch(date.cstart, date.cend, false, 'combined', 'combined') && dateMismatch(date.astart, date.cstart, true, 'combined', 'combined')"> and </span>
+                            <span ng-if="dateMismatch(date.astart, date.cstart, true, 'combined', 'combined')">after answering starts.</span>
+                        </p>
+                    </compair-field-with-feedback>
                 </div>
                 <div class="col-md-6 form-group">
-                    <label class="required-star">Comparing Ends</label><br />
-                    <div class="assignment-date">
-                        <span class="input-group">
-                            <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cend.date"
-                                is-open="date.cend.opened" ng-required="assignment.availableCheck"
-                                datepicker-options="{ minDate: datePickerMinDate(date.cstart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
-                                />
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.cend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                    <compair-field-with-feedback form-control="assignmentForm.compareEnd" is-date="true">
+                        <label class="required-star">Comparing Ends</label><br />
+                        <div class="assignment-date">
+                            <span class="input-group">
+                                <input name="compareEnd" id="compareEnd" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.cend.date"
+                                    is-open="date.cend.opened" ng-required="assignment.availableCheck" placeholder="DD-Month-YYYY"
+                                    datepicker-options="{ minDate: datePickerMinDate(date.cstart.date, date.astart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
+                                    />
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.cend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
                             </span>
-                        </span>
-                    </div>
-                    <div class="assignment-date">
-                        <div uib-timepicker ng-model="date.cend.time" minute-step="1" mousewheel="false"></div>
-                    </div>
+                        </div>
+                        <div class="assignment-date">
+                            <div uib-timepicker ng-model="date.cend.time" minute-step="1" mousewheel="false"></div>
+                        </div>
+                        <!-- if the field is empty/incomplete AND compare enabled AND save attempted -->
+                        <p ng-if="(assignmentForm.compareEnd.$invalid || !date.cend.time) && assignment.availableCheck && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time must students finish comparing?</p>
+                        <!-- if end after course end AND compare enabled AND save attempted -->
+                        <p ng-if="(assignmentForm.compareEnd.$valid  && date.cend.time) && dateMismatch(date.cend, course.end_date, true, 'combined',  'new') && assignment.availableCheck && saveAttempted" class="alert alert-warning">Make sure comparing ends before the course ends ({{course.end_date | date:'dd-MMMM-yyyy'}} at {{course.end_date | date:'h:mm a'}}).</p>
+                    </compair-field-with-feedback>
                 </div>
             </div>
         </div>
@@ -201,45 +236,62 @@
         <div ng-show="assignment.enable_self_evaluation">
             <hr />
             <input id="selfEvalCheck" type="checkbox" ng-model="assignment.selfEvalCheck">
-            <label for="selfEvalCheck">Manually set when students self-evaluate<span ng-show="assignment.selfEvalCheck">:</span></label>
+            <label for="selfEvalCheck">Manually set when students self-evaluate<span ng-show="!assignment.selfEvalCheck" class="not-bold"> (currently available after a student finishes comparing, with no end date)</span><span ng-show="assignment.selfEvalCheck">:</span></label>
             <br /><br />
 
             <div ng-show="assignment.selfEvalCheck">
 
                 <div class="row">
                     <div class="col-md-6 form-group">
-                        <label class="required-star">Self-Evaluation Begins</label><br />
-                        <div class="assignment-date">
-                            <span class="input-group">
-                                <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.sestart.date"
-                                    is-open="date.sestart.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck"
-                                    datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(date.seend.date, course.end_date) }"
-                                    />
-                                <span class="input-group-btn">
-                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.sestart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                        <compair-field-with-feedback form-control="assignmentForm.selfEvalStart" is-date="true">
+                            <label class="required-star">Self-Evaluation Begins</label><br />
+                            <div class="assignment-date">
+                                <span class="input-group">
+                                    <input name="selfEvalStart" id="selfEvalStart" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.sestart.date"
+                                        is-open="date.sestart.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck" placeholder="DD-Month-YYYY"
+                                        datepicker-options="{ minDate: datePickerMinDate(date.astart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
+                                        />
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.sestart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                    </span>
                                 </span>
-                            </span>
-                        </div>
-                        <div class="assignment-date">
-                            <div uib-timepicker ng-model="date.sestart.time" minute-step="1" mousewheel="false"></div>
-                        </div>
+                            </div>
+                            <div class="assignment-date">
+                                <div uib-timepicker ng-model="date.sestart.time" minute-step="1" mousewheel="false"></div>
+                            </div>
+                            <!-- if the field is empty/incomplete AND self-eval enabled AND a save attempted -->
+                            <p ng-if="(assignmentForm.selfEvalStart.$invalid || !date.sestart.time) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">What date (DD-Month-YYYY) and time can students start self-evaluating?</p>
+                            <!-- if end is before start OR start is before answer start OR start is before compare start AND self-eval enabled AND save attempted -->
+                            <p ng-if="(assignmentForm.selfEvalStart.$valid && date.sestart.time) && (dateMismatch(date.sestart, date.seend, false, 'combined', 'combined') || dateMismatch(date.astart, date.sestart, true, 'combined', 'combined') || dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined')) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">
+                                Make sure self-evaluating starts
+                                <span ng-if="dateMismatch(date.sestart, date.seend, false, 'combined', 'combined')">before it ends<span ng-if="!dateMismatch(date.astart, date.sestart, true, 'combined', 'combined') && !dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined')">...</span></span>
+                                <span ng-if="dateMismatch(date.sestart, date.seend, false, 'combined', 'combined') && (dateMismatch(date.astart, date.sestart, true, 'combined', 'combined') || (dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined') && assignment.availableCheck))"> and </span>
+                                <span ng-if="dateMismatch(date.astart, date.sestart, true, 'combined', 'combined') || (dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined') && assignment.availableCheck)">after <span ng-if="dateMismatch(date.astart, date.sestart, true, 'combined', 'combined')">answering</span> <span ng-if="dateMismatch(date.astart, date.sestart, true, 'combined', 'combined') && (dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined') && assignment.availableCheck)">and</span> <span ng-if="dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined') && assignment.availableCheck">comparing</span> start<span ng-if="!(dateMismatch(date.astart, date.sestart, true, 'combined', 'combined') && (dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined') && assignment.availableCheck))">s</span>.</span>
+                            </p>
+                        </compair-field-with-feedback>
                     </div>
                     <div class="col-md-6 form-group">
-                        <label class="required-star">Self-Evaluation Ends</label><br />
-                        <div class="assignment-date">
-                            <span class="input-group">
-                                <input type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.seend.date"
-                                    is-open="date.seend.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck"
-                                    datepicker-options="{ minDate: datePickerMinDate(date.astart.date, date.sestart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
-                                    />
-                                <span class="input-group-btn">
-                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.seend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                        <compair-field-with-feedback form-control="assignmentForm.selfEvalEnd" is-date="true">
+                            <label class="required-star">Self-Evaluation Ends</label><br />
+                            <div class="assignment-date">
+                                <span class="input-group">
+                                    <input name="selfEvalEnd" id="selfEvalEnd" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.seend.date"
+                                        is-open="date.seend.opened" ng-required="assignment.enable_self_evaluation && assignment.selfEvalCheck" placeholder="DD-Month-YYYY"
+                                        datepicker-options="{ minDate: datePickerMinDate(date.sestart.date, date.astart.date, course.start_date), maxDate: datePickerMaxDate(course.end_date) }"
+                                        />
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.seend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                    </span>
                                 </span>
-                            </span>
-                        </div>
-                        <div class="assignment-date">
-                            <div uib-timepicker ng-model="date.seend.time" minute-step="1" mousewheel="false"></div>
-                        </div>
+                            </div>
+                            <div class="assignment-date">
+                                <div uib-timepicker ng-model="date.seend.time" minute-step="1" mousewheel="false"></div>
+                            </div>
+                            <!-- if the field is incomplete AND self-eval enabled AND save attempted -->
+                            <p ng-if="(assignmentForm.selfEvalEnd.$invalid || !date.seend.time) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">What date (DD-Month-YYYY) and time must students finish self-evaluating?</p>
+                             <!-- if end after course end AND self-eval enabled AND save attempted -->
+                            <p ng-if="(assignmentForm.selfEvalEnd.$valid && date.seend.time) && dateMismatch(date.seend, course.end_date, true, 'combined', 'new') && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">Make sure self-evaluating ends before the course ends ({{course.end_date | date:'dd-MMMM-yyyy'}} at {{course.end_date | date:'h:mm a'}}).</p>
+                        </compair-field-with-feedback>
                     </div>
                 </div>
             </div>
@@ -251,7 +303,7 @@
         <legend>Prompts</legend>
         <div class="instructional-text">
             <p><strong>These criteria and instructions appear when students compare answers<span ng-if="assignment.enable_self_evaluation"> and self-evaluate</span></strong> for this assignment, to guide them in their critical-thinking process. For each comparison, students have to choose a preferred answer for each criterion listed below and provide peer feedback to both answers as prompted below.<span ng-if="assignment.enable_self_evaluation"> For the self-evaluation, students provide reflection to their own answer as prompted below.</span></p>
-            <p>Note that the <strong>number of criteria is permanently set once students start comparing</strong>, so you won't be able to add or drop criteria after comparing begins. For multiple criteria, if you use the adaptive answer selection setting (see next section), you may also add a weight for each criterion before comparing begins. The weight indicates how much influence you want each criterion to have in determining the winning answer in a pair.</p>
+            <p>Note that the <strong>number of criteria is permanently set once students start comparing</strong>, so you won't be able to add or drop criteria after comparing begins. For multiple criteria, if you use the adaptive answer selection setting (see next section), you may also add a weight for each criterion before comparing begins. The weight indicates how much influence you want each criterion to have in determining the overall winning answer in a pair.</p>
         </div>
         <ng-include src="'modules/criterion/criterion-assignment-partial.html'"></ng-include>
         <hr />
@@ -300,8 +352,8 @@
 
         <label class="required-star">Answer Pair Selection</label>
         <p ng-if="(assignment.pairing_algorithm == PairingAlgorithm.adaptive || assignment.pairing_algorithm == PairingAlgorithm.adaptive_min_delta) && assignment.rank_display_limit == null">You are currently using the default:</p>
-        <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive || assignment.pairing_algorithm == PairingAlgorithm.adaptive_min_delta">Adaptive&mdash;Add score/rank to answers, pair answers by scores, <span ng-if="assignment.rank_display_limit == null">hide ranking from students</span><span ng-if="assignment.rank_display_limit == 10">let students see answers ranked 10<sup>th</sup> and higher</span><span ng-if="assignment.rank_display_limit == 20">let students see answers ranked 20<sup>th</sup> and higher</span></blockquote>
-        <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.random">Random&mdash;Don't add score/rank to answers, pair answers randomly</blockquote>
+        <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.adaptive || assignment.pairing_algorithm == PairingAlgorithm.adaptive_min_delta"><strong>Adaptive / Use Scoring</strong>&mdash;Add score/rank to answers, pair answers by scores, <span ng-if="assignment.rank_display_limit == null">hide ranking from students</span><span ng-if="assignment.rank_display_limit == 10">let students see answers peer-ranked 10<sup>th</sup> and higher</span><span ng-if="assignment.rank_display_limit == 20">let students see answers peer-ranked 20<sup>th</sup> and higher</span></blockquote>
+        <blockquote ng-if="assignment.pairing_algorithm == PairingAlgorithm.random"><strong>Random / No Scoring</strong>&mdash;Don't add score/rank to answers, pair answers randomly</blockquote>
         <a href="" ng-click="showAdvanced = !showAdvanced">
             <p>
                 <i class="fa fa-chevron-down" ng-show="showAdvanced"></i>
@@ -355,7 +407,9 @@
         <div class="form-group">
             <compair-field-with-feedback form-control="assignmentForm.number_of_comparisons">
                 <label class="required-star">Comparisons Required from Each Student</label>
-                <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" required placeholder="number of comparisons required from each student">
+                <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" maxlength="4" required placeholder="number of comparisons required from each student">
+                <!-- if the field is invalid AND a save attempted -->
+                <p ng-if="assignmentForm.number_of_comparisons.$invalid && saveAttempted" class="alert alert-warning">How many comparisons (minimum 1) will you require of each student, entered as a number?</p>
             </compair-field-with-feedback>
         </div>
 
@@ -374,6 +428,8 @@
 
         <div ng-show="assignment.addPractice">
             <br />
+            <!-- if one or both answers are missing AND a save attempted -->
+            <p ng-if="missingPracticeAnswers && saveAttempted" class="alert alert-warning">Please provide some text or a file attachment for {{whichMissingAnswer}} in the practice pair below, or uncheck the practice pair selection above.</p>
             <div class="row">
                 <div class="col-md-1"></div>
                 <div class="col-md-5 form-group">
@@ -384,7 +440,7 @@
                     </span>
                     <span ng-if="assignment.compared" class="text-muted">(not editable)</span>
                     <div ng-if="!comparison_example.answer1.content && !comparison_example.answer1.file">
-                        <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
+                        <p class="text-muted"><em>Click 'Edit' above to add your example answer here.<br/> Consider also adding a practice key/feedback as an assignment attachment, and instructing students to view this after the practice.</em></p>
                     </div>
                     <rich-content content="comparison_example.answer1.content" attachment="comparison_example.answer1.file"></rich-content>
                 </div>
@@ -399,7 +455,7 @@
                     </span>
                     <span ng-if="assignment.compared" class="text-muted">(not editable)</span>
                     <div ng-if="!comparison_example.answer2.content && !comparison_example.answer2.file">
-                        <p class="text-muted"><em>Click 'Edit' above to add your example answer here.</em></p>
+                        <p class="text-muted"><em>Click 'Edit' above to add your comparative example answer here.</em></p>
                     </div>
                     <rich-content content="comparison_example.answer2.content" attachment="comparison_example.answer2.file"></rich-content>
                 </div>
@@ -415,7 +471,7 @@
         <br />
 
         <input id="educators_can_compare" type="checkbox" name="educators_can_compare" ng-model="assignment.educators_can_compare">
-        <label class="not-bold" for="educators_can_compare">Allow instructors and teaching assistants to compare <span ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}' || assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive_min_delta}}'">and affect scores of </span>student answers</label>
+        <label class="not-bold" for="educators_can_compare">Let instructors and teaching assistants compare <span ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}' || assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive_min_delta}}'">and affect scores of </span>student answers</label>
 
         <br /><br />
 
@@ -425,39 +481,45 @@
                 <span ng-show="assignment.enable_self_evaluation">
                     <strong ng-show="assignment.number_of_comparisons && !assignment.addPractice">{{assignment.number_of_comparisons*2+1}} answers</strong><strong ng-show="assignment.number_of_comparisons && assignment.addPractice">{{assignment.number_of_comparisons*2+3}} answers</strong><strong ng-show="!assignment.number_of_comparisons && assignment.addPractice">3 answers</strong><strong ng-show="!assignment.number_of_comparisons && !assignment.addPractice">1 answer</strong>,
                     including their own,</span>
-                for this assignment.
+                    and receive roughly <strong><span ng-show="assignment.number_of_comparisons">{{assignment.number_of_comparisons*2}}</span><span ng-show="!assignment.number_of_comparisons">0</span> peer feedback comments</strong> on their answer.
     </fieldset>
 
     <fieldset>
         <legend>Participation Grade</legend>
 
         <div class="instructional-text">
-            <p>Enter the <strong>relative weight you'd like assigned to each part of the assignment</strong> a student completes, and this will be computed into a percentage, adding up to 100% participation for the whole assignment. Note the comparison percentage is awarded based on how many comparisons a student completes out of the required number (e.g., if a student completes 2/3 comparisons and comparisons are 33% of the grade, a student will receive 22% for comparisons). </p>
+            <p>Enter the <strong>relative weight you'd like assigned to each part of the assignment</strong> a student completes, and this will be computed into a percentage, adding up to 100% participation for the whole assignment. Note the comparison percentage is based on how many comparisons a student completes (e.g., if a student does 2 of 3 required comparisons that count toward 33% of the grade, a student will receive 22% out of 33% for comparisons). </p>
         </div>
 
         <div class="form-group">
             <label class="required-star">Grade Weights</label>
             <div class="row">
                 <div class="col-md-2">
-                    <span class="text-muted">Answer ({{getGradeWeightAsPercent(assignment.answer_grade_weight)|number:2}}%)</span>
-                    <input class="form-control" type="number" min="0" required
-                           id="answer_grade_weight" name="answer_grade_weight" ng-model="assignment.answer_grade_weight">
+                    <compair-field-with-feedback form-control="assignmentForm.answer_grade_weight" is-date="true">
+                        <span class="text-muted">Answer <span ng-show="assignment.answer_grade_weight">({{getGradeWeightAsPercent(assignment.answer_grade_weight)|number:2}}%)</span></span>
+                        <input class="form-control" type="number" min="0" required
+                               id="answer_grade_weight" name="answer_grade_weight" ng-model="assignment.answer_grade_weight" placeholder="#">
+                    </compair-field-with-feedback>
                 </div>
                 <div class="col-md-1 text-center">
                     +
                 </div>
                 <div class="col-md-2">
-                    <span class="text-muted">Comparisons ({{getGradeWeightAsPercent(assignment.comparison_grade_weight)|number:2}}%)</span>
-                    <input class="form-control" type="number" min="0" required
-                           id="comparison_grade_weight" name="comparison_grade_weight" ng-model="assignment.comparison_grade_weight">
+                    <compair-field-with-feedback form-control="assignmentForm.comparison_grade_weight" is-date="true">
+                        <span class="text-muted">Comparisons <span ng-show="assignment.comparison_grade_weight">({{getGradeWeightAsPercent(assignment.comparison_grade_weight)|number:2}}%)</span></span>
+                        <input class="form-control" type="number" min="0" required
+                               id="comparison_grade_weight" name="comparison_grade_weight" ng-model="assignment.comparison_grade_weight" placeholder="#">
+                    </compair-field-with-feedback>
                 </div>
                 <div class="col-md-1 text-center" ng-show="assignment.enable_self_evaluation">
                     +
                 </div>
                 <div class="col-md-3" ng-show="assignment.enable_self_evaluation">
-                    <span class="text-muted">Self-Evaluation ({{getGradeWeightAsPercent(assignment.self_evaluation_grade_weight)|number:2}}%)</span>
-                    <input class="form-control" type="number" min="0" required
-                           id="self_evaluation_grade_weight" name="self_evaluation_grade_weight" ng-model="assignment.self_evaluation_grade_weight">
+                    <compair-field-with-feedback form-control="assignmentForm.self_evaluation_grade_weight" is-date="true">
+                        <span class="text-muted">Self-Evaluation <span ng-show="assignment.self_evaluation_grade_weight">({{getGradeWeightAsPercent(assignment.self_evaluation_grade_weight)|number:2}}%)</span></span>
+                        <input class="form-control" type="number" min="0" required
+                               id="self_evaluation_grade_weight" name="self_evaluation_grade_weight" ng-model="assignment.self_evaluation_grade_weight" placeholder="#">
+                    </compair-field-with-feedback>
                 </div>
                 <div class="col-md-1 text-center">
                     =
@@ -466,12 +528,21 @@
                     <p class="text-muted">100.00%</p>
                 </div>
             </div>
+            <!-- if one or more fields invalid AND a save attempted -->
+            <p ng-if="(assignmentForm.answer_grade_weight.$invalid || assignmentForm.comparison_grade_weight.$invalid || assignmentForm.self_evaluation_grade_weight.$invalid) && saveAttempted" class="alert alert-warning">What relative weight (minimum 0) should each phase of the assignment receive, entered as a number?</p>
         </div>
     </fieldset>
-    <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    
+    <!-- different helper messages for pre or post save attempts -->
+    <p class="text-center text-muted" ng-if="!saveAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    <p class="text-center text-warning" ng-if="saveAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
+        
     <input ng-if="method == 'copy'" type="submit" class="btn btn-success btn-lg center-block" value="Duplicate"
-        ng-disabled="assignmentForm.$invalid || assignment.criteria.length == 0 || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
+        ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete"
+        ng-click="showErrors($event, assignmentForm.$valid)" />
+    
     <input ng-if="method != 'copy'" type="submit" class="btn btn-success btn-lg center-block" value="Save"
-        ng-disabled="assignmentForm.$invalid || assignment.criteria.length == 0 || submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete" />
-
+        ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete"
+        ng-click="showErrors($event, assignmentForm.$valid)" />
+    
 </form>

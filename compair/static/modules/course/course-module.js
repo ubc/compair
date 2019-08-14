@@ -6,7 +6,7 @@
 function combineDateTime(datetime) {
     var date = new Date(datetime.date);
     var time = new Date(datetime.time);
-    date.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
+    date.setHours(time.getHours(), time.getMinutes(), 0 , 0);
     return date;
 }
 
@@ -491,6 +491,76 @@ module.controller(
             object.opened = true;
         };
 
+        // check dates against one another for inline error display
+        $scope.dateMismatch = function(firstDate, secondDate, canBeEqual) {
+          
+            if (firstDate && firstDate !== undefined && secondDate && secondDate !== undefined) {
+               
+                if (firstDate.date && secondDate.date && firstDate.time && secondDate.time) {
+                   
+                    // is the date the same?
+                    if (firstDate.date.toDateString() === secondDate.date.toDateString()) {
+
+                            // can the start and end time be the same?
+                            if (canBeEqual) {
+                                // does the end time follow or equal the start time?
+                                if (firstDate.time.toTimeString().split(' ')[0] <= secondDate.time.toTimeString().split(' ')[0]) {
+                                    return false; 
+                                } else {
+                                    return true; // show errors
+                                }
+                            } else {
+                                // does the end time follow the start time?
+                                if (firstDate.time.toTimeString().split(' ')[0] < secondDate.time.toTimeString().split(' ')[0]) {
+                                    return false;
+                                } else {
+                                    return true; // show errors
+                                }
+                            }
+                            
+                    } else {
+                            
+                            // does the end date follow the start date?
+                            if (firstDate.date < secondDate.date) {
+                                return false;
+                            } else {
+                                return true; // show errors
+                            }
+
+                    }//closes if equal
+                
+                }//closes if date/time
+            
+            }//closes if undefined
+       
+        };
+        
+        // decide on showing inline errors for course add/edit form
+        $scope.showErrors = function($event, formValid, courseStart, courseEnd) {
+
+            // show error if invalid form or missing times or course start/end date/time mismatch
+            if (!formValid ||
+                (courseStart.date && !courseStart.time) || (courseEnd.date && !courseEnd.time) ||
+                (courseStart.date && courseEnd.date &&
+                  ( (courseStart.date > courseEnd.date && courseStart.date.toDateString() != courseEnd.date.toDateString()) ||
+                    (courseStart.date.toDateString() === courseEnd.date.toDateString() && courseStart.time.toTimeString().split(' ')[0] >= courseEnd.time.toTimeString().split(' ')[0]) )) ) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this course couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this course couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            }
+            
+        };
+        
         $scope.save = function() {
             $scope.submitted = true;
 
@@ -504,7 +574,8 @@ module.controller(
             } else {
                 $scope.course.end_date = null;
             }
-
+            
+            // second-tier error catching
             if ($scope.course.start_date == null) {
                 Toaster.warning('Course Not Saved', 'Please indicate the course start time and save again.');
                 $scope.submitted = false;
@@ -563,6 +634,7 @@ module.controller(
         $scope.showAssignments = false;
         $scope.submitted = false;
         $scope.format = 'dd-MMMM-yyyy';
+        $scope.saveAttempted = false;
 
         $scope.setupDuplicateCourse = function() {
             $scope.duplicateCourse = {
@@ -582,10 +654,16 @@ module.controller(
             if ($scope.originalCourse.start_date) {
                 var weekDelta = getWeeksDelta(moment(), $scope.originalCourse.start_date);
                 $scope.duplicateCourse.date.course_start.date = getNewDuplicateDate($scope.originalCourse.start_date, weekDelta).toDate();
+                $scope.duplicateCourse.date.course_start.time = moment($scope.duplicateCourse.date.course_start.time).toDate();
 
                 if ($scope.originalCourse.end_date) {
                     $scope.duplicateCourse.date.course_end.date = getNewDuplicateDate($scope.originalCourse.end_date, weekDelta).toDate();
+                    $scope.duplicateCourse.date.course_end.time = moment($scope.duplicateCourse.date.course_end.time).toDate();
                 }
+                
+            } else {
+                 $scope.duplicateCourse.date.course_start.time = moment($scope.duplicateCourse.date.course_start.time).toDate();
+                 $scope.duplicateCourse.date.course_end.time = moment($scope.duplicateCourse.date.course_end.time).toDate();
             }
 
             $scope.originalAssignments = [];
@@ -598,9 +676,14 @@ module.controller(
             );
         };
 
-        $scope.canGoBack = function(theFormToCheck) {
-            return (theFormToCheck.$pristine || confirm('Are you sure you want to leave this page? Any dates you\'ve manually changed for assignments here will be lost.'));
-        }
+        $scope.canGoBack = function() {
+            if (confirm('Are you sure you want to leave this page? Any dates you\'ve manually changed for assignments here will be lost.')) {
+                $scope.showAssignments = false;
+                $scope.saveAttempted = false;
+            } else {
+                $scope.showAssignments = true;
+            }
+        };
 
         $scope.adjustDuplicateAssignmentDates = function() {
             // startPoint is original course start_date if set
@@ -645,11 +728,15 @@ module.controller(
                 if (assignment.compare_start) {
                     duplicate_assignment.date.cstart.date = getNewDuplicateDate(assignment.compare_start, weekDelta).toDate();
                     duplicate_assignment.date.cstart.time = moment(assignment.compare_start).toDate();
+                } else {
+                    duplicate_assignment.date.cstart.time = moment(duplicate_assignment.date.cstart.time).toDate();
                 }
 
                 if (assignment.compare_end) {
                     duplicate_assignment.date.cend.date = getNewDuplicateDate(assignment.compare_end, weekDelta).toDate();
                     duplicate_assignment.date.cend.time = moment(assignment.compare_end).toDate();
+                } else {
+                    duplicate_assignment.date.cend.time = moment(duplicate_assignment.date.cend.time).toDate();
                 }
 
                 if (assignment.compare_start && assignment.compare_end) {
@@ -659,15 +746,19 @@ module.controller(
                 if (assignment.self_eval_start) {
                     duplicate_assignment.date.sestart.date = getNewDuplicateDate(assignment.self_eval_start, weekDelta).toDate();
                     duplicate_assignment.date.sestart.time = moment(assignment.self_eval_start).toDate();
-                }
-
-                if (assignment.self_eval_start) {
-                    duplicate_assignment.selfEvalCheck = true;
+                } else {
+                    duplicate_assignment.date.sestart.time = moment(duplicate_assignment.date.sestart.time).toDate();
                 }
 
                 if (assignment.self_eval_end) {
                     duplicate_assignment.date.seend.date =  getNewDuplicateDate(assignment.self_eval_end, weekDelta).toDate();
                     duplicate_assignment.date.seend.time = moment(assignment.self_eval_end).toDate();
+                } else {
+                    duplicate_assignment.date.seend.time = moment(duplicate_assignment.date.seend.time).toDate();
+                }
+                
+                if (assignment.self_eval_start) {
+                    duplicate_assignment.selfEvalCheck = true;
                 }
 
                 $scope.duplicateAssignments.push(duplicate_assignment);
@@ -704,11 +795,216 @@ module.controller(
                 return moment(left) < moment(right) ? left : right;
             }, dates[0])).toDate();
         };
+        
+        // check for validity on first step of duplication form (need to pass in individual fields to check for partial validity)
+        $scope.partialValidity = function(courseName, courseYear, courseTerm, courseStart, courseEnd) {
+            if (courseName !==false && courseYear !==false && courseTerm !==false && courseStart !==false && courseEnd !==false) {
+                return true;
+            } else {
+                return false;
+            }
+        };
+        
+        // check dates against one another for inline error display
+        $scope.dateMismatch = function(firstDate, secondDate, canBeEqual) {          
+          
+            if (firstDate && firstDate !== undefined && secondDate && secondDate !== undefined ) {
+                
+                // combine date and time
+                firstDate = combineDateTime(firstDate);
+                secondDate = combineDateTime(secondDate);
+         
+                // is the date the same?
+                if (firstDate.toDateString() === secondDate.toDateString()) {
 
+                    // can the start and end time be the same?
+                    if (canBeEqual) {
+                        // does the end time follow or equal the start time?
+                        if (firstDate.toTimeString().split(' ')[0] <= secondDate.toTimeString().split(' ')[0]) {
+                            return false; 
+                        } else {
+                            return true; // show errors
+                        }
+                    } else {
+                        // does the end time follow the start time?
+                        if (firstDate.toTimeString().split(' ')[0] < secondDate.toTimeString().split(' ')[0]) {
+                            return false;
+                        } else {
+                            return true; // show errors
+                        }
+                    }
+                        
+                } else {
+                        
+                    // does the end date follow the start date?
+                    if (Date.parse(firstDate) < Date.parse(secondDate)) {
+                        return false;
+                    } else {
+                        return true; // show errors
+                    }
+
+                }//closes if equal
+            
+            }//closes if undefined
+       
+        };
+        
+        // decide on showing inline errors for first page of course duplication form
+        $scope.showFirstErrors = function(formValid, courseStart, courseEnd) {
+             
+            // show error if invalid form or missing times or course start/end date/time mismatch
+            if (!formValid ||
+                 (courseStart.date !== null && !courseStart.time) || (courseEnd.date !== null && !courseEnd.time) ||
+                 (courseStart.date && courseEnd.date &&
+                   ( (courseStart.date > courseEnd.date && courseStart.date.toDateString() != courseEnd.date.toDateString()) ||
+                     (courseStart.date.toDateString() === courseEnd.date.toDateString() && courseStart.time.toTimeString().split(' ')[0] >= courseEnd.time.toTimeString().split(' ')[0]) )) ) {
+
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, you weren't able to go to the next step yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, you weren't able to go to the next step yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            } else {
+                                
+                // clear toast, hide messages, and advance to next step
+                Toaster.clear();
+                $scope.saveAttempted = false;
+                $scope.duplicateNext();
+    
+            }//closes if-else
+        
+        };
+        
+        // decide on showing inline errors for second page of course duplication form
+        $scope.showSecondErrors = function($event, formValid, assignmentsList) {
+            
+            // don't submit but assume no date errors
+            $event.preventDefault();
+            $scope.dateError = false;
+            
+            // now look for date errors
+            if (assignmentsList.length > 0) {
+                
+                angular.forEach(assignmentsList, function(assignment) {
+                    
+                    // don't apply comparison dates if unchecked
+                    if (assignment.availableCheck === false) {
+                        assignment.date.cstart.date = null;
+                        assignment.date.cend.date = null;
+                    }
+                    
+                    // don't apply self-eval dates if unchecked
+                    if (assignment.selfEvalCheck === false) {
+                        assignment.date.sestart.date = null;
+                        assignment.date.seend.date = null;
+                    }
+                    
+                    // if assignment has start/end date but no matching time or
+                    // assignment ends before it starts or
+                    // assignment starts before the course starts or
+                    // assignment ends after the course ends or
+                    // comparison has start/end date but no matching time or
+                    // comparison ends before it starts or
+                    // comparison starts before answer starts or
+                    // comparison ends after the course ends or
+                    // self-eval has start/end date but no matching time or
+                    // self-eval ends before it starts or
+                    // self-eval starts before answer starts or
+                    // self-eval starts before compare starts or
+                    // self-eval ends after the course ends
+                    if ( (assignment.date.astart.date &&
+                           (assignment.date.astart.date !== null && !assignment.date.astart.time)) ||
+                         (assignment.date.aend.date &&
+                           (assignment.date.aend.date !== null && !assignment.date.aend.time)) ||
+                         (assignment.date.astart.date && assignment.date.aend.date &&
+                           ( (assignment.date.astart.date > assignment.date.aend.date && assignment.date.astart.date.toDateString() != assignment.date.aend.date.toDateString()) ||
+                             (assignment.date.astart.date.toDateString() === assignment.date.aend.date.toDateString() && assignment.date.astart.time.toTimeString().split(' ')[0] >= assignment.date.aend.time.toTimeString().split(' ')[0]) ) )  ||
+                         (assignment.date.astart.date && $scope.duplicateCourse.start_date &&
+                           ( (assignment.date.astart.date < $scope.duplicateCourse.start_date && assignment.date.astart.date.toDateString() != $scope.duplicateCourse.start_date.toDateString()) ||
+                             (assignment.date.astart.date.toDateString() === $scope.duplicateCourse.start_date.toDateString() && assignment.date.astart.time.toTimeString().split(' ')[0] < $scope.duplicateCourse.start_date.toTimeString().split(' ')[0]) ) ) ||
+                         (assignment.date.aend.date && $scope.duplicateCourse.end_date &&
+                           ( (assignment.date.aend.date > $scope.duplicateCourse.end_date && assignment.date.aend.date.toDateString() != $scope.duplicateCourse.end_date.toDateString()) ||
+                             (assignment.date.aend.date.toDateString() === $scope.duplicateCourse.end_date.toDateString() && assignment.date.aend.time.toTimeString().split(' ')[0] > $scope.duplicateCourse.end_date.toTimeString().split(' ')[0]) ) ) ||
+                         (assignment.date.cstart.date &&
+                            (assignment.date.cstart.date !== null && !assignment.date.cstart.time)) ||
+                         (assignment.date.cend.date &&
+                            (assignment.date.cend.date !== null && !assignment.date.cend.time)) ||
+                         (assignment.date.cstart.date && assignment.date.cend.date &&
+                           ( (assignment.date.cstart.date > assignment.date.cend.date && assignment.date.cstart.date.toDateString() != assignment.date.cend.date.toDateString()) ||
+                             (assignment.date.cstart.date.toDateString() === assignment.date.cend.date.toDateString() && assignment.date.cstart.time.toTimeString().split(' ')[0] >= assignment.date.cend.time.toTimeString().split(' ')[0]) ) ) ||
+                         (assignment.date.astart.date && assignment.date.cstart.date &&
+                           ( (assignment.date.astart.date > assignment.date.cstart.date && assignment.date.astart.date.toDateString() != assignment.date.cstart.date.toDateString()) ||
+                             (assignment.date.astart.date.toDateString() === assignment.date.cstart.date.toDateString() && assignment.date.astart.time.toTimeString().split(' ')[0] > assignment.date.cstart.time.toTimeString().split(' ')[0]) ) ) ||
+                         ($scope.duplicateCourse.end_date && assignment.date.cend.date &&
+                           ( (assignment.date.cend.date > $scope.duplicateCourse.end_date && assignment.date.cend.date.toDateString() != $scope.duplicateCourse.end_date.toDateString()) ||
+                             (assignment.date.cend.date.toDateString() === $scope.duplicateCourse.end_date.toDateString() && assignment.date.cend.time.toTimeString().split(' ')[0] > $scope.duplicateCourse.end_date.toTimeString().split(' ')[0]) ) ) ||
+                         (assignment.date.sestart.date &&
+                           (assignment.date.sestart.date !== null && !assignment.date.sestart.time)) ||
+                         (assignment.date.seend.date &&
+                           (assignment.date.seend.date !== null && !assignment.date.seend.time)) ||
+                         (assignment.date.sestart.date && assignment.date.seend.date &&
+                           ( (assignment.date.sestart.date > assignment.date.seend.date && assignment.date.sestart.date.toDateString() != assignment.date.seend.date.toDateString()) ||
+                             (assignment.date.sestart.date.toDateString() === assignment.date.seend.date.toDateString() && assignment.date.sestart.time.toTimeString().split(' ')[0] >= assignment.date.seend.time.toTimeString().split(' ')[0]) ) ) ||
+                         (assignment.date.astart.date && assignment.date.sestart.date &&
+                           ( (assignment.date.astart.date > assignment.date.sestart.date && assignment.date.astart.date.toDateString() != assignment.date.sestart.date.toDateString()) ||
+                             (assignment.date.astart.date.toDateString() === assignment.date.sestart.date.toDateString() && assignment.date.astart.time.toTimeString().split(' ')[0] > assignment.date.sestart.time.toTimeString().split(' ')[0]) ) ) ||
+                         (assignment.date.cstart.date && assignment.date.sestart.date &&
+                           ( (assignment.date.cstart.date > assignment.date.sestart.date && assignment.date.cstart.date.toDateString() != assignment.date.sestart.date.toDateString()) ||
+                             (assignment.date.cstart.date.toDateString() === assignment.date.sestart.date.toDateString() && assignment.date.cstart.time.toTimeString().split(' ')[0] > assignment.date.sestart.time.toTimeString().split(' ')[0]) ) ) ||
+                         ($scope.duplicateCourse.end_date && assignment.date.seend.date &&
+                           ( (assignment.date.seend.date > $scope.duplicateCourse.end_date && assignment.date.seend.date.toDateString() != $scope.duplicateCourse.end_date.toDateString()) ||
+                             (assignment.date.seend.date.toDateString() === $scope.duplicateCourse.end_date.toDateString() && assignment.date.seend.time.toTimeString().split(' ')[0] > $scope.duplicateCourse.end_date.toTimeString().split(' ')[0]) ) )
+                       ) {
+                            $scope.dateError = true;
+                    }
+                    
+                });//closes foreach
+                
+            }//closes if
+            
+            // if invalid form or date mismatch
+            if (!formValid || $scope.dateError === true) {        
+                
+                // set helper text and toast
+                $scope.helperMsg = "Sorry, this duplicate couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this duplicate couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+                
+            } else {
+               
+                // clear toast, hide messages, and duplicate
+                Toaster.clear();
+                $scope.saveAttempted = false;
+                $scope.duplicate();
+            
+            }
+        };
+        
         $scope.duplicateNext = function() {
+            
+            // set course start/end, display assignments to duplicate, adjust those assignments' dates
+            if ($scope.duplicateCourse.date.course_start.date !== null) {
+                $scope.duplicateCourse.start_date = combineDateTime($scope.duplicateCourse.date.course_start);
+            } else {
+                $scope.duplicateCourse.start_date = null;
+            }
+            if ($scope.duplicateCourse.date.course_end.date !== null) {
+                $scope.duplicateCourse.end_date = combineDateTime($scope.duplicateCourse.date.course_end);
+            } else {
+                $scope.duplicateCourse.end_date = null;
+            }
             $scope.showAssignments = true;
             $scope.adjustDuplicateAssignmentDates();
-        }
+            
+        };
 
         $scope.duplicate = function() {
             $scope.submitted = true;
@@ -725,8 +1021,9 @@ module.controller(
                 $scope.duplicateCourse.end_date = null;
             }
 
+            // second-tier error catching
             if ($scope.duplicateCourse.start_date == null) {
-                Toaster.warning('Course Not Saved', 'Please indicate the course start time and try again.');
+                Toaster.warning('Course Not Duplicated', 'Please indicate the course start time and try again.');
                 $scope.submitted = false;
                 return;
             }
@@ -744,41 +1041,39 @@ module.controller(
                     name: assignment.name,
                     answer_start: combineDateTime(assignment.date.astart),
                     answer_end: combineDateTime(assignment.date.aend),
-                    compare_start: combineDateTime(assignment.date.cstart),
-                    compare_end: combineDateTime(assignment.date.cend),
+                    compare_start: assignment.availableCheck ? combineDateTime(assignment.date.cstart) : null,
+                    compare_end: assignment.availableCheck ? combineDateTime(assignment.date.cend) : null,
                     enable_self_evaluation: assignment.enable_self_evaluation,
-                    self_eval_start: assignment.enable_self_evaluation && assignment.selfEvalCheck? combineDateTime(assignment.date.sestart) : null,
-                    self_eval_end: assignment.enable_self_evaluation && assignment.selfEvalCheck? combineDateTime(assignment.date.seend) : null,
+                    self_eval_start: assignment.enable_self_evaluation && assignment.selfEvalCheck ? combineDateTime(assignment.date.sestart) : null,
+                    self_eval_end: assignment.enable_self_evaluation && assignment.selfEvalCheck ? combineDateTime(assignment.date.seend) : null,
                 }
 
+                // second-tier error catching
                 // answer end datetime has to be after answer start datetime
                 if (assignment_submit.answer_start >= assignment_submit.answer_end) {
-                    Toaster.warning('Assignment Not Duplicated', 'Please set answer end time after answer start time and try again.');
+                    Toaster.warning('Course Not Duplicated', 'Please set answer end time for "'+assignment_submit.name+'" after answer start time and try again.');
                     $scope.submitted = false;
                     return;
                 } else if (assignment.availableCheck && assignment_submit.answer_start > assignment_submit.compare_start) {
-                    Toaster.warning('Assignment Not Duplicated', 'Please double-check the answer and comparison start and end times for mismatches and try again.');
+                    Toaster.warning('Course Not Duplicated', 'Please set comparison start time for "'+assignment_submit.name+'" after answer start time and try again.');
                     $scope.submitted = false;
                     return;
                 } else if (assignment.availableCheck && assignment_submit.compare_start >= assignment_submit.compare_end) {
-                    Toaster.warning('Assignment Not Duplicated', 'Please set comparison end time after comparison start time and try again.');
+                    Toaster.warning('Course Not Duplicated', 'Please set comparison end time for "'+assignment_submit.name+'" after comparison start time and try again.');
                     $scope.submitted = false;
                     return;
+                } else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start < assignment_submit.answer_start) {
+                    Toaster.warning('Course Not Duplicated', 'Please set self-evaluation start time for "'+assignment_submit.name+'" after answer start time and try again.');
+                    $scope.submitted = false;
+                    return;
+                //} else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start < assignment_submit.compare_start) {
+                //    Toaster.warning('Course Not Duplicated', 'Please set self-evaluation start time for "'+assignment_submit.name+'" after comparison start time and try again.');
+                //    $scope.submitted = false;
+                //    return;
                 } else if (assignment.enable_self_evaluation && assignment.selfEvalCheck && assignment_submit.self_eval_start >= assignment_submit.self_eval_end) {
-                    Toaster.warning('Assignment Not Duplicated', 'Please set self-evaluation end time after self-evaluation start time and try again.');
+                    Toaster.warning('Course Not Duplicated', 'Please set self-evaluation end time for "'+assignment_submit.name+'" after self-evaluation start time and try again.');
                     $scope.submitted = false;
                     return;
-                }
-
-                // if option is not checked; make sure no compare dates are saved.
-                if (!assignment.availableCheck) {
-                    assignment_submit.compare_start = null;
-                    assignment_submit.compare_end = null;
-                }
-                // same for self-evaluation dates
-                if (!assignment.selfEvalCheck) {
-                    assignment_submit.self_eval_start = null;
-                    assignment_submit.self_eval_end = null;
                 }
 
                 $scope.duplicateCourse.assignments.push(assignment_submit);
@@ -800,6 +1095,7 @@ module.controller(
 
             }).$promise.finally(function() {
                 $scope.submitted = false;
+                $scope.saveAttempted = false;
             });
         };
 
@@ -835,6 +1131,7 @@ module.controller(
         $scope.course = resolvedData.course || {};
         $scope.loggedInUserId = resolvedData.loggedInUser.id;
         $scope.editorOptions = EditorOptions.basic;
+        $scope.saveAttempted = false;
 
         $scope.method = $scope.course.id ? "edit" : "create";
         // unlike for assignments, course dates initially blank
@@ -847,11 +1144,11 @@ module.controller(
         if ($scope.method == "create") {
             $scope.course.year = new Date().getFullYear();
         } else if ($scope.method == "edit") {
-            // dates may be left blank
-            $scope.date.course_start.date = $scope.course.start_date != null ? new Date($scope.course.start_date) : null;
-            $scope.date.course_end.date = $scope.course.end_date != null ? new Date($scope.course.end_date) : null;
+            // end date may be left blank
+            $scope.date.course_start.date = new Date($scope.course.start_date);
+            $scope.date.course_end.date = $scope.course.end_date ? new Date($scope.course.end_date) : null;
             $scope.date.course_start.time = new Date($scope.course.start_date);
-            $scope.date.course_end.time = new Date($scope.course.end_date);
+            $scope.date.course_end.time = $scope.course.end_date ? new Date($scope.course.end_date) : null;
         }
 
         $scope.datePickerOpen = function($event, object) {
@@ -860,34 +1157,108 @@ module.controller(
 
             object.opened = true;
         };
+        
+        // check dates against one another for inline error display
+        $scope.dateMismatch = function(firstDate, secondDate, canBeEqual) {
+          
+            if (firstDate && firstDate !== undefined && secondDate && secondDate !== undefined) {
+               
+                if (firstDate.date && secondDate.date && firstDate.time && secondDate.time) {
+                   
+                    // is the date the same?
+                    if (firstDate.date.toDateString() === secondDate.date.toDateString()) {
+
+                            // can the start and end time be the same?
+                            if (canBeEqual) {
+                                // does the end time follow or equal the start time?
+                                if (firstDate.time.toTimeString().split(' ')[0] <= secondDate.time.toTimeString().split(' ')[0]) {
+                                    return false; 
+                                } else {
+                                    return true; // show errors
+                                }
+                            } else {
+                                // does the end time follow the start time?
+                                if (firstDate.time.toTimeString().split(' ')[0] < secondDate.time.toTimeString().split(' ')[0]) {
+                                    return false;
+                                } else {
+                                    return true; // show errors
+                                }
+                            }
+                            
+                    } else {
+                            
+                            // does the end date follow the start date?
+                            if (firstDate.date < secondDate.date) {
+                                return false;
+                            } else {
+                                return true; // show errors
+                            }
+
+                    }//closes if equal
+                
+                }//closes if date/time
+            
+            }//closes if undefined
+       
+        };
+        
+        // decide on showing inline errors for course add/edit form
+        $scope.showErrors = function($event, formValid, courseStart, courseEnd) {
+
+            // show error if invalid form or missing times or course start/end date/time mismatch
+            if (!formValid ||
+                (courseStart.date && !courseStart.time) || (courseEnd.date && !courseEnd.time) ||
+                (courseStart.date && courseEnd.date &&
+                  ( (courseStart.date > courseEnd.date && courseStart.date.toDateString() != courseEnd.date.toDateString()) ||
+                    (courseStart.date.toDateString() === courseEnd.date.toDateString() && courseStart.time.toTimeString().split(' ')[0] >= courseEnd.time.toTimeString().split(' ')[0]) )) ) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this course couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this course couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            }
+            
+        };
 
         $scope.save = function() {
             $scope.submitted = true;
 
-            if ($scope.date.course_start.date != null) {
+            if ($scope.date.course_start.date !== null) {
                 $scope.course.start_date = combineDateTime($scope.date.course_start);
             } else {
                 $scope.course.start_date = null;
             }
 
-            if ($scope.date.course_end.date != null) {
+            if ($scope.date.course_end.date !== null) {
                 $scope.course.end_date = combineDateTime($scope.date.course_end);
             } else {
                 $scope.course.end_date = null;
             }
-
-            if ($scope.course.start_date == null) {
+            
+            // second-tier error catching
+            if ($scope.course.start_date === null) {
                 Toaster.warning('Course Not Saved', 'Please indicate the course start time and save again.');
                 $scope.submitted = false;
+                $scope.saveAttempted = true;
                 return;
             }
-            else if ($scope.course.end_date != null && $scope.course.start_date > $scope.course.end_date) {
+            else if ($scope.course.end_date !== null && $scope.course.start_date > $scope.course.end_date) {
                 Toaster.warning('Course Not Saved', 'Please set course end time after course start time and save again.');
                 $scope.submitted = false;
+                $scope.saveAttempted = true;
                 return;
             }
 
             CourseResource.save({id: $scope.course.id}, $scope.course, function (ret) {
+                $scope.saveAttempted = false;
                 Toaster.success("Course Saved");
 
                 // refresh permissions

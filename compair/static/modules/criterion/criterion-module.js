@@ -27,10 +27,44 @@ module.controller(
         $scope.modalInstance = $uibModalInstance;
         $scope.editorOptions = EditorOptions.basic;
         $scope.submitted = false;
+        $scope.saveModalAttempted = false;
+        
+        if ($scope.method == 'create') {
+            // by default, check criterion to be included in default criteria list
+            $scope.criterion.default = true;
+        } 
 
         if ($scope.method == 'edit') {
             $scope.criterion = CriterionResource.get({'criterionId': $scope.criterion.id});
         }
+        
+        // decide on showing inline errors
+        $scope.showErrors = function($event, formValid) {
+
+            // show error if invalid form
+            if (!formValid) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this criterion couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this criterion couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveModalAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            } else {
+                
+                // go ahead and submit
+                $scope.criterionSubmit();
+           
+            }
+            
+        };//closes showErrors
+        
         $scope.criterionSubmit = function () {
             $scope.submitted = true;
 

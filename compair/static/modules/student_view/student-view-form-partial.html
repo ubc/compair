@@ -9,31 +9,43 @@
         use the "Answer" button when viewing ComPAIR normally.)
     </p>
 
-    <form name="studentViewForm" ng-submit="studentViewSubmit()" novalidate form-type="compare">
+    <form name="studentViewForm" novalidate form-type="compare">
         <fieldset>
             <legend>View Details</legend>
 
-            <div class="form-group">
+            <div class="form-group" ng-class="{'has-error':!studentView.courseId}">
                 <label for="studentViewCourseId" class="required-star">Course</label>
                 <select class="form-control" ng-model="studentView.courseId" name="studentViewCourseId" ng-change="getClassList()"
                         ng-options="c.id as c.name for c in courses | orderBy:'name'" required>
                     <option value="">- Select course -</option>
                 </select>
             </div>
-            <div class="form-group">
+            <!-- if no courses available AND a save attempted -->
+            <p ng-if="courses.length < 1 && saveViewAttempted" class="alert alert-warning">Please create at least one course to select here before trying the student view.</p>
+            <!-- if the field is empty AND a save attempted -->
+            <p ng-if="courses.length > 0 && !studentView.courseId && saveViewAttempted" class="alert alert-warning">Which course do you want to choose a student from?</p>
+            
+            <div class="form-group" ng-class="{'has-error':!studentView.userId && classlist.length > 0}">
                 <label for="studentViewClasslist" class="required-star">View As This Student</label>
-                <select class="form-control" ng-model="studentView.userId" name="studentViewClasslist" ng-enable="classlist.length > 0"
+                <select class="form-control" ng-model="studentView.userId" name="studentViewClasslist" ng-disabled="classlist.length < 1"
                         ng-options="s.id as (s.lastname + ', ' + s.firstname + ' (' + s.student_number + ')') for s in classlist | filter:{course_role:'Student'} | orderBy:['lastname', 'firstname', 'student_number']" required>
                     <option value="">- Select student -</option>
                 </select>
             </div>
+            <!-- if course selected AND no students available AND a save attempted -->
+            <p ng-if="studentView.courseId && classlist.length < 1 && saveViewAttempted" class="alert alert-warning">Please enrol at least one student in this course before trying the student view.</p>
+            <!-- if course selected AND student available AND the field is empty AND a save attempted -->
+            <p ng-if="studentView.courseId && classlist.length > 0 && !studentView.userId && saveViewAttempted" class="alert alert-warning">Which student from this course do you want to view ComPAIR as?</p>
+  
             
         </fieldset>
         
-        <p class="text-center text-muted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
-
-        <div class="form-group sub-step text-center">
-            <input ng-disabled="studentViewForm.$invalid || submitted" type="submit"
+        <!-- different helper messages for pre or post save attempts -->
+        <p class="text-center text-muted" ng-if="!saveViewAttempted"><span class="required-star"></span> = required (please make sure these areas are filled in)</p>
+        <p class="text-center text-warning" ng-if="saveViewAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
+    
+        <div class="form-group text-center">
+            <input ng-disabled="submitted" type="submit" ng-click="showErrors($event, studentViewForm.$valid)"
                  value="Apply" class="btn btn-success btn-lg" />
                 <p ng-if="submitted">
                     <i class="fa fa-spin fa-spinner"></i>&nbsp; Enabling view...

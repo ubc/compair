@@ -136,11 +136,36 @@ module.controller("LTIConsumerWriteController",
 
         $scope.method = $scope.consumer.id ? "edit" : "create";
         $scope.submitted = false;
+        
+        if ($scope.method == "create") {
+            $scope.consumer.active = true;
+        }
 
         if (!$scope.canManageUsers) {
             $location.path('/');
         }
+        
+        // decide on showing inline errors for LTI consumer add/edit form
+        $scope.showErrors = function($event, formValid) {
 
+            // show error if invalid form
+            if (!formValid) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this consumer couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this consumer couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            }
+            
+        };
+        
         $scope.save = function () {
             $scope.submitted = true;
 

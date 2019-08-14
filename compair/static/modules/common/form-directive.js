@@ -8,11 +8,13 @@ var module = angular.module('ubc.ctlt.compair.common.form', ['ckeditor']);
 /***** Directives *****/
 // add the css and elements required to show bootstrap's validation feedback
 // requires the parameter form-control, which passes in the input being validated
+// and is-date, which when true prevents display of helper icon on required fields
 module.directive('compairFieldWithFeedback', function() {
     return {
         restrict: 'E',
         scope: {
-            formControl: '='
+            formControl: '=',
+            isDate: '='
         },
         transclude: true,
         templateUrl: 'modules/common/form-field-with-feedback-template.html'
