@@ -68,18 +68,52 @@ module.controller(
         }
         $scope.modalInstance = $uibModalInstance;
         $scope.submitted = false;
+        $scope.duplicateGroupName = false;
+        $scope.saveGroupAttempted = false;
+        
+        // decide on showing inline errors for course add/edit form
+        $scope.showErrors = function($event, formValid) {
+
+            // show error if invalid form
+            if (!formValid) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this group couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this group couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveGroupAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            } else {
+                
+                $scope.groupSubmit();
+            
+            }
+            
+        };
 
         $scope.groupSubmit = function () {
             $scope.submitted = true;
 
             var groupNameExists = $filter('filter')($scope.groups, {'name':$scope.group.name, 'id': "!"+$scope.group.id}, true).length > 0;
-            groupNameExists = false;
+            //groupNameExists = false;
 
             if (groupNameExists) {
-                Toaster.warning("Group Not Added", "The group name you have entered already exists. Please enter another group name and press Save.");
                 $scope.submitted = false;
-            }
-            else {
+                $scope.duplicateGroupName = true;
+                $scope.saveGroupAttempted = true;
+                $scope.problemGroupName = $scope.group.name;
+                
+                $scope.helperTstrTitle = "Sorry, this group couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                $scope.helperMsg = "Sorry, this group couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            } else {
                 GroupResource.save({'courseId': $scope.courseId}, $scope.group).$promise.then(
                     function (ret) {
                         $scope.group = ret;
@@ -99,14 +133,41 @@ module.controller(
 
 module.controller(
     'ManageGroupsModalController',
-    ["$rootScope", "$scope", "$uibModalInstance", "Toaster", "$uibModal", "GroupResource", "xAPIStatementHelper",
-    function ($rootScope, $scope, $uibModalInstance, Toaster, $uibModal, GroupResource, xAPIStatementHelper) {
+    ["$rootScope", "$scope", "$uibModalInstance", "Toaster", "$uibModal", "GroupResource", "LearningRecordStatementHelper",
+    function ($rootScope, $scope, $uibModalInstance, Toaster, $uibModal, GroupResource, LearningRecordStatementHelper) {
         $scope.group = {};
         $scope.modalInstance = $uibModalInstance;
         $scope.modalDone = function() {
             $scope.modalInstance.dismiss();
         };
+        $scope.saveGroupAttempted = false;
 
+        // decide on showing inline errors for course add/edit form
+        $scope.showErrors = function($event, formValid) {
+
+            // show error if invalid form
+            if (!formValid) {
+                
+                // don't submit
+                $event.preventDefault();
+                
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this group couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this group couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+                
+                // display messages
+                $scope.saveGroupAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+            
+            } else {
+                
+                $scope.groupSubmit();
+            
+            }
+            
+        };
+        
         $scope.groupDelete = function(group_id) {
             $scope.submitted = true;
             GroupResource.delete({'courseId': $scope.courseId, 'groupId': group_id}).$promise
@@ -150,7 +211,7 @@ module.controller(
 
             modalInstance.opened.then(function() {
                 parentModal.addClass('hidden');
-                xAPIStatementHelper.opened_modal("Edit Group");
+                LearningRecordStatementHelper.opened_modal("Edit Group");
             });
             modalInstance.result.then(function (group_id) {
                 // refresh groups
@@ -159,10 +220,10 @@ module.controller(
                         $scope.groups = ret.objects;
                     });
                 parentModal.removeClass('hidden');
-                xAPIStatementHelper.closed_modal("Edit Group");
+                LearningRecordStatementHelper.closed_modal("Edit Group");
             }, function () {
                 parentModal.removeClass('hidden');
-                xAPIStatementHelper.closed_modal("Edit Group");
+                LearningRecordStatementHelper.closed_modal("Edit Group");
             });
         };
     }
