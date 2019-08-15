@@ -95,11 +95,11 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
 /***** Controllers *****/
 module.controller(
     "AnswerWriteModalController",
-    ["$scope", "$location", "AnswerResource", "ClassListResource", "$route", "TimerResource",
+    ["$scope", "$location", "$filter", "AnswerResource", "ClassListResource", "$route", "TimerResource",
         "AssignmentResource", "Toaster", "$timeout", "UploadValidator", "CourseRole", "$uibModalInstance",
         "answerAttachService", "EditorOptions", "LearningRecord", "LearningRecordStatementHelper", "$q", "Session",
         "CourseResource", "GroupResource",
-    function ($scope, $location, AnswerResource, ClassListResource, $route, TimerResource,
+    function ($scope, $location, $filter, AnswerResource, ClassListResource, $route, TimerResource,
         AssignmentResource, Toaster, $timeout, UploadValidator, CourseRole, $uibModalInstance,
         answerAttachService, EditorOptions, LearningRecord, LearningRecordStatementHelper, $q, Session,
         CourseResource, GroupResource)
@@ -129,12 +129,8 @@ module.controller(
                 comparable: true,
                 existingFile: false
             };
-
-            if ($scope.canManageAssignment) {
-                // preset the user_id if instructors creating new answers
-                $scope.answer.user_id = $scope.loggedInUserId;
-            }
         }
+        
         if ($scope.canManageAssignment) {
             ClassListResource.get({'courseId': $scope.courseId}, function (ret) {
                 $scope.classlist = ret.objects;
@@ -144,6 +140,13 @@ module.controller(
             });
             CourseResource.getInstructors({'id': $scope.courseId}, function (ret) {
                 $scope.instructors = ret.objects;
+
+                var found = $filter('filter')($scope.instructors, $scope.loggedInUserId, true);
+                if (found != "") {
+                    // preset the user_id if instructors creating new answers
+                    $scope.answer.user_id = $scope.loggedInUserId;
+                }
+
             });
         }
 

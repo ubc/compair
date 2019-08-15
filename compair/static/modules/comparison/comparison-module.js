@@ -379,7 +379,7 @@ module.controller(
         };
         
         // decide on showing inline errors
-        $scope.showErrors = function($event, commentContent) {
+        $scope.showErrors = function($event, commentContent, saveOnly) {
 
             // show errors if no self-eval content written
             if (!commentContent) {
@@ -398,7 +398,13 @@ module.controller(
 
             } else {
                 
-                $scope.commentSubmit();
+                if (saveOnly) {
+                    $scope.comment.draft = true;
+                    $scope.commentSubmit();
+                } else {
+                    $scope.comment.draft = false;
+                    $scope.commentSubmit();
+                }
                 
             }//closes if valid
 
