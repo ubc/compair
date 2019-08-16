@@ -51,6 +51,7 @@ module.controller(
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId;
+        $scope.saveAttempted = false;
 
         $scope.course = resolvedData.course;
         $scope.assignment = resolvedData.assignment;
@@ -77,7 +78,7 @@ module.controller(
             }
         }
 
-        // get an comparisons to be compared from the server
+        // get a comparison to be compared from the server
         $scope.comparisonError = false;
         $scope.answer1 = {};
         $scope.answer1_feedback = {};
@@ -133,12 +134,96 @@ module.controller(
                 $scope.preventExit = false; //no work done. its safe to exit
             }
         );
+        
+        // default to showing answer pair at 50-50 split
+        //$scope.expand = "none";
+        //$scope.expandAnswer = function(whichOne) {
+            
+            //show the left or right answer full-width or go back to 50-50 default
+        //    switch (whichOne) {
+        //        case 'left':
+        //            $scope.expand = "left";
+        //            break;
+        //        case 'right':
+        //            $scope.expand = "right";
+        //            break;
+        //        default:
+        //            $scope.expand = "none";
+        //            break;
+        //    }
+        //    
+        //};
+        
+        /* enable answer pair height buttons to start */
+        //$scope.noShrink = false;
+        //$scope.noGrow = false;
+        
+        /* to change answer pair height, find current height and add or substract set amount */
+        //$scope.changeHeight = function(direction) {
+        //    
+        //    var answersList = document.getElementsByClassName('scrollable-answer');
+        //    angular.forEach(answersList, function(elem) {
+        //        
+        //        var style = window.getComputedStyle(elem, null);
+        //        var currentHeight = (style.getPropertyValue('height')).slice(0, -2);
+        //        var growBy = 150;
+        //        
+        //        if (direction == "up") {
+        //            newHeight = parseInt(currentHeight)+growBy;
+        //            $scope.adjustHeight = { "height": newHeight + "px" };
+        //        }
+        //        if (direction == "down" && currentHeight > 200) {
+        //            newHeight = parseInt(currentHeight)-growBy;
+        //            $scope.adjustHeight = { "height": newHeight + "px" };
+        //        }
+        //        
+        //        /* area cannot be less than 200px or more than 950p */
+        //        if (newHeight <= 200) {
+        //            $scope.noShrink = true;
+        //            $scope.noGrow = false;
+        //        } else {
+        //            $scope.noShrink = false;
+        //            $scope.noGrow = false;
+        //        }
+        //        if (newHeight >= 950) {
+        //            $scope.noGrow = true;
+        //        }
+        //   
+        //    });
+        //
+        //};
 
         $scope.trackExited = function() {
             LearningRecordStatementHelper.exited_comparison_question(
                 $scope.assignment, $scope.tracking
             );
         };
+        
+        // decide on showing inline errors
+        $scope.showErrors = function($event, formValid) {
+
+            // show errors if invalid form
+            if (!formValid) {
+
+                // don't save
+                $event.preventDefault();
+
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this comparison couldn't be saved yet, but you're almost there. Simply update any highlighted information in Step 1) or Step 2) above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this comparison couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information in Step 1) or Step 2) of the form and then try again.";
+
+                // display messages
+                $scope.saveAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+
+            } else {
+                
+                $scope.comparisonSubmit();
+                
+            }//closes if valid
+
+        };//closes showErrors
 
         // save comparison to server
         $scope.comparisonSubmit = function(comparisonForm) {
@@ -292,6 +377,38 @@ module.controller(
                 $scope.assignment, $scope.tracking
             );
         };
+        
+        // decide on showing inline errors
+        $scope.showErrors = function($event, commentContent, saveOnly) {
+
+            // show errors if no self-eval content written
+            if (!commentContent) {
+
+                // don't save
+                $event.preventDefault();
+
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this self-evaluation couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this self-evaluation couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+
+                // display messages
+                $scope.saveFeedbackAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+
+            } else {
+                
+                if (saveOnly) {
+                    $scope.comment.draft = true;
+                    $scope.commentSubmit();
+                } else {
+                    $scope.comment.draft = false;
+                    $scope.commentSubmit();
+                }
+                
+            }//closes if valid
+
+        };//closes showErrors
 
         $scope.commentSubmit = function () {
             $scope.submitted = true;

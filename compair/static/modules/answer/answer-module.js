@@ -95,11 +95,11 @@ module.factory("AnswerResource", ['$resource', '$cacheFactory', function ($resou
 /***** Controllers *****/
 module.controller(
     "AnswerWriteModalController",
-    ["$scope", "$location", "AnswerResource", "ClassListResource", "$route", "TimerResource",
+    ["$scope", "$location", "$filter", "AnswerResource", "ClassListResource", "$route", "TimerResource",
         "AssignmentResource", "Toaster", "$timeout", "UploadValidator", "CourseRole", "$uibModalInstance",
         "answerAttachService", "EditorOptions", "LearningRecord", "LearningRecordStatementHelper", "$q", "Session",
         "CourseResource", "GroupResource",
-    function ($scope, $location, AnswerResource, ClassListResource, $route, TimerResource,
+    function ($scope, $location, $filter, AnswerResource, ClassListResource, $route, TimerResource,
         AssignmentResource, Toaster, $timeout, UploadValidator, CourseRole, $uibModalInstance,
         answerAttachService, EditorOptions, LearningRecord, LearningRecordStatementHelper, $q, Session,
         CourseResource, GroupResource)
@@ -119,6 +119,7 @@ module.controller(
         $scope.selectedIsStudent = false;
         $scope.isImpersonating = Session.isImpersonating();
         $scope.answer.rotated = false;
+        $scope.saveAnswerAttempted = false;
 
         if ($scope.method == "create") {
             $scope.answer = {
@@ -128,12 +129,8 @@ module.controller(
                 comparable: true,
                 existingFile: false
             };
-
-            if ($scope.canManageAssignment) {
-                // preset the user_id if instructors creating new answers
-                $scope.answer.user_id = $scope.loggedInUserId;
-            }
         }
+        
         if ($scope.canManageAssignment) {
             ClassListResource.get({'courseId': $scope.courseId}, function (ret) {
                 $scope.classlist = ret.objects;
@@ -143,6 +140,13 @@ module.controller(
             });
             CourseResource.getInstructors({'id': $scope.courseId}, function (ret) {
                 $scope.instructors = ret.objects;
+
+                var found = $filter('filter')($scope.instructors, $scope.loggedInUserId, true);
+                if (found != "") {
+                    // preset the user_id if instructors creating new answers
+                    $scope.answer.user_id = $scope.loggedInUserId;
+                }
+
             });
         }
 
@@ -205,6 +209,36 @@ module.controller(
             $scope.answer.comparable = true;
             $scope.answer.user_id = null;
         }
+        
+        // decide on showing inline errors
+        $scope.showErrors = function($event, formValid, answerContent, existingFile, saveOnly) {
+
+            // show errors if invalid form and no answer content written or uploaded
+            if (!formValid && (!answerContent && existingFile < 1)) {
+
+                // don't save/submit
+                $event.preventDefault();
+
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this answer couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this answer couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+
+                // display messages
+                $scope.saveAnswerAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+
+            } else {
+                
+                if (saveOnly) {
+                    $scope.answerSubmit(true); // save draft
+                } else {
+                    $scope.answerSubmit(false); // submit answer
+                }
+                
+            }//closes if valid
+
+        };//closes showErrors
 
         $scope.answerSubmit = function (saveDraft) {
             $scope.submitted = true;
@@ -282,6 +316,7 @@ module.controller(
         $scope.uploader = answerAttachService.getUploader();
         $scope.resetFileUploader = answerAttachService.reset;
         $scope.canSupportPreview = answerAttachService.canSupportPreview;
+        $scope.saveAnswerAttempted = false;
 
         if ($scope.method == 'create') {
             $scope.answer.existingFile = false;
@@ -315,6 +350,36 @@ module.controller(
             $scope.answer.uploadedFile = false;
         };
 
+        // decide on showing inline errors
+        $scope.showErrors = function($event, formValid, answerContent, existingFile, saveOnly) {
+
+            // show errors if invalid form and no answer content written or uploaded
+            if (!formValid && (!answerContent && existingFile < 1)) {
+
+                // don't save/submit
+                $event.preventDefault();
+
+                // set helper text and Toast
+                $scope.helperMsg = "Sorry, this answer couldn't be saved yet, but you're almost there. Simply update any highlighted information above and then try again.";
+                $scope.helperTstrTitle = "Sorry, this answer couldn't be saved yet";
+                $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
+
+                // display messages
+                $scope.saveAnswerAttempted = true;
+                Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
+
+            } else {
+                
+                if (saveOnly) {
+                    $scope.answerSubmit(true); // save draft
+                } else {
+                    $scope.answerSubmit(false); // submit answer
+                }
+                
+            }//closes if valid
+
+        };//closes showErrors
+        
         $scope.answerSubmit = function (saveDraft) {
             $scope.saveDraft = saveDraft;
             $scope.submitted = true;

@@ -5,7 +5,8 @@
 .evaluate-screen {
 
   /* class for p tag that precedes standalone-assignment div */
-  .assignment-toggle {
+  .assignment-toggle,
+  .answer-toggle {
     margin-top: 2.5em;
   }
     .assignment-toggle + .standalone-assignment {
@@ -18,9 +19,25 @@
 
   /* class for divs underneath each step (indented a bit more) */
   .sub-step {
-    margin: 0 1.3em;
+    
+    margin: 0 1.2em;
+    padding-left: 2.2em;
+    //border-left: 1px dashed @link-blue;
+    
+    fieldset {
+      margin-top: 1em;
+    }
+    
   }
 
+  /* hide answer pair display button options, instructions for scrollable box, and close links */
+  .pair-display,
+  .scrollable-instructions,
+  .close-link,
+  .height-control {
+    display: none;
+  }
+  
   /* class for div surrounding each answer choice */
   .answer-choice {
 
@@ -61,12 +78,24 @@
       margin-bottom: 1.5em;
       font-size: 1.1em;
     }
+    
+    /* make invisible border to accommodate error border */
+    .btn-group {
+      margin-bottom: 1em;
+      padding: 1em;
+      border: 1px solid @bkgrd-blue;
+    }
 
     /* answer selection buttons */
     .btn {
-      margin-bottom: 1em;
       padding: .6em 2em;
       font-weight: bold;
+    }
+    
+    /* increase contrast of selected button */
+    .btn-primary.active {
+      background-color: #204d74;
+      border-color: #122b40;
     }
 
     /* hide the actual answer inputs (radio buttons) */
@@ -76,6 +105,69 @@
     }
 
   }//closes each-criterion
+  
+  @media (min-width: 993px) {
+    
+    /* if adding scrollable boxes to compare screen, uncomment below */
+   
+    /* hide answer pair toggle */
+    //.answer-toggle,
+    //.lower-pair-display {
+    //  display: none;
+    //}
+    
+    /* show answer pair display button options, instructions for scrollable box, close links */
+    //.pair-display,
+    //.scrollable-instructions,
+    //.close-link,
+    //.height-control {
+    //  display: block;
+    //}
+    //.close-link {
+    //  margin-top: 1.2em;
+    //}
+    
+    /* selected answer expands to full width */
+    //.expanded {
+    //  width: 100%;
+    //}
+    
+    /* non-selected answer does not display */
+    //.collapsed {
+    //  display: none;
+    //}
+    
+    /* increase contrast of selected button */
+    //.pair-display .btn-info.active {
+    //  background-color: #269abc;
+    //  border-color: #1b6d85;
+    //}
+    
+    /* styles to restrain answer to scrollable box */
+    //.scrollable-answer {
+    //  padding: 0 2em 2em 2em;
+    //  height: 350px;
+    //  overflow: auto;
+    //  box-shadow: 2px 2px 20px 2px #efefef inset;
+    //  border: 2px solid @border-gray; 
+    //}
+   
+    /* styles to restrain comparison form to scrollable box */
+    //.scrollable-form {
+    //  margin: 0;
+    //  padding: 1.5em;
+    //  height: 400px;
+    //  overflow: auto;
+    //  box-shadow: 2px 2px 20px 2px #efefef inset;
+    //  border: 2px solid @border-gray; 
+    //}
+    
+    /* feedback fieldset when scrollable has addtional margin */
+    //.scrollable-feedback {
+    //  margin-bottom: 2em;
+    //}
+  
+  }//closes 993px
 
 }//closes evaluate-screen
 

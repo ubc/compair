@@ -1,5 +1,7 @@
 <modal-cancel-button modal-instance="modalInstance" ng-show="modalInstance !== undefined"></modal-cancel-button>
 <h1 ng-if="downloadName">{{downloadName}}</h1>
+<h1 ng-if="!downloadName">Attachment</h1>
+<!-- <p class="text-right" ng-if="content.url"><a href="{{content.url}}" target="_blank" class="btn btn-info btn-sm">Open in New Window</a></p> -->
 <div class="each-attachment-content">
     <ng-include src="'modules/rich-content/rich-content-attachment-template.html'"></ng-include>
 </div>
