@@ -19,7 +19,8 @@ down_revision = 'b492a8f2132c'
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import func
-
+from sqlalchemy import create_engine
+from sqlalchemy.engine.reflection import Inspector
 from compair.models import convention
 
 group_table = sa.table('group',
@@ -30,23 +31,28 @@ group_table = sa.table('group',
 )
 
 def upgrade():
-    # drop the foreign key on course_id and recreate them.
-    # otherwise may encounter issues when dropping unique constraint.
-    # seems the unittest/demo site/prod are using diff naming convention for the foreign key,
-    # use try-except to drop the key
-    foreign_key_name = 'group_ibfk_1'
-    try:
+    # Drop the foreign key on course_id and recreate it.
+    # Otherwise may encounter issues when dropping unique constraint (e.g. on mysql with certain data).
+    # Seems the unittest/demo site/prod are using diff naming convention for the foreign key,
+    # so use inspector to try to find it
+    insp = Inspector.from_engine(op.get_bind())
+    foreign_keys = insp.get_foreign_keys('group')
+    filtered_keys = [k for k in foreign_keys if \
+        k['referred_table']=='course' and \
+        len(k['constrained_columns'])==1 and \
+        k['constrained_columns'][0]=='course_id']
+    if filtered_keys:
+        foreign_key_name = filtered_keys[0]['name']
         with op.batch_alter_table('group', naming_convention=convention) as batch_op:
-            batch_op.drop_constraint(foreign_key_name, type_='foreignkey')
-    except ValueError:
-        with op.batch_alter_table('group', naming_convention=convention) as batch_op:
-            foreign_key_name = 'fk_group_course_id_course'
             batch_op.drop_constraint(foreign_key_name, type_='foreignkey')
 
     with op.batch_alter_table('group', naming_convention=convention) as batch_op:
         batch_op.drop_constraint('uq_course_and_group_name', type_='unique')
-    with op.batch_alter_table('group', naming_convention=convention) as batch_op:
-        batch_op.create_foreign_key(foreign_key_name, 'course', ['course_id'], ['id'], ondelete='CASCADE')
+
+    if filtered_keys:
+        foreign_key_name = filtered_keys[0]['name']
+        with op.batch_alter_table('group', naming_convention=convention) as batch_op:
+            batch_op.create_foreign_key(foreign_key_name, 'course', ['course_id'], ['id'], ondelete='CASCADE')
 
 def downgrade():
     connection = op.get_bind()
