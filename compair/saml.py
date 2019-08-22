@@ -1,5 +1,4 @@
-from future.types.newbytes import newbytes
-from future.utils import bytes_to_native_str
+from future.utils import native
 from flask import current_app, url_for, session as sess
 from onelogin.saml2.auth import OneLogin_Saml2_Auth
 from onelogin.saml2.settings import OneLogin_Saml2_Settings
@@ -51,7 +50,7 @@ def _get_auth(request):
 
 def get_saml_login_url(request):
     the_url = _get_auth(request).login()
-    return bytes_to_native_str(the_url) if isinstance(the_url, newbytes) else the_url
+    return native(the_url)
 
 def get_saml_auth_response(request):
     auth = _get_auth(request)
@@ -71,4 +70,4 @@ def get_saml_logout_url(request):
         session_index=sess.get('SAML_SESSION_INDEX'),
         return_to=logout_service_url
     )
-    return bytes_to_native_str(the_url) if isinstance(the_url, newbytes) else the_url
+    return native(the_url)
