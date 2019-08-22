@@ -194,7 +194,7 @@
                                 Your private feedback for <strong>Answer {{answer1.evaluation_number}}</strong>'s author
                                 <i class="fa fa-arrow-down"></i>
                             </label>
-                            <div ng-class="{'has-error': (!canManageAssignment || preview) && !answer1_feedback.content && saveComparisonAttempted}">
+                            <div ng-class="{'has-error': !canManageAssignment && !answer1_feedback.content && saveComparisonAttempted}">
                                 <textarea id="answer1_feedback" ng-if="comparison.id"
                                     ng-model="answer1_feedback.content" rows="12" ckeditor="editor1Options" ng-required="{{!canManageAssignment}}">
                                 </textarea>
@@ -206,7 +206,7 @@
                                 Your private feedback for <strong>Answer {{answer2.evaluation_number}}</strong>'s author
                                 <i class="fa fa-arrow-down"></i>
                             </label>
-                            <div ng-class="{'has-error': (!canManageAssignment || preview) && !answer2_feedback.content && saveComparisonAttempted}">
+                            <div ng-class="{'has-error': !canManageAssignment && !answer2_feedback.content && saveComparisonAttempted}">
                                 <textarea id="answer2_feedback" ng-if="comparison.id"
                                     ng-model="answer2_feedback.content" rows="12" ckeditor="editor2Options" ng-required="{{!canManageAssignment}}">
                                 </textarea>
@@ -230,7 +230,7 @@
         
         <div class="form-group text-center row">
             <div class="col-md-12">
-                <input ng-show="!canManageAssignment" ng-disabled="submitted" type="submit"
+                <input ng-show="(!canManageAssignment || preview)" ng-disabled="submitted" type="submit"
                     ng-click="isDraft = true; comparisonSubmit(comparisonForm);"
                     value="Save Draft" class="btn btn-default btn-lg" />
                 &nbsp; &nbsp;
