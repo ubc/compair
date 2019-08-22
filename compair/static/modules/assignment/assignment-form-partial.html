@@ -29,7 +29,7 @@
                 name="assignmentName" ng-model="assignment.name" placeholder="short question or title that will link to the assignment"
                 required ng-maxlength="255" auto-focus />
             <!-- if the field is empty AND a save attempted -->
-            <p ng-if="assignmentForm.assignmentName.$invalid && saveAttempted" class="alert alert-warning">What short name <span ng-if="assignmentForm.assignmentName.$error.maxlength">(maximum 255 characters)</span> would you like displayed for this assignment?</p>
+            <p ng-if="assignmentForm.assignmentName.$invalid && saveAssignmentAttempted" class="alert alert-warning">What short name <span ng-if="assignmentForm.assignmentName.$error.maxlength">(maximum 255 characters)</span> would you like displayed for this assignment?</p>
         </compair-field-with-feedback>
 
         <label class="required-star">Self-Evaluation</label>
@@ -135,9 +135,9 @@
                         <div uib-timepicker ng-model="date.astart.time" minute-step="1" mousewheel="false"></div>
                     </div>
                     <!-- if the field is empty/incomplete AND save attempted -->
-                    <p ng-if="(assignmentForm.answerStart.$invalid || !date.astart.time) && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time can students start answering?</p>
+                    <p ng-if="(assignmentForm.answerStart.$invalid || !date.astart.time) && saveAssignmentAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time can students start answering?</p>
                     <!-- if assignment start/end mismatch OR course/assignment start mismatch AND save attempted -->
-                    <p ng-if="(assignmentForm.answerStart.$valid && date.astart.time) && (dateMismatch(date.astart, date.aend, false, 'combined', 'combined') || dateMismatch(course.start_date, date.astart, true, 'new', 'combined')) && saveAttempted" class="alert alert-warning">
+                    <p ng-if="(assignmentForm.answerStart.$valid && date.astart.time) && (dateMismatch(date.astart, date.aend, false, 'combined', 'combined') || dateMismatch(course.start_date, date.astart, true, 'new', 'combined')) && saveAssignmentAttempted" class="alert alert-warning">
                         Make sure answering starts
                         <span ng-if="dateMismatch(date.astart, date.aend, false, 'combined', 'combined')">before it ends<span ng-if="!dateMismatch(course.start_date, date.astart, true, 'new', 'combined')">...</span></span>
                         <span ng-if="dateMismatch(date.astart, date.aend, false, 'combined', 'combined') && dateMismatch(course.start_date, date.astart, true, 'new', 'combined')"> and </span>
@@ -163,9 +163,9 @@
                         <div uib-timepicker ng-model="date.aend.time" minute-step="1" mousewheel="false"></div>
                     </div>
                      <!-- if the field is empty/incomplete AND save attempted -->
-                    <p ng-if="(assignmentForm.answerEnd.$invalid || !date.aend.time) && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time must students finish answering?</p>
+                    <p ng-if="(assignmentForm.answerEnd.$invalid || !date.aend.time) && saveAssignmentAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time must students finish answering?</p>
                     <!-- if course/assignment end mismatch AND save attempted -->
-                        <p ng-if="(assignmentForm.answerEnd.$valid && date.aend.time) && dateMismatch(date.aend, course.end_date, true, 'combined', 'new') && saveAttempted" class="alert alert-warning">Make sure answering ends before the course ends ({{course.end_date | date:'dd-MMMM-yyyy'}} at {{course.end_date | date:'h:mm a'}}).</p>
+                        <p ng-if="(assignmentForm.answerEnd.$valid && date.aend.time) && dateMismatch(date.aend, course.end_date, true, 'combined', 'new') && saveAssignmentAttempted" class="alert alert-warning">Make sure answering ends before the course ends ({{course.end_date | date:'dd-MMMM-yyyy'}} at {{course.end_date | date:'h:mm a'}}).</p>
                 </compair-field-with-feedback>
             </div>
         </div>
@@ -197,9 +197,9 @@
                             <div uib-timepicker ng-model="date.cstart.time" minute-step="1" mousewheel="false"></div>
                         </div>
                         <!-- if the field is empty/incomplete AND comparing enabled AND save attempted -->
-                        <p ng-if="(assignmentForm.compareStart.$invalid || !date.cstart.time) && assignment.availableCheck && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time can students start comparing?</p>
+                        <p ng-if="(assignmentForm.compareStart.$invalid || !date.cstart.time) && assignment.availableCheck && saveAssignmentAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time can students start comparing?</p>
                         <!-- if end is before the start date OR start is before answer start AND comparing enabled AND save attempted -->
-                        <p ng-if="(assignmentForm.compareStart.$valid && date.cstart.time) && (dateMismatch(date.cstart, date.cend, false, 'combined',  'combined') || dateMismatch(date.astart, date.cstart, true, 'combined',  'combined')) && assignment.availableCheck && saveAttempted" class="alert alert-warning">
+                        <p ng-if="(assignmentForm.compareStart.$valid && date.cstart.time) && (dateMismatch(date.cstart, date.cend, false, 'combined',  'combined') || dateMismatch(date.astart, date.cstart, true, 'combined',  'combined')) && assignment.availableCheck && saveAssignmentAttempted" class="alert alert-warning">
                             Make sure comparing starts
                             <span ng-if="dateMismatch(date.cstart, date.cend, false, 'combined', 'combined')">before it ends<span ng-if="!dateMismatch(date.astart, date.cstart, true, 'combined', 'combined')">...</span></span>
                             <span ng-if="dateMismatch(date.cstart, date.cend, false, 'combined', 'combined') && dateMismatch(date.astart, date.cstart, true, 'combined', 'combined')"> and </span>
@@ -225,9 +225,9 @@
                             <div uib-timepicker ng-model="date.cend.time" minute-step="1" mousewheel="false"></div>
                         </div>
                         <!-- if the field is empty/incomplete AND compare enabled AND save attempted -->
-                        <p ng-if="(assignmentForm.compareEnd.$invalid || !date.cend.time) && assignment.availableCheck && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time must students finish comparing?</p>
+                        <p ng-if="(assignmentForm.compareEnd.$invalid || !date.cend.time) && assignment.availableCheck && saveAssignmentAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time must students finish comparing?</p>
                         <!-- if end after course end AND compare enabled AND save attempted -->
-                        <p ng-if="(assignmentForm.compareEnd.$valid  && date.cend.time) && dateMismatch(date.cend, course.end_date, true, 'combined',  'new') && assignment.availableCheck && saveAttempted" class="alert alert-warning">Make sure comparing ends before the course ends ({{course.end_date | date:'dd-MMMM-yyyy'}} at {{course.end_date | date:'h:mm a'}}).</p>
+                        <p ng-if="(assignmentForm.compareEnd.$valid  && date.cend.time) && dateMismatch(date.cend, course.end_date, true, 'combined',  'new') && assignment.availableCheck && saveAssignmentAttempted" class="alert alert-warning">Make sure comparing ends before the course ends ({{course.end_date | date:'dd-MMMM-yyyy'}} at {{course.end_date | date:'h:mm a'}}).</p>
                     </compair-field-with-feedback>
                 </div>
             </div>
@@ -260,9 +260,9 @@
                                 <div uib-timepicker ng-model="date.sestart.time" minute-step="1" mousewheel="false"></div>
                             </div>
                             <!-- if the field is empty/incomplete AND self-eval enabled AND a save attempted -->
-                            <p ng-if="(assignmentForm.selfEvalStart.$invalid || !date.sestart.time) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">What date (DD-Month-YYYY) and time can students start self-evaluating?</p>
+                            <p ng-if="(assignmentForm.selfEvalStart.$invalid || !date.sestart.time) && assignment.selfEvalCheck && saveAssignmentAttempted" class="alert alert-warning">What date (DD-Month-YYYY) and time can students start self-evaluating?</p>
                             <!-- if end is before start OR start is before answer start OR start is before compare start AND self-eval enabled AND save attempted -->
-                            <p ng-if="(assignmentForm.selfEvalStart.$valid && date.sestart.time) && (dateMismatch(date.sestart, date.seend, false, 'combined', 'combined') || dateMismatch(date.astart, date.sestart, true, 'combined', 'combined') || dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined')) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">
+                            <p ng-if="(assignmentForm.selfEvalStart.$valid && date.sestart.time) && (dateMismatch(date.sestart, date.seend, false, 'combined', 'combined') || dateMismatch(date.astart, date.sestart, true, 'combined', 'combined') || dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined')) && assignment.selfEvalCheck && saveAssignmentAttempted" class="alert alert-warning">
                                 Make sure self-evaluating starts
                                 <span ng-if="dateMismatch(date.sestart, date.seend, false, 'combined', 'combined')">before it ends<span ng-if="!dateMismatch(date.astart, date.sestart, true, 'combined', 'combined') && !dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined')">...</span></span>
                                 <span ng-if="dateMismatch(date.sestart, date.seend, false, 'combined', 'combined') && (dateMismatch(date.astart, date.sestart, true, 'combined', 'combined') || (dateMismatch(date.cstart, date.sestart, true, 'combined', 'combined') && assignment.availableCheck))"> and </span>
@@ -288,9 +288,9 @@
                                 <div uib-timepicker ng-model="date.seend.time" minute-step="1" mousewheel="false"></div>
                             </div>
                             <!-- if the field is incomplete AND self-eval enabled AND save attempted -->
-                            <p ng-if="(assignmentForm.selfEvalEnd.$invalid || !date.seend.time) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">What date (DD-Month-YYYY) and time must students finish self-evaluating?</p>
+                            <p ng-if="(assignmentForm.selfEvalEnd.$invalid || !date.seend.time) && assignment.selfEvalCheck && saveAssignmentAttempted" class="alert alert-warning">What date (DD-Month-YYYY) and time must students finish self-evaluating?</p>
                              <!-- if end after course end AND self-eval enabled AND save attempted -->
-                            <p ng-if="(assignmentForm.selfEvalEnd.$valid && date.seend.time) && dateMismatch(date.seend, course.end_date, true, 'combined', 'new') && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">Make sure self-evaluating ends before the course ends ({{course.end_date | date:'dd-MMMM-yyyy'}} at {{course.end_date | date:'h:mm a'}}).</p>
+                            <p ng-if="(assignmentForm.selfEvalEnd.$valid && date.seend.time) && dateMismatch(date.seend, course.end_date, true, 'combined', 'new') && assignment.selfEvalCheck && saveAssignmentAttempted" class="alert alert-warning">Make sure self-evaluating ends before the course ends ({{course.end_date | date:'dd-MMMM-yyyy'}} at {{course.end_date | date:'h:mm a'}}).</p>
                         </compair-field-with-feedback>
                     </div>
                 </div>
@@ -378,7 +378,7 @@
                         <li>Later students <em>may</em> experience increased level of difficulty</li>
                     </ul>
                     <div class="rank-selection">
-                        <label ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}' || assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive_min_delta}}'">Let students see rank (but not score) for: &nbsp;</label>
+                        <label ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}' || assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive_min_delta}}'" class="required-star">Let students see rank (but not score) for: </label>
                         <select ng-show="assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive}}' || assignment.pairing_algorithm == '{{PairingAlgorithm.adaptive_min_delta}}'" ng-model="assignment.rank_display_limit"
                                 ng-options="option.value as option.label for option in rankLimitOptions">
                             <option value="">No answers (ranking hidden)</option>
@@ -409,7 +409,7 @@
                 <label class="required-star">Comparisons Required from Each Student</label>
                 <input type="text" id="number_of_comparisons" name="number_of_comparisons" class="form-control" ng-model="assignment.number_of_comparisons" ng-pattern="/^[1-9]\d*$/" maxlength="4" required placeholder="number of comparisons required from each student">
                 <!-- if the field is invalid AND a save attempted -->
-                <p ng-if="assignmentForm.number_of_comparisons.$invalid && saveAttempted" class="alert alert-warning">How many comparisons (minimum 1) will you require of each student, entered as a number?</p>
+                <p ng-if="assignmentForm.number_of_comparisons.$invalid && saveAssignmentAttempted" class="alert alert-warning">How many comparisons (minimum 1) will you require of each student, entered as a number?</p>
             </compair-field-with-feedback>
         </div>
 
@@ -429,7 +429,7 @@
         <div ng-show="assignment.addPractice">
             <br />
             <!-- if one or both answers are missing AND a save attempted -->
-            <p ng-if="missingPracticeAnswers && saveAttempted" class="alert alert-warning">Please provide some text or a file attachment for {{whichMissingAnswer}} in the practice pair below, or uncheck the practice pair selection above.</p>
+            <p ng-if="missingPracticeAnswers && saveAssignmentAttempted" class="alert alert-warning">Please provide some text or a file attachment for {{whichMissingAnswer}} in the practice pair below, or uncheck the practice pair selection above.</p>
             <div class="row">
                 <div class="col-md-1"></div>
                 <div class="col-md-5 form-group">
@@ -529,20 +529,20 @@
                 </div>
             </div>
             <!-- if one or more fields invalid AND a save attempted -->
-            <p ng-if="(assignmentForm.answer_grade_weight.$invalid || assignmentForm.comparison_grade_weight.$invalid || assignmentForm.self_evaluation_grade_weight.$invalid) && saveAttempted" class="alert alert-warning">What relative weight (minimum 0) should each phase of the assignment receive, entered as a number?</p>
+            <p ng-if="(assignmentForm.answer_grade_weight.$invalid || assignmentForm.comparison_grade_weight.$invalid || assignmentForm.self_evaluation_grade_weight.$invalid) && saveAssignmentAttempted" class="alert alert-warning">What relative weight (minimum 0) should each phase of the assignment receive, entered as a number?</p>
         </div>
     </fieldset>
     
     <!-- different helper messages for pre or post save attempts -->
-    <p class="text-center text-muted" ng-if="!saveAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
-    <p class="text-center text-warning" ng-if="saveAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
+    <p class="text-center text-muted" ng-if="!saveAssignmentAttempted"><span class="required-star "></span> = required (please make sure these areas are filled in)</p>
+    <p class="text-center text-warning" ng-if="saveAssignmentAttempted"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
         
     <input ng-if="method == 'copy'" type="submit" class="btn btn-success btn-lg center-block" value="Duplicate"
         ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete"
-        ng-click="showErrors($event, assignmentForm.$valid)" />
+        ng-click="showAssignmentErrors($event, assignmentForm.$valid)" />
     
     <input ng-if="method != 'copy'" type="submit" class="btn btn-success btn-lg center-block" value="Save"
         ng-disabled="submitted || (uploader.queue.length && !uploader.queue[0].isSuccess) || uploader.waitForKalturaComplete"
-        ng-click="showErrors($event, assignmentForm.$valid)" />
+        ng-click="showAssignmentErrors($event, assignmentForm.$valid)" />
     
 </form>

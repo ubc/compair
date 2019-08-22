@@ -26,11 +26,12 @@
 
 <form name="commentForm" class="form" confirm-form-exit novalidate form-type="comment">
     <fieldset>
-        
+        <legend><span ng-if="answerComment || selfEvalComment">Feedback</span><span ng-if="!answerComment && !selfEvalComment">Comment</span><span ng-if="!selfEvalComment"> Details</span></legend>
+        <div ng-if="selfEvalComment" class="instructional-text">
+            <p ng-bind-html="instructions"></p>
+        </div>
         <!--if no content AND save attempted -->
         <p class="alert alert-warning" ng-if="!comment.content && saveFeedbackAttempted">What do you want to say in response to <span ng-if="answerComment">this</span><span ng-if="selfEvalComment">your</span> answer? Enter text below.</p>
-        
-        <legend><span ng-if="answerComment || selfEvalComment">Feedback</span><span ng-if="!answerComment && !selfEvalComment">Comment</span><span ng-if="!selfEvalComment"> Details</span></legend>
         <div class="form-group">
             <label ng-if="!selfEvalComment" class="required-star">Your feedback to <span ng-if="parent.user.id != loggedInUserId">this author</span><span ng-if="parent.user.id == loggedInUserId">your own answer</span></label>
             <label ng-if="selfEvalComment" class="required-star">Your private feedback to yourself</label>

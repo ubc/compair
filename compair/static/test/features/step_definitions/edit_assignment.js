@@ -57,8 +57,8 @@ var editAssignmentStepDefinitionsWrapper = function () {
         return expect(item.element(by.css(".media-heading")).getText()).to.eventually.equal("New Name »");
     });
 
-    this.Then("I should see a warning message in the edit criterion modal", function() {
-        return expect(element(by.css('.modal .intro-text.text-warning')).isPresent()).to.eventually.equal(true);
+    this.Then("I should see an info message in the edit criterion modal", function() {
+        return expect(element(by.css('.modal .intro-text.alert-info')).isPresent()).to.eventually.equal(true);
     });
 
     this.Then("I should not be able to remove criteria", function() {
