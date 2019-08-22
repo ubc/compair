@@ -43,7 +43,7 @@ Feature: Edit Assignment
     Given I'm an Instructor
     And I'm on 'edit assignment' page for assignment with id '1abcABC123-abcABC123_Z' and course id '1abcABC123-abcABC123_Z'
     When I edit the second criterion
-    Then I should see a warning message in the edit criterion modal
+    Then I should see an info message in the edit criterion modal
 
   Scenario: Cannot add or remove an assignment's criterion as instructor after its been compared
     Given I'm an Instructor

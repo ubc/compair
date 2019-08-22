@@ -357,8 +357,8 @@
             </div>
 
             <!-- Student Answer Metadata Header -->
-            <div ng-repeat="answer in user_answers.objects">
-                <div class="each-evaluation clearfix" ng-class="{'highlight-momentarily': highlightAnswer }">
+            <div ng-repeat="answer in user_answers.objects"  class="each-evaluation">
+                <div class="clearfix" ng-class="{'highlight-momentarily': highlightAnswer }">
                     <div class="each-header clearfix">
                         <compair-answer-avatar answer="answer" skip-name="true" me="true"></compair-answer-avatar>
                         <span class="label label-default" ng-if="isInstructor(answer.user_id)">{{instructorLabel(answer.user_id)}}</span>

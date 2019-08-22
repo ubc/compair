@@ -40,18 +40,20 @@
                         </p>
                         <div ng-show="showAppLogin">
                             <div class="form-group has-feedback"
-                                ng-class="{'has-error': loginForm.username.$invalid, 'has-success': loginForm.username.$valid}">
+                                ng-class="{'has-error': loginForm.username.$invalid}">
                                 <label for="inputUser" class="required-star">ComPAIR Username</label>
                                 <input type="text" id="inputUser" name="username"
                                     ng-model="username" required placeholder=""
                                     class="form-control">
+                                <span ng-if="loginForm.username.$invalid" class="glyphicon glyphicon-pencil form-control-feedback"></span>
                             </div>
                             <div class="form-group has-feedback"
-                                ng-class="{'has-error': loginForm.password.$invalid, 'has-success': loginForm.password.$valid}">
+                                ng-class="{'has-error': loginForm.password.$invalid}">
                                 <label for="inputPass" class="required-star">ComPAIR Password</label>
                                 <span ng-if="AuthTypesEnabled.demo">(Default: <i>demo</i>)</span>
                                 <input type="password" id="inputPass" name="password" ng-model="password" required
                                         placeholder="" class="form-control">
+                                <span ng-if="loginForm.password.$invalid" class="glyphicon glyphicon-pencil form-control-feedback"></span>
                             </div>
                             <div class="alert alert-warning text-center" ng-show="login_err">Please double-check your username and password and try again.</div><br />
                             <input type="submit" ng-disabled="loginForm.$invalid || submitted" class="btn btn-success center-block" ng-class="" value="Log In">

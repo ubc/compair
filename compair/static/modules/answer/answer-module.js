@@ -120,6 +120,7 @@ module.controller(
         $scope.isImpersonating = Session.isImpersonating();
         $scope.answer.rotated = false;
         $scope.saveAnswerAttempted = false;
+        $scope.editorOptions = EditorOptions.basic;
 
         if ($scope.method == "create") {
             $scope.answer = {

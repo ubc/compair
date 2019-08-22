@@ -63,7 +63,7 @@
                     <!-- if the field is empty/incomplete AND a next attempted -->
                     <p ng-if="(duplicateCourseForm.courseStart.$invalid || !duplicateCourse.date.course_start.time) && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time does this course start?</p>
                     <!-- if course start/end mismatch AND a next attempted -->
-                    <p ng-if="dateMismatch(duplicateCourse.date.course_start, duplicateCourse.date.course_end, false) && saveAttempted" class="alert alert-warning">Make sure this course starts before it ends...</p>
+                    <p ng-if="(duplicateCourseForm.courseStart.$valid && duplicateCourse.date.course_start.time) && dateMismatch(duplicateCourse.date.course_start, duplicateCourse.date.course_end, false) && saveAttempted" class="alert alert-warning">Make sure this course starts before it ends...</p>
                 </compair-field-with-feedback>
             </div>
             <div class="col-md-6 form-group">
@@ -135,7 +135,7 @@
                         <!-- if the field is empty/incomplete AND save attempted -->
                         <p ng-if="(duplicateCourseForm['answer' + ($index+1) + 'Start'].$invalid || !assignment.date.astart.time) && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time can students start answering?</p>
                         <!-- if assignment start/end mismatch OR course/assignment start mismatch AND save attempted -->
-                        <p ng-if="(dateMismatch(assignment.date.astart, assignment.date.aend, false) || dateMismatch(duplicateCourse.date.course_start, assignment.date.astart, true)) && saveAttempted" class="alert alert-warning">
+                        <p ng-if="(duplicateCourseForm['answer' + ($index+1) + 'Start'].$valid && assignment.date.astart.time) && (dateMismatch(assignment.date.astart, assignment.date.aend, false) || dateMismatch(duplicateCourse.date.course_start, assignment.date.astart, true)) && saveAttempted" class="alert alert-warning">
                             Make sure answering starts
                             <span ng-if="dateMismatch(assignment.date.astart, assignment.date.aend, false)">before it ends<span ng-if="!dateMismatch(duplicateCourse.date.course_start, assignment.date.astart, true)">...</span></span>
                             <span ng-if="dateMismatch(assignment.date.astart, assignment.date.aend, false) && dateMismatch(duplicateCourse.date.course_start, assignment.date.astart, true)"> and </span>
@@ -168,7 +168,7 @@
                         <!-- if the field is incomplete AND save attempted -->
                         <p ng-if="(duplicateCourseForm['answer' + ($index+1) + 'End'].$invalid || !assignment.date.aend.time) && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time must students finish answering?</p>
                         <!-- if course/assignment end mismatch AND save attempted -->
-                        <p ng-if="dateMismatch(assignment.date.aend, duplicateCourse.date.course_end) && saveAttempted" class="alert alert-warning">Make sure answering ends before the course ends ({{duplicateCourse.end_date | date:'dd-MMMM-yyyy'}} at {{duplicateCourse.end_date | date:'h:mm a'}} - <a href="" ng-click="canGoBack();">change this?</a>).</p>
+                        <p ng-if="(duplicateCourseForm['answer' + ($index+1) + 'End'].$valid && assignment.date.aend.time) && dateMismatch(assignment.date.aend, duplicateCourse.date.course_end) && saveAttempted" class="alert alert-warning">Make sure answering ends before the course ends ({{duplicateCourse.end_date | date:'dd-MMMM-yyyy'}} at {{duplicateCourse.end_date | date:'h:mm a'}} - <a href="" ng-click="canGoBack();">change this?</a>).</p>
                     </compair-field-with-feedback>
                 </div>
             </div>
@@ -207,7 +207,7 @@
                         <!-- if the field is empty/incomplete AND comparing enabled AND save attempted -->
                         <p ng-if="(duplicateCourseForm['compare' + ($index+1) + 'Start'].$invalid || !assignment.date.cstart.time) && assignment.availableCheck && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time can students start comparing?</p>
                         <!-- if end is before the start date OR start is before answer start AND comparing enabled AND save attempted -->
-                        <p ng-if="(dateMismatch(assignment.date.cstart, assignment.date.cend, false) || dateMismatch(assignment.date.astart, assignment.date.cstart, true)) && assignment.availableCheck && saveAttempted" class="alert alert-warning">
+                        <p ng-if="(duplicateCourseForm['compare' + ($index+1) + 'Start'].$valid && assignment.date.cstart.time) && (dateMismatch(assignment.date.cstart, assignment.date.cend, false) || dateMismatch(assignment.date.astart, assignment.date.cstart, true)) && assignment.availableCheck && saveAttempted" class="alert alert-warning">
                             Make sure comparing starts
                             <span ng-if="dateMismatch(assignment.date.cstart, assignment.date.cend, false)">before it ends<span ng-if="!dateMismatch(assignment.date.astart, assignment.date.cstart, true)">...</span></span>
                             <span ng-if="dateMismatch(assignment.date.cstart, assignment.date.cend, false) && dateMismatch(assignment.date.astart, assignment.date.cstart, true)"> and </span>
@@ -240,7 +240,7 @@
                         <!-- if the field is incomplete AND compare enabled AND save attempted -->
                         <p ng-if="(duplicateCourseForm['compare' + ($index+1) + 'End'].$invalid || !assignment.date.cend.time) && assignment.availableCheck && saveAttempted" class="alert alert-warning">What day (DD-Month-YYYY) and time must students finish comparing?</p>
                         <!-- if end after course end AND compare enabled AND save attempted -->
-                        <p ng-if="dateMismatch(assignment.date.cend, duplicateCourse.date.course_end, true) && assignment.availableCheck && saveAttempted" class="alert alert-warning">Make sure comparing ends before the course ends ({{duplicateCourse.end_date | date:'dd-MMMM-yyyy'}} at {{duplicateCourse.end_date | date:'h:mm a'}} - <a href="" ng-click="canGoBack();">change this?</a>).</p>
+                        <p ng-if="(duplicateCourseForm['compare' + ($index+1) + 'End'].$valid && assignment.date.cend.time) && dateMismatch(assignment.date.cend, duplicateCourse.date.course_end, true) && assignment.availableCheck && saveAttempted" class="alert alert-warning">Make sure comparing ends before the course ends ({{duplicateCourse.end_date | date:'dd-MMMM-yyyy'}} at {{duplicateCourse.end_date | date:'h:mm a'}} - <a href="" ng-click="canGoBack();">change this?</a>).</p>
                     </compair-field-with-feedback>
                 </div>
                 <div class="col-md-1"></div>
@@ -294,7 +294,7 @@
                                     <!-- if the field is empty/incomplete AND self-eval enabled AND a save attempted -->
                                     <p ng-if="(duplicateCourseForm['selfeval' + ($index+1) + 'Start'].$invalid || !assignment.date.sestart.time) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">What date (DD-Month-YYYY) and time can students start self-evaluating?</p>
                                     <!-- if end is before start OR start is before answer start OR start is before compare start AND self-eval enabled AND save attempted -->
-                                    <p ng-if="(dateMismatch(assignment.date.sestart, assignment.date.seend, false) || dateMismatch(assignment.date.astart, assignment.date.sestart, true) || dateMismatch(assignment.date.cstart, assignment.date.sestart, true)) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">
+                                    <p ng-if="(duplicateCourseForm['selfeval' + ($index+1) + 'Start'].$valid && assignment.date.sestart.time) &&  (dateMismatch(assignment.date.sestart, assignment.date.seend, false) || dateMismatch(assignment.date.astart, assignment.date.sestart, true) || dateMismatch(assignment.date.cstart, assignment.date.sestart, true)) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">
                                         Make sure self-evaluating starts
                                         <span ng-if="dateMismatch(assignment.date.sestart, assignment.date.seend, false)">before it ends<span ng-if="!dateMismatch(assignment.date.astart, assignment.date.sestart, true) && !dateMismatch(assignment.date.cstart, assignment.date.sestart, true)">...</span></span>
                                         <span ng-if="dateMismatch(assignment.date.sestart, assignment.date.seend, false) && (dateMismatch(assignment.date.astart, assignment.date.sestart, true) || (dateMismatch(assignment.date.cstart, assignment.date.sestart, true) && assignment.availableCheck))"> and </span>
@@ -322,7 +322,7 @@
                                     <!-- if the field is incomplete AND self-eval enabled AND save attempted -->
                                     <p ng-if="(duplicateCourseForm['selfeval' + ($index+1) + 'End'].$invalid || !assignment.date.seend.time) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">What date (DD-Month-YYYY) and time must students finish self-evaluating?</p>
                                      <!-- if end after course end AND self-eval enabled AND save attempted -->
-                                    <p ng-if="dateMismatch(assignment.date.seend, duplicateCourse.date.course_end, true) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">Make sure self-evaluating ends before the course ends ({{duplicateCourse.date.course_end.date | date:'dd-MMMM-yyyy'}} at {{duplicateCourse.end_date | date:'h:mm a'}} - <a href="" ng-click="canGoBack();">change this?</a>).</p>
+                                    <p ng-if="(duplicateCourseForm['selfeval' + ($index+1) + 'End'].$valid && assignment.date.seend.time) && dateMismatch(assignment.date.seend, duplicateCourse.date.course_end, true) && assignment.selfEvalCheck && saveAttempted" class="alert alert-warning">Make sure self-evaluating ends before the course ends ({{duplicateCourse.date.course_end.date | date:'dd-MMMM-yyyy'}} at {{duplicateCourse.end_date | date:'h:mm a'}} - <a href="" ng-click="canGoBack();">change this?</a>).</p>
                                 </compair-field-with-feedback>
                             </div>
                             <div class="col-md-1"></div>

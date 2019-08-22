@@ -51,7 +51,9 @@ module.controller(
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId;
-        $scope.saveAttempted = false;
+        $scope.saveComparisonAttempted = false;
+        $scope.editor1Options = EditorOptions.simplified;
+        $scope.editor2Options = EditorOptions.simplified;
 
         $scope.course = resolvedData.course;
         $scope.assignment = resolvedData.assignment;
@@ -200,7 +202,7 @@ module.controller(
         };
         
         // decide on showing inline errors
-        $scope.showErrors = function($event, formValid) {
+        $scope.showComparisonErrors = function($event, formValid) {
 
             // show errors if invalid form
             if (!formValid) {
@@ -214,7 +216,7 @@ module.controller(
                 $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information in Step 1) or Step 2) of the form and then try again.";
 
                 // display messages
-                $scope.saveAttempted = true;
+                $scope.saveComparisonAttempted = true;
                 Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
 
             } else {
@@ -329,6 +331,7 @@ module.controller(
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId;
+        $scope.editorOptions = EditorOptions.simplified;
 
         $scope.course = resolvedData.course;
         $scope.assignment = resolvedData.assignment;
@@ -464,7 +467,6 @@ module.controller(
         $scope.users = [];
         $scope.answers = [];
         $scope.WinningAnswer = WinningAnswer;
-        breadcrumbs.options = {'Course assignments': $scope.course.name};
 
         $scope.resetUsers = function(instructors, students) {
             instructors = _.sortBy(instructors, 'name');

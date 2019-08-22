@@ -91,7 +91,7 @@ module.controller(
         $scope.method = $scope.comment.id ? 'edit' : 'create';
         $scope.modalInstance = $uibModalInstance;
 
-        $scope.editorOptions = EditorOptions.basic;
+        $scope.editorOptions = EditorOptions.simplified;
         $scope.answerComment = true;
         $scope.AnswerCommentType = AnswerCommentType;
         $scope.saveFeedbackAttempted = false;

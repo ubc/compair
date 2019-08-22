@@ -198,12 +198,12 @@ gulp.task('bdd', gulp.series('webdriver_update', function (done) {
             //args: ['--baseUrl', 'http://127.0.0.1:8080/app']
         }))
         .on('error', function (e) {
-            throw e
+            throw e;
         })
         .on('end', function() {
             connect.serverClose();
-            done();
         });
+        done();
 }));
 
 /**
@@ -220,13 +220,15 @@ gulp.task('test:unit', function (done) {
 /**
  * Generate index.html
  */
-gulp.task('generate_index', function() {
+gulp.task('generate_index', function(done) {
     var proc = exec('PYTHONUNBUFFERED=1 python manage.py util generate_index');
     proc.stderr.on('data', function (data) {
         process.stderr.write(data);
+        done();
     });
     proc.stdout.on('data', function (data) {
         process.stdout.write(data);
+        done();
     });
 });
 
@@ -262,16 +264,16 @@ gulp.task('server:frontend', gulp.series('generate_index', function(done) {
     });
     // clean up after server close
     app.server.on('close', function() {
-        gulp.start('delete_index');
-        done();
+        gulp.task('start', gulp.series('delete_index'));
     });
+    done();
 }));
 
 /**
  * Run acceptance tests
  */
-gulp.task('test:acceptance', gulp.series('server:frontend', 'bdd', function() {
-
+gulp.task('test:acceptance', gulp.series('server:frontend', 'bdd', function(done) {
+    done();
 }));
 
 /**
@@ -345,9 +347,11 @@ gulp.task('server:backend', function() {
     var proc = exec('PYTHONUNBUFFERED=1 python manage.py runserver -h 0.0.0.0');
     proc.stderr.on('data', function (data) {
         process.stderr.write(data);
+        done();
     });
     proc.stdout.on('data', function (data) {
         process.stdout.write(data);
+        done();
     });
 });
 
@@ -360,6 +364,7 @@ gulp.task('server:backend', function() {
 gulp.task('webdriver_standalone', function(done) {
     var webdriver_standalone = require('gulp-protractor').webdriver_standalone;
     webdriver_standalone(done);
+    done();
 });
 
 

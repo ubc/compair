@@ -124,8 +124,8 @@ module.directive('comparisonPreview', function() {
         /* this template is our simple text with button to launch the preview */
         templateUrl: 'modules/assignment/preview-inline-template-comparison.html',
         controller:
-                ["$scope", "$uibModal", "LearningRecordStatementHelper",
-                function ($scope, $uibModal, LearningRecordStatementHelper) {
+                ["$scope", "$uibModal", "EditorOptions", "LearningRecordStatementHelper",
+                function ($scope, $uibModal, EditorOptions, LearningRecordStatementHelper) {
             /* need to pass to comparison template all expected properties to complete the preview */
             $scope.previewComparisonPopup = function() {
                 $scope.preview = true;
@@ -157,71 +157,74 @@ module.directive('comparisonPreview', function() {
                     comparison_criteria: []
                 };
                 $scope.comparison.id = '123';
+                $scope.editor1Options = EditorOptions.simplified;
+                $scope.editor2Options = EditorOptions.simplified;
                 angular.forEach($scope.assignment.criteria, function(criterion) {
                     $scope.comparison.comparison_criteria.push({
                         'criterion_id': criterion.id,
                         'criterion': criterion,
-                        'content': ''
+                        'content': '',
+                        'winner' : ''
                     });
                 });
 
-                // default to showing answer pair at 50-50 split
-                $scope.expand = "none";
-                $scope.expandAnswer = function(whichOne) {
-                    
-                    //show the left or right answer full-width or go back to 50-50 default
-                    switch (whichOne) {
-                        case 'left':
-                            $scope.expand = "left";
-                            break;
-                        case 'right':
-                            $scope.expand = "right";
-                            break;
-                        default:
-                            $scope.expand = "none";
-                            break;
-                    }
-                    
-                };
-                
-                /* enable answer pair height buttons to start */
-                $scope.noShrink = false;
-                $scope.noGrow = false;
-                
-                /* to change answer pair height, find current height and add or substract set amount */
-                $scope.changeHeight = function(direction) {
-                    
-                    var answersList = document.getElementsByClassName('scrollable-answer');
-                    angular.forEach(answersList, function(elem) {
-                        
-                        var style = window.getComputedStyle(elem, null);
-                        var currentHeight = (style.getPropertyValue('height')).slice(0, -2);
-                        var growBy = 150;
-                        
-                        if (direction == "up") {
-                            newHeight = parseInt(currentHeight)+growBy;
-                            $scope.adjustHeight = { "height": newHeight + "px" };
-                        }
-                        if (direction == "down" && currentHeight > 200) {
-                            newHeight = parseInt(currentHeight)-growBy;
-                            $scope.adjustHeight = { "height": newHeight + "px" };
-                        }
-                        
-                        /* area cannot be less than 200px or more than 950p */
-                        if (newHeight <= 200) {
-                            $scope.noShrink = true;
-                            $scope.noGrow = false;
-                        } else {
-                            $scope.noShrink = false;
-                            $scope.noGrow = false;
-                        }
-                        if (newHeight >= 950) {
-                            $scope.noGrow = true;
-                        }
-                   
-                    });
-                
-                };
+                //// default to showing answer pair at 50-50 split
+                //$scope.expand = "none";
+                //$scope.expandAnswer = function(whichOne) {
+                //    
+                //    //show the left or right answer full-width or go back to 50-50 default
+                //    switch (whichOne) {
+                //        case 'left':
+                //            $scope.expand = "left";
+                //            break;
+                //        case 'right':
+                //            $scope.expand = "right";
+                //            break;
+                //        default:
+                //            $scope.expand = "none";
+                //            break;
+                //    }
+                //    
+                //};
+                //
+                ///* enable answer pair height buttons to start */
+                //$scope.noShrink = false;
+                //$scope.noGrow = false;
+                //
+                ///* to change answer pair height, find current height and add or substract set amount */
+                //$scope.changeHeight = function(direction) {
+                //    
+                //    var answersList = document.getElementsByClassName('scrollable-answer');
+                //    angular.forEach(answersList, function(elem) {
+                //        
+                //        var style = window.getComputedStyle(elem, null);
+                //        var currentHeight = (style.getPropertyValue('height')).slice(0, -2);
+                //        var growBy = 150;
+                //        
+                //        if (direction == "up") {
+                //            newHeight = parseInt(currentHeight)+growBy;
+                //            $scope.adjustHeight = { "height": newHeight + "px" };
+                //        }
+                //        if (direction == "down" && currentHeight > 200) {
+                //            newHeight = parseInt(currentHeight)-growBy;
+                //            $scope.adjustHeight = { "height": newHeight + "px" };
+                //        }
+                //        
+                //        /* area cannot be less than 200px or more than 950p */
+                //        if (newHeight <= 200) {
+                //            $scope.noShrink = true;
+                //            $scope.noGrow = false;
+                //        } else {
+                //            $scope.noShrink = false;
+                //            $scope.noGrow = false;
+                //        }
+                //        if (newHeight >= 950) {
+                //            $scope.noGrow = true;
+                //        }
+                //   
+                //    });
+                //
+                //};
 
                 /* student view preview is comparison template */
                 $scope.modalInstance = $uibModal.open({
@@ -245,12 +248,13 @@ module.directive('selfEvalPreview', function() {
         /* this template is our simple text with button to launch the preview */
         templateUrl: 'modules/assignment/preview-inline-template-self-eval.html',
         controller:
-                ["$scope", "$uibModal", "LearningRecordStatementHelper",
-                function ($scope, $uibModal, LearningRecordStatementHelper) {
+                ["$scope", "$uibModal", "EditorOptions", "LearningRecordStatementHelper",
+                function ($scope, $uibModal, EditorOptions, LearningRecordStatementHelper) {
             /* need to pass to self-eval template all expected properties to complete the preview */
             $scope.previewSelfEvalPopup = function() {
                 $scope.selfEvalComment = true;
                 $scope.preview = true;
+                $scope.editorOptions = EditorOptions.simplified;
                 $scope.instructions = $scope.assignment.self_eval_instructions ? $scope.assignment.self_eval_instructions:"Now write an evaluation of your own answer and <strong>give feedback to yourself</strong>, considering the other answers you've seen. What did you do well? Where might you improve?";
                 $scope.parent = {
                     name: $scope.assignment.name ? $scope.assignment.name : "Assignment name will go here",
@@ -1405,7 +1409,7 @@ module.controller("AssignmentWriteController",
     {
         $scope.courseId = $routeParams.courseId;
         $scope.assignmentId = $routeParams.assignmentId || undefined;
-        $scope.saveAttempted = false;
+        $scope.saveAssignmentAttempted = false;
 
         $scope.course = resolvedData.course;
         $scope.assignment = resolvedData.assignment || {};
@@ -1878,7 +1882,7 @@ module.controller("AssignmentWriteController",
         };
         
         // decide on showing other inline errors
-        $scope.showErrors = function($event, formValid) {
+        $scope.showAssignmentErrors = function($event, formValid) {
             
             // check for number of criteria entered
             existingCriteria = $scope.assignment.criteria.length;
@@ -2000,7 +2004,7 @@ module.controller("AssignmentWriteController",
                 $scope.helperTstrMsg = "...but you're almost there. Simply update the highlighted information and then try again.";
                 
                 // display messages
-                $scope.saveAttempted = true;
+                $scope.saveAssignmentAttempted = true;
                 Toaster.warning($scope.helperTstrTitle, $scope.helperTstrMsg);
             
             }
