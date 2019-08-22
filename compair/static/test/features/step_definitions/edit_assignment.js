@@ -16,7 +16,7 @@ var editAssignmentStepDefinitionsWrapper = function () {
         browser.driver.executeScript("document.body.innerHTML = '';")
         browser.driver.findElement(by.css("body")).sendKeys(text);
         browser.driver.switchTo().defaultContent();
-        return element(by.css("body")).click();
+        return true;
     });
 
     this.When("I edit the second criterion", function() {
@@ -24,14 +24,14 @@ var editAssignmentStepDefinitionsWrapper = function () {
             .element(by.cssContainingText('a', 'Edit')).click();
 
         browser.wait(browser.isElementPresent(element(by.css(".modal.in"))), 1000);
-        return element(by.css(".modal.in")).click();
+        return true;
     });
 
     this.When("I add a new criterion", function() {
         element(by.id("add-new-criteria")).click();
 
         browser.wait(browser.isElementPresent(element(by.css(".modal.in"))), 1000);
-        return element(by.css(".modal.in")).click();
+        return true;
     });
 
 
@@ -43,12 +43,12 @@ var editAssignmentStepDefinitionsWrapper = function () {
 
         browser.driver.switchTo().alert().accept();
         browser.driver.switchTo().defaultContent();
-        return element(by.css("body")).click();
+        return true;
     });
 
     this.When("I add my default criterion", function() {
         element(by.id("select-default-criteria")).sendKeys("Which sounds better?");
-        return element(by.id("add-default-criteria")).click();
+        return true;
     });
 
     this.Then("I should see the assignment with the new name", function() {
