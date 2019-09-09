@@ -62,7 +62,7 @@
             <div class="col-md-6 scrollable-answer" ng-style="adjustHeight" ng-hide="comparisonError" ng-class="{'expanded' : expand == 'left', 'collapsed' : expand == 'right', '' : expand == 'none'}">
                 <p class="text-right close-link" ng-click="expandAnswer()" ng-class="{'' : expand == 'left', 'collapsed' : expand == 'right', 'collapsed' : expand == 'none'}"><a href="">Close</a></p>
                 <div class="answer-choice clearfix">
-                    <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{answer1.evaluation_number}}</h3>
+                    <h3 class="text-center"><compair-logo type="'scale-flipped'"></compair-logo> Answer {{answer1.evaluation_number}}</h3>
                     <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+answer1.evaluation_number" display-inline="true"></rich-content>
                 </div>
             </div>
@@ -70,7 +70,7 @@
             <div class="col-md-6 scrollable-answer" ng-style="adjustHeight" ng-hide="comparisonError" ng-class="{'collapsed' : expand == 'left', 'expanded' : expand == 'right', '' : expand == 'none'}">
                 <p class="text-right close-link" ng-click="expandAnswer()" ng-class="{'collapsed' : expand == 'left', '' : expand == 'right', 'collapsed' : expand == 'none'}"><a href="">Close</a></p>
                 <div class="answer-choice clearfix"s>
-                    <h3 class="text-center"><compair-logo type="'scale-flipped'"></compair-logo> Answer {{answer2.evaluation_number}}</h3>
+                    <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{answer2.evaluation_number}}</h3>
                     <rich-content content="answer2.content" attachment="answer2.file" download-name="'Answer #'+answer2.evaluation_number" display-inline="true"></rich-content>
                 </div>
             </div>
@@ -124,14 +124,14 @@
                                 <p class="required-star"><strong>Select Your Choice</strong></p>
                                 <div class="btn-group" ng-class="{'has-error': !comparison_criterion.winner && saveComparisonAttempted}">
                                     <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer1 && comparison_criterion.winner !== undefined}">
-                                        <img ng-src="img/white-scale-icon-16x16.png" alt="ComPAIR Scale Logo"><input type="radio" class="hideRadio"
+                                        <img ng-src="img/white-scale-icon-flipped-16x16.png" alt="ComPAIR Scale Logo"><input type="radio" class="hideRadio"
                                             name="answer{{answer1.id}}" required
                                             ng-model="comparison_criterion.winner"
                                             ng-value="WinningAnswer.answer1">
                                         Answer {{answer1.evaluation_number}}
                                     </label>
                                     <label class="btn btn-primary" ng-class="{active: comparison_criterion.winner == WinningAnswer.answer2 && comparison_criterion.winner !== undefined}">
-                                        <img ng-src="img/white-scale-icon-flipped-16x16.png" alt="ComPAIR Scale Logo"><input type="radio" class="hideRadio"
+                                        <img ng-src="img/white-scale-icon-16x16.png" alt="ComPAIR Scale Logo"><input type="radio" class="hideRadio"
                                             name="answer{{answer2.id}}" required
                                             ng-model="comparison_criterion.winner"
                                             ng-value="WinningAnswer.answer2">
@@ -160,7 +160,7 @@
                 <div class="row lower-pair-display sub-step">
                     <div class="col-md-6">
                         <div ng-show="showAnswers" class="answer-choice clearfix">
-                            <h3 class="text-center"><compair-logo type="'scale'"></compair-logo> Answer {{answer1.evaluation_number}}</h3>
+                            <h3 class="text-center"><compair-logo type="'scale-flipped'"></compair-logo> Answer {{answer1.evaluation_number}}</h3>
                             <rich-content content="answer1.content" attachment="answer1.file" download-name="'Answer #'+answer1.evaluation_number" display-inline="true"></rich-content>
                         </div>
                     </div>
