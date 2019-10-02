@@ -11,7 +11,7 @@ services:
       - ./.data/mysql:/var/lib/mysql
     restart: always
   redis:
-    image: redis:3.2.4
+    image: redis:5.0
     command: redis-server --appendonly yes
     volumes:
       - ./.data/redis:/data
@@ -25,7 +25,7 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - DB_NAME=compair
-      - SQLALCHEMY_POOL_RECYCLE=299
+      - SQLALCHEMY_ENGINE_OPTIONS={"pool_recycle":299}
       - CELERY_BROKER_URL=redis://redis:6379
       - ASSET_LOCATION=local
     volumes:
@@ -44,7 +44,7 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - DB_NAME=compair
-      - SQLALCHEMY_POOL_RECYCLE=299
+      - SQLALCHEMY_ENGINE_OPTIONS={"pool_recycle":299}
       - CELERY_BROKER_URL=redis://redis:6379
       - ASSET_LOCATION=local
       - C_FORCE_ROOT=1

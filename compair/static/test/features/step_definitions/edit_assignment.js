@@ -9,14 +9,17 @@ var expect = chai.expect;
 var editAssignmentStepDefinitionsWrapper = function () {
     this.Given("I fill in the criterion description with '$text'", function(text) {
         //load the ckeditor iframe
-        browser.sleep(1000);
+        browser.sleep(2000);
         browser.wait(browser.isElementPresent(element(by.css("#cke_criterionDescription iframe"))), 1000);
         browser.driver.switchTo().frame(element(by.css("#cke_criterionDescription iframe")).getWebElement());
         // clear the content
         browser.driver.executeScript("document.body.innerHTML = '';")
         browser.driver.findElement(by.css("body")).sendKeys(text);
         browser.driver.switchTo().defaultContent();
-        return element(by.css("body")).click();
+        browser.sleep(2000);
+        return;
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        //return element(by.css("body")).click();
     });
 
     this.When("I edit the second criterion", function() {
@@ -24,14 +27,18 @@ var editAssignmentStepDefinitionsWrapper = function () {
             .element(by.cssContainingText('a', 'Edit')).click();
 
         browser.wait(browser.isElementPresent(element(by.css(".modal.in"))), 1000);
-        return element(by.css(".modal.in")).click();
+        return;
+        // dont do any click.  it may accidentially click on any button (depending on the browser window size)
+        // return element(by.css(".modal.in")).click();
     });
 
     this.When("I add a new criterion", function() {
         element(by.id("add-new-criteria")).click();
 
         browser.wait(browser.isElementPresent(element(by.css(".modal.in"))), 1000);
-        return element(by.css(".modal.in")).click();
+        return;
+        // dont do any click.  it may accidentially click on any button (depending on the browser window size)
+        // return element(by.css(".modal.in")).click();
     });
 
 
@@ -43,7 +50,9 @@ var editAssignmentStepDefinitionsWrapper = function () {
 
         browser.driver.switchTo().alert().accept();
         browser.driver.switchTo().defaultContent();
-        return element(by.css("body")).click();
+        return;
+        // dont do any click.  it may accidentially click on any button (depending on the browser window size)
+        // return element(by.css("body")).click();
     });
 
     this.When("I add my default criterion", function() {

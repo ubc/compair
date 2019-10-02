@@ -50,7 +50,7 @@ class TestUsersModel(ComPAIRTestCase):
         self.assertEqual(self.user.avatar, '0bc83cb571cd1c50ba6f3e8a78ef1346', 'Email with upper case letters')
 
         self.user.system_role = SystemRole.student
-        self.user.uuid = str(base64.urlsafe_b64encode(uuid.uuid4().bytes)).replace('=', '')
+        self.user.uuid = base64.urlsafe_b64encode(uuid.uuid4().bytes).decode('ascii').replace('=', '')
         self.assertNotEqual(self.user.avatar, '0bc83cb571cd1c50ba6f3e8a78ef1346', 'Student based on uuid')
 
     def test_set_password(self):

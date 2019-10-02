@@ -13,11 +13,14 @@ exports.config = {
     },
     capabilities: {
         'name': 'ComPAIR suite tests',
+        'platform': process.env.TEST_BROWSER_PLATFORM,
         'browserName': process.env.TEST_BROWSER_NAME,
         'version': process.env.TEST_BROWSER_VERSION,
         'tunnel-identifier': process.env.TRAVIS_JOB_NUMBER,
         'maxDuration': 3600, // 1 hour
-        'loggingPrefs': {"browser": "SEVERE"}
+        'loggingPrefs': {"browser": "SEVERE"},
+        'chromeOptions': { args: [ "--headless" ] },
+        'moz:firefoxOptions': { args: [ "--headless" ] },
     },
     onPrepare: function() {
         // disable angular and css animations so tests run faster

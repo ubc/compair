@@ -15,7 +15,12 @@ exports.config = {
     capabilities: {
         'name': 'ComPAIR suite tests',
         'browserName': 'chrome',
-        'loggingPrefs': {"browser": "SEVERE"}
+        'loggingPrefs': {"browser": "SEVERE"},
+        // Headless mode for firefox and chrome. Running tests with GUI may cause problems.
+        // e.g. on Linux, Firefox hangs if minimized. Chrome hangs and fails randomly even when the browser is in focus
+        // Also seems to solve some timing issues and no more browser.sleep at odd places.
+        'chromeOptions': { args: [ "--headless" ] },
+        'moz:firefoxOptions': { args: [ "--headless" ] },
     },
     onPrepare: function() {
         // disable angular and css animations so tests run faster

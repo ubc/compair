@@ -23,9 +23,7 @@ before_cache:
 
 python:
   - "2.7"
-  - "3.6"
-  # there is no binary wheels for 3.7 and compiling it from source will fail
-  #- "3.7"
+  - "3.7"
 
 stages:
   - test
@@ -36,16 +34,16 @@ jobs:
   include:
     - &test-acceptance-chrome
       stage: acceptance test + deploy
-      python: "3.6"
-      env: TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=63 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+      python: "3.7"
+      env: TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=latest TEST_BROWSER_PLATFORM="Linux" DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
       script: node_modules/.bin/gulp test:ci
       addons:
         sauce_connect: true
     - &test-acceptance-firefox
       <<: *test-acceptance-chrome
-      env: TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=57 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+      env: TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=latest TEST_BROWSER_PLATFORM="Linux" DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - stage: acceptance test + deploy
-      python: "3.6"
+      python: "3.7"
       env: COMPILE_ASSETS=true
       before_install: true
       install: true
@@ -63,8 +61,7 @@ jobs:
       after_failure:
       - timeout 3s docker-compose logs app db web
   allow_failures:
-    - env: TEST_BROWSER_NAME=chrome TEST_BROWSER_VERSION=63 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
-    - env: TEST_BROWSER_NAME=firefox TEST_BROWSER_VERSION=57 DISABLE_MOCK=false DB=sqlite DATABASE_URI="sqlite:///:memory:"
+    - script: node_modules/.bin/gulp test:ci
 
 env:
   global:
@@ -83,11 +80,11 @@ env:
     - DB=mysql DATABASE_URI="mysql+pymysql://root@localhost/compair"
 
 before_install:
-  - nvm install 9.3
+  - nvm install 10.16
 
 install:
   - sudo apt-get update -y
-  - sudo apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev
+  - sudo apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev
   - make deps
 
 before_script:

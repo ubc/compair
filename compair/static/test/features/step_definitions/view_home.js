@@ -18,7 +18,9 @@ var viewHomeStepDefinitionsWrapper = function () {
     this.When("I filter home page courses by '$filter'", function (filter) {
         element(by.css("form.search-courses input")).sendKeys(filter);
         // force blur
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 
     this.Then("I should see '$numberString' courses", function (numberString) {

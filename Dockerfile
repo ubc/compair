@@ -1,17 +1,17 @@
 # Python DEPS
 
-FROM python:2.7-slim as python-base
+FROM python:3.7-slim as python-base
 
 ADD requirements.txt .
 RUN apt-get update -y \
     && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl gcc pkg-config \
-    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev  \
+    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
     && pip install -r requirements.txt \
     && pip install uwsgi
 
 # NODE DEPS
 
-FROM node:8.9.3 as node-deps
+FROM node:10.16 as node-deps
 
 WORKDIR /home/node/app
 
@@ -25,7 +25,7 @@ RUN mkdir -p compair/templates/static/ \
 
 # Python Application image
 
-FROM python:2.7-slim as python-app
+FROM python:3.7-slim as python-app
 
 MAINTAINER Pan Luo <pan.luo@ubc.ca>
 
@@ -40,7 +40,7 @@ COPY --from=python-base /requirements.txt /code/requirements.txt
 
 RUN apt-get update -y \
     && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl \
-    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev  \
+    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
     && pip install -r /code/requirements.txt \
     && pip install uwsgi \
     # see https://github.com/onelogin/python3-saml/issues/82

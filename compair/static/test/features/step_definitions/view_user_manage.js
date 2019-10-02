@@ -9,13 +9,11 @@ var expect = chai.expect;
 var viewUserManageStepDefinitionsWrapper = function () {
 
     this.Then("I should see '$count' courses listed", function (count) {
-        browser.waitForAngular();
         return expect(element.all(by.exactRepeater("course in courses"))
             .count()).to.eventually.eql(parseInt(count));
     });
 
     this.Then("I should see courses with names:", function (data) {
-        browser.waitForAngular();
         var list = data.hashes().map(function(item) {
             return item.name;
         });
@@ -27,7 +25,9 @@ var viewUserManageStepDefinitionsWrapper = function () {
     this.When("I filter user courses & accounts page courses by '$filter'", function (filter) {
         element(by.css("form.search-courses input")).sendKeys(filter);
         // force blur
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 
     this.When("I select drop for the first course listed", function () {
@@ -38,7 +38,9 @@ var viewUserManageStepDefinitionsWrapper = function () {
 
         browser.driver.switchTo().alert().accept();
         browser.driver.switchTo().defaultContent();
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 
     this.When("I select the Student role for the first course", function () {
@@ -51,7 +53,9 @@ var viewUserManageStepDefinitionsWrapper = function () {
 
         roleSelect.sendKeys('Student');
         // force blur
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 
     this.When("I set the first course's group to '$groupname'", function (groupname) {
@@ -64,17 +68,17 @@ var viewUserManageStepDefinitionsWrapper = function () {
 
         groupSelect.sendKeys(groupname);
         // force blur
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 
     this.Then("I should see '$count' LTI connections listed", function (count) {
-        browser.waitForAngular();
         return expect(element.all(by.exactRepeater("lti_user in lti_users"))
             .count()).to.eventually.eql(parseInt(count));
     });
 
     this.Then("I should see LTI connections with entries:", function (data) {
-        browser.waitForAngular();
         var consumer_keys = data.hashes().map(function(item) {
             return item.consumer_key;
         });
@@ -96,17 +100,17 @@ var viewUserManageStepDefinitionsWrapper = function () {
 
         browser.driver.switchTo().alert().accept();
         browser.driver.switchTo().defaultContent();
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 
     this.Then("I should see '$count' third party connections listed", function (count) {
-        browser.waitForAngular();
         return expect(element.all(by.exactRepeater("third_party_user in third_party_users"))
             .count()).to.eventually.eql(parseInt(count));
     });
 
     this.Then("I should see third party connections with entries:", function (data) {
-        browser.waitForAngular();
         var types = data.hashes().map(function(item) {
             return item.type;
         });
@@ -128,7 +132,9 @@ var viewUserManageStepDefinitionsWrapper = function () {
 
         browser.driver.switchTo().alert().accept();
         browser.driver.switchTo().defaultContent();
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 };
 

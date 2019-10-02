@@ -26,11 +26,12 @@ Feature: Edit Course Users
     And I select the Student role for the user
     And I submit form with the 'Enrol' button
     Then I should see '3' users listed for the course
-    And I should see course users with displaynames:
+    When I sort by displayname in decending order
+    Then I should see course users with displaynames:
       | displayname            |
-      | First Student          |
       | Second Student         |
       | root                   |
+      | First Student          |
 
   Scenario: Sorting course users as instructor
     Given I'm an Instructor
