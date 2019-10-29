@@ -310,6 +310,7 @@ Note: [https://www.testshib.org](https://www.testshib.org) is used for using sam
 ### LTI Settings
 
 `LTI_LOGIN_ENABLED`: Enable login via LTI consumer (default: True)
+The launch URL will be `https://YOUR_SITE_DOMAIN/api/lti/auth`
 
 Restart server after making any changes to settings
 
