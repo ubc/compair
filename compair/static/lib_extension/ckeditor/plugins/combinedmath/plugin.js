@@ -30,7 +30,10 @@ CKEDITOR.plugins.add( 'combinedmath', {
                         math = math.replace(/\\\(/g, '');
                         math = math.replace(/\\\)/g, '');
                     }
-                    data.mathexp = math;
+                    // undo any escape done by ckeditor
+                    var parser = new DOMParser;
+                    var textContent = parser.parseFromString(math, 'text/html').body.textContent;
+                    data.mathexp = textContent;
                 }
                 return isValidCombinedMath;
             },

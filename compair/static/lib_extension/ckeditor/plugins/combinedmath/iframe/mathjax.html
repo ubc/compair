@@ -18,7 +18,9 @@
     location.search.substr(1).split("&").forEach(function(item) {queryDict[item.split("=")[0]] = item.split("=")[1]})
     var mathDiv = document.getElementById('math');
     var mathexp = decodeURIComponent(queryDict['mathexp']);
-    mathDiv.textContent = mathexp;
+    // undo any escape done by ckeditor
+    var parser = new DOMParser;
+    mathDiv.textContent = parser.parseFromString(mathexp, 'text/html').body.textContent;
     MathJax.Hub.Configured();
     MathJax.Hub.Queue(["Typeset", MathJax.Hub, 'math']);
     var iframe = window.frameElement;
