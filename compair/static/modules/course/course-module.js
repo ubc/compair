@@ -1143,6 +1143,9 @@ module.controller(
 
         if ($scope.method == "create") {
             $scope.course.year = new Date().getFullYear();
+            // force time format to match
+            $scope.date.course_start.time = new Date($scope.date.course_start.time);
+            $scope.date.course_end.time = new Date($scope.date.course_end.time);
         } else if ($scope.method == "edit") {
             // end date may be left blank
             $scope.date.course_start.date = new Date($scope.course.start_date);
