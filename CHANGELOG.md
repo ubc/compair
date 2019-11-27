@@ -1,3 +1,9 @@
+# v1.2.4
+
+## Notable changes
+* Added inline error reporting for forms
+* Fixed problems with MathJax
+
 # v1.2.2
 
 ## Breaking changes
