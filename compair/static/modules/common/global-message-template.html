@@ -1,0 +1,15 @@
+<div ng-if="AuthTypesEnabled.demo">
+    <div class="alert alert-warning text-center demo-msg" role="alert">
+        <p>
+            <i class="fa fa-exclamation-triangle"></i> Please note this is a demo site. Any changes you make will reset at 3 a.m. Pacific Standard Time.
+        </p>
+    </div>
+</div>
+
+<div ng-if="!AuthTypesEnabled.demo && (canCreateCourses && !canCreateUsers)">
+    <div class="alert alert-warning text-center demo-msg" role="alert">
+        <p>Instructors: What do you like about ComPAIR? What could be improved?<br>
+            <strong>Share your thoughts with the UBC development team in our <a href="https://ubc.ca1.qualtrics.com/jfe/form/SV_aeMM85kkRmMZ0hv" target="_blank">2020 instructor survey &raquo;</a></strong>
+        </p>
+    </div>
+</div>
