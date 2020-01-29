@@ -889,20 +889,29 @@ class AssignmentUsersComparisonsAPI(Resource):
         restrict_user = is_user_access_restricted(current_user)
         params = assignment_users_comparison_list_parser.parse_args()
 
-        # only get users who have at least made one comparison
+        # get users who have at least made one comparison or finished self-eval.
         # each paginated item is a user (with a set of comparisons and self-evaluations)
         user_query = User.query \
             .join(UserCourse, and_(
                 User.id == UserCourse.user_id,
                 UserCourse.course_id == course.id
             )) \
-            .join(Comparison, and_(
+            .outerjoin(Comparison, and_(
                 Comparison.user_id == User.id,
                 Comparison.assignment_id == assignment.id
             )) \
+            .outerjoin(AnswerComment, and_(
+                AnswerComment.user_id == User.id,
+                AnswerComment.assignment_id == assignment.id,
+                AnswerComment.active == True,
+                AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+            )) \
             .filter(and_(
-                UserCourse.course_role != CourseRole.dropped,
-                Comparison.completed == True
+                or_(
+                    AnswerComment.draft == False,
+                    Comparison.completed == True
+                ),
+                UserCourse.course_role != CourseRole.dropped \
             )) \
             .group_by(User) \
             .order_by(User.lastname, User.firstname)
@@ -916,7 +925,8 @@ class AssignmentUsersComparisonsAPI(Resource):
                 AnswerComment.active == True,
                 AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                 AnswerComment.draft == False,
-                Answer.active == True,
+                # self-eval on deleted answer should also be counted. so NOT checking the active flag
+                # Answer.active == True,
                 Answer.practice == False,
                 Answer.draft == False,
                 Answer.assignment_id == assignment.id
@@ -994,6 +1004,7 @@ class AssignmentUsersComparisonsAPI(Resource):
                 ))
 
             answer_comments = AnswerComment.query \
+                .filter_by(assignment_id=assignment.id) \
                 .filter(or_(*conditions)) \
                 .filter_by(draft=False) \
                 .all()
