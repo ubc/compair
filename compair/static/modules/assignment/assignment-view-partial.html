@@ -148,7 +148,7 @@
 
                 <!-- Students should see before evaluating during the comparison period (regular comparison) -->
                 <p class="intro-text" ng-if="!canManageAssignment && assignment.compare_period && comparisons_left > 0 && ((assignment.status.answers.answered && assignment.answer_period) || !assignment.answer_period)">
-                    <a ng-if="hasComparisonsAvailable" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare" title="Compare answers">Compare answers</a><span ng-if="!hasComparisonsAvailable">Compare answers (when they are available)</span> for the assignment first, then read answers written by your classmates and instructors here.
+                    <a ng-if="assignment.status.comparisons.available" ng-href="#/course/{{courseId}}/assignment/{{assignment.id}}/compare" title="Compare answers">Compare answers</a><span ng-if="!assignment.status.comparisons.available">Compare answers (when they are available)</span> for the assignment first, then read answers written by your classmates and instructors here.
                 </p>
 
                 <!-- Students should see before evaluating during the comparison period (self-evaluation) -->
