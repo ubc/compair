@@ -5,12 +5,9 @@ ComPAIR
 
 Introduction
 ------------
-Adaptive Comparative Judgement (ACJ) is based on the law of comparative judgement conceived by L. L. Thurstone in 1927 as a method for psychological measurements.
-First used for psychological measurements, today it offers an alternative to marking, especially for performance assessments for which achievement can be difficult to describe in mark schemes and for those where inter-marker reliability is often a problem.
+ComPAIR is a peer review application developed by the University of British Columbia and freely available for anyone to download, install, and use. ComPAIR distinguishes itself from other peer review tools by harnessing students' innate ability to compare. Rather than have students evaluate one work at a time, ComPAIR presents paired sets of peer work for comparison-based review and feedback.
 
-This application is based on an updated 2012 paper which details ACJ's method and history.
-Students answer questions asked by instructors or other students and are then able to compare and judge the given answers. From these comparisons, a score for each answer is calculated according to ACJ's methods.
-
+ComPAIR was inspired by Adaptive Comparative Judgement (ACJ), which is based on the law of comparative judgement conceived by L. L. Thurstone in 1927 that states human beings are better at comparing two things than evaluating one in isolation. In the application, instructors can enable a score for each answer that "adapts" to how the answer does in each comparison. The scores can then be used in generating subsequent pairs, theoretically increasing the similarity in answer quality and the challenge for students in choosing which better meets the instructor-set criteria.
 
 Frameworks
 ----------
