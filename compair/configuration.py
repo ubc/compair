@@ -124,7 +124,7 @@ for env in env_overridables:
 
 for env in env_bool_overridables:
     if os.environ.get(env) != None:
-        config[env] = strtobool(os.environ.get(env))
+        config[env] = bool(strtobool(os.environ.get(env)))
 
 for env in env_int_overridables:
     if os.environ.get(env) != None:
