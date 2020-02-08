@@ -177,7 +177,7 @@ api.add_resource(LTIStatusAPI, '/status')
 class ComPAIRRequestValidator(RequestValidator):
     @property
     def enforce_ssl(self):
-        return current_app.config.get('ENFORCE_SSL', True)
+        return bool(current_app.config.get('ENFORCE_SSL', True))
 
     @property
     def client_key_length(self):

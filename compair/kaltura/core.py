@@ -25,7 +25,7 @@ class KalturaCore(object):
 
     @classmethod
     def enforce_ssl(cls):
-        return current_app.config.get('ENFORCE_SSL', True)
+        return bool(current_app.config.get('ENFORCE_SSL', True))
 
     @classmethod
     def partner_id(cls):

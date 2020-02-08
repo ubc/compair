@@ -42,7 +42,7 @@ class CustomCASClient(CASClient):
     def get_cas_response(self, url):
         try:
             # overwritten to allow development environment to use self signed certificates
-            verify = current_app.config.get('ENFORCE_SSL', True)
+            verify = bool(current_app.config.get('ENFORCE_SSL', True))
             response = requests.get(url, verify=verify)
             response_text = response.text.encode('utf-8') if response.text else None
             return CASResponse(response_text)
@@ -55,7 +55,7 @@ class CustomSAMLClient(SAMLClient):
     def get_saml_response(self, url, envelope):
         try:
             # overwritten to allow development environment to use self signed certificates
-            verify = current_app.config.get('ENFORCE_SSL', True)
+            verify = bool(current_app.config.get('ENFORCE_SSL', True))
             response = requests.post(url, data=envelope, verify=verify)
             response_text = response.text.encode('utf-8') if response.text else None
             return CustomSAMLResponse(response_text)
