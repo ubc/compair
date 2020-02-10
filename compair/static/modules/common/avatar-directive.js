@@ -23,7 +23,7 @@ angular.module('ubc.ctlt.compair.common').directive('compairUserAvatar', functio
             me: '=?'
         },
         template:   '<a ng-href="#/user/{{ user.id }}">' +
-                        '<img src="//www.gravatar.com/avatar/{{ user.avatar }}?s=32&d=retro" alt="" /> ' +
+                        '<img ng-src="//www.gravatar.com/avatar/{{ user.avatar }}?s=32&d=retro" alt="" /> ' +
                     '</a>' +
                     '<a ng-href="#/user/{{ user.id }}">' +
                         '<span ng-if="!skipName">{{ user.displayname }}</span>' +
@@ -41,7 +41,7 @@ angular.module('ubc.ctlt.compair.common').directive('compairGroupAvatar', functi
             skipName: '=?',
             me: '=?'
         },
-        template:   '<img src="//www.gravatar.com/avatar/{{ group.avatar }}?s=32&d=retro" alt="" /> ' +
+        template:   '<img ng-src="//www.gravatar.com/avatar/{{ group.avatar }}?s=32&d=retro" alt="" /> ' +
                     '<span ng-if="!skipName">{{ group.name }}</span>' +
                     '<span ng-if="me">{{ !!skipName ? "Your Group" : " (Your Group)" }}</span>'
     };
@@ -54,7 +54,7 @@ angular.module('ubc.ctlt.compair.common').directive('compairStudentAvatar', func
             user: '='
         },
         template:   '<a ng-href="#/user/{{ user.id }}">' +
-                        '<img src="//www.gravatar.com/avatar/{{ user.avatar }}?s=32&d=retro" alt="" /> ' +
+                        '<img ng-src="//www.gravatar.com/avatar/{{ user.avatar }}?s=32&d=retro" alt="" /> ' +
                     '</a>' +
                     '<a ng-href="#/user/{{ user.id }}">' +
                         '{{ user.fullname }} ({{ user.student_number }})' +

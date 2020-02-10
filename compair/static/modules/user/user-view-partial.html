@@ -11,9 +11,9 @@
     <hr>
     <div class="col-md-3 gravatar-img">
         <a ng-if="canManageUsers || loggedInUserIsInstructor" href="https://en.gravatar.com/" title="Add or edit your user image with Gravatar">
-           <img id="user_avatar" class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
+           <img id="user_avatar" class="media-object" ng-src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
         </a>
-        <img ng-if="!(canManageUsers || loggedInUserIsInstructor)" id="user_avatar" class="media-object" src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
+        <img ng-if="!(canManageUsers || loggedInUserIsInstructor)" id="user_avatar" class="media-object" ng-src="//www.gravatar.com/avatar/{{user.avatar}}?s=200&d=retro">
     </div>
     <div class="col-md-9 user-details">
         <div class="row">

@@ -9,7 +9,7 @@
     <kaltura-player id="{{content.id}}_{{modalInstance ? 'modal' : 'inline'}}" base-url="{{content.service_url}}" width="100%" height="90px" video="content.kalturaAttributes" class="content-item"></kaltura-player>
 </div>
 <div ng-if="content.type == 'pdf'" class="embed-responsive embed-responsive-pdf">
-    <iframe src="{{content.url}}" class="content-item embed-responsive-item"></iframe>
+    <iframe ng-src="{{content.url}}" class="content-item embed-responsive-item"></iframe>
 </div>
 <div ng-if="content.type == 'image'">
     <img ng-src="{{content.url}}" ng-alt="{{content.title}}" class="content-item attachment-view"/>
