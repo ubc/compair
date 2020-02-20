@@ -139,7 +139,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, AttemptMixin, WriteTrackingMixin)
             ))
 
         if group_id:
-            query = query.filter(Answer.group_id != group_id)
+            query = query.filter(or_(Answer.group_id != group_id, Answer.group_id == None))
 
         answers_with_score = query.all()
 
