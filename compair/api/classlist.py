@@ -18,6 +18,7 @@ from compair.authorization import allow, require, USER_IDENTITY
 from compair.models import UserCourse, Course, User, SystemRole, CourseRole, \
     ThirdPartyType, ThirdPartyUser, Group
 from compair.tasks import set_passwords
+from compair.user_lookup import LdapLookupEngine
 from .util import new_restful_api
 
 classlist_api = Blueprint('classlist_api', __name__)
@@ -91,20 +92,22 @@ def _parse_user_row(import_type, row):
     return user
 
 
-def _get_existing_users_by_identifier(import_type, users):
-    username_index = COMPAIR_IMPORT['username']
-    if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
-        username_index = CAS_OR_SAML_IMPORT['username']
-    usernames = [u[username_index] for u in users if len(u) > username_index]
-    if len(usernames) == 0:
-        return {}
-
+def _get_existing_users_by_identifier(import_type, users, lookup_info_by_username, lookup_info_by_student_number):
+    """ Attempt to find users by unique identifiers
+    """
     if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
         # CAS/SAML login
+        username_index = CAS_OR_SAML_IMPORT['username']
+        usernames = [u[username_index] for u in users if len(u) > username_index]
+
+        unique_ids = \
+            [v.get('unique_identifier') for v in lookup_info_by_username.values() if v.get('unique_identifier')] + \
+            [v.get('unique_identifier') for v in lookup_info_by_student_number.values() if v.get('unique_identifier')] + \
+            usernames       # TODO normally username won't be used as unique identifier. data clean up may needed if old import logic used to create users
         third_party_users = ThirdPartyUser.query \
             .options(joinedload('user')) \
             .filter(and_(
-                ThirdPartyUser.unique_identifier.in_(usernames),
+                ThirdPartyUser.unique_identifier.in_(unique_ids),
                 ThirdPartyUser.third_party_type == ThirdPartyType(import_type)
             )) \
             .all()
@@ -113,6 +116,11 @@ def _get_existing_users_by_identifier(import_type, users):
         }
     else:
         # ComPAIR login
+        username_index = COMPAIR_IMPORT['username']
+        usernames = [u[username_index] for u in users if len(u) > username_index]
+        if len(usernames) == 0:
+            return {}
+
         users = User.query \
             .filter(User.username.in_(usernames)) \
             .all()
@@ -146,8 +154,33 @@ def import_users(import_type, course, users):
     import_usernames = []
     import_student_numbers = []
 
+    # if user lookup is available, use it to get more info about the users
+    lookup_info_by_username = {}
+    lookup_info_by_student_number = {}
+    if current_app.config.get('USER_LOOKUP_LDAP_ENABLED', False):
+        with LdapLookupEngine(current_app.config) as lookup:
+            if lookup.is_available():
+                # TODO do a batch query with the LDAP server instead of looping each row
+                for user_row in users:
+                    if len(user_row) < 1:
+                        continue  # skip empty row
+                    user = _parse_user_row(import_type, user_row)
+
+                    username = user.get('username')
+                    student_number = user.get('student_number')
+
+                    u = lookup.get_by_username(username) if username else None
+                    if u:
+                        lookup_info_by_username[username] = u
+
+                    u = lookup.get_by_student_number(student_number) if student_number else None
+                    if u:
+                        lookup_info_by_student_number[student_number] = u
+            else:
+                abort(500, title="Class List Not Imported", message="Sorry, failed to lookup uploaded username / student number.")
+
     # store unique user identifiers - eg. student number - throws error if duplicate in file
-    existing_system_usernames = _get_existing_users_by_identifier(import_type, users)
+    existing_system_usernames = _get_existing_users_by_identifier(import_type, users, lookup_info_by_username, lookup_info_by_student_number)
     existing_system_student_numbers = _get_existing_users_by_student_number(import_type, users)
 
     groups = course.groups.all()
@@ -166,32 +199,54 @@ def import_users(import_type, course, users):
         password = user.get('password') #always None for CAS/SAML import, can be None for existing users on ComPAIR import
         student_number = user.get('student_number')
 
-        u = existing_system_usernames.get(username, None)
+        if not username and not student_number:
+            invalids.append({'user': User(username=username), 'message': 'Either username or student number is required.'})
+            continue
+        elif username and username in import_usernames:
+            invalids.append({'user': User(username=username), 'message': 'This username repeated in the file.'})
+            continue
 
-        if not username:
-            invalids.append({'user': User(username=username), 'message': 'The username is required.'})
-            continue
-        elif username in import_usernames:
-            invalids.append({'user': User(username=username), 'message': 'This username already exists in the file.'})
-            continue
+        u = None
+        # try to get the existing user record by unique identifier / username...
+        if username:
+            u = existing_system_usernames.get(username, None)
+            if u and u.student_number and student_number and u.student_number != student_number:
+                invalids.append({'user': User(username=username), 'message': 'This student number already exists in the system.'})
+                continue
+        # ... otherwise, try student number
+        if u is None and student_number:
+            u = existing_system_student_numbers.get(student_number, None)
+            if u and u.username and u.username != username:
+                invalids.append({'user': User(username=username), 'message': 'This student number already exists in the system.'})
+                continue
 
         if u:
-            # overwrite password if user has not logged in yet
-            if u.last_online == None and not password in [None, '*']:
+            # overwrite password if the imported user is a student, not authenticated via 3rd party, and has not logged in yet
+            if u.system_role == SystemRole.student and not u.username is None and u.last_online == None and not password in [None, '*']:
                 set_user_passwords.append((u, password))
         else:
+            # if the imported user is a new user, create the record
             u = User(
                 username=None,
                 password=None,
                 student_number=user.get('student_number'),
                 firstname=user.get('firstname'),
                 lastname=user.get('lastname'),
-                email=user.get('email')
+                email=user.get('email'),
+                displayname=user.get('displayname')
             )
             if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
                 # CAS/SAML login
+                lookup_user = None
+                if username:
+                    lookup_user = lookup_info_by_username.get(username)
+                if not lookup_user and student_number:
+                    lookup_user = lookup_info_by_student_number.get(student_number)
+                # TODO check the edge case: what is the username and student number looked up diff users?
+                unique_id = lookup_user.get('unique_identifier') if lookup_user and lookup_user.get('unique_identifier') else username
+
                 u.third_party_auths.append(ThirdPartyUser(
-                    unique_identifier=username,
+                    unique_identifier=unique_id,
                     third_party_type=ThirdPartyType(import_type)
                 ))
             else:
@@ -223,7 +278,8 @@ def import_users(import_type, course, users):
             u.displayname = user.get('displayname') if user.get('displayname') else display_name_generator()
             db.session.add(u)
 
-        import_usernames.append(username)
+        if username:
+            import_usernames.append(username)
         if student_number:
             import_student_numbers.append(student_number)
         imported_users.append( (u, user.get('group')) )
@@ -441,7 +497,9 @@ class ClasslistRootAPI(Resource):
         uploaded_file.save(tmp_name)
         current_app.logger.debug("Importing for course " + str(course.id) + " with " + filename)
         with open(tmp_name, 'rb') as csvfile:
-            spamreader = csv.reader(csvfile)
+            # Specify the encoding utf-8-sig. Otherwise if the file has utf BOM,
+            # it will be incorrectly added to the first field of the first row
+            spamreader = csv.reader(csvfile, encoding='utf-8-sig')
             users = []
             for row in spamreader:
                 if row:

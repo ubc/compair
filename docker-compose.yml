@@ -50,6 +50,15 @@ services:
       - SAML_METADATA_URL=https://samltest.id/saml/idp
       - SAML_METADATA_ENTITY_ID=http://compair/api/saml/metadata
       - SAML_EXPOSE_METADATA_ENDPOINT=true
+      - USER_LOOKUP_LDAP_ENABLED=true
+      - USER_LOOKUP_LDAP_URL=ldap://ldap
+      #- USER_LOOKUP_LDAP_URL=ldaps://ldap
+      - USER_LOOKUP_LDAP_PROXY_AGENT=cn=admin,dc=example,dc=org
+      - USER_LOOKUP_LDAP_PROXY_PASSWORD=admin
+      - USER_LOOKUP_LDAP_BASE_DN=dc=example,dc=org
+      - USER_LOOKUP_LDAP_SEARCH_USERNAME_ATTRS=cn
+      - USER_LOOKUP_LDAP_SEARCH_STUDENT_NUM_ATTRS=ubcEduStudentNumber
+      - USER_LOOKUP_LDAP_SEARCH_UNIQUE_IDENTIFIER_ATTRS=ubcEduCwlPUID
       - SQLALCHEMY_ENGINE_OPTIONS={"pool_recycle":299}
     volumes:
       - .:/code
@@ -103,3 +112,13 @@ services:
     image: mailhog/mailhog:v1.0.0
     ports:
       - "8025:8025"
+  ldap:
+    image: osixia/openldap:1.3.0
+    command: --copy-service
+    ports:
+      - 389:389
+      - 636:636
+    volumes:
+      - ./dev/ldapadd_ubcedu.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/ldapadd_ubcedu.ldif
+      - ./.data/ldap:/var/lib/ldap
+      - ./.data/slapd.d:/etc/ldap/slapd.d

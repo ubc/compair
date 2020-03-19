@@ -540,7 +540,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(1, result['success'])
             self.assertEqual(1, len(result['invalids']))
             self.assertEqual(None, result['invalids'][0]['user']['username'])
-            self.assertEqual('The username is required.', result['invalids'][0]['message'])
+            self.assertEqual('Either username or student number is required.', result['invalids'][0]['message'])
             uploaded_file.close()
 
             # test no password provided
@@ -576,7 +576,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(1, result['success'])
             self.assertEqual(1, len(result['invalids']))
             self.assertEqual(student.username, result['invalids'][0]['user']['username'])
-            self.assertEqual('This username already exists in the file.', result['invalids'][0]['message'])
+            self.assertEqual('This username repeated in the file.', result['invalids'][0]['message'])
             uploaded_file.close()
 
             # test duplicate student number in system
@@ -593,8 +593,8 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test duplicate student number in file
             content = "".join([
-                student.username, ",password,", student.student_number, "\n",
-                "username1,password,", student.student_number])
+                "username2,password,", '999999999999', "\n",
+                "username1,password,", '999999999999'])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename)))
             self.assert200(rv)
@@ -905,7 +905,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assert400(rv)
 
             # test no username provided
-            content = "".join([",\n", cas_student.unique_identifier, ",", student.student_number])
+            content = "".join([",\n", cas_student.user.username, ",", student.student_number])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
@@ -913,7 +913,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(1, result['success'])
             self.assertEqual(1, len(result['invalids']))
             self.assertEqual(None, result['invalids'][0]['user']['username'])
-            self.assertEqual('The username is required.', result['invalids'][0]['message'])
+            self.assertEqual('Either username or student number is required.', result['invalids'][0]['message'])
             uploaded_file.close()
 
             # test duplicate usernames in file
@@ -925,7 +925,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(1, result['success'])
             self.assertEqual(1, len(result['invalids']))
             self.assertEqual(cas_student.unique_identifier, result['invalids'][0]['user']['username'])
-            self.assertEqual('This username already exists in the file.', result['invalids'][0]['message'])
+            self.assertEqual('This username repeated in the file.', result['invalids'][0]['message'])
             uploaded_file.close()
 
             # test duplicate student number in system
@@ -942,8 +942,8 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test duplicate student number in file
             content = "".join([
-                cas_student.unique_identifier, ",", student.student_number, "\n",
-                "username1,", student.student_number])
+                "username2,y999999999", "\n",
+                "username1,y999999999"])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
             self.assert200(rv)
@@ -1089,7 +1089,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
         student = self.data.get_authorized_student()
         saml_student = self.auth_data.create_third_party_user(
             user=student,
-            third_party_type=ThirdPartyType.saml
+            third_party_type=ThirdPartyType.saml,
         )
         instructor = self.data.get_authorized_instructor()
         saml_instructor = self.auth_data.create_third_party_user(
@@ -1106,14 +1106,14 @@ class ClassListAPITest(ComPAIRAPITestCase):
         filename = "classlist.csv"
 
         # test login required
-        uploaded_file = io.BytesIO((saml_student.unique_identifier).encode('utf-8'))
+        uploaded_file = io.BytesIO((saml_student.user.username).encode('utf-8'))
         rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
         self.assert401(rv)
         uploaded_file.close()
 
         # test unauthorized user
         with self.login(self.data.get_unauthorized_instructor().username):
-            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(saml_student.user.username.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
             self.assert403(rv)
             uploaded_file.close()
@@ -1122,13 +1122,13 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 self.login(student.username), \
                 self.impersonate(instructor, student)]:
             with user_context:
-                uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+                uploaded_file = io.BytesIO(saml_student.user.username.encode('utf-8'))
                 rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
                 self.assert403(rv)
                 uploaded_file.close()
 
         with self.login(self.data.get_authorized_ta().username):
-            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(saml_student.user.username.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
             self.assert403(rv)
             uploaded_file.close()
@@ -1136,20 +1136,20 @@ class ClassListAPITest(ComPAIRAPITestCase):
         with self.login(self.data.get_authorized_instructor().username):
             # test invalid course id
             invalid_url = '/api/courses/999/users'
-            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(saml_student.user.username.encode('utf-8'))
             rv = self.client.post(invalid_url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
             uploaded_file.close()
             self.assert404(rv)
 
             # test invalid file type
             invalid_filetype = "classlist.png"
-            uploaded_file = io.BytesIO(saml_student.unique_identifier.encode('utf-8'))
+            uploaded_file = io.BytesIO(saml_student.user.username.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, invalid_filetype), import_type=ThirdPartyType.saml.value))
             uploaded_file.close()
             self.assert400(rv)
 
             # test no username provided
-            content = "".join([",\n", saml_student.unique_identifier, ",", student.student_number])
+            content = "".join([",\n", saml_student.user.username, ",", student.student_number])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
             self.assert200(rv)
@@ -1157,23 +1157,23 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(1, result['success'])
             self.assertEqual(1, len(result['invalids']))
             self.assertEqual(None, result['invalids'][0]['user']['username'])
-            self.assertEqual('The username is required.', result['invalids'][0]['message'])
+            self.assertEqual('Either username or student number is required.', result['invalids'][0]['message'])
             uploaded_file.close()
 
             # test duplicate usernames in file
-            content = "".join([saml_student.unique_identifier, "\n", saml_student.unique_identifier])
+            content = "".join([saml_student.user.username, "\n", saml_student.user.username])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
             self.assert200(rv)
             result = rv.json
             self.assertEqual(1, result['success'])
             self.assertEqual(1, len(result['invalids']))
-            self.assertEqual(saml_student.unique_identifier, result['invalids'][0]['user']['username'])
-            self.assertEqual('This username already exists in the file.', result['invalids'][0]['message'])
+            self.assertEqual(saml_student.user.username, result['invalids'][0]['user']['username'])
+            self.assertEqual('This username repeated in the file.', result['invalids'][0]['message'])
             uploaded_file.close()
 
             # test duplicate student number in system
-            content = "".join(['username1,', student.student_number, "\n", saml_student.unique_identifier])
+            content = "".join(['username1,', student.student_number, "\n", saml_student.user.username])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
             self.assert200(rv)
@@ -1186,8 +1186,8 @@ class ClassListAPITest(ComPAIRAPITestCase):
 
             # test duplicate student number in file
             content = "".join([
-                saml_student.unique_identifier, ",", student.student_number, "\n",
-                "username1,", student.student_number])
+                "username2,x999999999", "\n",
+                "username1,x999999999"])
             uploaded_file = io.BytesIO(content.encode('utf-8'))
             rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
             self.assert200(rv)

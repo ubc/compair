@@ -172,10 +172,23 @@ module.service('importService',
         return uploader;
     };
 
-    var onComplete = function(courseId, response) {
-        results = response;
-        if (!('error' in results)) {
-            onSuccess(courseId);
+    var onComplete = function(courseId, response, status) {
+        if (status >= 400) {
+            var cache = $cacheFactory.get('classlist');
+            if (cache) {
+                cache.remove('/api/courses/' + courseId + '/users');
+            }
+            if (model === 'users') {
+                Toaster.error("Users Not Imported", "Failed to enrolled users.");
+            } else {
+                Toaster.error("Import failed", "Failed to import data.");
+            }
+            $location.path('/course/' + courseId + '/user');
+        } else {
+            results = response;
+            if (!('error' in results)) {
+                onSuccess(courseId);
+            }
         }
     };
 

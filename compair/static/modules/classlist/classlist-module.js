@@ -366,7 +366,7 @@ module.controller(
         $scope.uploader = importService.getUploader($scope.courseId, 'users');
         $scope.uploader.onCompleteItem = function(fileItem, response, status, headers) {
             $scope.submitted = false;
-            importService.onComplete($scope.courseId, response);
+            importService.onComplete($scope.courseId, response, status);
         };
         $scope.uploader.onBeforeUploadItem = function(fileItem) {
             if ($scope.importType == ThirdPartyAuthType.cas || $scope.importType == ThirdPartyAuthType.saml) {

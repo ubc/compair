@@ -15,15 +15,15 @@
                 <li>Students will log in using a new username and password specific to ComPAIR. You must send the username and password to each student.</li>
                 <li>User information is expected in this order: <strong><span class="required-star">Username</span>, <span class="required-star">Password</span>, Student Number, First Name, Last Name, Email, Display Name, Group</strong></li>
                 <li>Usernames and passwords are required. All other information is optional. Usernames and student numbers must also be unique in the application.</li>
-                <li>To skip non-required information, simply leave a blank space between commas, e.g., to leave out first and last name:<br />
-                "studentuser1, pass1234, 005678, , ,jane.doe@student.ca, display0001, Group 2</li>
+                <li>To skip non-required information, simply skip the field between commas, e.g., to leave out first and last name:<br />
+                studentuser1,pass1234,005678,,,jane.doe@student.ca,display0001,Group 2</li>
             </ul>
             <ul class="li-spacing" ng-if="importType == ThirdPartyAuthType.cas || importType == ThirdPartyAuthType.saml">
                 <li>Students will log in using their CWL. The usernames in your file must match the students' CWLs.</li>
-                <li>User information is expected in this order: <strong><span class="required-star">Username</span>, Student Number, First Name, Last Name, Email, Display Name, Group</strong></li>
-                <li>Usernames are required. All other information is optional. Usernames and student numbers must also be unique in the application.</li>
-                <li>To skip non-required information, simply leave a blank space between commas, e.g., to leave out first and last name:<br />
-                "studentuser1, 005678, , ,jane.doe@student.ca, display0001, Group 2</li>
+                <li>User information is expected in this order: <strong><span class="required-star">Username</span>, <span class="required-star">Student Number</span>, First Name, Last Name, Email, Display Name, Group</strong>.</li>
+                <li>Each record needs either Username <strong>and / or</strong> Student Number. All other information is optional. Usernames and student numbers must also be unique in the application.</li>
+                <li>To skip non-required information, simply skip the field between commas, e.g., to leave out first and last name:<br />
+                studentuser1,005678,,,jane.doe@student.ca,display0001,Group 2</li>
             </ul>
         </div>
         <div class="form-group">
