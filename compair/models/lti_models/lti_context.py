@@ -13,7 +13,7 @@ class LTIContext(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     # table columns
     lti_consumer_id = db.Column(db.Integer, db.ForeignKey("lti_consumer.id", ondelete="CASCADE"),
         nullable=False)
-    context_id = db.Column(db.String(255), nullable=False)
+    context_id = db.Column(db.String(191), nullable=False)
     context_type = db.Column(db.String(255), nullable=True)
     context_title = db.Column(db.String(255), nullable=True)
     ext_ims_lis_memberships_id = db.Column(db.String(255), nullable=True)

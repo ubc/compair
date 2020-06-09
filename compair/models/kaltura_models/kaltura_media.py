@@ -23,7 +23,7 @@ class KalturaMedia(DefaultTableMixin, WriteTrackingMixin):
     player_id = db.Column(db.Integer, default=0, nullable=False)
 
     upload_ks = db.Column(db.String(1024), nullable=False)
-    upload_token_id = db.Column(db.String(255), nullable=False, index=True)
+    upload_token_id = db.Column(db.String(191), nullable=False, index=True)
     file_name = db.Column(db.String(255), nullable=True)
 
     entry_id = db.Column(db.String(255), nullable=True)
