@@ -12,7 +12,7 @@ services:
     ports:
       - "13306:3306"
   redis:
-    image: redis:3.2.4
+    image: redis:5.0
     command: redis-server --appendonly yes
     volumes:
       - ./.data/redis:/data
@@ -50,6 +50,7 @@ services:
       - SAML_METADATA_URL=https://idp.testshib.org/metadata/testshib-providers.xml
       - SAML_METADATA_ENTITY_ID=https://idp.testshib.org/idp/shibboleth
       - SAML_EXPOSE_METADATA_ENDPOINT=true
+      - SQLALCHEMY_ENGINE_OPTIONS={"pool_recycle":299}
     volumes:
       - .:/code
       - ./.data/persistent:/code/persistent
@@ -78,6 +79,7 @@ services:
       - MAIL_USERNAME=compair
       - MAIL_PASSWORD=compair
       - MAIL_DEFAULT_SENDER=compair@example.com
+      - SQLALCHEMY_ENGINE_OPTIONS={"pool_recycle":299}
   worker_scheduler:
     <<: *worker
     command: bash -c "rm -f celerybeat.pid && celery beat --app=celery_worker.celery --loglevel=DEBUG"

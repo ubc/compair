@@ -9,13 +9,11 @@ var expect = chai.expect;
 var editCourseUserStepDefinitionsWrapper = function () {
 
     this.Then("I should see '$count' users listed for the course", function (count) {
-        browser.waitForAngular();
         return expect(element.all(by.exactRepeater("user in classlist"))
             .count()).to.eventually.eql(parseInt(count));
     });
 
     this.Then("I should see course users with displaynames:", function (data) {
-        browser.waitForAngular();
         var list = data.hashes().map(function(item) {
             return item.displayname;
         });
@@ -38,7 +36,9 @@ var editCourseUserStepDefinitionsWrapper = function () {
         fillElement.sendKeys("Student");
 
         // force blur
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 
     this.When("I sort by displayname in decending order", function () {
@@ -55,7 +55,9 @@ var editCourseUserStepDefinitionsWrapper = function () {
 
         roleSelect.sendKeys('Instructor');
         // force blur
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 
     this.When("I set the second user's group to '$groupname'", function (groupname) {
@@ -81,7 +83,9 @@ var editCourseUserStepDefinitionsWrapper = function () {
 
         browser.driver.switchTo().alert().accept();
         browser.driver.switchTo().defaultContent();
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 };
 

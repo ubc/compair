@@ -9,19 +9,16 @@ var expect = chai.expect;
 var viewLTIConsumersStepDefinitionsWrapper = function () {
 
     this.Then("I should see '$count' consumers listed", function (count) {
-        browser.waitForAngular();
         return expect(element.all(by.exactRepeater("consumer in consumers"))
             .count()).to.eventually.eql(parseInt(count));
     });
 
     this.Then("I should see '$count' contexts listed", function (count) {
-        browser.waitForAngular();
         return expect(element.all(by.exactRepeater("context in contexts"))
             .count()).to.eventually.eql(parseInt(count));
     });
 
     this.Then("I should see consumers with consumer keys:", function (data) {
-        browser.waitForAngular();
         var list = data.hashes().map(function(item) {
             return item.oauth_consumer_key;
         });
@@ -30,8 +27,11 @@ var viewLTIConsumersStepDefinitionsWrapper = function () {
             .column('consumer.oauth_consumer_key')).getText()).to.eventually.eql(list);
     });
 
+    this.When("I sort by oauth_consumer_key in ascending order", function () {
+        return element.all(by.cssContainingText("table th a", "Consumer Key")).first().click();
+    });
+
     this.Then("I should see contexts with titles:", function (data) {
-        browser.waitForAngular();
         var list = data.hashes().map(function(item) {
             return item.context_title;
         });
@@ -50,7 +50,9 @@ var viewLTIConsumersStepDefinitionsWrapper = function () {
 
         activeSelect.sendKeys(active);
         // force blur
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 
     this.When("I set the third consumer's active status to '$active'", function (active) {
@@ -63,7 +65,9 @@ var viewLTIConsumersStepDefinitionsWrapper = function () {
 
         activeSelect.sendKeys(active);
         // force blur
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 
     this.When("I click the first consumer's Edit button", function () {

@@ -54,7 +54,7 @@ def upgrade():
                 group_table.insert().values(
                     course_id=course_id, name=group_name, active=True,
                     modified=datetime.utcnow(), created=datetime.utcnow(),
-                    uuid=str(base64.urlsafe_b64encode(uuid.uuid4().bytes)).replace('=', '')
+                    uuid=base64.urlsafe_b64encode(uuid.uuid4().bytes).decode('ascii').replace('=', '')
                 )
             )
             group_id = result.lastrowid

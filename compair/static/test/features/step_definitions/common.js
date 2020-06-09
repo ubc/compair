@@ -21,9 +21,7 @@ var commonStepDefinitionsWrapper = function() {
         return element(by.model(item)).getTagName().then(function(tagName) {
             // clear inputs and textareas then send keys
             if (tagName == 'input' || tagName == 'textarea') {
-                return element(by.model(item)).clear().then(function() {
-                    return element(by.model(item)).sendKeys(content);
-                });
+                return element(by.model(item)).clear().sendKeys(content);
             } else if (tagName == 'select') {
                 if (browser.browserName == "firefox") {
                     element(by.model(item)).click();
@@ -31,7 +29,9 @@ var commonStepDefinitionsWrapper = function() {
                 element(by.model(item)).sendKeys(content);
 
                 // force blur
-                return element(by.css("body")).click();
+                //return element(by.css("body")).click();
+                // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+                return;
             } else {
                 return element(by.model(item)).sendKeys(content);
             }

@@ -28,7 +28,7 @@ def upgrade():
         connection.execute(
             lti_consumer_table.update()
             .where(lti_consumer_table.c.id == record.id)
-            .values(uuid=str(base64.urlsafe_b64encode(uuid.uuid4().bytes)).replace('=', ''))
+            .values(uuid=base64.urlsafe_b64encode(uuid.uuid4().bytes).decode('ascii').replace('=', ''))
         )
 
     # step 3, apply unique constraint on generated table

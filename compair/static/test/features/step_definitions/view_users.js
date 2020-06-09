@@ -9,13 +9,11 @@ var expect = chai.expect;
 var viewUsersStepDefinitionsWrapper = function () {
 
     this.Then("I should see '$count' users listed", function (count) {
-        browser.waitForAngular();
         return expect(element.all(by.exactRepeater("user in users"))
             .count()).to.eventually.eql(parseInt(count));
     });
 
     this.Then("I should users with displaynames:", function (data) {
-        browser.waitForAngular();
         var list = data.hashes().map(function(item) {
             return item.displayname;
         });
@@ -41,7 +39,9 @@ var viewUsersStepDefinitionsWrapper = function () {
     this.When("I filter users page by '$filter'", function (filter) {
         element(by.css("form.search-users input")).sendKeys(filter);
         // force blur
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 };
 

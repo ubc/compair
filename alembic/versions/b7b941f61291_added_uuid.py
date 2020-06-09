@@ -34,7 +34,7 @@ def upgrade():
             connection.execute(
                 table.update()
                 .where(table.c.id == record.id)
-                .values(uuid=str(base64.urlsafe_b64encode(uuid.uuid4().bytes)).replace('=', ''))
+                .values(uuid=base64.urlsafe_b64encode(uuid.uuid4().bytes).decode('ascii').replace('=', ''))
             )
 
         # step 3, apply unique cosntraint on generated table

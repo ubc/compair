@@ -30,7 +30,9 @@ var viewNavbarStepDefinitionsWrapper = function () {
 
         expect(element(by.css("#own-profile-link")).isPresent()).to.eventually.equal(true);
         expect(element(by.css("#logout-link")).isPresent()).to.eventually.equal(true);
-        return element(by.css("body")).click();
+        //return element(by.css("body")).click();
+        // dont click on the body.  it may accidentially click on any button (depending on the browser window size)
+        return;
     });
 };
 

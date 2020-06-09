@@ -23,7 +23,7 @@ SECRET_KEY = "zfjlkfaweerP* SDF()U@#$haDJ;JKLASDFHUIO"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # recycle connections after ~5 minutes
-SQLALCHEMY_POOL_RECYCLE=299
+SQLALCHEMY_ENGINE_OPTIONS = {'pool_recycle': 299}
 
 # persistent directories for uploads and download
 PERSISTENT_BASE = os.getcwd() + '/persistent'

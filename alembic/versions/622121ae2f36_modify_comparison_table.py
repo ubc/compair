@@ -155,7 +155,7 @@ def upgrade():
                 # populate comparison table
                 result = connection.execute(
                     comparison_table.insert().values(
-                        uuid=str(base64.urlsafe_b64encode(uuid.uuid4().bytes)).replace('=', ''),
+                        uuid=base64.urlsafe_b64encode(uuid.uuid4().bytes).decode('ascii').replace('=', ''),
                         assignment_id=comparison.assignment_id, user_id=comparison.user_id,
                         answer1_id=comparison.answer1_id, answer2_id=comparison.answer2_id,
                         winner=None, #to be decided after talling all comparisons
