@@ -14,7 +14,7 @@ class LTINonce(DefaultTableMixin, WriteTrackingMixin):
     # table columns
     lti_consumer_id = db.Column(db.Integer, db.ForeignKey("lti_consumer.id", ondelete="CASCADE"),
         nullable=False)
-    oauth_nonce = db.Column(db.String(255), nullable=False)
+    oauth_nonce = db.Column(db.String(191), nullable=False)
     oauth_timestamp = db.Column(db.TIMESTAMP, nullable=False)
 
     # relationships

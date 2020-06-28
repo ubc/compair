@@ -15,7 +15,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     # table columns
     lti_consumer_id = db.Column(db.Integer, db.ForeignKey("lti_consumer.id", ondelete="CASCADE"),
         nullable=False)
-    user_id = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(db.String(191), nullable=False)
     lis_person_name_given = db.Column(db.String(255), nullable=True)
     lis_person_name_family = db.Column(db.String(255), nullable=True)
     lis_person_name_full = db.Column(db.String(255), nullable=True)

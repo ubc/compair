@@ -28,10 +28,16 @@ from distutils.util import strtobool
 from flask import Config
 from sqlalchemy.engine.url import URL
 
-
 config = Config('.')
 config.from_object('compair.settings')
 config.from_pyfile(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config.py'), silent=True)
+
+db_conn_options = ''
+if os.environ.get('DB_CONN_OPTIONS'):
+    options_dict = json.loads(os.environ.get('DB_CONN_OPTIONS'))
+    for key in options_dict:
+        db_conn_options = db_conn_options + ('?' if db_conn_options == '' else '&') + \
+            key + '=' + options_dict.get(key)
 
 if os.environ.get('OPENSHIFT_MYSQL_DB_HOST'):
     config['SQLALCHEMY_DATABASE_URI'] = URL(
@@ -44,14 +50,14 @@ if os.environ.get('OPENSHIFT_MYSQL_DB_HOST'):
     )
 elif os.environ.get('DB_HOST') or os.environ.get('DB_PORT') or os.environ.get('DB_USERNAME') \
         or os.environ.get('DB_PASSWORD') or os.environ.get('DB_NAME'):
-    config['SQLALCHEMY_DATABASE_URI'] = URL(
+    config['SQLALCHEMY_DATABASE_URI'] = str(URL(
         os.getenv('DB_DRIVER', 'mysql+pymysql'),
         host=os.getenv('DB_HOST', 'localhost'),
         port=os.getenv('DB_PORT', '3306'),
         username=os.getenv('DB_USERNAME', 'compair'),
         password=os.getenv('DB_PASSWORD', 'compair'),
         database=os.getenv('DB_NAME', 'compair'),
-    )
+    )) + db_conn_options
 elif os.environ.get('DATABASE_URI'):
     config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 elif "DATABASE" in config and 'DATABASE_URI' not in config:

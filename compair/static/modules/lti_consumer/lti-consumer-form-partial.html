@@ -9,7 +9,7 @@
             <label for="oauth_consumer_key" class="required-star">Consumer Key</label>
             <input class="form-control" id="oauth_consumer_key" type="text"
                 name="oauth_consumer_key" ng-model="consumer.oauth_consumer_key"
-                ng-minlength="10" ng-maxlength="255"
+                ng-minlength="10" ng-maxlength="191"
                 required />
             <!-- if the field is empty AND a save attempted -->
             <p ng-if="consumerForm.oauth_consumer_key.$invalid && saveAttempted" class="alert alert-warning">What key did you get from the LTI consumer? (This should be at least 10 characters long.)</p>

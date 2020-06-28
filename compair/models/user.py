@@ -30,8 +30,8 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     __tablename__ = 'user'
 
     # table columns
-    global_unique_identifier = db.Column(db.String(255), nullable=True) #should be treated as write once and only once
-    username = db.Column(db.String(255), unique=True, nullable=True)
+    global_unique_identifier = db.Column(db.String(191), nullable=True) #should be treated as write once and only once
+    username = db.Column(db.String(191), unique=True, nullable=True)
     _password = db.Column(db.String(255), unique=False, nullable=True)
     system_role = db.Column(EnumType(SystemRole), nullable=False, index=True)
     displayname = db.Column(db.String(255), nullable=False)

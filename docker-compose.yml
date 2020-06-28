@@ -27,6 +27,7 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - DB_NAME=compair
+      - DB_CONN_OPTIONS={"charset":"utf8mb4"}
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_ALWAYS_EAGER=0
@@ -69,6 +70,7 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - DB_NAME=compair
+      - DB_CONN_OPTIONS={"charset":"utf8mb4"}
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_ALWAYS_EAGER=0

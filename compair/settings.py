@@ -13,6 +13,7 @@ DATABASE = {
     'username': 'compair',
     'password': 'compaircompair',
     'database': 'compair',
+    'query': {'charset': 'utf8mb4'},
 }
 
 # enable sessions by setting the secret key

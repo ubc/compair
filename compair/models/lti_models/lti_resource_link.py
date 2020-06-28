@@ -15,7 +15,7 @@ class LTIResourceLink(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     lti_context_id = db.Column(db.Integer, db.ForeignKey("lti_context.id", ondelete="CASCADE"),
         nullable=True)
-    resource_link_id = db.Column(db.String(255), nullable=False)
+    resource_link_id = db.Column(db.String(191), nullable=False)
     resource_link_title = db.Column(db.String(255), nullable=True)
     launch_presentation_return_url = db.Column(db.Text, nullable=True)
     custom_param_assignment_id = db.Column(db.String(255), nullable=True)
