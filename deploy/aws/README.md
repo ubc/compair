@@ -41,7 +41,7 @@ You should be logged in with ssh key without password.
 
 Find the app container ID. If nothing showed up, wait for a few minutes.
 ```
-docker ps | grep "ubctlt/compair-app"
+docker ps | grep "\-compair-app"
 ```
 
 Execute the database command:
