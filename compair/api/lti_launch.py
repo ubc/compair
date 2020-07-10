@@ -39,7 +39,7 @@ class LTIAuthAPI(Resource):
         try:
             tool_provider = FlaskToolProvider.from_flask_request(request=request)
         except InvalidLaunchParamError as e:
-            return "Invalid Request: {}".format(e.message), 400
+            return "Invalid Request: {}".format(str(e)), 400
 
         validator = ComPAIRRequestValidator()
         if not tool_provider.is_valid_request(validator):
