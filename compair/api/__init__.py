@@ -1,5 +1,6 @@
 import mimetypes
 import os
+import re
 from functools import wraps
 
 from flask import redirect, render_template, jsonify
@@ -284,6 +285,15 @@ def register_api_blueprints(app):
 
         return send_file(file_path, mimetype=mimetype,
             attachment_filename=attachment_filename, as_attachment=as_attachment)
+
+    # set Cache-Control for /api/* calls
+    _api_call_pattern = re.compile('^' + re.escape('/api/'))
+    def _api_call_cache_control(resp):
+        if _api_call_pattern.match(request.full_path):
+            if 'cache-contorl' not in set(k.lower() for k in resp.headers.keys()):
+                resp.headers['Cache-Control'] = 'no-store'
+        return resp
+    app.after_request(_api_call_cache_control)
 
     return app
 
