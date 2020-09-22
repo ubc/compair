@@ -1,3 +1,8 @@
+# v1.2.6
+
+## Notable changes
+* Fixed issues around Learning record event retries
+
 # v1.2.4
 
 ## Notable changes
