@@ -1,6 +1,7 @@
 import json
 import socket
 import datetime
+from sqlalchemy import and_, or_
 
 from compair.core import celery
 from flask import current_app
@@ -12,7 +13,12 @@ from compair.core import db
 def emit_lrs_xapi_statement(self, xapi_log_id):
     from compair.learning_records import XAPI
 
-    xapi_log = XAPILog.query.filter_by(id=xapi_log_id).one_or_none()
+    xapi_log = XAPILog.query \
+        .filter_by(
+            id=xapi_log_id,
+            transmitted=False
+        ) \
+        .one_or_none()
 
     if xapi_log:
         try:
@@ -31,7 +37,12 @@ def emit_lrs_xapi_statement(self, xapi_log_id):
 def emit_lrs_caliper_event(self, caliper_log_id):
     from compair.learning_records import CaliperSensor
 
-    caliper_log = CaliperLog.query.filter_by(id=caliper_log_id).one_or_none()
+    caliper_log = CaliperLog.query \
+        .filter_by(
+            id=caliper_log_id,
+            transmitted=False
+        ) \
+        .one_or_none()
 
     if caliper_log:
         try:
