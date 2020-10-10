@@ -160,6 +160,15 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         prefix = get_asset_prefix(app)
         app.config.update(prefix)
 
+    # set resp headers
+    def _resp_header_defaults(resp):
+        headers_lower = set(k.lower() for k in resp.headers.keys())
+        # avoid xss by telling browser not to guess the content type
+        if 'x-content-type-options' not in headers_lower:
+            resp.headers['X-Content-Type-Options'] = 'nosniff'
+        return resp
+    app.after_request(_resp_header_defaults)
+
     if not skip_endpoints:
         # Flask-Login initialization
         login_manager.init_app(app)

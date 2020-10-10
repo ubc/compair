@@ -86,7 +86,7 @@ services:
     <<: *worker
     command: bash -c "rm -f celerybeat.pid && celery beat --app=celery_worker.celery --loglevel=DEBUG"
   web:
-    image: nginx:1.11
+    image: nginx:1.18
     volumes:
       - ./deploy/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./compair/static:/compair/app:ro
