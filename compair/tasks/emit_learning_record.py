@@ -29,7 +29,9 @@ def emit_lrs_xapi_statement(self, xapi_log_id):
                 return
             raise error
 
-        xapi_log.transmitted = True
+        XAPILog.query \
+            .filter_by(id=xapi_log_id) \
+            .delete()
         db.session.commit()
 
 @celery.task(bind=True, autoretry_for=(Exception,),
@@ -53,7 +55,9 @@ def emit_lrs_caliper_event(self, caliper_log_id):
                 return
             raise error
 
-        caliper_log.transmitted = True
+        CaliperLog.query \
+            .filter_by(id=caliper_log_id) \
+            .delete()
         db.session.commit()
 
 
