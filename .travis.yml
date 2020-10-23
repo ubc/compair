@@ -2,8 +2,6 @@ language: python
 
 dist: xenial
 
-sudo: required
-
 services:
   - docker
   - mysql
@@ -22,7 +20,6 @@ before_cache:
   - rm -f $HOME/.cache/pip/log/debug.log
 
 python:
-  - "2.7"
   - "3.7"
 
 stages:
@@ -75,7 +72,7 @@ env:
     - secure: "f4Z8sNwOpoSm2R0TyEsowL+edxEixCJT3qdS7s2G9zVlRTBzU33VrvBTpfgIJuFdMlGKNV16iHL7iWiLtyGcq07HlgffJc1KKWZGG8JuhykB+GKSOh/lNX/AgIrIUDtmLEpi1/MSXmiFbISf60C4GYstxtMfHeC7/WsVsGyfk7A="
     # Gitlab deployment key DEPLOYMENT_TOKEN
     - secure: "VGcweRjhmDkVgx3tL3R6/RWmS2ulKWfc3R8u4taMQF1hBCkFLdunkNR5Am9stkHmXCbiaXBnn9uE5Yv7sFx09oVq+i9kdbrYoN2ujVsSI/1dTUA8vbNps8/GQpICrU3qcgEUwHX/2xTHbJqvtyV0eG98z3bBg8EHHdMIFEjiT0g="
-  matrix:
+  jobs:
     - DB=sqlite DATABASE_URI="sqlite:///:memory:"
     - DB=mysql DATABASE_URI="mysql+pymysql://root@localhost/compair"
 
@@ -103,10 +100,7 @@ deploy:
   bucket: "compair-assets"
   skip_cleanup: true
   local_dir: compair/static/dist
-  upload-dir: dist
+  upload_dir: dist
   on:
     all_branches: true
     condition: "$COMPILE_ASSETS = true"
-
-notifications:
-  slack: ubcctlt:cyfS7OeXqRjqhyrpIMHJ0SRd
