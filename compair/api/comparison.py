@@ -181,7 +181,7 @@ class CompareRootAPI(Resource):
             if 'criterion_id' not in comparison_criterion_update:
                 abort(400, title="Comparison Not Saved", message="Sorry, the assignment is missing criteria. Please reload the page and try again.")
 
-            # set default values for cotnent and winner
+            # set default values for content and winner
             comparison_criterion_update.setdefault('content', None)
             winner = comparison_criterion_update.setdefault('winner', None)
 

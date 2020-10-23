@@ -236,7 +236,7 @@
                 &nbsp; &nbsp;
                 <!-- button to submit and refresh page IF evaluations remain for user -->
                 <input ng-disabled="submitted" type="submit"
-                    ng-click="showComparisonErrors($event, comparisonForm.$valid); isDraft = false"
+                    ng-click="isDraft = false; showComparisonErrors($event, comparisonForm.$valid);"
                     value="Submit" class="btn btn-success btn-lg" />
                 <p ng-if="submitted">
                     <i class="fa fa-spin fa-spinner"></i>
