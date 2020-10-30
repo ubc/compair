@@ -72,12 +72,10 @@ class LearningRecord(object):
 
         if current_app.config.get('LRS_USER_INPUT_FIELD_SIZE_LIMIT'):
             size_limit = current_app.config.get('LRS_USER_INPUT_FIELD_SIZE_LIMIT')
-            encoded_text = text.encode('utf-8')
-
             # if encoded_text is larger than size_limit, trim it
-            if len(encoded_text) > size_limit:
-                encoded_text = encoded_text[:size_limit]
-                return text_type(encoded_text.decode('utf-8', 'ignore'))+" [TEXT TRIMMED]..."
+            if len(text) > size_limit:
+                trimmed_text = text[:size_limit]
+                return trimmed_text+" [TEXT TRIMMED]..."
 
         return text
 

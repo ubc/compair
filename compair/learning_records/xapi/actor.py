@@ -16,7 +16,7 @@ class XAPIActor(object):
     def _generate_global_unique_identifier_account(cls, user):
         name = user.global_unique_identifier
         homepage = current_app.config.get('LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE')
-        if not (name and homepage):
+        if not name or not homepage:
             return None
 
         if not homepage.endswith('/'):

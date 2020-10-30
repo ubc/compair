@@ -137,7 +137,7 @@ ComPAIR uses the Experience API (xAPI) and/or Caliper for collecting learning an
 
 `LRS_APP_BASE_URL` Optionally set a base url to use for all statements. This is useful to help keep statement urls consistent if the url of your instance changes over time or is accessible though different routes (ex http+https or multiple sub-domains). (Uses base url of request by default)
 
-`LRS_USER_INPUT_FIELD_SIZE_LIMIT`: Set the byte limit on statement fields containing user input. Set this in order to prevent sending large statements to the LRS that it can't handle (1048576 by default or 1MB)
+`LRS_USER_INPUT_FIELD_SIZE_LIMIT`: Set the character limit on statement fields containing user input. Set this in order to prevent sending large statements to the LRS that it can't handle (default: 10,000 characters)
 
 `LRS_SIS_COURSE_ID_URI_TEMPLATE`: Template for setting SIS course ids (default '{base_url}/course/{sis_course_id}'). Uses string format function with access to:
 - `{base_url}`: Value of `LRS_APP_BASE_URL`
@@ -215,7 +215,7 @@ To run tasks asynchronously, you need to:
 
 ### Settings
 
-`CELERY_ALWAYS_EAGER`: Set to `0` to enable background tasks (`1` by default). 
+`CELERY_ALWAYS_EAGER`: Set to `0` to enable background tasks (`1` by default).
 **Note:** although ComPAIR uses Celery 4.x, it is **not** using `CELERY_TASK_ALWAYS_EAGER` nor `task_always_eager` as described [in the document](http://docs.celeryproject.org/en/latest/userguide/configuration.html#new-lowercase-settings).
 
 `CELERY_BROKER_URL`: Set the url for the broker tool to be used (ex: redis or rabbitmq instance url)

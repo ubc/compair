@@ -25,7 +25,7 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
         self.app.config['LRS_XAPI_PASSWORD'] = 'lrs_password'
         self.app.config['LRS_CALIPER_HOST'] = 'http://example.com/caliper'
         self.app.config['LRS_CALIPER_API_KEY'] = 'lrs_api_key'
-        self.app.config['LRS_USER_INPUT_FIELD_SIZE_LIMIT'] = 200 # 200 bytes
+        self.app.config['LRS_USER_INPUT_FIELD_SIZE_LIMIT'] = 10000 # 10,000 characters
 
         self.data = SimpleAnswersTestData()
         self.lti_data = LTITestData()
@@ -44,7 +44,7 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
         self.answer_comment = self.data.create_answer_comment(self.answer, self.user, AnswerCommentType.public)
         self.sent_xapi_statement = None
         self.sent_caliper_event = None
-        self.character_limit = int(current_app.config.get('LRS_USER_INPUT_FIELD_SIZE_LIMIT') / len("c".encode('utf-8')))
+        self.character_limit = current_app.config.get('LRS_USER_INPUT_FIELD_SIZE_LIMIT')
 
     @mock.patch('caliper.sensor.Sensor.send')
     def test_send_remote_caliper_event(self, mocked_send_event):

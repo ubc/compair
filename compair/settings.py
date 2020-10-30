@@ -71,7 +71,7 @@ LRS_CALIPER_HOST = 'local' #url for LRS Caliper statements
 LRS_CALIPER_API_KEY = None
 
 # limit user generated content field text size limit
-LRS_USER_INPUT_FIELD_SIZE_LIMIT = 524288 #512 * 1024 -> max 512KB
+LRS_USER_INPUT_FIELD_SIZE_LIMIT = 10000 #10,000 characters
 LRS_SIS_COURSE_ID_URI_TEMPLATE = '{base_url}/course/{sis_course_id}'
 LRS_SIS_SECTION_ID_URI_TEMPLATE = '{base_url}/course/{sis_course_id}/section/{sis_section_id}'
 

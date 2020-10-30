@@ -1,9 +1,8 @@
 from flask import request, session as sess
 from flask_login import current_user
 
-from tincan import RemoteLRS, Statement, Agent, AgentAccount, Verb, \
-    Activity, ActivityDefinition, ActivityList, Extensions, \
-    Context, ContextActivities, LanguageMap, StateDocument
+from tincan import Statement, ActivityList, \
+    Extensions, Context, ContextActivities
 
 from compair.core import impersonation
 

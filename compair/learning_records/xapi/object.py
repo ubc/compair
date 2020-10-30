@@ -294,7 +294,7 @@ class XAPIObject(object):
             id=ResourceIRI.attachment(file.name),
             definition=ActivityDefinition(
                 type=XAPIActivity.activity_types.get('file'),
-                name=LanguageMap({ 'en-US': file.alias }),
+                name=LanguageMap({ 'en-US': file.alias if file.alias else "" }),
                 extensions=Extensions()
             )
         )
@@ -308,7 +308,7 @@ class XAPIObject(object):
             id=ResourceIRI.attachment(file.name),
             definition=ActivityDefinition(
                 type=XAPIActivity.activity_types.get('file'),
-                name=LanguageMap({ 'en-US': file.alias }),
+                name=LanguageMap({ 'en-US': file.alias if file.alias else "" }),
                 extensions=Extensions()
             )
         )
@@ -322,7 +322,7 @@ class XAPIObject(object):
             id=ResourceIRI.report(file_name),
             definition=ActivityDefinition(
                 type=XAPIActivity.activity_types.get('file'),
-                name=LanguageMap({ 'en-US': file_name }),
+                name=LanguageMap({ 'en-US': file_name if file_name else "" }),
                 extensions=Extensions()
             )
         )

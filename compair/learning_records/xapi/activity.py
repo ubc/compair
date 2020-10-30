@@ -1,4 +1,4 @@
-from tincan import  Activity, ActivityDefinition, LanguageMap
+from tincan import  Activity, ActivityDefinition
 
 class XAPIActivity(object):
     activity_types = {
