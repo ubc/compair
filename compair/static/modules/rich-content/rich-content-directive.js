@@ -261,10 +261,10 @@ module.directive('richContent',
                         scope: modalScope
                     });
                     modalScope.modalInstance.opened.then(function() {
-                        LearningRecordStatementHelper.opened_attachment_modal(content.url);
+                        LearningRecordStatementHelper.opened_attachment_modal(content.title);
                     });
                     modalScope.modalInstance.result.finally(function() {
-                        LearningRecordStatementHelper.closed_attachment_modal(content.url);
+                        LearningRecordStatementHelper.closed_attachment_modal(content.title);
                     });
                 };
 
