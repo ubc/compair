@@ -41,15 +41,15 @@ services:
       - MAIL_DEFAULT_SENDER=compair@example.com
       - SAML_LOGIN_ENABLED=true
       - SAML_UNIQUE_IDENTIFIER=urn:oid:0.9.2342.19200300.100.1.1
-      - SAML_ATTRIBUTE_USER_ROLE=urn:oid:1.3.6.1.4.1.5923.1.1.1.1
-      - SAML_INSTRUCTOR_ROLE_VALUES=Staff
+      - SAML_ATTRIBUTE_USER_ROLE=https://samltest.id/attributes/role
+      - SAML_INSTRUCTOR_ROLE_VALUES=employee@samltest.id
       - SAML_ATTRIBUTE_FIRST_NAME=urn:oid:2.5.4.42
       - SAML_ATTRIBUTE_LAST_NAME=urn:oid:2.5.4.4
-      - SAML_ATTRIBUTE_EMAIL=urn:oid:1.3.6.1.4.1.5923.1.1.1.6
+      - SAML_ATTRIBUTE_EMAIL=urn:oid:0.9.2342.19200300.100.1.3
       - SAML_ATTRIBUTE_STUDENT_NUMBER=
       - SAML_SETTINGS_FILE=/code/deploy/development/dev_saml_settings.json
-      - SAML_METADATA_URL=https://idp.testshib.org/metadata/testshib-providers.xml
-      - SAML_METADATA_ENTITY_ID=https://idp.testshib.org/idp/shibboleth
+      - SAML_METADATA_URL=https://samltest.id/saml/idp
+      - SAML_METADATA_ENTITY_ID=http://compair/api/saml/metadata
       - SAML_EXPOSE_METADATA_ENDPOINT=true
       - SQLALCHEMY_ENGINE_OPTIONS={"pool_recycle":299}
     volumes:
