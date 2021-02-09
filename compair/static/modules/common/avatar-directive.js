@@ -57,7 +57,7 @@ angular.module('ubc.ctlt.compair.common').directive('compairStudentAvatar', func
                         '<img ng-src="//www.gravatar.com/avatar/{{ user.avatar }}?s=32&d=retro" alt="" /> ' +
                     '</a>' +
                     '<a ng-href="#/user/{{ user.id }}">' +
-                        '{{ user.fullname }} ({{ user.student_number }})' +
+                        '{{ !!user.fullname? user.fullname : user.displayname }} {{ !!user.student_number? "(" + user.student_number + ")" : "" }}' +
                     '</a>'
     };
 });

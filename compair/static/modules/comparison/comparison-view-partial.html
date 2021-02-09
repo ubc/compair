@@ -42,20 +42,19 @@
     <div ng-show="comparison_sets.length" class="evaluations">
 
         <div ng-repeat="comparison_set in comparison_sets">
-            <div class="each-evaluation" ng-repeat="comparison in comparison_set.comparisons">
-                <h4 class="text-center evaluator-heading" ng-if="$first">
+            <div class="each-evaluation-self">
+                <h4 class="text-center evaluator-heading">
                     <i class="fa fa-user" aria-hidden="true"></i> {{ comparison_set.user.fullname_sortable }} <br />
                     <i class="fa fa-arrow-down"></i>
                 </h4>
-
-                <div class="evaluator-answer" ng-if="$first">
-                    <p class="content"><a href="" ng-click="loadAnswerByAuthor(comparison.user_id);showMyAnswer = !showMyAnswer;">
+                <div class="evaluator-answer">
+                    <p class="content"><a href="" ng-click="loadAnswerByAuthor(comparison_set.user.id);showMyAnswer = !showMyAnswer;">
                         <i ng-show="showMyAnswer" class="fa fa-chevron-down"></i>
                         <i ng-hide="showMyAnswer" class="fa fa-chevron-right"></i>
-                        <em ng-if="isInstructor(comparison.user_id)">Show instructor/TA's answer</em>
-                        <em ng-if="!isInstructor(comparison.user_id)">Show student's answer</em>
+                        <em ng-if="isInstructor(comparison_set.user.id)">Show instructor/TA's answer</em>
+                        <em ng-if="!isInstructor(comparison_set.user.id)">Show student's answer</em>
                     </a></p>
-                    <compair-student-answer class="answer" answer="(answers | filter:{user_id:comparison.user_id}:true)[0]" ng-show="showMyAnswer"></compair-student-answer>
+                    <compair-student-answer class="answer" answer="(answers | filter:{user_id:comparison_set.user.id}:true)[0]" ng-show="showMyAnswer"></compair-student-answer>
                     <br />
                     <div class="" ng-if="comparison_set.self_evaluations.length > 0">
                         <div ng-repeat="self_evaluation in comparison_set.self_evaluations">
@@ -67,6 +66,17 @@
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <div class="each-evaluation" ng-if="comparison_set.comparisons.length==0">
+                <div class="each-header">
+                </div>
+                <div class="content">
+                    <p>(No pair comparisons completed by this student.)</p>
+                </div>
+            </div>
+
+            <div class="each-evaluation" ng-repeat="comparison in comparison_set.comparisons">
 
                 <!-- Comparison Header -->
                 <div class="each-header">
