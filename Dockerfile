@@ -44,7 +44,7 @@ RUN apt-get update -y \
     && pip install -r /code/requirements.txt \
     && pip install uwsgi \
     # see https://github.com/onelogin/python3-saml/issues/82
-    && STATIC_DEPS=true pip install lxml==4.1.1 --force-reinstall \
+    && STATIC_DEPS=true pip install lxml==4.6.2 --force-reinstall \
     && rm -rf /root/.cache \
     && rm -rf /var/lib/apt/lists/*
 
