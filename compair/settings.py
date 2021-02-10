@@ -72,8 +72,6 @@ LRS_CALIPER_API_KEY = None
 
 # limit user generated content field text size limit
 LRS_USER_INPUT_FIELD_SIZE_LIMIT = 10000 #10,000 characters
-LRS_SIS_COURSE_ID_URI_TEMPLATE = '{base_url}/course/{sis_course_id}'
-LRS_SIS_SECTION_ID_URI_TEMPLATE = '{base_url}/course/{sis_course_id}/section/{sis_section_id}'
 
 LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER = False # set to True to use user's global_unique_identifier if available
 LRS_ACTOR_ACCOUNT_GLOBAL_UNIQUE_IDENTIFIER_HOMEPAGE = None # set to the url for the global unique identifer homepage

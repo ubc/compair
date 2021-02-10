@@ -49,6 +49,7 @@ class AuthenticationLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         expected_caliper_event = {
             'action': 'LoggedIn',
+            'profile': 'SessionProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'object': self.expected_caliper_object,
             'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
@@ -98,7 +99,7 @@ class AuthenticationLearningRecordTests(ComPAIRLearningRecordTestCase):
         self.assertEqual(statements[0], expected_xapi_statement)
 
     def test_on_logout(self):
-        sess['end_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+        sess['end_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
         # not method provided
         on_logout.send(
@@ -109,6 +110,7 @@ class AuthenticationLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         expected_caliper_event = {
             'action': 'LoggedOut',
+            'profile': 'SessionProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'object': self.expected_caliper_object,
             'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),

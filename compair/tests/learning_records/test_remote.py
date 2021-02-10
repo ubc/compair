@@ -52,32 +52,35 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         def send_event_override(event):
             self.sent_caliper_event = json.loads(event.as_json())
+            self._del_empty_caliper_field(self.sent_caliper_event)
             return {}
         mocked_send_event.side_effect = send_event_override
 
         expected_assignment = {
             'name': self.assignment.name,
             'type': 'Assessment',
-            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'description': self.assignment.description,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid,
             'isPartOf': {
                 'academicSession': self.course.term,
-                'dateCreated': self.course.created.replace(tzinfo=pytz.utc).isoformat(),
-                'dateModified': self.course.modified.replace(tzinfo=pytz.utc).isoformat(),
+                'dateCreated': self.course.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                'dateModified': self.course.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                 'id': "https://localhost:8888/app/course/"+self.course.uuid,
                 'name': self.course.name,
                 'type': 'CourseOffering',
-                'extensions': {
-                    'ltiContexts': [{
-                        'context_id': self.lti_context.context_id,
-                        'oauth_consumer_key': self.lti_data.lti_consumer.oauth_consumer_key,
-                        'lis_course_offering_sourcedid': "sis_course_id",
-                        'lis_course_section_sourcedid': "sis_section_id",
-                    }]
-                }
+                'otherIdentifiers': [{
+                    'identifier': self.lti_context.context_id,
+                    'identifierType': 'LtiContextId',
+                    'type': 'SystemIdentifier',
+                    'extensions': {
+                        'lis_course_offering_sourcedid': 'sis_course_id',
+                        'lis_course_section_sourcedid': 'sis_section_id',
+                        'oauth_consumer_key': self.lti_context.oauth_consumer_key,
+                    },
+                }],
             },
             'items': [{
                 'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/question",
@@ -115,10 +118,10 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
         expected_assignment_question = {
             'name': self.assignment.name,
             'type': 'AssessmentItem',
-            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToSubmit': self.assignment.answer_end.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToSubmit': self.assignment.answer_end.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'description': self.assignment.description,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/question",
             'isPartOf': expected_assignment,
@@ -129,8 +132,8 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
             'assignee': self.get_compair_caliper_actor(self.user),
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/question/attempt/"+self.answer.attempt_uuid,
             'duration': "PT05M00S",
-            'startedAtTime': self.answer.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-            'endedAtTime': self.answer.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+            'startedAtTime': self.answer.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'endedAtTime': self.answer.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'type': 'Attempt'
         }
 
@@ -138,8 +141,8 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
             'attempt': expected_attempt,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer.uuid,
             'type': 'Response',
-            'dateCreated': self.answer.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.answer.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.answer.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.answer.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.answer.content),
                 'content': self.answer.content,
@@ -167,12 +170,12 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         expected_answer_comment = {
             'commenter': self.get_compair_caliper_actor(self.user),
-            'commented': expected_answer,
+            'commentedOn': expected_answer,
             'value': self.answer_comment.content,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer.uuid+"/comment/"+self.answer_comment.uuid,
             'type': 'Comment',
-            'dateCreated': self.answer_comment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.answer_comment.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.answer_comment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.answer_comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.answer_comment.content),
                 'isDraft': False,
@@ -183,6 +186,7 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         expected_event = {
             'action': 'Completed',
+            'profile': 'AssessmentProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
             'generated': expected_answer,
@@ -193,7 +197,8 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         # test with answer normal content
         event = caliper.events.AssessmentItemEvent(
-            action=caliper.constants.ASSESSMENT_ITEM_EVENT_ACTIONS["COMPLETED"],
+            action=caliper.constants.CALIPER_ACTIONS["COMPLETED"],
+            profile=caliper.constants.CALIPER_PROFILES["ASSESSMENT"],
             object=CaliperEntities.assignment_question(self.answer.assignment),
             generated=CaliperEntities.answer(self.answer),
             **CaliperEvent._defaults(self.user, self.course)
@@ -215,10 +220,11 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
         expected_answer['extensions']['content'] = ("c" * self.character_limit) + " [TEXT TRIMMED]..."
         expected_answer['extensions']['wordCount'] = 1
         expected_answer['extensions']['characterCount'] = len(content)
-        expected_answer['dateModified'] = self.answer.modified.replace(tzinfo=pytz.utc).isoformat()
+        expected_answer['dateModified'] = self.answer.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
         event = caliper.events.AssessmentItemEvent(
-            action=caliper.constants.ASSESSMENT_ITEM_EVENT_ACTIONS["COMPLETED"],
+            action=caliper.constants.CALIPER_ACTIONS["COMPLETED"],
+            profile=caliper.constants.CALIPER_PROFILES["ASSESSMENT"],
             object=CaliperEntities.assignment_question(self.answer.assignment),
             generated=CaliperEntities.answer(self.answer),
             **CaliperEvent._defaults(self.user, self.course)
@@ -232,7 +238,8 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         # test with answer comment normal content
         event = caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["MODIFIED"],
+            action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+            profile=caliper.constants.CALIPER_PROFILES["GENERAL"],
             object=CaliperEntities.answer_comment(self.answer_comment),
             **CaliperEvent._defaults(self.user, self.course)
         )
@@ -243,6 +250,7 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         expected_event = {
             'action': 'Modified',
+            'profile': 'GeneralProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
             'object': expected_answer_comment,
@@ -264,10 +272,11 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
         expected_answer_comment['value'] = ("d" * self.character_limit) + " [TEXT TRIMMED]..."
         expected_answer_comment['extensions']['wordCount'] = 1
         expected_answer_comment['extensions']['characterCount'] = len(content)
-        expected_answer_comment['dateModified'] = self.answer_comment.modified.replace(tzinfo=pytz.utc).isoformat()
+        expected_answer_comment['dateModified'] = self.answer_comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
         event = caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["MODIFIED"],
+            action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+            profile=caliper.constants.CALIPER_PROFILES["GENERAL"],
             object=CaliperEntities.answer_comment(self.answer_comment),
             **CaliperEvent._defaults(self.user, self.course)
         )
@@ -278,7 +287,8 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         # test with assignment normal content
         event = caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["MODIFIED"],
+            action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+            profile=caliper.constants.CALIPER_PROFILES["GENERAL"],
             object=CaliperEntities.assignment(self.assignment),
             **CaliperEvent._defaults(self.user, self.course)
         )
@@ -289,6 +299,7 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         expected_event = {
             'action': 'Modified',
+            'profile': 'GeneralProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
             'object': expected_assignment,
@@ -311,10 +322,11 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
         # expected_assignment name and description should be <= LRS_USER_INPUT_FIELD_SIZE_LIMIT bytes long + " [TEXT TRIMMED]..."
         expected_assignment['name'] = ("a" * self.character_limit) + " [TEXT TRIMMED]..."
         expected_assignment['description'] = ("b" * self.character_limit) + " [TEXT TRIMMED]..."
-        expected_assignment['dateModified'] = self.assignment.modified.replace(tzinfo=pytz.utc).isoformat()
+        expected_assignment['dateModified'] = self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
         event = caliper.events.Event(
-            action=caliper.constants.BASIC_EVENT_ACTIONS["MODIFIED"],
+            action=caliper.constants.CALIPER_ACTIONS["MODIFIED"],
+            profile=caliper.constants.CALIPER_PROFILES["GENERAL"],
             object=CaliperEntities.assignment(self.assignment),
             **CaliperEvent._defaults(self.user, self.course)
         )
@@ -350,16 +362,6 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
             'objectType': 'Activity'
         }
 
-        expected_sis_course = {
-            'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid,
-            'objectType': 'Activity'
-        }
-
-        expected_sis_section = {
-            'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid+'/section/'+self.lti_context.lis_course_section_sourcedid,
-            'objectType': 'Activity'
-        }
-
         expected_assignment = {
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid,
             'definition': {
@@ -387,8 +389,8 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
                 'extensions': {
                     'http://id.tincanapi.com/extension/attempt': {
                         'duration': "PT05M00S",
-                        'startedAtTime': self.answer.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                        'endedAtTime': self.answer.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                        'startedAtTime': self.answer.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                        'endedAtTime': self.answer.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                     }
                 }
             },
@@ -427,11 +429,15 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
         expected_context = {
             'contextActivities': {
                 'parent': [expected_assignment_question, expected_attempt],
-                'grouping': [expected_assignment, expected_course, expected_sis_course, expected_sis_section]
+                'grouping': [expected_assignment, expected_course]
             },
             'extensions': {
                 'http://id.tincanapi.com/extension/browser-info': {},
-                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                'sis_courses': [{
+                    'id': 'sis_course_id',
+                    'section_ids': ['sis_section_id']
+                }]
             }
         }
 
@@ -505,11 +511,15 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
         expected_context = {
             'contextActivities': {
                 'parent': [expected_answer],
-                'grouping': [expected_assignment_question, expected_assignment, expected_course, expected_sis_course, expected_sis_section]
+                'grouping': [expected_assignment_question, expected_assignment, expected_course]
             },
             'extensions': {
                 'http://id.tincanapi.com/extension/browser-info': {},
-                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                'sis_courses': [{
+                    'id': 'sis_course_id',
+                    'section_ids': ['sis_section_id']
+                }]
             }
         }
 
@@ -563,11 +573,15 @@ class RemoteLearningRecordTests(ComPAIRLearningRecordTestCase):
         expected_context = {
             'contextActivities': {
                 'parent': [expected_course],
-                'grouping': [expected_sis_course, expected_sis_section]
+                'grouping': []
             },
             'extensions': {
                 'http://id.tincanapi.com/extension/browser-info': {},
-                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                'sis_courses': [{
+                    'id': 'sis_course_id',
+                    'section_ids': ['sis_section_id']
+                }]
             }
         }
 

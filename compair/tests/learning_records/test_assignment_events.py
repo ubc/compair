@@ -30,27 +30,29 @@ class AssignmentLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         self.expected_caliper_course = {
             'academicSession': self.course.term,
-            'dateCreated': self.course.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.course.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.course.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.course.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'id': "https://localhost:8888/app/course/"+self.course.uuid,
             'name': self.course.name,
             'type': 'CourseOffering',
-            'extensions': {
-                'ltiContexts': [{
-                    'context_id': self.lti_context.context_id,
+            'otherIdentifiers': [{
+                'identifier': self.lti_context.context_id,
+                'identifierType': 'LtiContextId',
+                'type': 'SystemIdentifier',
+                'extensions': {
+                    'lis_course_offering_sourcedid': 'sis_course_id',
+                    'lis_course_section_sourcedid': 'sis_section_id',
                     'oauth_consumer_key': self.lti_data.lti_consumer.oauth_consumer_key,
-                    'lis_course_offering_sourcedid': "sis_course_id",
-                    'lis_course_section_sourcedid': "sis_section_id",
-                }]
-            }
+                },
+            }]
         }
 
         self.expected_caliper_assignment = {
             'name': self.assignment.name,
             'type': 'Assessment',
-            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'description': self.assignment.description,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid,
             'isPartOf': self.expected_caliper_course,
@@ -96,16 +98,6 @@ class AssignmentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'objectType': 'Activity'
         }
 
-        self.expected_xapi_sis_course = {
-            'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid,
-            'objectType': 'Activity'
-        }
-
-        self.expected_xapi_sis_section = {
-            'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid+'/section/'+self.lti_context.lis_course_section_sourcedid,
-            'objectType': 'Activity'
-        }
-
         self.expected_xapi_assignment = {
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid,
             'definition': {
@@ -127,11 +119,12 @@ class AssignmentLearningRecordTests(ComPAIRLearningRecordTestCase):
         events = self.get_and_clear_caliper_event_log()
         expected_caliper_event = {
             'action': 'Created',
+            'profile': 'ResourceManagementProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
             'object': self.expected_caliper_assignment,
             'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
-            'type': 'Event'
+            'type': 'ResourceManagementEvent'
         }
 
         self.assertEqual(len(events), 1)
@@ -149,11 +142,15 @@ class AssignmentLearningRecordTests(ComPAIRLearningRecordTestCase):
             "context": {
                 'contextActivities': {
                     'parent': [self.expected_xapi_course],
-                    'grouping': [self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                    'grouping': []
                 },
                 'extensions': {
                     'http://id.tincanapi.com/extension/browser-info': {},
-                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                    'sis_courses': [{
+                        'id': 'sis_course_id',
+                        'section_ids': ['sis_section_id']
+                    }]
                 }
             }
         }
@@ -174,11 +171,12 @@ class AssignmentLearningRecordTests(ComPAIRLearningRecordTestCase):
         events = self.get_and_clear_caliper_event_log()
         expected_caliper_event = {
             'action': 'Modified',
+            'profile': 'ResourceManagementProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
             'object': self.expected_caliper_assignment,
             'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
-            'type': 'Event'
+            'type': 'ResourceManagementEvent'
         }
 
         self.assertEqual(len(events), 1)
@@ -196,11 +194,15 @@ class AssignmentLearningRecordTests(ComPAIRLearningRecordTestCase):
             "context": {
                 'contextActivities': {
                     'parent': [self.expected_xapi_course],
-                    'grouping': [self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                    'grouping': []
                 },
                 'extensions': {
                     'http://id.tincanapi.com/extension/browser-info': {},
-                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                    'sis_courses': [{
+                        'id': 'sis_course_id',
+                        'section_ids': ['sis_section_id']
+                    }]
                 }
             }
         }
@@ -217,12 +219,13 @@ class AssignmentLearningRecordTests(ComPAIRLearningRecordTestCase):
         )
         events = self.get_and_clear_caliper_event_log()
         expected_caliper_event = {
-            'action': 'Deleted',
+            'action': 'Archived',
+            'profile': 'ResourceManagementProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
             'object': self.expected_caliper_assignment,
             'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
-            'type': 'Event'
+            'type': 'ResourceManagementEvent'
         }
 
         self.assertEqual(len(events), 1)
@@ -233,18 +236,22 @@ class AssignmentLearningRecordTests(ComPAIRLearningRecordTestCase):
         expected_xapi_statement = {
             "actor": self.get_compair_xapi_actor(self.user),
             "verb": {
-                'id': 'http://activitystrea.ms/schema/1.0/delete',
-                'display': {'en-US': 'deleted'}
+                'id': 'https://w3id.org/xapi/dod-isd/verbs/archived',
+                'display': {'en-US': 'archived'}
             },
             "object": self.expected_xapi_assignment,
             "context": {
                 'contextActivities': {
                     'parent': [self.expected_xapi_course],
-                    'grouping': [self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                    'grouping': []
                 },
                 'extensions': {
                     'http://id.tincanapi.com/extension/browser-info': {},
-                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                    'sis_courses': [{
+                        'id': 'sis_course_id',
+                        'section_ids': ['sis_section_id']
+                    }]
                 }
             }
         }

@@ -227,14 +227,16 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_ITEM_EVENT'],
-                    action: Caliper.actions.assessment_item['STARTED'],
+                    action: Caliper.actions['STARTED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.assignment_question(assignment),
                     generated: Caliper.entities.answer_attempt(assignment, tracking, false),
                 }, true)
 
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_EVENT'],
-                    action: Caliper.actions.assessment['STARTED'],
+                    action: Caliper.actions['STARTED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.assignment(assignment),
                     generated: Caliper.entities.assignment_attempt(assignment, tracking, false),
                 }, true)
@@ -261,7 +263,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_EVENT'],
-                    action: Caliper.actions.assessment['PAUSED'],
+                    action: Caliper.actions['PAUSED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.assignment(assignment),
                     generated: Caliper.entities.assignment_attempt(assignment, tracking, true),
                 })
@@ -313,27 +316,31 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_ITEM_EVENT'],
-                    action: Caliper.actions.assessment_item['STARTED'],
+                    action: Caliper.actions['STARTED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.comparison_question(assignment, comparison_number),
                     generated: Caliper.entities.comparison_attempt(assignment, comparison_number, tracking, false),
                 })
 
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_ITEM_EVENT'],
-                    action: Caliper.actions.assessment_item['STARTED'],
+                    action: Caliper.actions['STARTED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.evaluation_question(assignment, evaluation_number1),
                     generated: Caliper.entities.evaluation_attempt(assignment, evaluation_number1, tracking, false),
                 })
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_ITEM_EVENT'],
-                    action: Caliper.actions.assessment_item['STARTED'],
+                    action: Caliper.actions['STARTED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.evaluation_question(assignment, evaluation_number2),
                     generated: Caliper.entities.evaluation_attempt(assignment, evaluation_number2, tracking, false),
                 })
 
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_EVENT'],
-                    action: Caliper.actions.assessment['STARTED'],
+                    action: Caliper.actions['STARTED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.assignment(assignment),
                     generated: Caliper.entities.assignment_attempt(assignment, tracking, false),
                 })
@@ -360,7 +367,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_EVENT'],
-                    action: Caliper.actions.assessment['PAUSED'],
+                    action: Caliper.actions['PAUSED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.assignment(assignment),
                     generated: Caliper.entities.assignment_attempt(assignment, tracking, true),
                 })
@@ -392,14 +400,16 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_ITEM_EVENT'],
-                    action: Caliper.actions.assessment_item['STARTED'],
+                    action: Caliper.actions['STARTED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.self_evaluation_question(assignment),
                     generated: Caliper.entities.self_evaluation_attempt(assignment, tracking, false),
                 })
 
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_EVENT'],
-                    action: Caliper.actions.assessment['STARTED'],
+                    action: Caliper.actions['STARTED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.assignment(assignment),
                     generated: Caliper.entities.assignment_attempt(assignment, tracking, false),
                 })
@@ -426,7 +436,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(assignment.course_id, {
                     type: Caliper.events['ASSESSMENT_EVENT'],
-                    action: Caliper.actions.assessment['PAUSED'],
+                    action: Caliper.actions['PAUSED'],
+                    profile: Caliper.profiles['ASSESSMENT'],
                     object: Caliper.entities.assignment(assignment),
                     generated: Caliper.entities.assignment_attempt(assignment, tracking, true),
                 })
@@ -451,7 +462,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['NAVIGATION_EVENT'],
-                    action: Caliper.actions.navigation['NAVIGATED_TO'],
+                    action: Caliper.actions['NAVIGATED_TO'],
+                    profile: Caliper.profiles['READING'],
                     object: Caliper.entities.page(relativePath),
                     extensions: {
                         absoluteUrl: LearningRecord.urlSafeEncode(absoluteUrl)
@@ -477,8 +489,9 @@ module.service('LearningRecordStatementHelper',
 
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
-                    type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SEARCHED'],
+                    type: Caliper.events['SEARCH_EVENT'],
+                    action: Caliper.actions['SEARCHED'],
+                    profile: Caliper.profiles['SEARCH'],
                     object: Caliper.entities.page(relativePath),
                     extensions: {
                         absoluteUrl: LearningRecord.urlSafeEncode(absoluteUrl),
@@ -505,8 +518,9 @@ module.service('LearningRecordStatementHelper',
 
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
-                    type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SEARCHED'],
+                    type: Caliper.events['SEARCH_EVENT'],
+                    action: Caliper.actions['SEARCHED'],
+                    profile: Caliper.profiles['SEARCH'],
                     object: Caliper.entities.page(relativePath),
                     extensions: {
                         absoluteUrl: LearningRecord.urlSafeEncode(absoluteUrl),
@@ -535,7 +549,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SHOWED'],
+                    action: Caliper.actions['SHOWED'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.page_section(relativePath, sectionName),
                     extensions: {
@@ -561,7 +576,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['HID'],
+                    action: Caliper.actions['HID'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.page_section(relativePath, sectionName),
                     extensions: {
@@ -588,8 +604,9 @@ module.service('LearningRecordStatementHelper',
 
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
-                    type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SEARCHED'],
+                    type: Caliper.events['SEARCH_EVENT'],
+                    action: Caliper.actions['SEARCHED'],
+                    profile: Caliper.profiles['SEARCH'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.page_section(relativePath, sectionName),
                     extensions: {
@@ -617,8 +634,9 @@ module.service('LearningRecordStatementHelper',
 
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
-                    type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SEARCHED'],
+                    type: Caliper.events['SEARCH_EVENT'],
+                    action: Caliper.actions['SEARCHED'],
+                    profile: Caliper.profiles['SEARCH'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.page_section(relativePath, sectionName),
                     extensions: {
@@ -647,7 +665,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SHOWED'],
+                    action: Caliper.actions['SHOWED'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.modal(relativePath, modalName),
                     extensions: {
@@ -673,7 +692,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['HID'],
+                    action: Caliper.actions['HID'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.modal(relativePath, modalName),
                     extensions: {
@@ -700,8 +720,9 @@ module.service('LearningRecordStatementHelper',
 
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
-                    type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SEARCHED'],
+                    type: Caliper.events['SEARCH_EVENT'],
+                    action: Caliper.actions['SEARCHED'],
+                    profile: Caliper.profiles['SEARCH'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.modal(relativePath, modalName),
                     extensions: {
@@ -729,8 +750,9 @@ module.service('LearningRecordStatementHelper',
 
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
-                    type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SEARCHED'],
+                    type: Caliper.events['SEARCH_EVENT'],
+                    action: Caliper.actions['SEARCHED'],
+                    profile: Caliper.profiles['SEARCH'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.modal(relativePath, modalName),
                     extensions: {
@@ -759,7 +781,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SHOWED'],
+                    action: Caliper.actions['SHOWED'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.page_section(relativePath, attachment_name),
                     extensions: {
@@ -785,7 +808,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['HID'],
+                    action: Caliper.actions['HID'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.page_section(relativePath, attachment_name),
                     extensions: {
@@ -812,7 +836,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SHOWED'],
+                    action: Caliper.actions['SHOWED'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.modal(relativePath, attachment_name),
                     extensions: {
@@ -838,7 +863,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['HID'],
+                    action: Caliper.actions['HID'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.modal(relativePath, attachment_name),
                     extensions: {
@@ -867,7 +893,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SHOWED'],
+                    action: Caliper.actions['SHOWED'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.modal(relativePath, contentUrl),
                     extensions: {
@@ -893,7 +920,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['HID'],
+                    action: Caliper.actions['HID'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.modal(relativePath, contentUrl),
                     extensions: {
@@ -924,7 +952,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['SHOWED'],
+                    action: Caliper.actions['SHOWED'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.page_section(relativePath, "answer/"+answer.id+"/replies"),
                     extensions: {
@@ -952,7 +981,8 @@ module.service('LearningRecordStatementHelper',
             if (LearningRecordSettings.caliper_enabled) {
                 Caliper.generateEvent(course_id, {
                     type: Caliper.events['EVENT'],
-                    action: Caliper.actions.basic['HID'],
+                    action: Caliper.actions['HID'],
+                    profile: Caliper.profiles['GENERAL'],
                     object: Caliper.entities.page(relativePath),
                     target: Caliper.entities.page_section(relativePath, "answer/"+answer.id+"/replies"),
                     extensions: {

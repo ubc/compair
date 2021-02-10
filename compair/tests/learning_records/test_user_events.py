@@ -28,6 +28,7 @@ class UserLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         expected_caliper_event = {
             'action': 'Modified',
+            'profile': 'GeneralProfile',
             'actor': self.get_compair_caliper_actor(self.user),
             'object': self.get_compair_caliper_actor(self.user),
             'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),

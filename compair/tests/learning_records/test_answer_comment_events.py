@@ -42,26 +42,28 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         self.expected_caliper_course = {
             'academicSession': self.course.term,
-            'dateCreated': self.course.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.course.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.course.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.course.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'id': "https://localhost:8888/app/course/"+self.course.uuid,
             'name': self.course.name,
             'type': 'CourseOffering',
-            'extensions': {
-                'ltiContexts': [{
-                    'context_id': self.lti_context.context_id,
+            'otherIdentifiers': [{
+                'identifier': self.lti_context.context_id,
+                'identifierType': 'LtiContextId',
+                'type': 'SystemIdentifier',
+                'extensions': {
+                    'lis_course_offering_sourcedid': 'sis_course_id',
+                    'lis_course_section_sourcedid': 'sis_section_id',
                     'oauth_consumer_key': self.lti_data.lti_consumer.oauth_consumer_key,
-                    'lis_course_offering_sourcedid': "sis_course_id",
-                    'lis_course_section_sourcedid': "sis_section_id",
-                }]
-            }
+                },
+            }]
         }
         self.expected_caliper_assignment = {
             'name': self.assignment.name,
             'type': 'Assessment',
-            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'description': self.assignment.description,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid,
             'isPartOf': self.expected_caliper_course,
@@ -101,10 +103,10 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
         self.expected_caliper_assignment_question = {
             'name': self.assignment.name,
             'type': 'AssessmentItem',
-            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToSubmit': self.assignment.answer_end.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToSubmit': self.assignment.answer_end.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'description': self.assignment.description,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/question",
             'isPartOf': self.expected_caliper_assignment,
@@ -115,8 +117,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'assignee': self.get_compair_caliper_actor(self.user),
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/question/attempt/"+self.answer.attempt_uuid,
             'duration': "PT05M00S",
-            'startedAtTime': self.answer.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-            'endedAtTime': self.answer.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+            'startedAtTime': self.answer.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'endedAtTime': self.answer.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'type': 'Attempt'
         }
 
@@ -124,8 +126,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'attempt': self.expected_caliper_answer_attempt,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer.uuid,
             'type': 'Response',
-            'dateCreated': self.answer.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.answer.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.answer.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.answer.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.answer.content),
                 'content': self.answer.content,
@@ -154,9 +156,9 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
         self.expected_caliper_self_evaluation_question = {
             'name': "Assignment self-evaluation",
             'type': 'AssessmentItem',
-            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToStartOn': self.assignment.answer_end.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToStartOn': self.assignment.answer_end.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/self-evaluation/question",
             'isPartOf': self.expected_caliper_assignment,
         }
@@ -166,8 +168,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'assignee': self.get_compair_caliper_actor(self.user),
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/self-evaluation/question/attempt/"+self.self_evaluation_comment.attempt_uuid,
             'duration': "PT05M00S",
-            'startedAtTime': self.self_evaluation_comment.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-            'endedAtTime': self.self_evaluation_comment.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+            'startedAtTime': self.self_evaluation_comment.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'endedAtTime': self.self_evaluation_comment.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'type': 'Attempt'
         }
 
@@ -175,8 +177,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'attempt': self.expected_caliper_self_evaluation_attempt,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer.uuid+"/comment/"+self.self_evaluation_comment.uuid+"/self-evaluation",
             'type': 'Response',
-            'dateCreated': self.self_evaluation_comment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.self_evaluation_comment.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.self_evaluation_comment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.self_evaluation_comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.self_evaluation_comment.content),
                 'content': self.self_evaluation_comment.content,
@@ -188,9 +190,9 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
         self.expected_caliper_evaluation_question = {
             'name': "Assignment Answer Evaluation #5",
             'type': 'AssessmentItem',
-            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToStartOn': self.assignment.answer_end.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToStartOn': self.assignment.answer_end.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/evaluation/question/5",
             'isPartOf': self.expected_caliper_assignment,
         }
@@ -200,8 +202,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'assignee': self.get_compair_caliper_actor(self.user),
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/evaluation/question/5/attempt/"+self.evaluation_comment.attempt_uuid,
             'duration': "PT05M00S",
-            'startedAtTime': self.evaluation_comment.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-            'endedAtTime': self.evaluation_comment.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+            'startedAtTime': self.evaluation_comment.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'endedAtTime': self.evaluation_comment.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'type': 'Attempt'
         }
 
@@ -209,8 +211,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'attempt': self.expected_caliper_evaluation_attempt,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer.uuid+"/comment/"+self.evaluation_comment.uuid+"/evaluation",
             'type': 'Response',
-            'dateCreated': self.evaluation_comment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.evaluation_comment.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.evaluation_comment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.evaluation_comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.evaluation_comment.content),
                 'content': self.evaluation_comment.content,
@@ -224,10 +226,10 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer.uuid+"/comment/"+self.self_evaluation_comment.uuid,
             'type': 'Comment',
             'commenter': self.get_compair_caliper_actor(self.user),
-            'commented': self.expected_caliper_answer,
+            'commentedOn': self.expected_caliper_answer,
             'value': self.self_evaluation_comment.content,
-            'dateCreated': self.self_evaluation_comment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.self_evaluation_comment.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.self_evaluation_comment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.self_evaluation_comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.self_evaluation_comment.content),
                 'type': AnswerCommentType.self_evaluation.value,
@@ -240,10 +242,10 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer.uuid+"/comment/"+self.evaluation_comment.uuid,
             'type': 'Comment',
             'commenter': self.get_compair_caliper_actor(self.user),
-            'commented': self.expected_caliper_answer,
+            'commentedOn': self.expected_caliper_answer,
             'value': self.evaluation_comment.content,
-            'dateCreated': self.evaluation_comment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.evaluation_comment.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.evaluation_comment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.evaluation_comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.evaluation_comment.content),
                 'type': AnswerCommentType.evaluation.value,
@@ -256,10 +258,10 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer.uuid+"/comment/"+self.public_comment.uuid,
             'type': 'Comment',
             'commenter': self.get_compair_caliper_actor(self.user),
-            'commented': self.expected_caliper_answer,
+            'commentedOn': self.expected_caliper_answer,
             'value': self.public_comment.content,
-            'dateCreated': self.public_comment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.public_comment.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.public_comment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.public_comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.public_comment.content),
                 'type': AnswerCommentType.public.value,
@@ -272,10 +274,10 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer.uuid+"/comment/"+self.private_comment.uuid,
             'type': 'Comment',
             'commenter': self.get_compair_caliper_actor(self.user),
-            'commented': self.expected_caliper_answer,
+            'commentedOn': self.expected_caliper_answer,
             'value': self.private_comment.content,
-            'dateCreated': self.private_comment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.private_comment.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.private_comment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.private_comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.private_comment.content),
                 'type': AnswerCommentType.private.value,
@@ -291,16 +293,6 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                 'type': 'http://adlnet.gov/expapi/activities/course',
                 'name': {'en-US': self.course.name}
             },
-            'objectType': 'Activity'
-        }
-
-        self.expected_xapi_sis_course = {
-            'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid,
-            'objectType': 'Activity'
-        }
-
-        self.expected_xapi_sis_section = {
-            'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid+'/section/'+self.lti_context.lis_course_section_sourcedid,
             'objectType': 'Activity'
         }
 
@@ -331,8 +323,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                 'extensions': {
                     'http://id.tincanapi.com/extension/attempt': {
                         'duration': "PT05M00S",
-                        'startedAtTime': self.answer.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                        'endedAtTime': self.answer.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                        'startedAtTime': self.answer.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                        'endedAtTime': self.answer.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                     }
                 }
             },
@@ -358,8 +350,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                 'extensions': {
                     'http://id.tincanapi.com/extension/attempt': {
                         'duration': "PT05M00S",
-                        'startedAtTime': self.self_evaluation_comment.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                        'endedAtTime': self.self_evaluation_comment.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                        'startedAtTime': self.self_evaluation_comment.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                        'endedAtTime': self.self_evaluation_comment.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                     }
                 }
             },
@@ -394,8 +386,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                 'extensions': {
                     'http://id.tincanapi.com/extension/attempt': {
                         'duration': "PT05M00S",
-                        'startedAtTime': self.evaluation_comment.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                        'endedAtTime': self.evaluation_comment.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                        'startedAtTime': self.evaluation_comment.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                        'endedAtTime': self.evaluation_comment.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                     }
                 }
             },
@@ -490,15 +482,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
 
                 xapi_object['definition']['extensions']['http://id.tincanapi.com/extension/isDraft'] = draft
                 caliper_object['extensions']['isDraft'] = draft
-                caliper_object['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).isoformat()
+                caliper_object['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
                 if comment.id == self.self_evaluation_comment.id:
                     self.expected_xapi_self_evaluation_response['definition']['extensions']['http://id.tincanapi.com/extension/isDraft'] = draft
                     self.expected_caliper_self_evaluation_response['extensions']['isDraft'] = draft
-                    self.expected_caliper_self_evaluation_response['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).isoformat()
+                    self.expected_caliper_self_evaluation_response['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
                 elif comment.id == self.evaluation_comment.id:
                     self.expected_xapi_evaluation_response['definition']['extensions']['http://id.tincanapi.com/extension/isDraft'] = draft
                     self.expected_caliper_evaluation_response['extensions']['isDraft'] = draft
-                    self.expected_caliper_evaluation_response['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).isoformat()
+                    self.expected_caliper_evaluation_response['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
                 evaluation_number = 5 if comment.id == self.evaluation_comment.id else None
 
@@ -517,15 +509,17 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                     if not draft:
                         expected_caliper_events.append({
                             'action': 'Commented',
+                            'profile': 'FeedbackProfile',
                             'actor': self.get_compair_caliper_actor(self.user),
                             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                             'object': self.expected_caliper_answer,
                             'generated': caliper_object,
                             'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
-                            'type': 'Event'
+                            'type': 'FeedbackEvent'
                         })
                     expected_caliper_events.append({
                         'action': 'Completed',
+                        'profile': 'AssessmentProfile',
                         'actor': self.get_compair_caliper_actor(self.user),
                         'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                         'object': self.expected_caliper_self_evaluation_question,
@@ -535,6 +529,7 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                     })
                     expected_caliper_events.append({
                         'action': 'Submitted',
+                        'profile': 'AssessmentProfile',
                         'actor': self.get_compair_caliper_actor(self.user),
                         'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                         'object': self.expected_caliper_assignment,
@@ -543,12 +538,27 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'assignee': self.get_compair_caliper_actor(self.user),
                             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/attempt/"+comment.attempt_uuid,
                             'duration': "PT05M00S",
-                            'startedAtTime': comment.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                            'endedAtTime': comment.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                            'startedAtTime': comment.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                            'endedAtTime': comment.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                             'type': 'Attempt'
                         },
                         'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
                         'type': 'AssessmentEvent'
+                    })
+                    expected_caliper_events.append({
+                        'action': 'Used',
+                        'profile': 'ToolUseProfile',
+                        'actor': self.get_compair_caliper_actor(self.user),
+                        'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
+                        'object': {
+                            'id': self.app_base_url.rstrip("/"),
+                            'type': 'SoftwareApplication',
+                            'name': 'ComPAIR',
+                            'description': 'The ComPAIR learning application pairs student answers for deeper learning through comparison of peer work.',
+                            'version': self.app.config.get('COMPAIR_VERSION', None)
+                        },
+                        'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
+                        'type': 'ToolUseEvent'
                     })
                     self.assertEqual(len(events), len(expected_caliper_events))
                     for index, expected_event in enumerate(expected_caliper_events):
@@ -569,11 +579,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                                 'registration': comment.attempt_uuid,
                                 'contextActivities': {
                                     'parent': [self.expected_xapi_answer],
-                                    'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                    'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course]
                                 },
                                 'extensions': {
                                     'http://id.tincanapi.com/extension/browser-info': {},
-                                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                    'sis_courses': [{
+                                        'id': 'sis_course_id',
+                                        'section_ids': ['sis_section_id']
+                                    }]
                                 }
                             },
                             "result": {
@@ -597,11 +611,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'registration': comment.attempt_uuid,
                             'contextActivities': {
                                 'parent': [self.expected_xapi_self_evaluation_question, self.expected_xapi_answer, self.expected_xapi_self_evaluation_attempt],
-                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course]
                             },
                             'extensions': {
                                 'http://id.tincanapi.com/extension/browser-info': {},
-                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                'sis_courses': [{
+                                    'id': 'sis_course_id',
+                                    'section_ids': ['sis_section_id']
+                                }]
                             }
                         },
                         "result": {
@@ -628,8 +646,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                                 'extensions': {
                                     'http://id.tincanapi.com/extension/attempt': {
                                         'duration': "PT05M00S",
-                                        'startedAtTime': comment.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                                        'endedAtTime': comment.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                                        'startedAtTime': comment.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                                        'endedAtTime': comment.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                                     }
                                 }
                             },
@@ -639,11 +657,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'registration': comment.attempt_uuid,
                             'contextActivities': {
                                 'parent': [self.expected_xapi_assignment],
-                                'grouping': [self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                'grouping': [self.expected_xapi_course]
                             },
                             'extensions': {
                                 'http://id.tincanapi.com/extension/browser-info': {},
-                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                'sis_courses': [{
+                                    'id': 'sis_course_id',
+                                    'section_ids': ['sis_section_id']
+                                }]
                             }
                         },
                         "result": {
@@ -661,15 +683,17 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                     if not draft:
                         expected_caliper_events.append({
                             'action': 'Commented',
+                            'profile': 'FeedbackProfile',
                             'actor': self.get_compair_caliper_actor(self.user),
                             'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                             'object': self.expected_caliper_answer,
                             'generated': caliper_object,
                             'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
-                            'type': 'Event'
+                            'type': 'FeedbackEvent'
                         })
                     expected_caliper_events.append({
                         'action': 'Completed',
+                        'profile': 'AssessmentProfile',
                         'actor': self.get_compair_caliper_actor(self.user),
                         'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                         'object': self.expected_caliper_evaluation_question,
@@ -696,11 +720,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                                 'registration': comment.attempt_uuid,
                                 'contextActivities': {
                                     'parent': [self.expected_xapi_answer],
-                                    'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                    'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course]
                                 },
                                 'extensions': {
                                     'http://id.tincanapi.com/extension/browser-info': {},
-                                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                    'sis_courses': [{
+                                        'id': 'sis_course_id',
+                                        'section_ids': ['sis_section_id']
+                                    }]
                                 }
                             },
                             "result": {
@@ -724,11 +752,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'registration': comment.attempt_uuid,
                             'contextActivities': {
                                 'parent': [self.expected_xapi_evaluation_question, self.expected_xapi_answer, self.expected_xapi_evaluation_attempt],
-                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course]
                             },
                             'extensions': {
                                 'http://id.tincanapi.com/extension/browser-info': {},
-                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                'sis_courses': [{
+                                    'id': 'sis_course_id',
+                                    'section_ids': ['sis_section_id']
+                                }]
                             }
                         },
                         "result": {
@@ -749,12 +781,13 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                 elif comment.id in [self.public_comment.id, self.private_comment.id]:
                     expected_caliper_event = {
                         'action': 'Commented',
+                        'profile': 'FeedbackProfile',
                         'actor': self.get_compair_caliper_actor(self.user),
                         'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                         'object': self.expected_caliper_answer,
                         'generated': caliper_object,
                         'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
-                        'type': 'Event'
+                        'type': 'FeedbackEvent'
                     }
                     events = self.get_and_clear_caliper_event_log()
                     self.assertEqual(len(events), 1)
@@ -770,11 +803,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                         "context": {
                             'contextActivities': {
                                 'parent': [self.expected_xapi_answer],
-                                'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course]
                             },
                             'extensions': {
                                 'http://id.tincanapi.com/extension/browser-info': {},
-                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                'sis_courses': [{
+                                    'id': 'sis_course_id',
+                                    'section_ids': ['sis_section_id']
+                                }]
                             }
                         },
                         "result": {
@@ -807,15 +844,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
 
                 xapi_object['definition']['extensions']['http://id.tincanapi.com/extension/isDraft'] = draft
                 caliper_object['extensions']['isDraft'] = draft
-                caliper_object['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).isoformat()
+                caliper_object['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
                 if comment.id == self.self_evaluation_comment.id:
                     self.expected_xapi_self_evaluation_response['definition']['extensions']['http://id.tincanapi.com/extension/isDraft'] = draft
                     self.expected_caliper_self_evaluation_response['extensions']['isDraft'] = draft
-                    self.expected_caliper_self_evaluation_response['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).isoformat()
+                    self.expected_caliper_self_evaluation_response['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
                 elif comment.id == self.evaluation_comment.id:
                     self.expected_xapi_evaluation_response['definition']['extensions']['http://id.tincanapi.com/extension/isDraft'] = draft
                     self.expected_caliper_evaluation_response['extensions']['isDraft'] = draft
-                    self.expected_caliper_evaluation_response['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).isoformat()
+                    self.expected_caliper_evaluation_response['dateModified'] = comment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
                 evaluation_number = 5 if comment.id == self.evaluation_comment.id else None
 
@@ -833,17 +870,30 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                     events = self.get_and_clear_caliper_event_log()
                     expected_caliper_events = []
                     if not draft:
-                        expected_caliper_events.append({
-                            'action': 'Commented' if was_draft else 'Modified',
-                            'actor': self.get_compair_caliper_actor(self.user),
-                            'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
-                            'object': self.expected_caliper_answer,
-                            'generated': caliper_object,
-                            'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
-                            'type': 'Event'
-                        })
+                        if was_draft:
+                            expected_caliper_events.append({
+                                'action': 'Commented',
+                                'profile': 'FeedbackProfile',
+                                'actor': self.get_compair_caliper_actor(self.user),
+                                'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
+                                'object': self.expected_caliper_answer,
+                                'generated': caliper_object,
+                                'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
+                                'type': 'FeedbackEvent'
+                            })
+                        else:
+                            expected_caliper_events.append({
+                                'action': 'Modified',
+                                'profile': 'GeneralProfile',
+                                'actor': self.get_compair_caliper_actor(self.user),
+                                'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
+                                'object': caliper_object,
+                                'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
+                                'type': 'Event'
+                            })
                     expected_caliper_events.append({
                         'action': 'Completed',
+                        'profile': 'AssessmentProfile',
                         'actor': self.get_compair_caliper_actor(self.user),
                         'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                         'object': self.expected_caliper_self_evaluation_question,
@@ -853,6 +903,7 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                     })
                     expected_caliper_events.append({
                         'action': 'Submitted',
+                        'profile': 'AssessmentProfile',
                         'actor': self.get_compair_caliper_actor(self.user),
                         'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                         'object': self.expected_caliper_assignment,
@@ -861,12 +912,27 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'assignee': self.get_compair_caliper_actor(self.user),
                             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/attempt/"+comment.attempt_uuid,
                             'duration': "PT05M00S",
-                            'startedAtTime': comment.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                            'endedAtTime': comment.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                            'startedAtTime': comment.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                            'endedAtTime': comment.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                             'type': 'Attempt'
                         },
                         'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
                         'type': 'AssessmentEvent'
+                    })
+                    expected_caliper_events.append({
+                        'action': 'Used',
+                        'profile': 'ToolUseProfile',
+                        'actor': self.get_compair_caliper_actor(self.user),
+                        'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
+                        'object': {
+                            'id': self.app_base_url.rstrip("/"),
+                            'type': 'SoftwareApplication',
+                            'name': 'ComPAIR',
+                            'description': 'The ComPAIR learning application pairs student answers for deeper learning through comparison of peer work.',
+                            'version': self.app.config.get('COMPAIR_VERSION', None)
+                        },
+                        'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
+                        'type': 'ToolUseEvent'
                     })
                     self.assertEqual(len(events), len(expected_caliper_events))
                     for index, expected_event in enumerate(expected_caliper_events):
@@ -884,11 +950,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                                 'registration': comment.attempt_uuid,
                                 'contextActivities': {
                                     'parent': [self.expected_xapi_answer],
-                                    'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                    'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course]
                                 },
                                 'extensions': {
                                     'http://id.tincanapi.com/extension/browser-info': {},
-                                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                    'sis_courses': [{
+                                        'id': 'sis_course_id',
+                                        'section_ids': ['sis_section_id']
+                                    }]
                                 }
                             },
                             "result": {
@@ -912,11 +982,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'registration': comment.attempt_uuid,
                             'contextActivities': {
                                 'parent': [self.expected_xapi_self_evaluation_question, self.expected_xapi_answer, self.expected_xapi_self_evaluation_attempt],
-                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course]
                             },
                             'extensions': {
                                 'http://id.tincanapi.com/extension/browser-info': {},
-                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                'sis_courses': [{
+                                    'id': 'sis_course_id',
+                                    'section_ids': ['sis_section_id']
+                                }]
                             }
                         },
                         "result": {
@@ -943,8 +1017,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                                 'extensions': {
                                     'http://id.tincanapi.com/extension/attempt': {
                                         'duration': "PT05M00S",
-                                        'startedAtTime': comment.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                                        'endedAtTime': comment.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                                        'startedAtTime': comment.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                                        'endedAtTime': comment.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                                     }
                                 }
                             },
@@ -954,11 +1028,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'registration': comment.attempt_uuid,
                             'contextActivities': {
                                 'parent': [self.expected_xapi_assignment],
-                                'grouping': [self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                'grouping': [self.expected_xapi_course]
                             },
                             'extensions': {
                                 'http://id.tincanapi.com/extension/browser-info': {},
-                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                'sis_courses': [{
+                                    'id': 'sis_course_id',
+                                    'section_ids': ['sis_section_id']
+                                }]
                             }
                         },
                         "result": {
@@ -974,17 +1052,30 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                     events = self.get_and_clear_caliper_event_log()
                     expected_caliper_events = []
                     if not draft:
-                        expected_caliper_events.append({
-                            'action': 'Commented' if was_draft else 'Modified',
-                            'actor': self.get_compair_caliper_actor(self.user),
-                            'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
-                            'object': self.expected_caliper_answer,
-                            'generated': caliper_object,
-                            'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
-                            'type': 'Event'
-                        })
+                        if was_draft:
+                            expected_caliper_events.append({
+                                'action': 'Commented',
+                                'profile': 'FeedbackProfile',
+                                'actor': self.get_compair_caliper_actor(self.user),
+                                'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
+                                'object': self.expected_caliper_answer,
+                                'generated': caliper_object,
+                                'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
+                                'type': 'FeedbackEvent'
+                            })
+                        else:
+                            expected_caliper_events.append({
+                                'action': 'Modified',
+                                'profile': 'GeneralProfile',
+                                'actor': self.get_compair_caliper_actor(self.user),
+                                'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
+                                'object': caliper_object,
+                                'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
+                                'type': 'Event'
+                            })
                     expected_caliper_events.append({
                         'action': 'Completed',
+                        'profile': 'AssessmentProfile',
                         'actor': self.get_compair_caliper_actor(self.user),
                         'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                         'object': self.expected_caliper_evaluation_question,
@@ -1008,11 +1099,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                                 'registration': comment.attempt_uuid,
                                 'contextActivities': {
                                     'parent': [self.expected_xapi_answer],
-                                    'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                    'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course]
                                 },
                                 'extensions': {
                                     'http://id.tincanapi.com/extension/browser-info': {},
-                                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                    'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                    'sis_courses': [{
+                                        'id': 'sis_course_id',
+                                        'section_ids': ['sis_section_id']
+                                    }]
                                 }
                             },
                             "result": {
@@ -1036,11 +1131,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'registration': comment.attempt_uuid,
                             'contextActivities': {
                                 'parent': [self.expected_xapi_evaluation_question, self.expected_xapi_answer, self.expected_xapi_evaluation_attempt],
-                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course]
                             },
                             'extensions': {
                                 'http://id.tincanapi.com/extension/browser-info': {},
-                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                'sis_courses': [{
+                                    'id': 'sis_course_id',
+                                    'section_ids': ['sis_section_id']
+                                }]
                             }
                         },
                         "result": {
@@ -1061,10 +1160,10 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                 elif comment.id in [self.public_comment.id, self.private_comment.id]:
                     expected_caliper_event = {
                         'action': 'Modified',
+                        'profile': 'GeneralProfile',
                         'actor': self.get_compair_caliper_actor(self.user),
                         'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
-                        'object': self.expected_caliper_answer,
-                        'generated': caliper_object,
+                        'object': caliper_object,
                         'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
                         'type': 'Event'
                     }
@@ -1079,11 +1178,15 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
                         "context": {
                             'contextActivities': {
                                 'parent': [self.expected_xapi_answer],
-                                'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course]
                             },
                             'extensions': {
                                 'http://id.tincanapi.com/extension/browser-info': {},
-                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                'sis_courses': [{
+                                    'id': 'sis_course_id',
+                                    'section_ids': ['sis_section_id']
+                                }]
                             }
                         },
                         "result": {
@@ -1111,7 +1214,8 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
 
             events = self.get_and_clear_caliper_event_log()
             expected_caliper_event = {
-                'action': 'Deleted',
+                'action': 'Archived',
+                'profile': 'GeneralProfile',
                 'actor': self.get_compair_caliper_actor(self.user),
                 'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                 'object': caliper_object,
@@ -1127,18 +1231,22 @@ class AnswerCommentLearningRecordTests(ComPAIRLearningRecordTestCase):
             expected_xapi_statement = {
                 "actor": self.get_compair_xapi_actor(self.user),
                 "verb": {
-                    'id': 'http://activitystrea.ms/schema/1.0/delete',
-                    'display': {'en-US': 'deleted'}
+                    'id': 'https://w3id.org/xapi/dod-isd/verbs/archived',
+                    'display': {'en-US': 'archived'}
                 },
                 "object": xapi_object,
                 "context": {
                     'contextActivities': {
                         'parent': [self.expected_xapi_answer],
-                        'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                        'grouping': [self.expected_xapi_assignment_question, self.expected_xapi_assignment, self.expected_xapi_course]
                     },
                     'extensions': {
                         'http://id.tincanapi.com/extension/browser-info': {},
-                        'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                        'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                        'sis_courses': [{
+                            'id': 'sis_course_id',
+                            'section_ids': ['sis_section_id']
+                        }]
                     }
                 }
             }

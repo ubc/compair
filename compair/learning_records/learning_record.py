@@ -21,20 +21,12 @@ class LearningRecord(object):
         return base_url.rstrip('/')
 
     @classmethod
-    def get_sis_course_id_uri_template(cls):
-        return current_app.config.get('LRS_SIS_COURSE_ID_URI_TEMPLATE')
-
-    @classmethod
-    def get_sis_section_id_uri_template(cls):
-        return current_app.config.get('LRS_SIS_SECTION_ID_URI_TEMPLATE')
-
-    @classmethod
     def emit(cls, record):
         return
 
     @classmethod
     def generate_timestamp(cls):
-        return datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+        return datetime.datetime.utcnow().replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
     @classmethod
     def _unescape(cls, text):

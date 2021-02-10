@@ -43,6 +43,7 @@
     "angular-uuids": "~0.0.4",
     "angular-local-storage": "~0.7.1",
     "angular-promise-extras": "~0.1.8",
+    "navigator-sendbeacon": "~0.0.3",
     "ng-kaltura-player": "~1.2.1",
     "pdf.js-viewer": "~1.6.211"
   },

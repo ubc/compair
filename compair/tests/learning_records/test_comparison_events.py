@@ -64,26 +64,28 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
 
         self.expected_caliper_course = {
             'academicSession': self.course.term,
-            'dateCreated': self.course.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.course.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.course.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.course.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'id': "https://localhost:8888/app/course/"+self.course.uuid,
             'name': self.course.name,
             'type': 'CourseOffering',
-            'extensions': {
-                'ltiContexts': [{
-                    'context_id': self.lti_context.context_id,
+            'otherIdentifiers': [{
+                'identifier': self.lti_context.context_id,
+                'identifierType': 'LtiContextId',
+                'type': 'SystemIdentifier',
+                'extensions': {
+                    'lis_course_offering_sourcedid': 'sis_course_id',
+                    'lis_course_section_sourcedid': 'sis_section_id',
                     'oauth_consumer_key': self.lti_data.lti_consumer.oauth_consumer_key,
-                    'lis_course_offering_sourcedid': "sis_course_id",
-                    'lis_course_section_sourcedid': "sis_section_id",
-                }]
-            }
+                },
+            }]
         }
         self.expected_caliper_assignment = {
             'name': self.assignment.name,
             'type': 'Assessment',
-            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'description': self.assignment.description,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid,
             'isPartOf': self.expected_caliper_course,
@@ -123,10 +125,10 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
         self.expected_caliper_assignment_question = {
             'name': self.assignment.name,
             'type': 'AssessmentItem',
-            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToSubmit': self.assignment.answer_end.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToStartOn': self.assignment.answer_start.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToSubmit': self.assignment.answer_end.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'description': self.assignment.description,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/question",
             'isPartOf': self.expected_caliper_assignment,
@@ -137,8 +139,8 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
             'assignee': self.get_compair_caliper_actor(self.answer1.user),
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/question/attempt/"+self.answer1.attempt_uuid,
             'duration': "PT05M00S",
-            'startedAtTime': self.answer1.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-            'endedAtTime': self.answer1.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+            'startedAtTime': self.answer1.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'endedAtTime': self.answer1.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'type': 'Attempt'
         }
 
@@ -146,8 +148,8 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
             'attempt': self.expected_caliper_answer1_attempt,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer1.uuid,
             'type': 'Response',
-            'dateCreated': self.answer1.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.answer1.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.answer1.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.answer1.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.answer1.content),
                 'content': self.answer1.content,
@@ -178,8 +180,8 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
             'assignee': self.get_compair_caliper_actor(self.answer2.user),
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/question/attempt/"+self.answer2.attempt_uuid,
             'duration': "PT05M00S",
-            'startedAtTime': self.answer2.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-            'endedAtTime': self.answer2.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+            'startedAtTime': self.answer2.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'endedAtTime': self.answer2.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'type': 'Attempt'
         }
 
@@ -187,8 +189,8 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
             'attempt': self.expected_caliper_answer2_attempt,
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer2.uuid,
             'type': 'Response',
-            'dateCreated': self.answer2.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.answer2.modified.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.answer2.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.answer2.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'extensions': {
                 'characterCount': len(self.answer2.content),
                 'content': self.answer2.content,
@@ -217,9 +219,9 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
         self.expected_caliper_comparison_question = {
             'name': "Assignment comparison #1",
             'type': 'AssessmentItem',
-            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'dateToStartOn': self.assignment.answer_end.replace(tzinfo=pytz.utc).isoformat(),
+            'dateCreated': self.assignment.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': self.assignment.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateToStartOn': self.assignment.answer_end.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
             'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/comparison/question/1",
             'isPartOf': self.expected_caliper_assignment,
         }
@@ -231,16 +233,6 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                 'type': 'http://adlnet.gov/expapi/activities/course',
                 'name': {'en-US': self.course.name}
             },
-            'objectType': 'Activity'
-        }
-
-        self.expected_xapi_sis_course = {
-            'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid,
-            'objectType': 'Activity'
-        }
-
-        self.expected_xapi_sis_section = {
-            'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid+'/section/'+self.lti_context.lis_course_section_sourcedid,
             'objectType': 'Activity'
         }
 
@@ -271,8 +263,8 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                 'extensions': {
                     'http://id.tincanapi.com/extension/attempt': {
                         'duration': "PT05M00S",
-                        'startedAtTime': self.answer1.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                        'endedAtTime': self.answer1.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                        'startedAtTime': self.answer1.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                        'endedAtTime': self.answer1.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                     }
                 }
             },
@@ -297,8 +289,8 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                 'extensions': {
                     'http://id.tincanapi.com/extension/attempt': {
                         'duration': "PT05M00S",
-                        'startedAtTime': self.answer2.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                        'endedAtTime': self.answer2.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                        'startedAtTime': self.answer2.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                        'endedAtTime': self.answer2.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                     }
                 }
             },
@@ -356,8 +348,8 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                     'assignee': self.get_compair_caliper_actor(self.user),
                     'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/comparison/question/"+str(current_comparison)+"/attempt/"+comparison.attempt_uuid,
                     'duration': "PT05M00S",
-                    'startedAtTime': comparison.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                    'endedAtTime': comparison.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                    'startedAtTime': comparison.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                    'endedAtTime': comparison.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                     'type': 'Attempt'
                 }
 
@@ -365,8 +357,8 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                     'attempt': expected_caliper_comparison_attempt,
                     'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/comparison/"+comparison.uuid,
                     'type': 'Response',
-                    'dateCreated': comparison.created.replace(tzinfo=pytz.utc).isoformat(),
-                    'dateModified': comparison.modified.replace(tzinfo=pytz.utc).isoformat(),
+                    'dateCreated': comparison.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                    'dateModified': comparison.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                     'extensions': {
                         'pairingAlgorithm': self.comparison.pairing_algorithm.value,
                         'winner': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/answer/"+self.answer1.uuid if completed else "Undecided",
@@ -384,6 +376,7 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                 events = self.get_and_clear_caliper_event_log()
                 expected_caliper_events = [{
                     'action': 'Completed',
+                    'profile': 'AssessmentProfile',
                     'actor': self.get_compair_caliper_actor(self.user),
                     'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                     'object': self.expected_caliper_comparison_question,
@@ -392,6 +385,7 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                     'type': 'AssessmentItemEvent'
                 }, {
                     'action': 'Submitted',
+                    'profile': 'AssessmentProfile',
                     'actor': self.get_compair_caliper_actor(self.user),
                     'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                     'object': self.expected_caliper_assignment,
@@ -400,17 +394,32 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                         'assignee': self.get_compair_caliper_actor(self.user),
                         'id': "https://localhost:8888/app/course/"+self.course.uuid+"/assignment/"+self.assignment.uuid+"/attempt/"+comparison.attempt_uuid,
                         'duration': "PT05M00S",
-                        'startedAtTime': comparison.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                        'endedAtTime': comparison.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                        'startedAtTime': comparison.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                        'endedAtTime': comparison.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                         'type': 'Attempt'
                     },
                     'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
                     'type': 'AssessmentEvent'
+                }, {
+                    'action': 'Used',
+                    'profile': 'ToolUseProfile',
+                    'actor': self.get_compair_caliper_actor(self.user),
+                    'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
+                    'object': {
+                        'id': self.app_base_url.rstrip("/"),
+                        'type': 'SoftwareApplication',
+                        'name': 'ComPAIR',
+                        'description': 'The ComPAIR learning application pairs student answers for deeper learning through comparison of peer work.',
+                        'version': self.app.config.get('COMPAIR_VERSION', None)
+                    },
+                    'session': self.get_caliper_session(self.get_compair_caliper_actor(self.user)),
+                    'type': 'ToolUseEvent'
                 }]
 
                 if not is_comparison_example and completed:
                     expected_caliper_events.append({
                         'action': 'Ranked',
+                        'profile': 'GeneralProfile',
                         'actor': self.get_compair_caliper_actor(self.user),
                         'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                         'object': self.expected_caliper_answer1,
@@ -419,6 +428,7 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                     })
                     expected_caliper_events.append({
                         'action': 'Ranked',
+                        'profile': 'GeneralProfile',
                         'actor': self.get_compair_caliper_actor(self.user),
                         'membership': self.get_caliper_membership(self.course, self.user, self.lti_context),
                         'object': self.expected_caliper_answer2,
@@ -437,8 +447,8 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                         'extensions': {
                             'http://id.tincanapi.com/extension/attempt': {
                                 'duration': "PT05M00S",
-                                'startedAtTime': comparison.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                                'endedAtTime': comparison.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                                'startedAtTime': comparison.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                                'endedAtTime': comparison.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                             }
                         }
                     },
@@ -470,11 +480,15 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                         'registration': comparison.attempt_uuid,
                         'contextActivities': {
                             'parent': [self.expected_xapi_comparison_question, self.expected_xapi_answer1, self.expected_xapi_answer2, expected_xapi_comparison_attempt],
-                            'grouping': [self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                            'grouping': [self.expected_xapi_assignment, self.expected_xapi_course]
                         },
                         'extensions': {
                             'http://id.tincanapi.com/extension/browser-info': {},
-                            'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                            'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                            'sis_courses': [{
+                                'id': 'sis_course_id',
+                                'section_ids': ['sis_section_id']
+                            }]
                         }
                     },
                     "result": {
@@ -501,8 +515,8 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'extensions': {
                                 'http://id.tincanapi.com/extension/attempt': {
                                     'duration': "PT05M00S",
-                                    'startedAtTime': comparison.attempt_started.replace(tzinfo=pytz.utc).isoformat(),
-                                    'endedAtTime': comparison.attempt_ended.replace(tzinfo=pytz.utc).isoformat(),
+                                    'startedAtTime': comparison.attempt_started.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+                                    'endedAtTime': comparison.attempt_ended.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
                                 }
                             }
                         },
@@ -512,11 +526,15 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                         'registration': comparison.attempt_uuid,
                         'contextActivities': {
                             'parent': [self.expected_xapi_assignment],
-                            'grouping': [self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                            'grouping': [self.expected_xapi_course]
                         },
                         'extensions': {
                             'http://id.tincanapi.com/extension/browser-info': {},
-                            'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                            'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                            'sis_courses': [{
+                                'id': 'sis_course_id',
+                                'section_ids': ['sis_section_id']
+                            }]
                         }
                     },
                     "result": {
@@ -537,11 +555,15 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'registration': comparison.attempt_uuid,
                             'contextActivities': {
                                 'parent': [self.expected_xapi_assignment_question, self.expected_xapi_answer1_attempt],
-                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course]
                             },
                             'extensions': {
                                 'http://id.tincanapi.com/extension/browser-info': {},
-                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                            'sis_courses': [{
+                                'id': 'sis_course_id',
+                                'section_ids': ['sis_section_id']
+                            }]
                             }
                         },
                         "result": {
@@ -578,11 +600,15 @@ class ComparisonLearningRecordTests(ComPAIRLearningRecordTestCase):
                             'registration': comparison.attempt_uuid,
                             'contextActivities': {
                                 'parent': [self.expected_xapi_assignment_question, self.expected_xapi_answer2_attempt],
-                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course, self.expected_xapi_sis_course, self.expected_xapi_sis_section]
+                                'grouping': [self.expected_xapi_assignment, self.expected_xapi_course]
                             },
                             'extensions': {
                                 'http://id.tincanapi.com/extension/browser-info': {},
-                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info()
+                                'http://id.tincanapi.com/extension/session-info': self.get_xapi_session_info(),
+                                'sis_courses': [{
+                                    'id': 'sis_course_id',
+                                    'section_ids': ['sis_section_id']
+                                }]
                             }
                         },
                         "result": {

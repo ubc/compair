@@ -10,7 +10,7 @@ from tincan import Statement
 from compair.learning_records.learning_record import LearningRecord
 
 class XAPI(LearningRecord):
-    _version = '1.0.1'
+    _version = '1.0.3'
 
     @classmethod
     def enabled(cls):

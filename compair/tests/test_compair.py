@@ -231,7 +231,9 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
         'objectType': 'Activity'
     }
     app_base_url = 'https://localhost:8888/'
-    caliper_context = 'http://purl.imsglobal.org/ctx/caliper/v1p1'
+    caliper_contexts = [
+        'http://purl.imsglobal.org/ctx/caliper/v1p2',
+    ]
 
     def create_app(self):
         settings = test_app_settings.copy()
@@ -239,8 +241,15 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
         settings['LRS_XAPI_STATEMENT_ENDPOINT'] = 'local'
         settings['CALIPER_ENABLED'] = True
         settings['LRS_CALIPER_HOST'] = 'local'
+        # you can certify by uncommenting, running nosetests compair.tests.learning_records, and
+        # running a few navigation events on the front end
+        # settings['LRS_CALIPER_HOST'] = 'https://caliper-dev.imsglobal.org/caliper/4d7a0b79-0d0f-4127-808d-bfe88b6e037f/message'
+        # settings['LRS_CALIPER_API_KEY'] = '4d7a0b79-0d0f-4127-808d-bfe88b6e037f'
         settings['LRS_APP_BASE_URL'] = self.app_base_url
         app = create_app(settings_override=settings)
+
+        # make it easier to debug
+        self.maxDiff = None
         return app
 
     @contextmanager
@@ -248,7 +257,7 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
         sess['user_id'] = user.id
         sess['session_token'] = user.generate_session_token()
         sess['session_id'] = md5(sess['session_token'].encode('UTF-8')).hexdigest()
-        sess['start_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat()
+        sess['start_at'] = datetime.datetime.utcnow().replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
     def generate_tracking(self, **kargs):
         tracking = {
@@ -280,7 +289,7 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
             del statement['context']
 
         # check timestamp
-        self.assertEqual(statement['version'], '1.0.1')
+        self.assertEqual(statement['version'], '1.0.3')
         del statement['version']
 
         self.assertIsNotNone(statement['timestamp'])
@@ -297,14 +306,14 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
         XAPILog.query.delete()
         return statements
 
-    def get_unique_identifier_xapi_actor(self, user, homepage, identifier):
+    def get_unique_identifier_xapi_actor(self, user, homepage, identifier, third_party_users=[], lti_users=[]):
         return {
             'account': {'homePage': homepage, 'name': identifier },
             'name': user.fullname,
             'objectType': 'Agent'
         }
 
-    def get_compair_xapi_actor(self, user):
+    def get_compair_xapi_actor(self, user, third_party_users=[], lti_users=[]):
         return {
             'account': {'homePage': 'https://localhost:8888/', 'name': user.uuid },
             'name': user.fullname,
@@ -323,12 +332,12 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
         return session_info
 
     def _del_empty_caliper_field(self, event_dict):
-        # this is done in order to trim down all the empty fields that Caliper will through in
+        # this is done in order to trim down all the empty fields that Caliper will throw in
         # makes testing events manageable
         keys_to_delete = []
         for k, v in event_dict.items():
             if k == '@context':
-                self.assertEqual(v, self.caliper_context)
+                self.assertIn(v, self.caliper_contexts)
                 keys_to_delete.append(k)
             elif isinstance(v, dict):
                 # recursively remove empty fields
@@ -358,9 +367,18 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
             del event_dict[k]
 
     def _validate_and_cleanup_caliper_event(self, event):
-        self.assertEqual(event['@context'], self.caliper_context)
+        self._del_empty_caliper_field(event)
 
-        self.assertEqual(event['edApp'], self.app_base_url.rstrip("/"))
+        if event.get('@context'):
+            self.assertIn(event['@context'], self.caliper_contexts)
+
+        self.assertEqual(event['edApp'], {
+            'id': self.app_base_url.rstrip("/"),
+            'type': 'SoftwareApplication',
+            'name': 'ComPAIR',
+            'description': 'The ComPAIR learning application pairs student answers for deeper learning through comparison of peer work.',
+            'version': self.app.config.get('COMPAIR_VERSION', None)
+        })
         del event['edApp']
 
         self.assertIsNotNone(event['eventTime'])
@@ -373,8 +391,6 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
         self.assertIsNotNone(event['object'])
         self.assertIsNotNone(event['actor'])
         self.assertIsNotNone(event['session'])
-
-        self._del_empty_caliper_field(event)
 
         return event
 
@@ -395,7 +411,14 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
             'type': 'Session',
             'user': caliper_actor,
             'dateCreated': sess.get('start_at'),
-            'startedAtTime': sess.get('start_at')
+            'startedAtTime': sess.get('start_at'),
+            'client': {
+                'id': 'https://localhost:8888/session/'+sess.get("session_id")+'/client',
+                'type': 'SoftwareApplication',
+                'ipAddress': '', # TODO fake this
+                'userAgent': '', # TODO fake this
+                'host': 'localhost',
+            }
         }
 
         if sess.get('login_method') != None:
@@ -408,21 +431,6 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
 
         return caliper_session
 
-    def get_unique_identifier_caliper_actor(self, user, homepage, identifier):
-        if not homepage.endswith('/'):
-            homepage += '/'
-        return {
-            'dateCreated': user.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': user.modified.replace(tzinfo=pytz.utc).isoformat(),
-            'id': homepage+identifier,
-            'type': "Person",
-            'name': user.fullname,
-            'extensions': {
-                'externalUserId': identifier,
-                'edAppUserId': user.uuid
-            }
-        }
-
     def get_caliper_membership(self, course, user, lti_context=None):
         membership = {
             'id': "https://localhost:8888/app/course/"+course.uuid+"/user/"+user.uuid,
@@ -433,29 +441,78 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
             'status': 'Active'
         }
         if lti_context:
-            membership['organization'] = {
-                'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid+'/section/'+self.lti_context.lis_course_section_sourcedid,
-                'type': 'CourseSection',
-                'subOrganizationOf': {
-                    'id': 'https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid,
-                    'type': 'CourseOffering'
-                }
-            }
             membership['extensions'] = {
-                'sis_courses': ['https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid],
-                'sis_sections': ['https://localhost:8888/course/'+self.lti_context.lis_course_offering_sourcedid+'/section/'+self.lti_context.lis_course_section_sourcedid]
+                'sis_courses': [{
+                    'id': lti_context.lis_course_offering_sourcedid,
+                    'section_ids': [lti_context.lis_course_section_sourcedid]
+                }]
             }
 
         return membership
 
-    def get_compair_caliper_actor(self, user):
-        return {
-            'id': "https://localhost:8888/"+user.uuid,
-            'dateCreated': user.created.replace(tzinfo=pytz.utc).isoformat(),
-            'dateModified': user.modified.replace(tzinfo=pytz.utc).isoformat(),
+    def _add_other_identifiers_to_actor(self, actor, third_party_users=[], lti_users=[]):
+        if len(lti_users) > 0 or len(third_party_users) > 0:
+            if not actor.get('otherIdentifiers'):
+                actor['otherIdentifiers'] = []
+
+            for lti_user in lti_users:
+                actor['otherIdentifiers'].append({
+                    'identifier': lti_user.user_id,
+                    'identifierType': 'LtiUserId',
+                    'type': 'SystemIdentifier',
+                    'extensions': {
+                        'oauth_consumer_key': lti_user.oauth_consumer_key,
+                        'global_unique_identifier': lti_user.global_unique_identifier,
+                        'student_number': lti_user.student_number,
+                        'lis_person_sourcedid': lti_user.lis_person_sourcedid,
+                    }
+                })
+
+            for third_party_user in third_party_users:
+                actor['otherIdentifiers'].append({
+                    'identifier': third_party_user.unique_identifier,
+                    'identifierType': 'SystemId',
+                    'type': 'SystemIdentifier',
+                    'extensions': {
+                        'third_party_type': third_party_user.third_party_type.value
+                    }
+                })
+
+    def get_unique_identifier_caliper_actor(self, user, homepage, identifier, third_party_users=[], lti_users=[]):
+        if not homepage.endswith('/'):
+            homepage += '/'
+        actor = {
+            'dateCreated': user.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': user.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'id': homepage+identifier,
             'type': "Person",
-            'name': user.fullname
+            'name': user.fullname,
+            'otherIdentifiers': [{
+                'identifier': identifier,
+                'identifierType': 'SisSourcedId',
+                'type': 'SystemIdentifier',
+                'source': homepage,
+            },{
+                'identifier': user.uuid,
+                'identifierType': 'SystemId',
+                'type': 'SystemIdentifier',
+                'source': 'https://localhost:8888',
+            }]
         }
+        self._add_other_identifiers_to_actor(actor, third_party_users, lti_users)
+
+        return actor
+
+    def get_compair_caliper_actor(self, user, third_party_users=[], lti_users=[]):
+        actor = {
+            'id': "https://localhost:8888/"+user.uuid,
+            'dateCreated': user.created.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'dateModified': user.modified.replace(tzinfo=pytz.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'type': "Person",
+            'name': user.fullname,
+        }
+        self._add_other_identifiers_to_actor(actor, third_party_users, lti_users)
+        return actor
 
 class SessionTests(ComPAIRAPITestCase):
     def test_loggedin_user_session(self):

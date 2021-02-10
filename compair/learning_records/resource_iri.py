@@ -29,23 +29,12 @@ class ResourceIRI(object):
         return cls.course(course_uuid)+'/user/'+user_uuid
 
     @classmethod
-    def sis_course(cls, sis_course_id):
-        return LearningRecord.get_sis_course_id_uri_template().format(
-            base_url=LearningRecord.get_base_url(),
-            sis_course_id=sis_course_id
-        )
-
-    @classmethod
-    def sis_section(cls, sis_course_id, sis_section_id):
-        return LearningRecord.get_sis_section_id_uri_template().format(
-            base_url=LearningRecord.get_base_url(),
-            sis_course_id=sis_course_id,
-            sis_section_id=sis_section_id
-        )
-
-    @classmethod
     def user_session(cls, session_id):
         return LearningRecord.get_base_url()+'/session/'+session_id
+
+    @classmethod
+    def user_client(cls, session_id):
+        return cls.user_session(session_id)+'/client'
 
     @classmethod
     def course(cls, course_uuid):
@@ -56,6 +45,9 @@ class ResourceIRI(object):
         return cls._get_app_url()+'criterion/'+criterion_uuid
 
 
+    @classmethod
+    def group(cls, course_uuid, group_uuid):
+        return cls.course(course_uuid)+'/group/'+group_uuid
 
     @classmethod
     def assignment(cls, course_uuid, assignment_uuid):

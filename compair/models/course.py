@@ -119,8 +119,8 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @classmethod
     def __declare_last__(cls):
-        from .lti_models import LTIContext, Assignment, \
-            UserCourse, CourseRole
+        from .lti_models import LTIContext
+        from . import Assignment, UserCourse, CourseRole
         super(cls, cls).__declare_last__()
 
         cls.groups_locked = column_property(

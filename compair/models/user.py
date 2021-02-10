@@ -5,7 +5,7 @@ import time
 from six import text_type
 
 # sqlalchemy
-from sqlalchemy.orm import synonym, joinedload
+from sqlalchemy.orm import column_property, synonym, joinedload
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy_enum34 import EnumType
@@ -145,6 +145,14 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         # third party auth users may have their username not set
         return self.username != None and current_app.config['APP_LOGIN_ENABLED']
 
+    @hybrid_property
+    def lti_linked(self):
+        return self.lti_user_link_count > 0
+
+    @hybrid_property
+    def has_third_party_auth(self):
+        return self.third_party_auth_count > 0
+
     def verify_password(self, password):
         if self.password == None or not current_app.config['APP_LOGIN_ENABLED']:
             return False
@@ -230,7 +238,23 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
 
     @classmethod
     def __declare_last__(cls):
+        from .lti_models import LTIUser
+        from . import ThirdPartyUser
         super(cls, cls).__declare_last__()
+
+        cls.third_party_auth_count = column_property(
+            select([func.count(ThirdPartyUser.id)]).
+            where(ThirdPartyUser.user_id == cls.id),
+            deferred=True,
+            group="counts"
+        )
+
+        cls.lti_user_link_count = column_property(
+            select([func.count(LTIUser.id)]).
+            where(LTIUser.compair_user_id == cls.id),
+            deferred=True,
+            group="counts"
+        )
 
     __table_args__ = (
         # prevent duplicate user in course
