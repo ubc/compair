@@ -48,8 +48,7 @@ def _get_auth(request):
     return auth
 
 def get_saml_login_url(request):
-    the_url = _get_auth(request).login()
-    return native(the_url)
+    return _get_auth(request).login()
 
 def get_saml_auth_response(request):
     auth = _get_auth(request)
@@ -64,9 +63,8 @@ def get_saml_logout_url(request):
     if auth.get_slo_url() is None:
         return logout_service_url
 
-    the_url = auth.logout(
+    return auth.logout(
         name_id=sess.get('SAML_NAME_ID'),
         session_index=sess.get('SAML_SESSION_INDEX'),
         return_to=logout_service_url
     )
-    return native(the_url)
