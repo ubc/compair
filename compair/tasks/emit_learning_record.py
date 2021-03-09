@@ -9,6 +9,7 @@ from compair.models import CaliperLog, XAPILog
 from compair.core import db
 
 @celery.task(bind=True, autoretry_for=(Exception,),
+    retry_kwargs={'max_retries': 1},
     ignore_result=True, store_errors_even_if_ignored=True)
 def emit_lrs_xapi_statement(self, xapi_log_id):
     from compair.learning_records import XAPI
@@ -26,6 +27,7 @@ def emit_lrs_xapi_statement(self, xapi_log_id):
         except socket.error as error:
             # don't raise connection refused error when in eager mode
             if error.errno != socket.errno.ECONNREFUSED:
+                current_app.logger.error("emit_lrs_xapi_statement connection refused: "+socket.error.strerror)
                 return
             raise error
 
@@ -35,6 +37,7 @@ def emit_lrs_xapi_statement(self, xapi_log_id):
         db.session.commit()
 
 @celery.task(bind=True, autoretry_for=(Exception,),
+    retry_kwargs={'max_retries': 1},
     ignore_result=True, store_errors_even_if_ignored=True)
 def emit_lrs_caliper_event(self, caliper_log_id):
     from compair.learning_records import CaliperSensor
@@ -52,6 +55,7 @@ def emit_lrs_caliper_event(self, caliper_log_id):
         except socket.error as error:
             # don't raise connection refused error when in eager mode
             if error.errno != socket.errno.ECONNREFUSED:
+                current_app.logger.error("emit_lrs_caliper_event connection refused: "+socket.error.strerror)
                 return
             raise error
 
@@ -79,7 +83,7 @@ def resend_learning_records(self):
             .all()
 
         for xapi_log in xapi_logs:
-            emit_lrs_xapi_statement.delay(xapi_log.id)
+            emit_lrs_xapi_statement(xapi_log.id)
 
     if CaliperSensor.enabled() and not CaliperSensor.storing_locally():
         caliper_logs = CaliperLog.query \
@@ -90,4 +94,4 @@ def resend_learning_records(self):
             .all()
 
         for caliper_log in caliper_logs:
-            emit_lrs_caliper_event.delay(caliper_log.id)
+            emit_lrs_caliper_event(caliper_log.id)
