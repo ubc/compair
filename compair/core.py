@@ -34,7 +34,8 @@ impersonation = Impersonation()
 # initialize celery
 celery = Celery(
     backend=config.get("CELERY_RESULT_BACKEND"),
-    broker=config.get("CELERY_BROKER_URL")
+    broker=config.get("CELERY_BROKER_URL"),
+    result_expires=(30 * 60), # 30 minutes
 )
 
 # initialize Flask-Mail
