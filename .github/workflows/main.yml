@@ -88,12 +88,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Publish to Registry
-      uses: elgohr/Publish-Docker-Github-Action@master
+      uses: docker/build-push-action@v1
       with:
-        name: ubcctlt/compair-app
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-        tags: latest,${GITHUB_REF##*/}
+        repository: ubcctlt/compair-app
+        tag_with_ref: true
     - name: Trigger deploy
       run: |
         curl -X POST \
