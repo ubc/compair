@@ -93,8 +93,7 @@ jobs:
         name: ubcctlt/compair-app
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-        tags: latest
-        tag_names: true
+        tags: latest,${GITHUB_REF##*/}
     - name: Trigger deploy
       run: |
         curl -X POST \
