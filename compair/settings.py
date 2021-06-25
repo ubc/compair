@@ -4,7 +4,7 @@ import os
     Default settings, if no other settings is specified, values here are used.
 """
 
-COMPAIR_VERSION = "1.2.8"
+COMPAIR_VERSION = "1.2.9"
 
 DATABASE = {
     'drivername': 'mysql+pymysql',
