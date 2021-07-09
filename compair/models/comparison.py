@@ -277,6 +277,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, AttemptMixin, WriteTrackingMixin)
             # update round counters
             answers = [answer1, answer2]
             for answer in answers:
+                answer._write_tracking_enabled = False
                 answer.round += 1
                 db.session.add(answer)
 
