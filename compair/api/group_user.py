@@ -26,7 +26,7 @@ on_group_user_get = event.signal('GROUP_USER_GET')
 on_group_user_create = event.signal('GROUP_USER_CREATE')
 on_group_user_list_create = event.signal('GROUP_USER_LIST_CREATE')
 on_group_user_delete = event.signal('GROUP_USER_DELETE')
-on_group_user_list_delete = event.signal('GROUP_USER_LIST_CREATE')
+on_group_user_list_delete = event.signal('GROUP_USER_LIST_DELETE')
 
 # /<group_uuid>/users/:user_uuid
 class GroupUserIdAPI(Resource):
