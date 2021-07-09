@@ -1,3 +1,8 @@
+# v1.2.10
+
+## Notable changes
+* Added LTI custom parameter sanitizer to LTI consumers
+
 # v1.2.8
 
 ## Notable changes
