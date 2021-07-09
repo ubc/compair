@@ -1,4 +1,5 @@
 # sqlalchemy
+import re
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -113,11 +114,21 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
         if lti_consumer.global_unique_identifier_param and lti_consumer.global_unique_identifier_param in tool_provider.launch_params:
             lti_user.global_unique_identifier = tool_provider.launch_params[lti_consumer.global_unique_identifier_param]
+            if lti_consumer.custom_param_regex_sanitizer and lti_consumer.global_unique_identifier_param.startswith('custom_'):
+                regex = re.compile(lti_consumer.custom_param_regex_sanitizer)
+                lti_user.global_unique_identifier = regex.sub('', lti_user.global_unique_identifier)
+                if lti_user.global_unique_identifier == '':
+                    lti_user.global_unique_identifier = None
         else:
             lti_user.global_unique_identifier = None
 
         if lti_consumer.student_number_param and lti_consumer.student_number_param in tool_provider.launch_params:
             lti_user.student_number = tool_provider.launch_params[lti_consumer.student_number_param]
+            if lti_consumer.custom_param_regex_sanitizer and lti_consumer.student_number_param.startswith('custom_'):
+                regex = re.compile(lti_consumer.custom_param_regex_sanitizer)
+                lti_user.student_number = regex.sub('', lti_user.student_number)
+                if lti_user.student_number == '':
+                    lti_user.student_number = None
         else:
             lti_user.student_number = None
 

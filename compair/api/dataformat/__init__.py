@@ -406,6 +406,7 @@ def get_lti_consumer(include_sensitive=False):
         'oauth_consumer_key': fields.String,
         'global_unique_identifier_param': fields.String,
         'student_number_param': fields.String,
+        'custom_param_regex_sanitizer': fields.String,
         'active': fields.Boolean,
         'modified': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.modified)),
         'created': fields.DateTime(dt_format='iso8601', attribute=lambda x: replace_tzinfo(x.created))

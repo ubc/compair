@@ -22,6 +22,7 @@ var viewLTIConsumersStepDefinitionsWrapper = function () {
         expect(element(by.css("#consumer_oauth_consumer_secret")).getText()).to.eventually.equal("consumer_secret_1");
         expect(element(by.css("#consumer_global_unique_identifier_param")).getText()).to.eventually.equal("consumer_global_unique_identifier_param");
         expect(element(by.css("#consumer_student_number_param")).getText()).to.eventually.equal("consumer_consumer_student_number_param");
+        expect(element(by.css("#consumer_custom_param_regex_sanitizer")).getText()).to.eventually.equal("consumer_custom_param_regex_sanitizer");
         expect(element(by.model("consumer.active")).isSelected()).to.eventually.equal(true);
 
         expect(element(by.css("#consumer_created")).isPresent()).to.eventually.equal(true);
@@ -35,6 +36,7 @@ var viewLTIConsumersStepDefinitionsWrapper = function () {
         expect(element(by.css("#consumer_oauth_consumer_secret")).getText()).to.eventually.equal("consumer_secret_3");
         expect(element(by.css("#consumer_global_unique_identifier_param")).getText()).to.eventually.equal("");
         expect(element(by.css("#consumer_student_number_param")).getText()).to.eventually.equal("");
+        expect(element(by.css("#consumer_custom_param_regex_sanitizer")).getText()).to.eventually.equal("");
         expect(element(by.model("consumer.active")).isSelected()).to.eventually.equal(false);
 
         expect(element(by.css("#consumer_created")).isPresent()).to.eventually.equal(true);

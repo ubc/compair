@@ -414,6 +414,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
 
             # student_number_param ------
             lti_consumer.student_number_param = "custom_student_number"
+            lti_consumer.custom_param_regex_sanitizer = "^\\$.+$"
             db.session.commit()
 
             # student_number_param parameter is missing
@@ -465,12 +466,39 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(lti_user.student_number, "1234567"+str(index))
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
+            # student_number_param parameter is sanitized
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_uuid=assignment.uuid, custom_student_number="$1234567"+str(index),
+                    follow_redirects=False) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+                self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
+                self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
+                self.assertEqual(lti_user.id, sess.get('lti_user'))
+                self.assertEqual(lti_context.id, sess.get('lti_context'))
+                self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
+
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+            self.assertIsNone(lti_user.student_number)
+            self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
+
             lti_consumer.student_number_param = None
+            lti_consumer.custom_param_regex_sanitizer = None
             db.session.commit()
             # done student_number_param ------
 
             # global_unique_identifier_param ------
             lti_consumer.global_unique_identifier_param = "custom_puid"
+            lti_consumer.custom_param_regex_sanitizer = "^\\$.+$"
             db.session.commit()
 
             # global_unique_identifier_param parameter is missing
@@ -494,6 +522,35 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 # check that user is logged in
                 self.assertEqual(str(user.id), sess.get('user_id'))
 
+            lti_user = LTIUser.query.all()[-1]
+            self.assertIsNone(lti_user.global_unique_identifier)
+            self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
+
+            # global_unique_identifier_param parameter is present but sanitized
+            custom_puid = "$puid123456789_"+str(lti_role)
+            with self.lti_launch(lti_consumer, lti_resource_link_id,
+                    user_id=lti_user_id, context_id=lti_context_id, roles=lti_role,
+                    assignment_uuid=assignment.uuid, follow_redirects=False,
+                    custom_puid=custom_puid) as rv:
+                self.assertRedirects(rv, '/app/#/course/'+course.uuid+'/assignment/'+assignment.uuid)
+
+            # check session
+            with self.client.session_transaction() as sess:
+                self.assertTrue(sess.get('LTI'))
+                self.assertEqual(lti_consumer.id, sess.get('lti_consumer'))
+                self.assertEqual(lti_resource_link.id, sess.get('lti_resource_link'))
+                self.assertEqual(lti_user.id, sess.get('lti_user'))
+                self.assertEqual(lti_context.id, sess.get('lti_context'))
+                self.assertEqual(lti_user_resource_link.id, sess.get('lti_user_resource_link'))
+
+                # user already exists, lti_create_user_link should be None
+                self.assertIsNone(sess.get('lti_create_user_link'))
+
+                # check that user is logged in
+                self.assertEqual(str(user.id), sess.get('user_id'))
+
+            lti_user = LTIUser.query.all()[-1]
+            self.assertIsNone(lti_user.global_unique_identifier)
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
             # global_unique_identifier_param parameter is present (new user)
@@ -586,6 +643,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
             lti_consumer.global_unique_identifier_param = None
+            lti_consumer.custom_param_regex_sanitizer = None
             db.session.commit()
             # done global_unique_identifier_param ------
 

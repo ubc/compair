@@ -1,4 +1,5 @@
 import json
+import re
 from six import text_type
 
 # sqlalchemy
@@ -319,10 +320,20 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             # find global unique identifier if available
             if lti_consumer.global_unique_identifier_param and record.findtext(lti_consumer.global_unique_identifier_param):
                 member['global_unique_identifier'] = record.findtext(lti_consumer.global_unique_identifier_param)
+                if lti_consumer.custom_param_regex_sanitizer and lti_consumer.global_unique_identifier_param.startswith('custom_'):
+                    regex = re.compile(lti_consumer.custom_param_regex_sanitizer)
+                    member['global_unique_identifier'] = regex.sub('', member['global_unique_identifier'])
+                    if member['global_unique_identifier'] == '':
+                        member['global_unique_identifier'] = None
 
             # find student number if available
             if lti_consumer.student_number_param and record.findtext(lti_consumer.student_number_param):
                 member['student_number'] = record.findtext(lti_consumer.student_number_param)
+                if lti_consumer.custom_param_regex_sanitizer and lti_consumer.student_number_param.startswith('custom_'):
+                    regex = re.compile(lti_consumer.custom_param_regex_sanitizer)
+                    member['student_number'] = regex.sub('', member['student_number'])
+                    if member['student_number'] == '':
+                        member['student_number'] = None
 
             members.append(member)
         return members

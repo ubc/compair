@@ -31,6 +31,9 @@
                         <a href="" ng-click="updateTableOrderBy('student_number_param')">Student Number Param</a>
                     </th>
                     <th>
+                        <a href="" ng-click="updateTableOrderBy('custom_param_regex_sanitizer')">Custom Param Regex Sanitizer</a>
+                    </th>
+                    <th>
                         <a href="" ng-click="updateTableOrderBy('active')">Status</a>
                     </th>
                 </tr>
@@ -48,6 +51,9 @@
                     </td>
                     <td>
                         {{consumer.student_number_param}}
+                    </td>
+                    <td>
+                        {{consumer.custom_param_regex_sanitizer}}
                     </td>
                     <td>
                         <select ng-model="consumer.active" ng-options="key for (key , value) in {'Active': true, 'Inactive': false}"

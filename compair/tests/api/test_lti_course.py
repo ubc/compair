@@ -258,6 +258,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
         lti_consumer = self.lti_data.lti_consumer
         lti_consumer.global_unique_identifier_param = "custom_puid"
         lti_consumer.student_number_param = "custom_student_number"
+        lti_consumer.custom_param_regex_sanitizer = "^\\$.+$"
         db.session.commit()
 
         lti_context = self.lti_data.create_context(lti_consumer)

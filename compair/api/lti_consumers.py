@@ -25,6 +25,7 @@ new_consumer_parser.add_argument('oauth_consumer_key', type=str, required=True, 
 new_consumer_parser.add_argument('oauth_consumer_secret', type=str)
 new_consumer_parser.add_argument('global_unique_identifier_param', type=non_blank_text)
 new_consumer_parser.add_argument('student_number_param', type=non_blank_text)
+new_consumer_parser.add_argument('custom_param_regex_sanitizer', type=non_blank_text)
 
 existing_consumer_parser = new_consumer_parser.copy()
 existing_consumer_parser.add_argument('id', type=str, required=True, nullable=False)
@@ -82,6 +83,7 @@ class ConsumerAPI(Resource):
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
         consumer.global_unique_identifier_param = params.get("global_unique_identifier_param")
         consumer.student_number_param = params.get("student_number_param")
+        consumer.custom_param_regex_sanitizer = params.get("custom_param_regex_sanitizer")
 
         try:
             db.session.add(consumer)
@@ -137,6 +139,7 @@ class ConsumerIdAPI(Resource):
         consumer.oauth_consumer_secret = params.get("oauth_consumer_secret")
         consumer.global_unique_identifier_param = params.get("global_unique_identifier_param")
         consumer.student_number_param = params.get("student_number_param")
+        consumer.custom_param_regex_sanitizer = params.get("custom_param_regex_sanitizer")
         consumer.active = params.get("active")
 
         try:

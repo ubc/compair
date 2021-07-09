@@ -19,6 +19,7 @@ class LTIConsumer(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin)
     lis_outcome_service_url = db.Column(db.Text, nullable=True)
     global_unique_identifier_param = db.Column(db.String(255), nullable=True)
     student_number_param = db.Column(db.String(255), nullable=True)
+    custom_param_regex_sanitizer = db.Column(db.String(255), nullable=True)
 
     # relationships
     lti_nonces = db.relationship("LTINonce", backref="lti_consumer", lazy="dynamic")

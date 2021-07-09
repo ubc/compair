@@ -6,6 +6,7 @@ var ltiConsumerTemplate = {
     "oauth_consumer_secret": null,
     "active": true,
     "global_unique_identifier_param": null,
+    "custom_param_regex_sanitizer": null,
     "student_number_param": null,
     "created": "Mon, 18 Apr 2016 17:38:23 -0000",
     "modified": "Mon, 18 Apr 2016 17:38:23 -0000"
