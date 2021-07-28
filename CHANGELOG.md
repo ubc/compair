@@ -1,3 +1,8 @@
+# v1.2.11
+
+## Notable changes
+* Fixed issues with learning events emitted while impersonating a user
+
 # v1.2.10
 
 ## Notable changes
