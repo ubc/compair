@@ -50,7 +50,7 @@ class XAPIStatement(object):
             statement.context.extensions['http://id.tincanapi.com/extension/session-info']['end_at'] = sess.get('end_at')
 
         if impersonation.is_impersonating() and user.id == current_user.id:
-            statement.context.extensions['http://id.tincanapi.com/extension/session-info']['impersonating-as'] = XAPIActor.generate_actor(user)
+            statement.context.extensions['http://id.tincanapi.com/extension/session-info']['impersonating-as'] = XAPIActor.generate_actor(user).as_version()
 
         statement.context.extensions['http://id.tincanapi.com/extension/browser-info'] = {}
 

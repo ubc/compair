@@ -26,7 +26,7 @@ class CaliperEvent(object):
 
         session_extensions = {}
         if impersonation.is_impersonating() and user.id == current_user.id:
-            session_extensions["impersonating-as"] = CaliperActor.generate_actor(user)
+            session_extensions["impersonating-as"] = CaliperActor.generate_actor(user).as_dict()
         defaults['session'] = CaliperEntities.session(caliper_actor, request, session_extensions)
 
         if course:
