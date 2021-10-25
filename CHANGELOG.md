@@ -1,3 +1,8 @@
+# v1.2.12
+
+## Notable changes
+* Add sending the submittedAt timestamp when sending grades via LTI 1.1
+
 # v1.2.11
 
 ## Notable changes
