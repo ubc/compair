@@ -13,11 +13,21 @@ def update_lti_course_grades(self, lti_consumer_id, sourcedid_and_grades):
         for (lis_result_sourcedid, course_grade_id) in sourcedid_and_grades:
             if course_grade_id:
                 course_grade = CourseGrade.query.get(course_grade_id)
-                grade = course_grade.grade if course_grade else 0.0
+                grade = 0.0
+                submittedAt = None
+                if course_grade:
+                    grade = course_grade.grade
+                    # This is timezone unaware, so we have to add a timezone to
+                    # it (to properly follow iso 8601). We convert it to the
+                    # compair server timezone, on the assumption that the
+                    # compair server timezone is the same as mariadb's
+                    # timezone.
+                    submittedAt = course_grade.modified.astimezone().isoformat()
 
                 current_app.logger.debug("Posting grade for lis_result_sourcedid: {}".format(lis_result_sourcedid))
+                current_app.logger.debug("Submitted At Time: {}".format(submittedAt))
 
-                LTIOutcome.post_replace_result(lti_consumer, lis_result_sourcedid, grade)
+                LTIOutcome.post_replace_result(lti_consumer, lis_result_sourcedid, grade, submittedAt)
 
     else:
         current_app.logger.info("Failed LTI Outcomes grade update for lti_consumer with id: {}. record not found.".format(lti_consumer_id))
@@ -31,10 +41,15 @@ def update_lti_assignment_grades(self, lti_consumer_id, sourcedid_and_grades):
         for (lis_result_sourcedid, assignment_grade_id) in sourcedid_and_grades:
             if assignment_grade_id:
                 assignment_grade = AssignmentGrade.query.get(assignment_grade_id)
-                grade = assignment_grade.grade if assignment_grade else 0.0
+                grade = 0.0
+                submittedAt = None
+                if assignment_grade:
+                    grade = assignment_grade.grade
+                    submittedAt = assignment_grade.modified.astimezone().isoformat()
 
                 current_app.logger.debug("Posting grade for lis_result_sourcedid: {}".format(lis_result_sourcedid))
+                current_app.logger.debug("Submitted At Time: {}".format(submittedAt))
 
-                LTIOutcome.post_replace_result(lti_consumer, lis_result_sourcedid, grade)
+                LTIOutcome.post_replace_result(lti_consumer, lis_result_sourcedid, grade, submittedAt)
     else:
         current_app.logger.info("Failed LTI Outcomes grade update for lti_consumer with id: {}. record not found.".format(lti_consumer_id))

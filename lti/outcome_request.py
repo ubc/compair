@@ -22,7 +22,8 @@ VALID_ATTRIBUTES = [
     'lis_result_sourcedid',
     'consumer_key',
     'consumer_secret',
-    'post_request'
+    'post_request',
+    'submittedAt'
 ]
 
 
@@ -221,6 +222,12 @@ class OutcomeRequest(object):
             language.text = 'en'
             text_string = etree.SubElement(result_score, 'textString')
             text_string.text = self.score.__str__()
+
+        # Canvas extension, for sending submission's "submitted at" timestamp
+        if self.submittedAt is not None:
+            detail = etree.SubElement(request, 'submissionDetails')
+            submittedAt = etree.SubElement(detail, 'submittedAt')
+            submittedAt.text = self.submittedAt
 
         if self.result_data:
             resultData = etree.SubElement(result, 'resultData')

@@ -240,7 +240,7 @@ class LTIOutcome(object):
             update_lti_course_grades.delay(lti_consumer.id, lti_context_grades)
 
     @classmethod
-    def post_replace_result(cls, lti_consumer, lis_result_sourcedid, grade):
+    def post_replace_result(cls, lti_consumer, lis_result_sourcedid, grade, submittedAt=None):
         """
         grade must be in range: [0.0, 1.0]
         """
@@ -261,6 +261,7 @@ class LTIOutcome(object):
             "consumer_secret": lti_consumer.oauth_consumer_secret,
             "lis_outcome_service_url": lti_consumer.lis_outcome_service_url,
             "lis_result_sourcedid": lis_result_sourcedid,
+            "submittedAt": submittedAt,
         })
         request.post_replace_result(grade)
 
