@@ -24,7 +24,7 @@ SQLAlchemy-Enum34==1.0.1
 mock==2.0.0
 elo==0.1.1
 trueskill==0.4.4
-Celery==4.1.1
+Celery==5.2.2
 kombu==4.3.0
 redis==2.10.5
 tincan==1.0.0
