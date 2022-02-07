@@ -46,8 +46,19 @@
                 <th class="text-center" ng-if="includeScores">
                     <a href="" ng-click="updateTableOrderBy('score')">Answer Score</a>
                 </th>
-                <th class="text-center" ng-if="showAttachments">
+                <th class="text-center attachments" ng-if="showAttachments">
                     <a href="" ng-click="updateTableOrderBy('attachments')">Attachments</a>
+                    <button ng-click="downloadAllAttachments()"
+                            ng-if="!(gradebookFilters.student || gradebookFilters.group)"
+                            ng-disabled="downloadAllBusy"
+                            title="Download all attachments"
+                            class="btn btn-sm btn-primary">
+                        <i ng-if="!downloadAllBusy" aria-hidden="true"
+                                                    class="fa fa-download"></i>
+                        <i ng-if="downloadAllBusy" class="fa fa-spin
+                                                          fa-spinner"></i>
+                        Download All
+                    </button>
                 </th>
                 <th class="text-center">
                     <a href="" ng-click="updateTableOrderBy('num_comparisons')">Comparisons</a>

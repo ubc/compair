@@ -26,14 +26,24 @@ module.factory(
     }
 ]);
 
+module.factory(
+    'AssignmentAttachmentResource',
+    ['$resource',
+    function($resource)
+    {
+        var ret = $resource('/api/courses/:courseId/assignments/:assignmentId/attachments/download');
+        return ret;
+    }
+]);
+
 /***** Controllers *****/
 module.controller("GradebookController",
     ["$scope", "$window", "$routeParams", "CourseResource", "GradebookResource",
         "GroupResource", "GroupUserResource", "AssignmentResource", "Authorize",
-        "LearningRecordStatementHelper",
+        "LearningRecordStatementHelper", "AssignmentAttachmentResource",
     function($scope, $window, $routeParams, CourseResource, GradebookResource,
         GroupResource, GroupUserResource, AssignmentResource, Authorize,
-        LearningRecordStatementHelper)
+        LearningRecordStatementHelper, AssignmentAttachmentResource)
     {
         $scope.users = [];
         $scope.gradebookFilters = {
@@ -137,6 +147,26 @@ module.controller("GradebookController",
             var orderBy = $scope.predicate + " " + ($scope.reverse ? "desc" : "asc");
             LearningRecordStatementHelper.sorted_page_section("participation tab", orderBy);
         }
+
+       $scope.downloadAllAttachments = function() {
+           $scope.downloadAllBusy = true;
+           AssignmentAttachmentResource.get({'courseId': $scope.courseId,'assignmentId': $scope.assignmentId}).$promise.then(
+               function(ret)
+               {
+                   // to make the browser download the zip file, we need to
+                   // create a link and click it
+                   const a = document.createElement('a');
+                   a.href = ret.file;
+                   a.download = ret.filename;
+                   a.click();
+                   $scope.downloadAllBusy = false;
+               },
+               function (ret)
+               {
+                 $scope.downloadAllBusy = false;
+               }
+           );
+       }
     }
 ]);
 

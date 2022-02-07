@@ -209,6 +209,16 @@
         background: @bkgrd-gray;
       }
 
+    /* participation tab */
+    #participation-tab table th {
+      /* make room & spacing for the "Download All" Attachments button */
+      vertical-align: top;
+      &.attachments {
+        a { display: block; }
+        .btn { margin-top: .6em; }
+      }
+    }
+
   }//closes tab-content
 
 }//closes assignment-screen

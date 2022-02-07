@@ -79,6 +79,11 @@ def register_api_blueprints(app):
         file_api,
         url_prefix='/api/attachment')
 
+    from .assignment_attachment import assignment_attachment_api
+    app.register_blueprint(
+        assignment_attachment_api,
+        url_prefix='/api/courses/<course_uuid>/assignments/<assignment_uuid>/attachments')
+    
     from .answer_comment import answer_comment_api
     app.register_blueprint(
         answer_comment_api,
