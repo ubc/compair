@@ -155,7 +155,7 @@ module.controller("GradebookController",
                {
                    // to make the browser download the zip file, we need to
                    // create a link and click it
-                   const a = document.createElement('a');
+                   var a = document.createElement('a');
                    a.href = ret.file;
                    a.download = ret.filename;
                    a.click();

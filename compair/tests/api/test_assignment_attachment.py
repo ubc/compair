@@ -99,7 +99,7 @@ class AssignmentAttachmentTests(ComPAIRAPITestCase):
             zipFilePath = '{}/{}'.format(current_app.config['REPORT_FOLDER'],
                                          expectedFilename)
             self.assertTrue(os.path.isfile(zipFilePath))
-            #self.filePathsToCleanup.append(zipFilePath)
+            self.filePathsToCleanup.append(zipFilePath)
             # check that the contents of the zip file are as expected
             archive = zipfile.ZipFile(zipFilePath)
             self.assertEqual(None, archive.testzip())
