@@ -9,7 +9,7 @@ Environment="C_FORCE_ROOT=1"
 Environment="DATABASE_URI=mysql+pymysql://compair:compair_password@localhost/compair"
 Environment="CELERY_BROKER_URL=redis://0.0.0.0:6379"
 Environment="ASSET_LOCATION=local"
-ExecStart=/www_data/compair/.env/bin/celery worker -A celery_worker.celery --logfile=/var/log/worker.log
+ExecStart=/www_data/compair/.env/bin/celery -A celery_worker.celery worker --logfile=/var/log/worker.log
 
 [Install]
 WantedBy=multi-user.target
