@@ -292,7 +292,7 @@
         {
           "Name": "compair-worker",
           "Image": "ubcctlt/compair-app",
-          "Command": ["celery", "worker", "--app=celery_worker.celery"],
+          "Command": ["celery", "--app=celery_worker.celery", "worker"],
           "Essential": true,
           "Memory": 256,
           "Links": ["redis"],

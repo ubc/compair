@@ -36,7 +36,7 @@ services:
     restart: always
   worker: &worker
     <<: *app
-    command: celery worker --app=celery_worker.celery --loglevel=INFO
+    command: celery --app=celery_worker.celery worker --loglevel=INFO
     environment:
       - DB_DRIVER=mysql+pymysql
       - DB_USERNAME=compair
@@ -50,7 +50,7 @@ services:
       - C_FORCE_ROOT=1
   worker_scheduler:
     <<: *worker
-    command: celery beat --app=celery_worker.celery --loglevel=INFO
+    command: celery --app=celery_worker.celery beat --loglevel=INFO
   web:
     image: nginx:1.11
     volumes:

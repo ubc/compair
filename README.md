@@ -200,7 +200,7 @@ By default (`CELERY_ALWAYS_EAGER=1`), these Celery tasks are executed locally by
 To run tasks asynchronously, you need to:
 
 - Set up a [Celery broker](http://docs.celeryproject.org/en/latest/getting-started/brokers/) (e.g. Redis, RabbitMQ)
-- Set up Celery workers to run the tasks. A worker can be started by running `celery worker --app=celery_worker.celery`. If the work runs in a separate container or virtual machine, remember to apply the same environment variables as the ComPAIR app.
+- Set up Celery workers to run the tasks. A worker can be started by running `celery --app=celery_worker.celery worker`. If the work runs in a separate container or virtual machine, remember to apply the same environment variables as the ComPAIR app.
 - Set `CELERY_BROKER_URL` according to your broker setup
 - Set `CELERY_ALWAYS_EAGER` to `0` (zero). See below for details
 
@@ -379,7 +379,7 @@ Setting `DEMO_INSTALLATION` to True will also force `APP_LOGIN_ENABLED` to True 
 
 ### Additional Setup
 
-In order for the cron job to work properly, you must also create an additional celery process (ex: `celery beat -A celery_worker.celery`). You should also set `CELERY_TIMEZONE` to your preferred timezone so that the automatic scheduler will reset properly at 3:00 a.m. in your timezone.
+In order for the cron job to work properly, you must also create an additional celery process (ex: `celery -A celery_worker.celery beat`). You should also set `CELERY_TIMEZONE` to your preferred timezone so that the automatic scheduler will reset properly at 3:00 a.m. in your timezone.
 
 You can set the data the first time by running:
 

@@ -17,7 +17,7 @@ spec:
       containers:
       - image: ubcctlt/compair-app
         name: compair-worker
-        command: ["celery", "worker", "--app=celery_worker.celery"]
+        command: ["celery", "--app=celery_worker.celery", "worker"]
         env:
         - name: DB_HOST
           value: compair-mysql
