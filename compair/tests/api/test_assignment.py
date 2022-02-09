@@ -1857,7 +1857,7 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
 
             mocked_update_course_grades_run.assert_called_once_with(
                 lti_consumer.id,
-                [(lti_user_resource_link.lis_result_sourcedid, student_grade_id)]
+                [[lti_user_resource_link.lis_result_sourcedid, student_grade_id]]
             )
             mocked_update_course_grades_run.reset_mock()
 
@@ -1954,7 +1954,7 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
                 )
                 mocked_update_assignment_grades_run.assert_called_once_with(
                     lti_consumer.id,
-                    [(lti_user_resource_link2.lis_result_sourcedid, student_assignment_grade_id)]
+                    [[lti_user_resource_link2.lis_result_sourcedid, student_assignment_grade_id]]
                 )
                 mocked_update_assignment_grades_run.reset_mock()
 
@@ -1964,7 +1964,7 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
                 )
                 mocked_update_course_grades_run.assert_called_once_with(
                     lti_consumer.id,
-                    [(lti_user_resource_link1.lis_result_sourcedid, student_course_grade_id)]
+                    [[lti_user_resource_link1.lis_result_sourcedid, student_course_grade_id]]
                 )
                 mocked_update_course_grades_run.reset_mock()
 
@@ -2009,7 +2009,7 @@ class AssignmentCourseGradeUpdateAPITests(ComPAIRAPITestCase):
             )
             mocked_update_course_grades_run.assert_called_once_with(
                 lti_consumer.id,
-                [(lti_user_resource_link1.lis_result_sourcedid, student_course_grade_id)]
+                [[lti_user_resource_link1.lis_result_sourcedid, student_course_grade_id]]
             )
             mocked_update_course_grades_run.reset_mock()
 

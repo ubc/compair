@@ -347,23 +347,23 @@ class ComparisonAPITests(ComPAIRAPITestCase):
                             if not assignment.enable_group_answers:
                                 mocked_update_assignment_grades_run.assert_called_once_with(
                                     lti_consumer.id,
-                                    [(lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id)]
+                                    [[lti_user_resource_link2.lis_result_sourcedid, new_assignment_grade.id]]
                                 )
                             else:
                                 mocked_update_assignment_grades_run.assert_called_once_with(
                                     lti_consumer.id,
-                                    [(lti_user_resource_link4.lis_result_sourcedid, new_assignment_grade.id)]
+                                    [[lti_user_resource_link4.lis_result_sourcedid, new_assignment_grade.id]]
                                 )
                             mocked_update_assignment_grades_run.reset_mock()
 
                             self.assertEqual(mocked_update_course_grades_run.call_count, 2)
                             mocked_update_course_grades_run.assert_any_call(
                                 lti_consumer.id,
-                                [(lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id)]
+                                [[lti_user_resource_link1.lis_result_sourcedid, new_course_grade.id]]
                             )
                             mocked_update_course_grades_run.assert_any_call(
                                 lti_consumer.id,
-                                [(lti_user_resource_link3.lis_result_sourcedid, new_course_grade.id)]
+                                [[lti_user_resource_link3.lis_result_sourcedid, new_course_grade.id]]
                             )
                             mocked_update_course_grades_run.reset_mock()
                         else:
