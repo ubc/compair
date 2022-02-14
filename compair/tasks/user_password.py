@@ -11,7 +11,9 @@ def set_passwords(self, user_passwords):
         .all()
 
     for user in users:
-        user.password = user_passwords.get(user.id, None)
+        # note that user_passwords keys are strings, not ints, due to celery's
+        # json serialization, so we need to match type
+        user.password = user_passwords.get(str(user.id), None)
 
     db.session.add_all(users)
     db.session.commit()
