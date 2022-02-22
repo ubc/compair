@@ -11,7 +11,7 @@ RUN apt-get update -y \
 
 # NODE DEPS
 
-FROM node:10.16 as node-deps
+FROM node:16 as node-deps
 
 WORKDIR /home/node/app
 
