@@ -1,7 +1,7 @@
 # Specify what columns should be sent out by the API
 from flask_restful import fields
 import pytz
-from flask_login import current_app
+from flask import current_app
 
 def replace_tzinfo(datetime):
     return datetime.replace(tzinfo=pytz.utc) if datetime else None

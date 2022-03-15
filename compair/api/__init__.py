@@ -3,8 +3,8 @@ import os
 import re
 from functools import wraps
 
-from flask import redirect, render_template, jsonify
-from flask_login import login_required, current_user, current_app
+from flask import redirect, render_template, jsonify, current_app
+from flask_login import login_required, current_user
 from flask import make_response
 from flask import send_file, url_for, redirect, request
 from flask_restful.reqparse import RequestParser

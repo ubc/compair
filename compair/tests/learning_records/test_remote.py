@@ -10,7 +10,7 @@ from compair.tests.test_compair import ComPAIRLearningRecordTestCase
 
 from compair.core import db
 from compair.models import AnswerCommentType
-from flask_login import current_app
+from flask import current_app
 from compair.learning_records import XAPIStatement, XAPIVerb, XAPIObject, \
     XAPIContext, XAPIResult, XAPI, CaliperEntities, CaliperSensor, CaliperEvent
 from tincan import LRSResponse

@@ -12,7 +12,7 @@ from compair.models import ThirdPartyType, SystemRole, CourseRole
 
 
 from compair.core import db
-from flask_login import current_app
+from flask import current_app
 from compair.learning_records import XAPIStatement, XAPIVerb, XAPIObject, \
     XAPIContext, XAPIResult, XAPI
 from tincan import LRSResponse

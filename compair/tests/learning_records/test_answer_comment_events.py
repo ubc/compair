@@ -7,7 +7,7 @@ from data.fixtures.test_data import AnswerCommentsTestData, LTITestData
 from compair.tests.test_compair import ComPAIRLearningRecordTestCase
 
 from compair.core import db
-from flask_login import current_app
+from flask import current_app
 from compair.models import AnswerCommentType
 
 from compair.learning_records.capture_events import on_answer_comment_create, \

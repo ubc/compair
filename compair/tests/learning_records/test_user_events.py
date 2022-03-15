@@ -7,7 +7,7 @@ from data.fixtures.test_data import BasicTestData
 from compair.tests.test_compair import ComPAIRLearningRecordTestCase
 
 from compair.core import db
-from flask_login import current_app
+from flask import current_app
 
 from compair.learning_records.capture_events import on_user_modified
 

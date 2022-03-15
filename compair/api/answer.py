@@ -1,8 +1,8 @@
 import datetime
 
 from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
-from flask import Blueprint
-from flask_login import login_required, current_user, current_app
+from flask import Blueprint, current_app
+from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import func, or_, and_, not_, desc

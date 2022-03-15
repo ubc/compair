@@ -2,8 +2,8 @@ import datetime
 import dateutil.parser
 
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
-from flask import Blueprint
-from flask_login import login_required, current_user, current_app
+from flask import Blueprint, current_app
+from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_

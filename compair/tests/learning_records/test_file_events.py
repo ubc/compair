@@ -8,7 +8,7 @@ from compair.tests.test_compair import ComPAIRLearningRecordTestCase
 
 from data.factories import AnswerFactory
 from compair.core import db
-from flask_login import current_app
+from flask import current_app
 
 from compair.learning_records.capture_events import on_get_file, \
     on_attach_file, on_detach_file
