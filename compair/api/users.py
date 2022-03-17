@@ -573,7 +573,7 @@ class UserCourseStatusListAPI(Resource):
                         ))
 
                     self_evaluations = AnswerComment.query \
-                        .join("answer") \
+                        .join(Answer) \
                         .with_entities(
                             Answer.assignment_id,
                             func.count(Answer.assignment_id).label('self_evaluation_count')

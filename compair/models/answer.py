@@ -97,7 +97,7 @@ class Answer(DefaultTableMixin, UUIDMixin, AttemptMixin, ActiveMixin, WriteTrack
                 AnswerComment.answer_id == cls.id,
                 AnswerComment.active == True,
                 AnswerComment.draft == False
-            )),
+            )).scalar_subquery(),
             deferred=True,
             group='counts'
         )
@@ -109,7 +109,7 @@ class Answer(DefaultTableMixin, UUIDMixin, AttemptMixin, ActiveMixin, WriteTrack
                 AnswerComment.active == True,
                 AnswerComment.draft == False,
                 AnswerComment.comment_type == AnswerCommentType.public
-            )),
+            )).scalar_subquery(),
             deferred=True,
             group='counts'
         )
@@ -121,7 +121,7 @@ class Answer(DefaultTableMixin, UUIDMixin, AttemptMixin, ActiveMixin, WriteTrack
                 AnswerComment.active == True,
                 AnswerComment.draft == False,
                 AnswerComment.answer_id == cls.id
-            )),
+            )).scalar_subquery(),
             deferred=True,
             group='counts'
         )

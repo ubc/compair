@@ -81,7 +81,8 @@ class AnswerCriterionScore(DefaultTableMixin, WriteTrackingMixin):
             where(and_(
                 s_alias.c.criterion_id == cls.criterion_id,
                 s_alias.c.assignment_id == cls.assignment_id,
-            ))
+            )).
+            scalar_subquery()
         )
 
     __table_args__ = (

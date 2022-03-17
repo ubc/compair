@@ -31,8 +31,7 @@ def define_authorization(user, they, impersonation_original_user=None):
             .filter(and_(
                 UserCourse.user_id == user.id,
                 UserCourse.course_role == CourseRole.instructor
-            )) \
-            .subquery()
+            ))
         exists = Course.query. \
             join(UserCourse) \
             .filter(and_(

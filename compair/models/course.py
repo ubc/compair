@@ -143,14 +143,16 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 Assignment.course_id == cls.id,
                 Assignment.active == True
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="min_associates"
         )
 
         cls.lti_context_count = column_property(
             select([func.count(LTIContext.id)]).
-            where(LTIContext.compair_course_id == cls.id),
+            where(LTIContext.compair_course_id == cls.id).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -161,7 +163,8 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                 LTIContext.compair_course_id == cls.id,
                 LTIContext.lis_course_offering_sourcedid != None,
                 LTIContext.lis_course_section_sourcedid != None,
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -171,7 +174,8 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 Assignment.course_id == cls.id,
                 Assignment.active == True
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -182,7 +186,8 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                 Assignment.course_id == cls.id,
                 Assignment.active == True,
                 Assignment.answer_start <= sql_utcnow()
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -192,7 +197,8 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 UserCourse.course_id == cls.id,
                 UserCourse.course_role == CourseRole.student
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )

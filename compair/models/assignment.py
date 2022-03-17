@@ -326,7 +326,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                         Group.id != None
                     ),
                 )
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -354,7 +355,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                         Group.id != None
                     ),
                 )
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -386,7 +388,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                         Group.id != None
                     ),
                 )
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -396,7 +399,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 ComparisonExample.assignment_id == cls.id,
                 ComparisonExample.active == True
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -405,7 +409,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             select([func.count(Comparison.id)]).
             where(and_(
                 Comparison.assignment_id == cls.id
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -415,7 +420,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
             where(and_(
                 Comparison.assignment_id == cls.id,
                 Comparison.completed == True
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -429,14 +435,16 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
                 AnswerComment.answer_id == Answer.id,
                 AnswerComment.draft == False,
                 Answer.assignment_id == cls.id
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
 
         cls.lti_resource_link_count = column_property(
             select([func.count(LTIResourceLink.id)]).
-            where(LTIResourceLink.compair_assignment_id == cls.id),
+            where(LTIResourceLink.compair_assignment_id == cls.id).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )

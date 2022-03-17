@@ -106,7 +106,8 @@ class AnswerScore(DefaultTableMixin, WriteTrackingMixin):
             where(and_(
                 Answer.active == True,
                 s_alias.c.assignment_id == cls.assignment_id,
-            ))
+            )).
+            scalar_subquery()
         )
 
     __table_args__ = (

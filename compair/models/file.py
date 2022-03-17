@@ -75,7 +75,8 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
             where(and_(
                 Assignment.file_id == cls.id,
                 Assignment.active == True
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
@@ -85,7 +86,8 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
             where(and_(
                 Answer.file_id == cls.id,
                 Answer.active == True
-            )),
+            )).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )

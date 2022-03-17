@@ -60,7 +60,8 @@ class Criterion(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
         cls.compare_count = column_property(
             select([func.count(ComparisonCriterion.id)]).
-            where(ComparisonCriterion.criterion_id == cls.id),
+            where(ComparisonCriterion.criterion_id == cls.id).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )

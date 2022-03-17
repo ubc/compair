@@ -670,7 +670,7 @@ class AssignmentRootStatusAPI(Resource):
 
 
         feedback_counts = AnswerComment.query \
-            .join("answer") \
+            .join(Answer) \
             .with_entities(
                 Answer.assignment_id,
                 func.count(Answer.assignment_id).label('feedback_count')
@@ -692,7 +692,7 @@ class AssignmentRootStatusAPI(Resource):
 
         # get self evaluation status for assignments with self evaluations enabled
         self_evaluations = AnswerComment.query \
-            .join("answer") \
+            .join(Answer) \
             .with_entities(
                 Answer.assignment_id,
                 func.count(Answer.assignment_id).label('self_evaluation_count')
@@ -711,7 +711,7 @@ class AssignmentRootStatusAPI(Resource):
             .all()
 
         self_evaluation_drafts = AnswerComment.query \
-            .join("answer") \
+            .join(Answer) \
             .with_entities(
                 Answer.assignment_id,
                 func.count(Answer.assignment_id).label('self_evaluation_count')
@@ -917,7 +917,7 @@ class AssignmentUsersComparisonsAPI(Resource):
             .order_by(User.lastname, User.firstname)
 
         self_evaluation_total = AnswerComment.query \
-            .join("answer") \
+            .join(Answer) \
             .with_entities(
                 func.count(Answer.assignment_id).label('self_evaluation_count')
             ) \

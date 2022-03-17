@@ -244,14 +244,16 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
 
         cls.third_party_auth_count = column_property(
             select([func.count(ThirdPartyUser.id)]).
-            where(ThirdPartyUser.user_id == cls.id),
+            where(ThirdPartyUser.user_id == cls.id).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
 
         cls.lti_user_link_count = column_property(
             select([func.count(LTIUser.id)]).
-            where(LTIUser.compair_user_id == cls.id),
+            where(LTIUser.compair_user_id == cls.id).
+            scalar_subquery(),
             deferred=True,
             group="counts"
         )
