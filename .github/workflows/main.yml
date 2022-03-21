@@ -98,6 +98,7 @@ jobs:
     - name: Trigger deploy
       run: |
         curl -X POST \
+            --fail \
             -F token=${{ secrets.DEPLOYMENT_TOKEN }} \
             -F ref=master \
             -F "variables[app__image__tag]=${GITHUB_REF##*/}" \
