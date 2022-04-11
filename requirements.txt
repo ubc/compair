@@ -1,3 +1,5 @@
+#pin Jinja2 to 3.0.3, since latest v3.1.1 broke Markup
+Jinja2==3.0.3
 Flask==1.0.2
 Flask-Login==0.4.1
 Flask-Restful==0.3.5
