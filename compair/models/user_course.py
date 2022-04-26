@@ -2,9 +2,8 @@ from enum import Enum
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import Enum, func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy_enum34 import EnumType
 
 from . import *
 
@@ -20,7 +19,7 @@ class UserCourse(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     group_id = db.Column(db.Integer, db.ForeignKey('group.id', ondelete="SET NULL"),
         nullable=True)
-    course_role = db.Column(EnumType(CourseRole),
+    course_role = db.Column(Enum(CourseRole),
         nullable=False, index=True)
 
     # relationships

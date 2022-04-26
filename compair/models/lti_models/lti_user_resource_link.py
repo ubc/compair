@@ -2,9 +2,8 @@ from six import text_type
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import Enum, func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy_enum34 import EnumType
 
 from . import *
 
@@ -20,8 +19,7 @@ class LTIUserResourceLink(DefaultTableMixin, WriteTrackingMixin):
         nullable=False)
     roles = db.Column(db.String(255), nullable=True)
     lis_result_sourcedid = db.Column(db.String(255), nullable=True)
-    course_role = db.Column(EnumType(CourseRole),
-        nullable=False)
+    course_role = db.Column(Enum(CourseRole), nullable=False)
 
     # relationships
     # lti_user via LTIUser Model

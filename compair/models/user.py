@@ -6,9 +6,8 @@ from six import text_type
 
 # sqlalchemy
 from sqlalchemy.orm import column_property, synonym, joinedload
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import Enum, func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy_enum34 import EnumType
 
 from flask_login import UserMixin, current_user
 from . import *
@@ -33,14 +32,14 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     global_unique_identifier = db.Column(db.String(191), nullable=True) #should be treated as write once and only once
     username = db.Column(db.String(191), unique=True, nullable=True)
     _password = db.Column(db.String(255), unique=False, nullable=True)
-    system_role = db.Column(EnumType(SystemRole), nullable=False, index=True)
+    system_role = db.Column(Enum(SystemRole), nullable=False, index=True)
     displayname = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(254), nullable=True)  # email addresses are max 254 characters
     firstname = db.Column(db.String(255), nullable=True)
     lastname = db.Column(db.String(255), nullable=True)
     student_number = db.Column(db.String(50), unique=True, nullable=True)
     last_online = db.Column(db.DateTime)
-    email_notification_method = db.Column(EnumType(EmailNotificationMethod),
+    email_notification_method = db.Column(Enum(EmailNotificationMethod),
         nullable=False, default=EmailNotificationMethod.enable, index=True)
 
     # relationships

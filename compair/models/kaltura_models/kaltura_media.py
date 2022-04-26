@@ -5,7 +5,6 @@ import pytz
 # sqlalchemy
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy_enum34 import EnumType
 
 from . import *
 

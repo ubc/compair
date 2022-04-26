@@ -5,9 +5,8 @@ import pytz
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import column_property
-from sqlalchemy import func, select, and_, or_, join
+from sqlalchemy import Enum, func, select, and_, or_, join
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy_enum34 import EnumType
 from sqlalchemy.ext.orderinglist import ordering_list
 
 from . import *
@@ -34,8 +33,8 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
     students_can_reply = db.Column(db.Boolean(), default=False, nullable=False)
     enable_self_evaluation = db.Column(db.Boolean(), default=False, nullable=False)
     enable_group_answers = db.Column(db.Boolean(), default=False, nullable=False)
-    scoring_algorithm = db.Column(EnumType(ScoringAlgorithm), nullable=True, default=ScoringAlgorithm.elo)
-    pairing_algorithm = db.Column(EnumType(PairingAlgorithm), nullable=True, default=PairingAlgorithm.random)
+    scoring_algorithm = db.Column(Enum(ScoringAlgorithm), nullable=True, default=ScoringAlgorithm.elo)
+    pairing_algorithm = db.Column(Enum(PairingAlgorithm), nullable=True, default=PairingAlgorithm.random)
     rank_display_limit = db.Column(db.Integer, nullable=True)
     educators_can_compare = db.Column(db.Boolean(), default=False, nullable=False)
     answer_grade_weight = db.Column(db.Integer, default=1, nullable=False)

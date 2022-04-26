@@ -1,9 +1,8 @@
 # sqlalchemy
 import re
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import Enum, func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy_enum34 import EnumType
 from flask import current_app
 
 from . import *
@@ -24,7 +23,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     global_unique_identifier = db.Column(db.String(255), nullable=True)
     compair_user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"),
         nullable=True)
-    system_role = db.Column(EnumType(SystemRole), nullable=False)
+    system_role = db.Column(Enum(SystemRole), nullable=False)
     student_number = db.Column(db.String(255), nullable=True)
     lis_person_sourcedid = db.Column(db.String(255), nullable=True)
 

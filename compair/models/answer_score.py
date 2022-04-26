@@ -1,9 +1,8 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import column_property
-from sqlalchemy import func, select, and_, or_, join
+from sqlalchemy import Enum, func, select, and_, or_, join
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy_enum34 import EnumType
 
 from compair.algorithms import ScoredObject
 
@@ -37,7 +36,7 @@ class AnswerScore(DefaultTableMixin, WriteTrackingMixin):
     score_variable2 = Rating's Sigma
     """
 
-    scoring_algorithm = db.Column(EnumType(ScoringAlgorithm),
+    scoring_algorithm = db.Column(Enum(ScoringAlgorithm),
         nullable=True, default=ScoringAlgorithm.elo)
     score = db.Column(db.Float, default=0, nullable=False, index=True)
     variable1 = db.Column(db.Float, nullable=True)

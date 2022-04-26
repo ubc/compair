@@ -4,9 +4,8 @@ from six import text_type
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import Enum, func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy_enum34 import EnumType
 from flask_login import current_user
 from flask import current_app
 
@@ -39,8 +38,8 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     roles = db.Column(db.String(255), nullable=True)
     lis_result_sourcedid = db.Column(db.String(255), nullable=True)
     lis_result_sourcedids = db.Column(db.Text, nullable=True)
-    course_role = db.Column(EnumType(CourseRole, name="course_role"),
-        nullable=False)
+    course_role = db.Column(Enum(CourseRole, name="course_role"),
+                            nullable=False)
 
     compair_course_id = association_proxy('lti_context', 'compair_course_id')
     compair_user_id = association_proxy('lti_user', 'compair_user_id')

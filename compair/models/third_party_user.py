@@ -7,10 +7,9 @@ import time
 
 # sqlalchemy
 from sqlalchemy.orm import synonym
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import Enum, func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy_enum34 import EnumType
 
 from . import *
 
@@ -22,7 +21,7 @@ class ThirdPartyUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
     __tablename__ = 'third_party_user'
 
     # table columns
-    third_party_type = db.Column(EnumType(ThirdPartyType), nullable=False)
+    third_party_type = db.Column(Enum(ThirdPartyType), nullable=False)
     unique_identifier = db.Column(db.String(191), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
     _params = db.Column(db.Text)

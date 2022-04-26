@@ -1,8 +1,7 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import Enum, func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy_enum34 import EnumType
 
 from . import *
 from importlib import import_module
@@ -18,7 +17,7 @@ class AnswerComment(DefaultTableMixin, UUIDMixin, AttemptMixin, ActiveMixin, Wri
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete="CASCADE"),
         nullable=False)
     content = db.Column(db.Text)
-    comment_type = db.Column(EnumType(AnswerCommentType),
+    comment_type = db.Column(Enum(AnswerCommentType),
         nullable=False, index=True)
     draft = db.Column(db.Boolean(), default=False, nullable=False, index=True)
 

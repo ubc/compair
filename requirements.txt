@@ -21,8 +21,12 @@ six==1.10.0
 caslib.py==2.2.2
 python3-saml==1.9.0
 alembic==1.7.7
+# TODO remove once old migrations are no longer needed
+# backport of sqlalchemy enum for python before 3.4, not used except by
+# alembic migrations before 23944543dc01
 enum34==1.1.6
-SQLAlchemy-Enum34==1.0.1
+# same as above for enum34
+SQLAlchemy-Enum34==2.0.0
 mock==2.0.0
 elo==0.1.1
 trueskill==0.4.4

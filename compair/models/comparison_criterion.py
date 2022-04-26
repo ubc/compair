@@ -1,10 +1,9 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import load_only
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import Enum, func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask import current_app
-from sqlalchemy_enum34 import EnumType
 
 from . import *
 from importlib import import_module
@@ -23,7 +22,7 @@ class ComparisonCriterion(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         nullable=False)
     criterion_id = db.Column(db.Integer, db.ForeignKey('criterion.id', ondelete="CASCADE"),
         nullable=False)
-    winner = db.Column(EnumType(WinningAnswer), nullable=True)
+    winner = db.Column(Enum(WinningAnswer), nullable=True)
     content = db.Column(db.Text)
 
     # relationships

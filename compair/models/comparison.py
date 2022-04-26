@@ -1,10 +1,9 @@
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import load_only
-from sqlalchemy import func, select, and_, or_
+from sqlalchemy import Enum, func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from flask import current_app
-from sqlalchemy_enum34 import EnumType
 
 from . import *
 from importlib import import_module
@@ -27,12 +26,12 @@ class Comparison(DefaultTableMixin, UUIDMixin, AttemptMixin, WriteTrackingMixin)
         nullable=False)
     answer2_id = db.Column(db.Integer, db.ForeignKey('answer.id', ondelete="CASCADE"),
         nullable=False)
-    winner = db.Column(EnumType(WinningAnswer), nullable=True)
+    winner = db.Column(Enum(WinningAnswer), nullable=True)
     comparison_example_id = db.Column(db.Integer, db.ForeignKey('comparison_example.id', ondelete="SET NULL"),
         nullable=True)
     round_compared = db.Column(db.Integer, default=0, nullable=False)
     completed = db.Column(db.Boolean(), default=False, nullable=False, index=True)
-    pairing_algorithm = db.Column(EnumType(PairingAlgorithm), nullable=True, default=PairingAlgorithm.random)
+    pairing_algorithm = db.Column(Enum(PairingAlgorithm), nullable=True, default=PairingAlgorithm.random)
 
     # relationships
     # assignment via Assignment Model
