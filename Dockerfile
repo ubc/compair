@@ -43,8 +43,6 @@ RUN apt-get update -y \
     && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
     && pip install -r /code/requirements.txt \
     && pip install uwsgi \
-    # see https://github.com/onelogin/python3-saml/issues/82
-    && STATIC_DEPS=true pip install lxml==4.6.2 --force-reinstall \
     && rm -rf /root/.cache \
     && rm -rf /var/lib/apt/lists/*
 
