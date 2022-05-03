@@ -37,7 +37,7 @@
     "angular-bootstrap": "~2.5.0",
     "angular-timer": "~1.3.5",
     "lodash": "~4.17.4",
-    "angular-file-saver": "~1.1.3",
+    "angular-file-saver": "elquimeras/ng-file-saver#^1.1.4",
     "ngclipboard": "~1.1.1",
     "tincan": "~0.50.0",
     "angular-uuids": "~0.0.4",
