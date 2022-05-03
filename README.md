@@ -112,6 +112,24 @@ Running tests
 
     make testb
 
+Alternatively, these tests may be run inside docker:
+
+    # with compair running via docker-compose, get a shell to the app service
+    docker-compose exec app bash
+    # run all the backend python tests
+    nosetests
+    # run individual tests, just use the test import path
+    nosetests compair.tests.api.test_assignment.AssignmentAPITests
+    # to make the test runner stop on the first failure, add -x
+    # to make the test runner capture standard out (for debug prints), add -s
+    # combined, this would be
+    nosetests -xs
+
+To help debug sqlalchemy, you can tell sqlalchemy to log all generated
+statements to stderr by adding this setting to `compair/settings.py`:
+
+    SQLALCHEMY_ECHO = True
+
 ### AngularJS spec tests:
 
     make testf
@@ -119,6 +137,17 @@ Running tests
 ### AngularJS acceptance tests:
 
     make testa
+
+These tests are written using Cucumber.js, the tests are located in
+`compair/static/test/features/`.
+
+Individual tests can be run by editing `gulpfile.js`. Edit the `bdd` gulp task:
+
+    // original line:
+    gulp.src(["compair/static/test/features/*.feature"])
+    // comment out original line and set it to a specific feature file, then run
+    // make testa
+    gulp.src(["compair/static/test/features/view_users.feature"])
 
 Generate Production Release
 ---------------------------

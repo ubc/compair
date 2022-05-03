@@ -1,3 +1,7 @@
-scipy==1.6.0
-numpy==1.21.0
-pillow==9.0.1
+# scipy 1.8 seems to be missing packages for python 3.7, so we'll stay with
+# 1.7.3 until python 3.7 is dropped
+scipy==1.7.3
+# numpy 1.22 seems to be missing packages for python 3.7, so we'll stay with
+# 1.21.6 until python 3.7 is dropped
+numpy==1.21.6
+pillow==9.1.0

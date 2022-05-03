@@ -1,6 +1,6 @@
 # Python DEPS
 
-FROM python:3.7-slim as python-base
+FROM python:3.8-slim as python-base
 
 ADD requirements.txt .
 RUN apt-get update -y \
@@ -25,7 +25,7 @@ RUN mkdir -p compair/templates/static/ \
 
 # Python Application image
 
-FROM python:3.7-slim as python-app
+FROM python:3.8-slim as python-app
 
 MAINTAINER Pan Luo <pan.luo@ubc.ca>
 

@@ -1021,7 +1021,7 @@ class TestFixture:
         self.students += students
 
         if num_groups > 0:
-            student_per_group = int(len(self.students) / num_groups) if num_groups is not 0 else 0
+            student_per_group = int(len(self.students) / num_groups) if num_groups != 0 else 0
             for idx in range(num_groups):
                 group = self.add_group(self.course)
                 # slice student list and enroll them into groups
