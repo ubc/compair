@@ -7,7 +7,7 @@ from six import text_type
 
 from . import dataformat
 from compair.core import event, db, abort
-from compair.authorization import require, allow
+from compair.authorization import require
 from compair.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
     LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
 from compair.models.lti_models import MembershipNoValidContextsException, \

@@ -1,4 +1,3 @@
-import dateutil.parser
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint
 from flask_login import login_required, current_user
@@ -9,7 +8,7 @@ from sqlalchemy.orm import joinedload, undefer_group, load_only
 
 from . import dataformat
 from compair.core import db, event, abort
-from compair.authorization import allow, require
+from compair.authorization import require
 from compair.models import Assignment, Course, Answer, ComparisonExample
 from .util import new_restful_api, get_model_changes
 

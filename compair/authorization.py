@@ -1,7 +1,7 @@
 from bouncer.constants import ALL, MANAGE, EDIT, READ, CREATE, DELETE
-from flask_bouncer import ensure
+from flask_bouncer import can, ensure
 from flask_login import current_user
-from werkzeug.exceptions import Unauthorized
+from werkzeug.exceptions import Forbidden
 from sqlalchemy import and_
 
 from .core import abort, impersonation
@@ -44,11 +44,11 @@ def define_authorization(user, they, impersonation_original_user=None):
 
     def if_can_delete_attachment_reference(file):
         for assignment in file.assignments.all():
-            if allow(DELETE, assignment):
+            if can(DELETE, assignment):
                 return True
 
         for answer in file.answers.all():
-            if allow(DELETE, answer):
+            if can(DELETE, answer):
                 return True
 
         return False
@@ -155,7 +155,7 @@ def get_logged_in_user_permissions():
 
         global_permissions = set()
         for operation in operations:
-            if allow(operation, model):
+            if can(operation, model):
                 global_permissions.add(operation)
         permissions[model_name]['global'] = list(global_permissions)
 
@@ -170,12 +170,12 @@ def get_logged_in_user_permissions():
             continue
         course_permissions = set()
         for operation in mod_operations:
-            if allow(operation, Course(id=user_course.course_id)):
+            if can(operation, Course(id=user_course.course_id)):
                 course_permissions.add(operation)
                 course_global_permissions.add(operation)
         permissions['Course'][user_course.course_uuid] = list(course_permissions)
 
-    if allow(CREATE, Course):
+    if can(CREATE, Course):
         course_global_permissions.add(CREATE)
     if is_admin:
         for operation in mod_operations:
@@ -192,7 +192,7 @@ def get_logged_in_user_permissions():
             continue
         assignment_permissions = set()
         for operation in operations:
-            if allow(operation, Assignment(course_id=user_course.course_id)):
+            if can(operation, Assignment(course_id=user_course.course_id)):
                 assignment_permissions.add(operation)
                 assignment_global_permissions.add(operation)
         permissions['Assignment'][user_course.course_uuid] = list(assignment_permissions)
@@ -205,31 +205,18 @@ def get_logged_in_user_permissions():
     return permissions
 
 
-def allow(operation, target):
-    """
-    This duplicates bouncer's can() operation since flask-bouncer doesn't implement it.
-    Named allow() to avoid namespace confusion with bouncer.
-    """
-    try:
-        ensure(operation, target)
-        return True
-    except Unauthorized:
-        return False
-
-
 def require(operation, target, title=None, message=None):
     """
-    This is basically Flask-Bouncer's ensure except it throws a 403 instead of a 401
-    if the permission check fails. A 403 is more accurate since authentication would
-    not help and it would prevent the login box from showing up. Named require() to avoid
-    confusion with Flask-Bouncer
+    This is basically Flask-Bouncer's ensure except it also takes an optional
+    error title and message that'll be passed to the user if the permission
+    check failed. Named require() to avoid confusion with Flask-Bouncer
     :param operation: same as Flask-Bouncer's ensure
     :param target: same as Flask-Bouncer's ensure
     :return:same as Flask-Bouncer's ensure
     """
     try:
         ensure(operation, target)
-    except Unauthorized as e:
+    except Forbidden as e:
         if not title:
             title = "Forbidden"
         if not message:
@@ -244,12 +231,12 @@ def is_user_access_restricted(user):
     Also restrict access during impersonation
     """
     # Determine if the logged in user can view full info on the target user
-    access_restricted = not allow(READ, user) or impersonation.is_impersonating()
+    access_restricted = not can(READ, user) or impersonation.is_impersonating()
     if access_restricted:
         enrolments = UserCourse.query.filter_by(user_id=user.id).all()
         # if the logged in user can edit the target user's enrolments, then we let them see full info
         for enrolment in enrolments:
-            if allow(EDIT, enrolment):
+            if can(EDIT, enrolment):
                 access_restricted = False
                 break
 

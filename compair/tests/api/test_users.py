@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 import json
 import datetime
 
-from flask_bouncer import MANAGE, CREATE, EDIT, DELETE, READ
-from compair.authorization import allow
+from flask_bouncer import can, MANAGE, CREATE, EDIT, DELETE, READ
 from flask_login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 
@@ -1661,7 +1660,7 @@ class UsersAPITests(ComPAIRAPITestCase):
 
                 expected_operations = set()
                 for operation in operations:
-                    if admin or allow(operation, model_name):
+                    if admin or can(operation, model_name):
                         expected_operations.add(operation)
 
                 self.assertEqual(global_permissions, expected_operations)

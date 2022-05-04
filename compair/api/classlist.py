@@ -4,6 +4,7 @@ import unicodecsv as csv
 
 from bouncer.constants import EDIT, READ, MANAGE
 from flask import Blueprint, request, current_app, make_response
+from flask_bouncer import can
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from six import BytesIO
@@ -14,7 +15,7 @@ from flask_restful.reqparse import RequestParser
 
 from . import dataformat
 from compair.core import db, event, abort, allowed_file, display_name_generator
-from compair.authorization import allow, require, USER_IDENTITY
+from compair.authorization import require, USER_IDENTITY
 from compair.models import UserCourse, Course, User, SystemRole, CourseRole, \
     ThirdPartyType, ThirdPartyUser, Group
 from compair.tasks import set_passwords
@@ -306,10 +307,10 @@ def import_users(import_type, course, users):
 def output_csv(data, code, headers=None):
     fieldnames = ['username', 'student_number', 'firstname', 'lastname', 'displayname', 'group_name']
 
-    if allow(MANAGE, User) or current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False):
+    if can(MANAGE, User) or current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False):
         fieldnames.insert(4, 'email')
 
-    if allow(MANAGE, User) or current_app.config.get('EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR', False):
+    if can(MANAGE, User) or current_app.config.get('EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR', False):
         if current_app.config.get('CAS_LOGIN_ENABLED'):
             fieldnames.insert(1, 'cas_username')
         if current_app.config.get('SAML_LOGIN_ENABLED'):
@@ -336,7 +337,7 @@ class ClasslistRootAPI(Resource):
         require(READ, UserCourse(course_id=course.id),
             title="Class List Unavailable",
             message="Sorry, your role in this course does not allow you to view the class list.")
-        restrict_user = not allow(READ, USER_IDENTITY)
+        restrict_user = not can(READ, USER_IDENTITY)
 
         # expire current_user from the session. When loading classlist from database, if the
         # user is already in the session, e.g. instructor for the course, the User.user_courses
@@ -397,7 +398,7 @@ class ClasslistRootAPI(Resource):
             user=current_user,
             course_id=course.id)
 
-        if allow(MANAGE, User):
+        if can(MANAGE, User):
             return {'objects': marshal(class_list, dataformat.get_full_users_in_course())}
         else:
             return {'objects': marshal(class_list, dataformat.get_users_in_course(restrict_user=restrict_user))}
@@ -583,7 +584,7 @@ class StudentsAPI(Resource):
         require(READ, course,
             title="Students Unavailable",
             message="Students can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
-        restrict_user = not allow(MANAGE, course)
+        restrict_user = not can(MANAGE, course)
 
         students = User.query \
             .with_entities(User, UserCourse) \
@@ -598,7 +599,7 @@ class StudentsAPI(Resource):
         users = []
         user_course = UserCourse(course_id=course.id)
         for u in students:
-            if allow(READ, user_course):
+            if can(READ, user_course):
                 users.append({
                     'id': u.User.uuid,
                     'name': u.User.fullname_sortable,
@@ -636,7 +637,7 @@ class InstructorsAPI(Resource):
         require(READ, course,
             title="Instructors Unavailable",
             message="Instructors can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
-        restrict_user = not allow(MANAGE, course)
+        restrict_user = not can(MANAGE, course)
 
         instructors = User.query \
             .with_entities(User, UserCourse) \
@@ -654,7 +655,7 @@ class InstructorsAPI(Resource):
         users = []
         user_course = UserCourse(course_id=course.id)
         for u in instructors:
-            if allow(READ, user_course):
+            if can(READ, user_course):
                 users.append({
                     'id': u.User.uuid,
                     'name': u.User.fullname_sortable,

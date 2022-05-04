@@ -1,5 +1,6 @@
 from bouncer.constants import CREATE, READ, EDIT, DELETE, MANAGE
 from flask import Blueprint
+from flask_bouncer import can
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
@@ -7,7 +8,7 @@ from sqlalchemy import and_, or_
 
 from . import dataformat
 from compair.core import db, event, abort
-from compair.authorization import require, allow
+from compair.authorization import require
 from compair.models import User, Answer, Assignment, Course, AnswerComment, \
     CourseRole, SystemRole, AnswerCommentType
 from .util import new_restful_api, get_model_changes, pagination_parser
@@ -67,7 +68,7 @@ class AnswerCommentListAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         params = answer_comment_list_parser.parse_args()
         answer_uuids = []
@@ -190,9 +191,9 @@ class AnswerCommentListAPI(Resource):
             title="Feedback Not Saved",
             message="Sorry, your role in this course does not allow you to save feedback for this answer.")
 
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         answer_comment = AnswerComment(answer_id=answer.id)
 
@@ -221,7 +222,7 @@ class AnswerCommentListAPI(Resource):
             abort(400, title="Feedback Not Saved", message="This feedback type is not recognized. Please contact support for assistance.")
         answer_comment.comment_type = AnswerCommentType(comment_type)
 
-        if answer_comment.comment_type == AnswerCommentType.self_evaluation and not assignment.self_eval_grace and not allow(MANAGE, assignment):
+        if answer_comment.comment_type == AnswerCommentType.self_evaluation and not assignment.self_eval_grace and not can(MANAGE, assignment):
             abort(403, title="Self-Evaluation Not Saved", message="Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.")
 
         answer_comment.update_attempt(
@@ -269,9 +270,9 @@ class AnswerCommentAPI(Resource):
             title="Feedback Unavailable",
             message="Sorry, your role in this course does not allow you to view this feedback.")
 
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         on_answer_comment_get.send(
             self,
@@ -295,9 +296,9 @@ class AnswerCommentAPI(Resource):
             title="Feedback Not Saved",
             message="Sorry, your role in this course does not allow you to save feedback for this answer.")
 
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         was_draft = answer_comment.draft
 
@@ -331,7 +332,7 @@ class AnswerCommentAPI(Resource):
 
         answer_comment.comment_type = AnswerCommentType(comment_type)
 
-        if answer_comment.comment_type == AnswerCommentType.self_evaluation and not assignment.self_eval_grace and not allow(MANAGE, assignment):
+        if answer_comment.comment_type == AnswerCommentType.self_evaluation and not assignment.self_eval_grace and not can(MANAGE, assignment):
             abort(403, title="Self-Evaluation Not Saved", message="Sorry, the self-evaluation deadline has passed and therefore cannot be submitted.")
 
         # only update draft param if currently a draft

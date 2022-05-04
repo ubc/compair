@@ -1,5 +1,6 @@
 from bouncer.constants import EDIT, READ, CREATE, DELETE, MANAGE
 from flask import Blueprint, current_app, request
+from flask_bouncer import can
 from flask_restful import Resource, marshal
 from flask_login import login_required
 from werkzeug.utils import secure_filename
@@ -9,7 +10,7 @@ from flask_login import current_user
 from sqlalchemy import and_, or_
 
 from . import dataformat
-from compair.authorization import require, allow
+from compair.authorization import require
 from compair.core import db, event, abort
 from compair.models import UserCourse, User, Course, CourseRole, \
     Group
@@ -249,7 +250,7 @@ class GroupCurrentUserAPI(Resource):
 
         if not user_course:
             # return none for admins who aren't enrolled in the course
-            if allow(MANAGE, course):
+            if can(MANAGE, course):
                 return None
             abort(400, title="Group Unavailable",
                 message="You are not currently enrolled in the course. Please double-check your enrollment in this course.")

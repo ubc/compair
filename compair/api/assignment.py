@@ -3,6 +3,7 @@ import dateutil.parser
 
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint, current_app
+from flask_bouncer import can
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
@@ -12,7 +13,7 @@ from six import text_type
 
 from . import dataformat
 from compair.core import db, event, abort
-from compair.authorization import allow, require, is_user_access_restricted
+from compair.authorization import require, is_user_access_restricted
 from compair.models import Assignment, Course, Criterion, AssignmentCriterion, Answer, Comparison, \
     AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File, User, UserCourse, \
     CourseRole, Group
@@ -92,9 +93,9 @@ class AssignmentIdAPI(Resource):
             message="Assignments can be saved only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         now = datetime.datetime.utcnow()
-        if assignment.answer_start and not allow(MANAGE, assignment) and not (assignment.answer_start <= now):
+        if assignment.answer_start and not can(MANAGE, assignment) and not (assignment.answer_start <= now):
             abort(403, title="Assignment Unavailable", message="This assignment is not yet open to students. Please check back after the start date the instructor has set.")
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         on_assignment_get.send(
             self,
@@ -351,7 +352,7 @@ class AssignmentRootAPI(Resource):
             message="Assignments can be seen only by those enrolled in the course. Please double-check your enrollment in this course.")
 
         assignment = Assignment(course_id=course.id)
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         # Get all assignments for this course, order by answer_start date, created date
         base_query = Assignment.query \
@@ -569,7 +570,7 @@ class AssignmentIdStatusAPI(Resource):
         # comparisons without seeing the same answer more than once
         comparison_available = other_comparable_answers >= assignment.number_of_comparisons * 2
         # instructors and tas can compare as long as there are new possible comparisons
-        if allow(EDIT, assignment):
+        if can(EDIT, assignment):
             comparison_available = comparison_count < other_comparable_answers * (other_comparable_answers - 1) / 2
 
         status = {
@@ -762,7 +763,7 @@ class AssignmentRootStatusAPI(Resource):
             # comparisons without seeing the same answer more than once
             comparison_available = other_comparable_answers >= assignment.number_of_comparisons * 2
             # instructors and tas can compare as long as there are new possible comparisons
-            if allow(EDIT, assignment):
+            if can(EDIT, assignment):
                 comparison_available = comparison_count < other_comparable_answers * (other_comparable_answers - 1) / 2
 
             statuses[assignment.uuid] = {

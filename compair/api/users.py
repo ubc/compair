@@ -4,6 +4,7 @@ import pytz
 
 from flask import Blueprint, current_app, session as sess
 from bouncer.constants import MANAGE, EDIT, CREATE, READ
+from flask_bouncer import can
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from flask_login import login_required, current_user
@@ -12,7 +13,7 @@ from sqlalchemy import exc, asc, or_, and_, func, desc, asc
 from six import text_type
 
 from . import dataformat
-from compair.authorization import is_user_access_restricted, require, allow, USER_IDENTITY
+from compair.authorization import is_user_access_restricted, require, USER_IDENTITY
 from compair.core import db, event, abort, impersonation
 from .util import new_restful_api, get_model_changes, pagination_parser
 from compair.models import User, SystemRole, Course, UserCourse, CourseRole, Assignment, \
@@ -124,7 +125,7 @@ def marshal_user_data(user):
         # when retrieving the profile of the student being impersonated,
         # don't include full profile (i.e. no email)
         return marshal(user, dataformat.get_user(False))
-    elif allow(MANAGE, user) or current_user.id == user.id:
+    elif can(MANAGE, user) or current_user.id == user.id:
         return marshal(user, dataformat.get_full_user())
     else:
         return marshal(user, dataformat.get_user(is_user_access_restricted(user)))
@@ -167,7 +168,7 @@ class UserAPI(Resource):
                 abort(409, title="User Not Saved", message="Sorry, this username already exists and usernames must be unique in ComPAIR. Please enter another username and try saving again.")
 
             user.username = username
-        elif allow(MANAGE, user):
+        elif can(MANAGE, user):
             #admins can optionally set username for users without a username
             username = params.get("username")
             if username:
@@ -178,12 +179,12 @@ class UserAPI(Resource):
         else:
             user.username = None
 
-        if allow(MANAGE, user):
+        if can(MANAGE, user):
             system_role = params.get("system_role", user.system_role.value)
             check_valid_system_role(system_role)
             user.system_role = SystemRole(system_role)
 
-        if allow(MANAGE, user) or user.id == current_user.id or current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False):
+        if can(MANAGE, user) or user.id == current_user.id or current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False):
             if current_user.system_role != SystemRole.student or current_app.config.get('ALLOW_STUDENT_CHANGE_EMAIL'):
                 user.email = params.get("email", user.email)
 
@@ -380,7 +381,7 @@ class CurrentUserCourseListAPI(Resource):
             .order_by(Course.start_date_order.desc(), Course.name) \
 
         # we want to list user linked courses only, so only check the association table
-        if not allow(MANAGE, Course):
+        if not can(MANAGE, Course):
             query = query.join(UserCourse) \
                 .filter(and_(
                     UserCourse.user_id == current_user.id,
@@ -516,7 +517,7 @@ class UserCourseStatusListAPI(Resource):
             )) \
             .add_columns(UserCourse.course_role, UserCourse.group_id) \
 
-        if not allow(MANAGE, Course):
+        if not can(MANAGE, Course):
             query = query.join(UserCourse, and_(
                     UserCourse.user_id == current_user.id,
                     UserCourse.course_id == Course.id,
@@ -538,7 +539,7 @@ class UserCourseStatusListAPI(Resource):
 
         for course, course_role, group_id in results:
             incomplete_assignment_ids = set()
-            if not allow(MANAGE, Course) and course_role == CourseRole.student:
+            if not can(MANAGE, Course) and course_role == CourseRole.student:
                 answer_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.answer_period]
                 compare_period_assignments = [assignment for assignment in course.assignments if assignment.active and assignment.compare_period]
 
@@ -726,12 +727,12 @@ class UserThirdPartyUserAPI(Resource):
 class TeachingUserCourseListAPI(Resource):
     @login_required
     def get(self):
-        if allow(MANAGE, Course()):
+        if can(MANAGE, Course()):
             courses = Course.query.filter_by(active=True).all()
         else:
             courses = []
             for user_course in current_user.user_courses:
-                if user_course.course.active and allow(MANAGE, Assignment(course_id=user_course.course_id)):
+                if user_course.course.active and can(MANAGE, Assignment(course_id=user_course.course_id)):
                     courses.append(user_course.course)
 
         course_list = [{'id': c.uuid, 'name': c.name} for c in courses]
@@ -749,7 +750,7 @@ class UserEditButtonAPI(Resource):
     @login_required
     def get(self, user_uuid):
         user = User.get_by_uuid_or_404(user_uuid)
-        available = allow(EDIT, user)
+        available = can(EDIT, user)
 
         on_user_edit_button_get.send(
             self,
@@ -765,8 +766,8 @@ class UserUpdateNotificationAPI(Resource):
     def post(self, user_uuid):
         user = User.get_by_uuid_or_404(user_uuid)
         # anyone who passes checking below should be an admin or current user
-        if not allow(MANAGE, user) and not user.id == current_user.id and not \
-                (allow(EDIT, user) and current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False)):
+        if not can(MANAGE, user) and not user.id == current_user.id and not \
+                (can(EDIT, user) and current_app.config.get('EXPOSE_EMAIL_TO_INSTRUCTOR', False)):
             abort(403, title="Notifications Not Updated", message="Sorry, your system role does not allow you to update notification settings for this user.")
 
         if not user.email:

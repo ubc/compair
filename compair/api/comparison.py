@@ -1,10 +1,9 @@
 from __future__ import division
-import operator
-import random
 import datetime
 
 from bouncer.constants import READ, CREATE, EDIT, MANAGE
 from flask import Blueprint, current_app
+from flask_bouncer import can
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
@@ -13,7 +12,7 @@ from sqlalchemy.orm import joinedload
 
 from . import dataformat
 from compair.core import db, event, abort
-from compair.authorization import require, allow
+from compair.authorization import require
 from compair.models import Answer, Comparison, Course, WinningAnswer, \
     Assignment, UserCourse, CourseRole, AssignmentCriterion, \
     AnswerComment, AnswerCommentType
@@ -54,7 +53,7 @@ class CompareRootAPI(Resource):
         require(CREATE, Comparison,
             title="Comparisons Unavailable",
             message="Comparisons can only be seen here by those enrolled in the course. Please double-check your enrollment in this course.")
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         comparison_count = assignment.completed_comparison_count_for_user(current_user.id)
 
@@ -89,7 +88,7 @@ class CompareRootAPI(Resource):
             # if there isn't an incomplete comparison, assign a new one
             try:
                 comparison = Comparison.create_new_comparison(assignment.id, current_user.id,
-                    skip_comparison_examples=allow(MANAGE, assignment))
+                    skip_comparison_examples=can(MANAGE, assignment))
 
                 on_comparison_create.send(
                     self,
@@ -141,7 +140,7 @@ class CompareRootAPI(Resource):
         require(EDIT, Comparison,
             title="Comparison Not Saved",
             message="Comparisons can only be saved by those enrolled in the course. Please double-check your enrollment in this course.")
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         if not assignment.compare_grace:
             abort(403, title="Comparison Not Saved",

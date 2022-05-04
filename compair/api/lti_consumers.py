@@ -7,7 +7,7 @@ from six import text_type
 
 from . import dataformat
 from compair.core import event, db, abort
-from compair.authorization import require, allow
+from compair.authorization import require
 from compair.models import LTIConsumer
 from .util import new_restful_api, get_model_changes, pagination_parser
 

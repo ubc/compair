@@ -12,7 +12,7 @@ SQLAlchemy==1.4.36
 blinker==1.4
 bouncer==0.1.12
 factory_boy==3.2.1
-flask-bouncer==0.1.13
+flask-bouncer==0.3.0
 passlib==1.7.4
 python-dateutil==2.8.2
 duration==1.1.1

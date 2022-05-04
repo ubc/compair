@@ -7,7 +7,6 @@ from sqlalchemy import and_, or_
 
 from . import dataformat
 from compair.core import event, db, abort, display_name_generator
-from compair.authorization import require, allow
 from .login import authenticate
 from compair.models import User, Course, LTIConsumer, LTIContext, LTIMembership, \
     LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce

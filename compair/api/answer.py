@@ -2,17 +2,16 @@ import datetime
 
 from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
 from flask import Blueprint, current_app
+from flask_bouncer import can
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import func, or_, and_, not_, desc
 from sqlalchemy.orm import joinedload, undefer_group
-from itertools import groupby
-from operator import attrgetter
 
 from . import dataformat
 from compair.core import db, event, abort
-from compair.authorization import require, allow, is_user_access_restricted
+from compair.authorization import require
 from compair.models import Answer, Assignment, Course, User, Comparison, Criterion, \
     AnswerScore, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType, \
     File, Group
@@ -83,7 +82,7 @@ class AnswerRootAPI(Resource):
         require(READ, assignment,
             title="Answers Unavailable",
             message="Answers are visible only to those enrolled in the course. Please double-check your enrollment in this course.")
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         params = answer_list_parser.parse_args()
 
@@ -203,13 +202,13 @@ class AnswerRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
-        if not assignment.answer_grace and not allow(MANAGE, assignment):
+        if not assignment.answer_grace and not can(MANAGE, assignment):
             abort(403, title="Answer Not Submitted", message="Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.")
 
         require(CREATE, Answer(course_id=course.id),
             title="Answer Not Submitted",
             message="Answers can be submitted only by those enrolled in the course. Please double-check your enrollment in this course.")
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         answer = Answer(assignment_id=assignment.id)
 
@@ -232,11 +231,11 @@ class AnswerRootAPI(Resource):
         user_uuid = params.get("user_id")
         group_uuid = params.get("group_id")
         # we allow instructor and TA to submit multiple answers for other users in the class
-        if user_uuid and not allow(MANAGE, Answer(course_id=course.id)):
+        if user_uuid and not can(MANAGE, Answer(course_id=course.id)):
             abort(400, title="Answer Not Submitted", message="Only instructors and teaching assistants can submit an answer on behalf of another.")
         if group_uuid and not assignment.enable_group_answers:
             abort(400, title="Answer Not Submitted", message="Group answers are not allowed for this assignment.")
-        if group_uuid and not allow(MANAGE, Answer(course_id=course.id)):
+        if group_uuid and not can(MANAGE, Answer(course_id=course.id)):
             abort(400, title="Answer Not Submitted", message="Only instructors and teaching assistants can submit an answer on behalf of a group.")
         if group_uuid and user_uuid:
             abort(400, title="Answer Not Submitted", message="You cannot submit an answer for a user and a group at the same time.")
@@ -363,7 +362,7 @@ class AnswerIdAPI(Resource):
         require(READ, answer,
             title="Answer Unavailable",
             message="Sorry, your role in this course does not allow you to view this answer.")
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         on_answer_get.send(
             self,
@@ -382,7 +381,7 @@ class AnswerIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
-        if not assignment.answer_grace and not allow(MANAGE, assignment):
+        if not assignment.answer_grace and not can(MANAGE, assignment):
             abort(403, title="Answer Not Submitted", message="Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.")
 
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
@@ -392,7 +391,7 @@ class AnswerIdAPI(Resource):
         require(EDIT, answer,
             title="Answer Not Saved",
             message="Sorry, your role in this course does not allow you to save this answer.")
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         if current_app.config.get('DEMO_INSTALLATION', False):
             from data.fixtures import DemoDataFixture
@@ -410,11 +409,11 @@ class AnswerIdAPI(Resource):
         user_uuid = params.get("user_id")
         group_uuid = params.get("group_id")
         # we allow instructor and TA to submit multiple answers for other users in the class
-        if user_uuid and user_uuid != answer.user_uuid and not allow(MANAGE, answer):
+        if user_uuid and user_uuid != answer.user_uuid and not can(MANAGE, answer):
             abort(400, title="Answer Not Submitted", message="Only instructors and teaching assistants can submit an answer on behalf of another.")
         if group_uuid and not assignment.enable_group_answers:
             abort(400, title="Answer Not Submitted", message="Group answers are not allowed for this assignment.")
-        if group_uuid and group_uuid != answer.group_uuid and not allow(MANAGE, answer):
+        if group_uuid and group_uuid != answer.group_uuid and not can(MANAGE, answer):
             abort(400, title="Answer Not Submitted", message="Only instructors and teaching assistants can submit an answer on behalf of a group.")
         if group_uuid and user_uuid:
             abort(400, title="Answer Not Submitted", message="You cannot submit an answer for a user and a group at the same time.")
@@ -602,7 +601,7 @@ class AnswerUserIdAPI(Resource):
         require(READ, Answer(user_id=current_user.id),
             title="Answers Unavailable",
             message="Sorry, your role in this course does not allow you to view answers for this assignment.")
-        restrict_user = not allow(MANAGE, assignment)
+        restrict_user = not can(MANAGE, assignment)
 
         params = user_answer_list_parser.parse_args()
 

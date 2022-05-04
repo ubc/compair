@@ -1,8 +1,4 @@
 import os
-import uuid
-import shutil
-import random
-import errno
 
 from flask import Blueprint, request, current_app
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
@@ -10,7 +6,6 @@ from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
 
 from compair.core import allowed_file, random_generator
-from compair.authorization import allow, require
 from . import dataformat
 from compair.core import db, event, abort
 from compair.models import File, Assignment, KalturaMedia

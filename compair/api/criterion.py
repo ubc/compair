@@ -6,7 +6,7 @@ from sqlalchemy import or_, and_
 
 from . import dataformat
 from compair.core import event, db
-from compair.authorization import require, allow
+from compair.authorization import require
 from compair.models import Criterion
 from .util import new_restful_api
 
