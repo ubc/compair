@@ -224,7 +224,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
         # check session
         with self.client.session_transaction() as sess:
             # check that user is logged in
-            self.assertEqual(str(instructor.id), sess.get('user_id'))
+            self.assertEqual(str(instructor.id), sess.get('_user_id'))
             self.assertIsNone(sess.get('lti_context'))
 
         # link course
@@ -239,7 +239,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
         # check session
         with self.client.session_transaction() as sess:
             # check that user is logged in
-            self.assertEqual(str(instructor.id), sess.get('user_id'))
+            self.assertEqual(str(instructor.id), sess.get('_user_id'))
             self.assertEqual(lti_context.id, sess.get('lti_context'))
 
         # link course

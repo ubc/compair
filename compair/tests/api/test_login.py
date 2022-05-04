@@ -114,7 +114,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(third_party_user.user.global_unique_identifier)
 
                 with self.client.session_transaction() as sess:
-                    self.assertEqual(sess.get('user_id'), str(third_party_user.user.id))
+                    self.assertEqual(sess.get('_user_id'), str(third_party_user.user.id))
 
                 # unused attributes
                 unique_identifier = system_role.value + "_with_unused_attributes"
@@ -423,7 +423,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(third_party_user.user.global_unique_identifier)
 
                 with self.client.session_transaction() as sess:
-                    self.assertEqual(sess.get('user_id'), str(third_party_user.user.id))
+                    self.assertEqual(sess.get('_user_id'), str(third_party_user.user.id))
 
                 # unused attributes
                 unique_identifier = system_role.value + "_with_unused_attributes"

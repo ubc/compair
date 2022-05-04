@@ -233,7 +233,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertTrue(sess.get('lti_create_user_link'))
 
                 # check that user is not logged in
-                self.assertIsNone(sess.get('user_id'))
+                self.assertIsNone(sess.get('_user_id'))
 
             # link user account
             user = self.data.create_user(system_role)
@@ -259,7 +259,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
 
             # valid request - user with account but no course
@@ -281,7 +281,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             # link course - user should be auto enrolled into course
             course = self.data.create_course()
@@ -307,7 +307,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             # verify enrollment
             user_course = UserCourse.query \
@@ -338,7 +338,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             # verify lti_resource_link does not retain the invalid assignment_id
             self.assertIsNone(lti_resource_link.compair_assignment_id)
@@ -366,7 +366,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             # verify lti_resource_link does not retain the invalid assignment_id
             self.assertIsNone(lti_resource_link.compair_assignment_id)
@@ -393,7 +393,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
@@ -436,7 +436,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             self.assertIsNone(lti_user.student_number)
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
@@ -461,7 +461,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             self.assertEqual(lti_user.student_number, "1234567"+str(index))
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
@@ -486,7 +486,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             self.assertIsNone(lti_user.student_number)
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
@@ -520,7 +520,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             lti_user = LTIUser.query.all()[-1]
             self.assertIsNone(lti_user.global_unique_identifier)
@@ -547,7 +547,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             lti_user = LTIUser.query.all()[-1]
             self.assertIsNone(lti_user.global_unique_identifier)
@@ -581,7 +581,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(sess.get('user_id'), str(lti_user.compair_user_id))
+                self.assertEqual(sess.get('_user_id'), str(lti_user.compair_user_id))
 
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
@@ -605,7 +605,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
@@ -638,7 +638,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                 self.assertIsNone(sess.get('lti_create_user_link'))
 
                 # check that user is logged in
-                self.assertEqual(str(user.id), sess.get('user_id'))
+                self.assertEqual(str(user.id), sess.get('_user_id'))
 
             self.assertEqual(lti_resource_link.compair_assignment_id, assignment.id)
 
@@ -1050,7 +1050,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is created
-                    self.assertEqual(str(user.id), sess.get('user_id'))
+                    self.assertEqual(str(user.id), sess.get('_user_id'))
 
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
@@ -1087,7 +1087,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
-                    self.assertEqual(str(user.id), sess.get('user_id'))
+                    self.assertEqual(str(user.id), sess.get('_user_id'))
 
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
@@ -1145,7 +1145,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
-                    self.assertEqual(str(user.id), sess.get('user_id'))
+                    self.assertEqual(str(user.id), sess.get('_user_id'))
 
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
@@ -1176,7 +1176,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
-                    self.assertEqual(str(user.id), sess.get('user_id'))
+                    self.assertEqual(str(user.id), sess.get('_user_id'))
 
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
@@ -1233,7 +1233,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
-                    self.assertEqual(str(user.id), sess.get('user_id'))
+                    self.assertEqual(str(user.id), sess.get('_user_id'))
 
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
@@ -1270,7 +1270,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
-                    self.assertEqual(str(user.id), sess.get('user_id'))
+                    self.assertEqual(str(user.id), sess.get('_user_id'))
 
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
@@ -1321,7 +1321,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
-                    self.assertEqual(str(user.id), sess.get('user_id'))
+                    self.assertEqual(str(user.id), sess.get('_user_id'))
 
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
@@ -1352,7 +1352,7 @@ class LTILaunchAPITests(ComPAIRAPITestCase):
                     self.assertIsNone(sess.get('lti_create_user_link'))
 
                     # check that user is logged in
-                    self.assertEqual(str(user.id), sess.get('user_id'))
+                    self.assertEqual(str(user.id), sess.get('_user_id'))
 
                 # check that lti_user is now linked
                 self.assertEqual(lti_user.compair_user_id, user.id)
