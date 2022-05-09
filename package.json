@@ -42,11 +42,10 @@
     "karma-jasmine": "^1.1.2",
     "karma-junit-reporter": "^1.2.0",
     "karma-ng-html2js-preprocessor": "~1.0",
-    "karma-phantomjs-launcher": "~1.0",
     "lodash": "^4.17.21",
     "object-assign": "~4.1",
-    "phantomjs-prebuilt": "^2.1.16",
     "protractor-cucumber-framework": "~4.1.1",
+    "puppeteer": "^13.7.0",
     "sauce-connect-launcher": "^1.2.4",
     "webdriver-manager": "~12.1.8"
   }

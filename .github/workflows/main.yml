@@ -42,17 +42,17 @@ jobs:
   unit_test_frontend:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
       with:
-        node-version: 12
+        node-version: 16
     - name: Install dependencies
       run: |
         npm install
         node_modules/gulp/bin/gulp.js
     - name: Frontend Karma Tests
       run: |
-        node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js --single-run --browsers PhantomJS
+        node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js --single-run
 
   deploy_assets:
     runs-on: ubuntu-latest

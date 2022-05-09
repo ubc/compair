@@ -1,3 +1,5 @@
+process.env.CHROME_BIN = require('puppeteer').executablePath()
+
 module.exports = function (config) {
     var wiredep = require('wiredep');
     var bowerFiles = wiredep({devDependencies: true, cwd: __dirname + '/../../../..'})['js'];
@@ -20,7 +22,7 @@ module.exports = function (config) {
 
         autoWatch: true,
 
-        browsers: ['Chrome'],
+        browsers: ['ChromeHeadless'],
 
         junitReporter: {
             outputFile: 'test_out/unit.xml',
