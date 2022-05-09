@@ -13,7 +13,7 @@ Frameworks
 ----------
 The frontend is purely written in Javascript, using [AngularJS](http://angularjs.org/) as a MVC-framework and [Bootstrap](http://getbootstrap.com/) for the design.
 The backend uses the python web application framework [Flask](http://flask.pocoo.org/) with [Flask SQLAlchemy](http://pythonhosted.org/Flask-SQLAlchemy/) for database persistence.
-[Alembic] (http://alembic.readthedocs.org/) is used to maintain database updates.
+[Alembic](http://alembic.readthedocs.org/) is used to maintain database updates.
 
 Developer Installation - Docker
 -------------------------------

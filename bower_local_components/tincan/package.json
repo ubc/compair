@@ -1,0 +1,49 @@
+{
+  "name": "tincanjs",
+  "description": "Experience API (Tin Can API) Library",
+  "version": "0.50.0",
+  "private": false,
+  "license": "Apache-2.0",
+  "main": "build/tincan-node.js",
+  "directories": {
+    "src": "src",
+    "doc": "doc"
+  },
+  "dependencies": {
+    "xhr2": "0.0.7",
+    "js-polyfills": "0.1.22",
+    "text-encoding": "0.6.0",
+    "arraybuffer-slice": "0.1.2"
+  },
+  "author": "Rustici Software <support@tincanapi.com>",
+  "contributors": [
+    {
+      "name": "Brian J. Miller",
+      "email": "brian.miller@rusticisoftware.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RusticiSoftware/TinCanJS.git"
+  },
+  "keywords": [
+    "tincan",
+    "tin can",
+    "e-learning",
+    "scorm",
+    "lrs",
+    "experienceapi",
+    "experience api",
+    "xapi",
+    "cmi5"
+  ],
+  "devDependencies": {
+    "grunt": "0.4.4",
+    "grunt-contrib-concat": "0.3.0",
+    "grunt-contrib-jshint": "0.12.0",
+    "grunt-contrib-uglify": "0.4.0",
+    "grunt-contrib-watch": "0.6.1",
+    "grunt-contrib-yuidoc": "^0.5.2",
+    "qunit": "0.9.1"
+  }
+}
