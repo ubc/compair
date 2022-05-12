@@ -223,7 +223,7 @@ ComPAIR has the following tasks defined under the package `compair.tasks`:
 - `set_passwords` - (bulk) updates user passwords e.g. when importing users
 - `send_lrs_statement` - sends xAPI statements to Learning Record Store
 
-By default (`CELERY_ALWAYS_EAGER=1`), these Celery tasks are executed locally by blocking until the task returns. To improve performance, you can configure them as background tasks to run asynchronously.
+By default (`CELERY_TASK_ALWAYS_EAGER=1`), these Celery tasks are executed locally by blocking until the task returns. To improve performance, you can configure them as background tasks to run asynchronously.
 
 ### Enable tasks to run in background
 To run tasks asynchronously, you need to:
@@ -231,12 +231,12 @@ To run tasks asynchronously, you need to:
 - Set up a [Celery broker](http://docs.celeryproject.org/en/latest/getting-started/brokers/) (e.g. Redis, RabbitMQ)
 - Set up Celery workers to run the tasks. A worker can be started by running `celery --app=celery_worker.celery worker`. If the work runs in a separate container or virtual machine, remember to apply the same environment variables as the ComPAIR app.
 - Set `CELERY_BROKER_URL` according to your broker setup
-- Set `CELERY_ALWAYS_EAGER` to `0` (zero). See below for details
+- Set `CELERY_TASK_ALWAYS_EAGER` to `0` (zero). See below for details
+- To add new Celery configuration values, convert the lower case Celery setting into uppercase and prepend it with a `CELERY_` prefix, and then add it to the right overrideable dict in `configuration.py`. E.g.: `broker_url` becomes `CELERY_BROKER_URL`. The setting will be stripped of the `CELERY_` prefix and converted back to lower case via Flask Config's `get_namespace()` before being fed to Celery.
 
 ### Settings
 
-`CELERY_ALWAYS_EAGER`: Set to `0` to enable background tasks (`1` by default).
-**Note:** although ComPAIR uses Celery 4.x, it is **not** using `CELERY_TASK_ALWAYS_EAGER` nor `task_always_eager` as described [in the document](http://docs.celeryproject.org/en/latest/userguide/configuration.html#new-lowercase-settings).
+`CELERY_TASK_ALWAYS_EAGER`: Set to `0` to enable background tasks (`1` by default).
 
 `CELERY_BROKER_URL`: Set the url for the broker tool to be used (ex: redis or rabbitmq instance url)
 

@@ -19,7 +19,7 @@ test_app_settings = {
     'CSRF_ENABLED': False,
     'PASSLIB_CONTEXT': 'plaintext',
     'ENFORCE_SSL': False,
-    'CELERY_ALWAYS_EAGER': True,
+    'CELERY_TASK_ALWAYS_EAGER': True,
     'XAPI_ENABLED': False,
     'CALIPER_ENABLED': False,
     'DEMO_INSTALLATION': False,

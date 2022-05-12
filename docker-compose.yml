@@ -30,7 +30,7 @@ services:
       - DB_CONN_OPTIONS={"charset":"utf8mb4"}
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_ALWAYS_EAGER=0
+      - CELERY_TASK_ALWAYS_EAGER=0
       #- GA_TRACKING_ID=12345
       - ENFORCE_SSL=0
       - MAIL_NOTIFICATION_ENABLED=1
@@ -73,7 +73,7 @@ services:
       - DB_CONN_OPTIONS={"charset":"utf8mb4"}
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_ALWAYS_EAGER=0
+      - CELERY_TASK_ALWAYS_EAGER=0
       - ENFORCE_SSL=0
       - MAIL_NOTIFICATION_ENABLED=1
       - MAIL_SERVER=mail

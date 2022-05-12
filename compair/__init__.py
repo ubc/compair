@@ -130,14 +130,14 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
     # setup celery scheduled tasks
     if app.config.get('DEMO_INSTALLATION', False):
         #each day at 3am
-        app.config.setdefault('CELERYBEAT_SCHEDULE', {})['reset-demo-data-daily'] = {
+        app.config.setdefault('CELERY_BEAT_SCHEDULE', {})['reset-demo-data-daily'] = {
             'task': "compair.tasks.demo.reset_demo",
             'schedule': crontab(hour=3, minute=0)
         }
     if (app.config.get('XAPI_ENABLED') and app.config.get('LRS_XAPI_STATEMENT_ENDPOINT') != 'local') or \
             (app.config.get('CALIPER_ENABLED') and app.config.get('LRS_CALIPER_HOST') != 'local'):
         # every 6 hours
-        app.config.setdefault('CELERYBEAT_SCHEDULE', {})['retry-sending-failed-learning-records'] = {
+        app.config.setdefault('CELERY_BEAT_SCHEDULE', {})['retry-sending-failed-learning-records'] = {
             'task': "compair.tasks.emit_learning_record.resend_learning_records",
             'schedule': crontab(hour='*/6', minute=0)
         }
@@ -145,7 +145,7 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
 
     db.init_app(app)
 
-    celery.conf.update(app.config)
+    celery.conf.update(app.config.get_namespace('CELERY_'))
 
     mail.init_app(app)
 
