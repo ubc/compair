@@ -233,6 +233,7 @@ To run tasks asynchronously, you need to:
 - Set `CELERY_BROKER_URL` according to your broker setup
 - Set `CELERY_TASK_ALWAYS_EAGER` to `0` (zero). See below for details
 - To add new Celery configuration values, convert the lower case Celery setting into uppercase and prepend it with a `CELERY_` prefix, and then add it to the right overrideable dict in `configuration.py`. E.g.: `broker_url` becomes `CELERY_BROKER_URL`. The setting will be stripped of the `CELERY_` prefix and converted back to lower case via Flask Config's `get_namespace()` before being fed to Celery.
+- If worker memory leak is an issue, setting `CELERY_WORKER_MAX_TASKS_PER_CHILD` or `CELERY_WORKER_MAX_MEMORY_PER_CHILD` on the worker can be a workaround.
 
 ### Settings
 
@@ -243,6 +244,10 @@ To run tasks asynchronously, you need to:
 `CELERY_RESULT_BACKEND`: Set the backend to store results (disabled by default)
 
 `CELERY_TIMEZONE`: Set the timezone used for cron jobs. Currently only used for demo installations ('America/Vancouver' by default)
+
+`CELERY_WORKER_MAX_TASKS_PER_CHILD`: Takes an int. Kills a worker process and forks a new one when it has executed the given number of tasks
+
+`CELERY_WORKER_MAX_MEMORY_PER_CHILD`: Takes an int as memory in kilobytes. Kills a worker process and forks a new one when it hits the given memory usage, the currently executing task will be allowed to complete before being killed.
 
 **Restart server after making any changes to settings**
 

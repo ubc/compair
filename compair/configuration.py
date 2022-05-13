@@ -109,7 +109,8 @@ env_bool_overridables = [
 
 env_int_overridables = [
     'ATTACHMENT_UPLOAD_LIMIT', 'LRS_USER_INPUT_FIELD_SIZE_LIMIT',
-    'MAIL_PORT', 'MAIL_MAX_EMAILS'
+    'MAIL_PORT', 'MAIL_MAX_EMAILS', 'CELERY_WORKER_MAX_TASKS_PER_CHILD',
+    'CELERY_WORKER_MAX_MEMORY_PER_CHILD'
 ]
 
 env_set_overridables = [
