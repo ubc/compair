@@ -12,6 +12,9 @@ updates:
       # Allow updates 
       - dependency-name: "lodash*"
       - dependency-name: "karma*"
+      - dependency-name: "minimist"
+      - dependency-name: "less"
+      - dependency-name: "gulp*"
     ignore:
       # Ignore updates to packages that start with 'aws'
       # Wildcards match zero or more arbitrary characters
