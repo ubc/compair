@@ -1,0 +1,34 @@
+
+version: 2
+updates:
+  # Configuration for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      # Disable all pull requests for Docker dependencies
+     # open-pull-requests-limit: 0
+    allow:
+      # Allow updates 
+      - dependency-name: "lodash*"
+      - dependency-name: "karma*"
+      - dependency-name: "minimist"
+      - dependency-name: "less"
+      - dependency-name: "gulp*"
+      - dependency-name: "bower"
+      - dependency-name: "proxy-middleware"
+      - dependency-name: "streamqueue"
+      - dependency-name: "wiredep"
+      - dependency-name: "chokidar"
+      - dependency-name: "angular*"
+      - dependency-name: "jspri*"
+      - dependency-name: "json-schema"
+      - dependency-name: "phantomjs*"
+      - dependency-name: "glob-parent*"
+      - dependency-name: "meow*"
+      - dependency-name: "glob-stream*"
+      - dependency-name: "trim-newlines"
+    ignore:
+      # Ignore updates to packages that start with 'aws'
+      # Wildcards match zero or more arbitrary characters
+      - dependency-name: "aws*"
