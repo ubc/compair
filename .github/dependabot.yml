@@ -1,0 +1,18 @@
+
+version: 2
+updates:
+  # Configuration for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "daily"
+      # Disable all pull requests for Docker dependencies
+     # open-pull-requests-limit: 0
+    allow:
+      # Allow updates 
+      - dependency-name: "lodash*"
+      - dependency-name: "karma*"
+    ignore:
+      # Ignore updates to packages that start with 'aws'
+      # Wildcards match zero or more arbitrary characters
+      - dependency-name: "aws*"
