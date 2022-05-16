@@ -23,7 +23,7 @@
     "gulp-rev": "^9.0.0",
     "gulp-sort": "^2.0.0",
     "gulp-uglify": "^3.0.1",
-    "less": "~3.9.0",
+    "less": "~4.1.2",
     "main-bower-files": "^2.13.3",
     "proxy-middleware": "^0.15.0",
     "streamqueue": "^1.1.2",
