@@ -11,7 +11,7 @@
     "gulp": "^4.0.0",
     "gulp-angular-templatecache": "^2.2.6",
     "gulp-bower": "^0.0.15",
-    "gulp-clean-css": "^3.10.0",
+    "gulp-clean-css": "^4.3.0",
     "gulp-cli": "^2.3.0",
     "gulp-concat": "^2.2.0",
     "gulp-concat-vendor": "^0.0.4",
