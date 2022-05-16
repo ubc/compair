@@ -15,6 +15,10 @@ updates:
       - dependency-name: "minimist"
       - dependency-name: "less"
       - dependency-name: "gulp*"
+      - dependency-name: "bower"
+      - dependency-name: "proxy-middleware"
+      - dependency-name: "streamqueue"
+      - dependency-name: "wiredep"
     ignore:
       # Ignore updates to packages that start with 'aws'
       # Wildcards match zero or more arbitrary characters
