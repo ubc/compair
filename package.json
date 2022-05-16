@@ -7,7 +7,7 @@
     "url": "https://github.com/ubc/compair.git"
   },
   "dependencies": {
-    "bower": "^1.8.4",
+    "bower": "^1.8.14",
     "gulp": "^4.0.0",
     "gulp-angular-templatecache": "^3.0.1",
     "gulp-bower": "^0.0.15",
