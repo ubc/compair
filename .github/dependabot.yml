@@ -19,6 +19,11 @@ updates:
       - dependency-name: "proxy-middleware"
       - dependency-name: "streamqueue"
       - dependency-name: "wiredep"
+      - dependency-name: "chokidar"
+      - dependency-name: "angular*"
+      - dependency-name: "jspri*"
+      - dependency-name: "json-schema"
+      - dependency-name: "phantomjs*"
     ignore:
       # Ignore updates to packages that start with 'aws'
       # Wildcards match zero or more arbitrary characters
