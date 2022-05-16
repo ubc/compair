@@ -5,9 +5,6 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-      # Disable all pull requests for Docker dependencies
-    open-pull-requests-limit: 0
-
     allow:
       # Allow updates 
       - dependency-name: "lodash*"
