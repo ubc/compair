@@ -24,6 +24,10 @@ updates:
       - dependency-name: "jspri*"
       - dependency-name: "json-schema"
       - dependency-name: "phantomjs*"
+      - dependency-name: "glob-parent*"
+      - dependency-name: "meow*"
+      - dependency-name: "glob-stream*"
+      - dependency-name: "trim-newlines"
     ignore:
       # Ignore updates to packages that start with 'aws'
       # Wildcards match zero or more arbitrary characters
