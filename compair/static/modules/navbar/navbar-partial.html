@@ -42,6 +42,12 @@
                             Manage LTI
                         </a>
                     </li>
+                    <li ng-if="canManageAssignments">
+                        <a ng-href="#/assignment/search/enddate" id="assignment-search-enddate-btn">
+                            <i class="fa fa-calendar"></i>
+                            Assignment EndDate
+                        </a>
+                    </li>
                 </ul>
                 <!-- Not Logged In Options -->
                 <ul class="nav navbar-nav navbar-right" ng-hide="loggedInUser.isLoggedIn()">

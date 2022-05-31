@@ -471,6 +471,18 @@ myApp.config(
                 },
                 reloadOnSearch: false,
             })
+        .when ('/assignment/search/enddate',
+            {
+                title: 'Assignment EndDate',
+                templateUrl: 'modules/assignment/assignment-search-partial.html',
+                label: "Assignment Search",
+                controller: 'AssignmentViewController',
+                resolve: {
+                    resolvedData: function() {
+                        // no data to preload
+                    }
+                }
+            })
         .when ('/course/:courseId/assignment/:assignmentId/edit',
             {
                 title: "Edit Assignment",
