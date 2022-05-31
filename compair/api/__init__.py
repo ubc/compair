@@ -69,6 +69,11 @@ def register_api_blueprints(app):
         assignment_api,
         url_prefix='/api/courses/<course_uuid>/assignments')
 
+    from .assignment_search_enddate import assignment_search_enddate_api
+    app.register_blueprint(
+        assignment_search_enddate_api,
+        url_prefix='/api/assignment/search/enddate')
+
     from .answer import answers_api
     app.register_blueprint(
         answers_api,
