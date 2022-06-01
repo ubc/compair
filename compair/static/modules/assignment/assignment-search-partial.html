@@ -4,7 +4,7 @@
 <div class="users-screen">
     <div class="row">
         <h1 class="col-sm-8">Assignment EndDate</h1>
-        <form class="col-sm-4 search-users text-right" role="search" ng-submit="zassignmentSubmit()" ng-show="canManageUsers && (users.length || userFilters.search)">
+        <form class="col-sm-4 search-users text-right" role="search" ng-submit="zassignmentSubmit()" >
             <div class="form-group">
                 <input class="form-control" type="date" onchange="getObject(this)" name="compare_end" placeholder="Search Date (YYYY-MM-DD)">
             </div>
@@ -64,29 +64,13 @@
                 <td>{{user.email}}</td>
                 <td>
                     {{ user.system_role }}
-                    <!--
-                    <select ng-if="user.system_role != SystemRole.sys_admin" ng-model="user.system_role"
-                            ng-options="system_role as system_role for system_role in system_roles"
-                            ng-change="updateUser(user)"></select>
-                    <span ng-if="user.system_role == SystemRole.sys_admin">{{ user.system_role }}</span>
-                    -->
+
                 </td>
             </tr>
             </tbody>
         </table>
     </div>
 
-    <div class="text-center" ng-if="users.length">
-        <ul uib-pagination total-items="totalNumUsers" ng-model="userFilters.page"
-            max-size="10" class="pagination-sm" boundary-links="true"
-            direction-links="false" items-per-page="userFilters.perPage"
-            num-pages="numPages" ng-hide="numPages == 1"></ul>
-    </div>
 
-    <div ng-if="!users.length">
-        <hr />
-        <p ng-if="!userFilters.search">No due date not found.</p>
-        <p ng-if="userFilters.search">No assignment due date found for this search. Please try another search term above.</p>
-    </div>
 
 </div>

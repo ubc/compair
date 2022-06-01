@@ -476,7 +476,7 @@ myApp.config(
                 title: 'Assignment EndDate',
                 templateUrl: 'modules/assignment/assignment-search-partial.html',
                 label: "Assignment Search",
-                controller: 'AssignmentViewController',
+                controller: 'AssignmentSearchEndDateController',
                 resolve: {
                     resolvedData: function() {
                         // no data to preload

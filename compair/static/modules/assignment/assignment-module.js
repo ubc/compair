@@ -924,6 +924,11 @@ module.filter("notScoredEnd", function () {
     }
 });
 
+    /***** Assignment Search EndDate Controllers *****/
+    module.controller("AssignmentSearchEndDateController",
+        ["$scope", function(){}]);
+
+
 /***** Controllers *****/
 module.controller("AssignmentViewController",
     ["$scope", "$routeParams", "$location", "AnswerResource", "AssignmentResource", "$anchorScroll",
