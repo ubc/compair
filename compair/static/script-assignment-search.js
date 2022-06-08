@@ -33,17 +33,19 @@ function showsearchapi(search_data) {
     //const myObj = JSON.parse(data);
 
     let tab = `<tr>
-          <th>Uuid</th>
+          <th>Assignment Uuid</th>
           <th>Name</th>
-          <th>Compare_Start</th>
-          <th>Compare_End</th>
+          <th>Answer Start</th>
+          <th>Answer End</th>
+          <th>Compare Start</th>
+          <th>Compare End</th>
          </tr>`;
 
 
     for (let key in  search_data) {
         //tab += `<tr><td colspan="4">${search_data[key]}</td></tr>`;
         let obj = JSON.parse(search_data[key])
-        tab += `<tr><td>${JSON.stringify(obj.uuid).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
+        tab += `<tr><td>${JSON.stringify(obj.uuid).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
     }
 
     // Setting innerHTML as tab variable
