@@ -1,14 +1,36 @@
 
 <script src="script-assignment-search.js"></script>
 
+<!--
+<fieldset>
+    <legend>Release Date</legend>
+    <div class="instructional-text">
+        <p><strong>Potential release dates:</strong> Testing: {{object.value}}</p>
+    </div>
+</fieldset>
+-->
+
 <div class="users-screen">
     <div class="row">
-        <h1 class="col-sm-8">Assignment EndDate:</h1>
+        <h1 class="col-sm-8">Plan Release Date:</h1>
+
         <form class="col-sm-4 search-users text-right" role="search">
+
             <div class="form-group">
-                <input class="form-control" type="date" onchange="getObject(this)" name="compare_end" placeholder="Search Date (YYYY-MM-DD)">
+                <span class="input-group">
+                    <!--calendar-->
+                <!--input class="form-control" type="date" onchange="getObject(this)" name="compare_end" placeholder="Search Date (YYYY-MM-DD)"-->
+                <input name="compare_end" onchange="getObject(this)" type="date" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.astart.date"
+                       is-open="date.astart.opened" required placeholder="DD-Month-YYYY"
+                />
+                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.cstart)"><i class="glyphicon glyphicon-calendar"></i></button>
+                                </span>
+                </span>
             </div>
+
         </form>
+
     </div>
 
     <!-- Here a loader is created which
