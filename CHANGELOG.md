@@ -5,27 +5,26 @@
 
 
 ### New Features
-** 1. "Download All" attachments button was added to generate and download a zip file of all submitted attachments in answers
-
-** 2. The "Assignment End-Date" feature was added for admin users to query for the assignments end-date. 
+* 1. "Download All" attachments button was added to generate and download a zip file of all submitted attachments in answers
+* 2. The "Assignment End-Date" feature was added for admin users to query for the assignments end-date. 
 
 
 ### Environment Variable Changes
-** CELERY_ALWAYS_EAGER is now CELERY_TASK_ALWAYS_EAGER
-** Default: false
-** Line 185: https://github.com/ubc/charts/blob/master/compair/templates/compair-deployment.yaml
+* CELERY_ALWAYS_EAGER is now CELERY_TASK_ALWAYS_EAGER
+  * Default: false
+  * Line 185: https://github.com/ubc/charts/blob/master/compair/templates/compair-deployment.yaml
 
 
 ### New Environment Variables: For controlling memory leak growth in Kubernetes
-** CELERY_WORKER_MAX_TASKS_PER_CHILD - Kills a worker process and forks a new one when it has executed the given number of tasks. 
-*** Default to 20
-*** Line 29: https://repo.code.ubc.ca/devops/compair-deploy/-/blob/master/values_staging.yaml
-*** Line 183: https://github.com/ubc/charts/blob/master/compair/templates/compair-deployment.yaml
+* CELERY_WORKER_MAX_TASKS_PER_CHILD - Kills a worker process and forks a new one when it has executed the given number of tasks. 
+  * Default to 20
+  * Line 29: https://repo.code.ubc.ca/devops/compair-deploy/-/blob/master/values_staging.yaml
+  * Line 183: https://github.com/ubc/charts/blob/master/compair/templates/compair-deployment.yaml
 
-** CELERY_WORKER_MAX_MEMORY_PER_CHILD - Set to memory in kilobytes. Kills a worker process and forks a new one when it hits the given memory usage, the currently executing task will be allowed to complete before being killed. 
-*** Default to 600MB
-*** Line 28: https://repo.code.ubc.ca/devops/compair-deploy/-/blob/master/values_staging.yaml
-*** Line 181: https://github.com/ubc/charts/blob/master/compair/templates/compair-deployment.yaml
+* CELERY_WORKER_MAX_MEMORY_PER_CHILD - Set to memory in kilobytes. Kills a worker process and forks a new one when it hits the given memory usage, the currently executing task will be allowed to complete before being killed. 
+  * Default to 600MB
+  * Line 28: https://repo.code.ubc.ca/devops/compair-deploy/-/blob/master/values_staging.yaml
+  * Line 181: https://github.com/ubc/charts/blob/master/compair/templates/compair-deployment.yaml
 
 ### Confluence Ref: https://confluence.it.ubc.ca/pages/viewpage.action?spaceKey=LTHub&title=ComPAIR+v1.3+Testing
 
