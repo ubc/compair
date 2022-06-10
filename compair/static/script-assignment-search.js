@@ -54,8 +54,12 @@ function showsearchapi(search_data) {
         iKey++;
     }
 
+    var iKeyText = iKey.toString() + " active assignments";
+    if (iKey ==1){
+        iKeyText = iKey.toString() + " active assignment";
+    }
     document.getElementById("searchDay").innerHTML = (searchDay);
-    document.getElementById("numberOfAssignment").innerHTML = iKey.toString();
+    document.getElementById("numberOfAssignment").innerHTML = iKeyText;
 
     // Setting innerHTML as tab variable
     document.getElementById("apiresults").innerHTML = tab;
