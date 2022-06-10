@@ -1,7 +1,7 @@
 
 <script src="script-assignment-search.js"></script>
 
-
+<!--
 <fieldset>
     <legend>Info</legend>
     <div class="instructional-text">
@@ -10,11 +10,30 @@
 
     </div>
 </fieldset>
-
+-->
+<!--- TEST AREA --->
+<!--
+<div class="col-md-6 form-group">
+    <compair-field-with-feedback form-control="assignmentForm.answerStart" is-date="true">
+        <br />
+        <div class="assignment-date">
+                        <span class="input-group">
+                            <input name="answerStart" id="answerStart" type="text" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.astart.date"
+                                   is-open="true" required placeholder="DD-Month-YYYY"
+                            />
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.aend)"><i class="glyphicon glyphicon-calendar"></i></button>
+                            </span>
+                        </span>
+        </div>
+    </compair-field-with-feedback>
+</div>
+-->
+<!------------------>
 
 <div class="users-screen">
     <div class="row">
-        <h1 class="col-sm-8">Plan Release Date:</h1>
+        <h1 class="col-sm-8">Plan Release Date</h1>
 
         <form class="col-sm-4 search-users text-right" role="search">
 
@@ -38,6 +57,12 @@
              role="status" id="loading">
             <span class="sr-only">Loading...</span>
         </div>
+    </div>
+
+    <div class="instructional-text">
+        <p class="intro-text">The purpose of this page is to search for ongoing or active assignments on a given date, to help plan for a potential release schedules for testing, staging, and production environments. <br/><br/>If you plan to release on <a id="searchDay"></a>, there will be <a id="numberOfAssignment"></a> active assignment[s]. Enter another date to check for active assignments then.
+        </p>
+
     </div>
 
     <div>

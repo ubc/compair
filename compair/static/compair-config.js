@@ -473,9 +473,9 @@ myApp.config(
             })
         .when ('/assignment/search/enddate',
             {
-                title: 'Release Date',
+                title: 'Plan Release Date',
                 templateUrl: 'modules/assignment/assignment-search-partial.html',
-                label: "Release Date",
+                label: "Plan Release Date",
                 controller: 'AssignmentSearchEndDateController',
                 resolve: {
                     resolvedData: function() {
