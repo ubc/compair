@@ -1,7 +1,16 @@
 let api_url = "/api/assignment/search/enddate";
 
+const options = { year: 'numeric', month: 'short', day: 'numeric' };
+var searchDay = new Date().toLocaleDateString('en-us', options);
+
+function formatDate(date) {
+    var d = (new Date(date.toString().replace(/-/g, '\/')) );
+    return d.toLocaleDateString('en-ca', options);
+}
+
 function getObject(object)
 {
+    searchDay = formatDate(object.value.toString());
     strURL = api_url.concat('?compare_end=').concat(object.value);
     getsearchapi(strURL);
 }
@@ -20,8 +29,6 @@ async function getsearchapi(url) {
     }
     showsearchapi(search_data);
 }
-// Calling that async function
-//getapi(api_url);
 
 // Function to hide the loader
 function hideloadersearch() {
@@ -29,8 +36,6 @@ function hideloadersearch() {
 }
 // Function to define innerHTML for HTML table
 function showsearchapi(search_data) {
-
-    //const myObj = JSON.parse(data);
 
     let tab = `<tr>
           <th>Assignment Name</th>
@@ -41,11 +46,16 @@ function showsearchapi(search_data) {
          </tr>`;
 
 
+    var iKey = 0;
     for (let key in  search_data) {
         //tab += `<tr><td colspan="4">${search_data[key]}</td></tr>`;
         let obj = JSON.parse(search_data[key])
         tab += `<tr><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
+        iKey++;
     }
+
+    document.getElementById("searchDay").innerHTML = (searchDay);
+    document.getElementById("numberOfAssignment").innerHTML = iKey.toString();
 
     // Setting innerHTML as tab variable
     document.getElementById("apiresults").innerHTML = tab;

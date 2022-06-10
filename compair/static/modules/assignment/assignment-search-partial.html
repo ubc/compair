@@ -1,14 +1,16 @@
 
 <script src="script-assignment-search.js"></script>
 
-<!--
+
 <fieldset>
-    <legend>Release Date</legend>
+    <legend>Info</legend>
     <div class="instructional-text">
-        <p><strong>Potential release dates:</strong> Testing: {{object.value}}</p>
+        <p>The purpose of this page is to search for ongoing or active assignments on a given date, to help plan for a potential release schedules for testing, staging, and production environments. <br/><br/>If you plan to release on <a id="searchDay"></a>, there will be <a id="numberOfAssignment"></a> active assignment[s]. Enter another date to check for active assignments then.
+        </p>
+
     </div>
 </fieldset>
--->
+
 
 <div class="users-screen">
     <div class="row">
@@ -23,10 +25,6 @@
                 <input name="compare_end" onchange="getObject(this)" type="date" class="form-control" uib-datepicker-popup="{{format}}" ng-model="date.astart.date"
                        is-open="date.astart.opened" required placeholder="DD-Month-YYYY"
                 />
-                <span class="input-group-btn">
-                                    <button type="button" class="btn btn-default" ng-click="datePickerOpen($event, date.cstart)"><i class="glyphicon glyphicon-calendar"></i></button>
-                                </span>
-                </span>
             </div>
 
         </form>
