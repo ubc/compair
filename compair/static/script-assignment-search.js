@@ -8,13 +8,13 @@ function formatDate(date) {
     return d.toLocaleDateString('en-ca', options);
 }
 
-function getObject(object)
+function getObjectDate(object)
 {
-    searchDay = formatDate(object.value.toString());
-    strURL = api_url.concat('?compare_end=').concat(object.value);
+    searchDay = formatDate(object);
+    strURL = api_url.concat('?compare_end=').concat(object);
+
     getsearchapi(strURL);
 }
-
 // Defining async function
 async function getsearchapi(url) {
 
