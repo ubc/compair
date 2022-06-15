@@ -924,9 +924,16 @@ module.filter("notScoredEnd", function () {
     }
 });
 
-    /***** Assignment Search EndDate Controllers *****/
-    module.controller("AssignmentSearchEndDateController",
-        ["$scope", function(){}]);
+/***** Assignment Search EndDate Controllers *****/
+module.controller("AssignmentSearchEndDateController",
+    ["$scope", function($scope){
+
+            $scope.searchDate = function() {
+                var formatDate = new Date($scope.dt);
+                getObjectDate(formatDate.toLocaleDateString('en-ca', { year: 'numeric' }) + "-" + formatDate.toLocaleDateString('en-ca', { month: '2-digit' }) + "-" + formatDate.toLocaleDateString('en-ca', { day: '2-digit' }));
+            };
+
+}]);
 
 
 /***** Controllers *****/

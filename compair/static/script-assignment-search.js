@@ -1,11 +1,20 @@
 let api_url = "/api/assignment/search/enddate";
 
-function getObject(object)
-{
-    strURL = api_url.concat('?compare_end=').concat(object.value);
-    getsearchapi(strURL);
+const options = { year: 'numeric', month: 'short', day: 'numeric' };
+var searchDay = new Date().toLocaleDateString('en-us', options);
+
+function formatDate(date) {
+    var d = (new Date(date.toString().replace(/-/g, '\/')) );
+    return d.toLocaleDateString('en-ca', options);
 }
 
+function getObjectDate(object)
+{
+    searchDay = formatDate(object);
+    strURL = api_url.concat('?compare_end=').concat(object);
+
+    getsearchapi(strURL);
+}
 // Defining async function
 async function getsearchapi(url) {
 
@@ -20,8 +29,6 @@ async function getsearchapi(url) {
     }
     showsearchapi(search_data);
 }
-// Calling that async function
-//getapi(api_url);
 
 // Function to hide the loader
 function hideloadersearch() {
@@ -30,23 +37,29 @@ function hideloadersearch() {
 // Function to define innerHTML for HTML table
 function showsearchapi(search_data) {
 
-    //const myObj = JSON.parse(data);
-
     let tab = `<tr>
-          <th>Assignment Uuid</th>
-          <th>Name</th>
-          <th>Answer Start</th>
-          <th>Answer End</th>
-          <th>Compare Start</th>
-          <th>Compare End</th>
+          <th>Assignment Name</th>
+          <th>Answering Begins</th>
+          <th>Answering Ends</th>
+          <th>Comparing Begins</th>
+          <th>Comparing Ends</th>
          </tr>`;
 
 
+    var iKey = 0;
     for (let key in  search_data) {
         //tab += `<tr><td colspan="4">${search_data[key]}</td></tr>`;
         let obj = JSON.parse(search_data[key])
-        tab += `<tr><td>${JSON.stringify(obj.uuid).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
+        tab += `<tr><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
+        iKey++;
     }
+
+    var iKeyText = iKey.toString() + " active assignments";
+    if (iKey ==1){
+        iKeyText = iKey.toString() + " active assignment";
+    }
+    document.getElementById("searchDay").innerHTML = (searchDay);
+    document.getElementById("numberOfAssignment").innerHTML = iKeyText;
 
     // Setting innerHTML as tab variable
     document.getElementById("apiresults").innerHTML = tab;

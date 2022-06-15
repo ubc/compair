@@ -62,9 +62,10 @@ class AssignmentRootAPI1(Resource):
         conn = engine.connect()
         ##sql_text = str("SELECT JSON_OBJECT('uuid', uuid,'name', name,'compare_start', compare_start, 'compare_end', compare_end) FROM assignment;");
         ##sql_text = str("SELECT JSON_OBJECT('uuid', uuid,'name', name,'compare_start', compare_start, 'compare_end', compare_end) FROM assignment WHERE compare_end >= '" + end_date + "';");
-        sql_text = str("SELECT JSON_OBJECT('uuid', uuid,'name', name,'answer_start', answer_start,'answer_end', answer_end,'compare_start', compare_start, 'compare_end', compare_end) FROM assignment WHERE compare_end >= '" + end_date + "' OR answer_end >= '" + end_date + "';");
+        ##sql_text = str("SELECT JSON_OBJECT('uuid', uuid,'name', name,'answer_start', answer_start,'answer_end', answer_end,'compare_start', compare_start, 'compare_end', compare_end) FROM assignment WHERE compare_end >= '" + end_date + "' OR answer_end >= '" + end_date + "';");
+        sql_text = str("SELECT JSON_OBJECT('uuid', uuid,'name', name,'answer_start', date_format(answer_start, '%%M %%d, %%Y'),'answer_end', date_format(answer_end, '%%M %%d, %%Y'),'compare_start', date_format(compare_start, '%%M %%d, %%Y'), 'compare_end', date_format(compare_end, '%%M %%d, %%Y')) FROM assignment WHERE compare_end >= '" + end_date + "' OR answer_end >= '" + end_date + "';");
 
-        print(sql_text)
+        ##print(sql_text)
 
         result = conn.execute(sql_text)
 
@@ -74,4 +75,3 @@ class AssignmentRootAPI1(Resource):
         return jsonify(final_result)
 
 api.add_resource(AssignmentRootAPI1, '')
-

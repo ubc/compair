@@ -3,12 +3,27 @@
 
 <div class="users-screen">
     <div class="row">
-        <h1 class="col-sm-8">Assignment EndDate:</h1>
+        <h1 class="col-sm-8">Plan Release Date</h1>
+
         <form class="col-sm-4 search-users text-right" role="search">
+
             <div class="form-group">
-                <input class="form-control" type="date" onchange="getObject(this)" name="compare_end" placeholder="Search Date (YYYY-MM-DD)">
+                <span class="input-group">
+                    <!--calendar-->
+                    <div ng-app="ubc.ctlt.compair.assignment" ng-controller="AssignmentSearchEndDateController as ctrlEndDate" >
+                            <div class="input-group" style="width:200px" >
+                                <input type="text" class="form-control" uib-datepicker-popup="yyyy-MMM-dd" ng-model="dt" is-open="isDatepickerOpen" ng-change="searchDate();"  datepicker-options="datepickerOptions" ng-required="true" close-text="Close" alt-input-formats="altInputFormats"/>
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="isDatepickerOpen = !isDatepickerOpen">
+                                      <i class="glyphicon glyphicon-calendar"></i>
+                                    </button>
+                                  </span>
+                            </div>
+                    </div>
             </div>
+
         </form>
+
     </div>
 
     <!-- Here a loader is created which
@@ -18,6 +33,12 @@
              role="status" id="loading">
             <span class="sr-only">Loading...</span>
         </div>
+    </div>
+
+    <div class="instructional-text">
+        <p class="intro-text">The purpose of this page is to search for ongoing or active assignments on a given date, to help plan potential schedules for testing, staging, and production environments. <br/><br/>If you plan to release on <b id="searchDay"></b>, there will be <b id="numberOfAssignment"></b>. Enter another date to check for active assignments then.
+        </p>
+
     </div>
 
     <div>
