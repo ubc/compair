@@ -51,8 +51,16 @@ class ToolProvider(ToolBase):
         validator = ProxyValidator(validator)
         endpoint = SignatureOnlyEndpoint(validator)
 
+        # hack to fix lti launch to assignment not working
+        # as far as I can figure, looks like Canvas doesn't use the modified
+        # url with the assignment query as part of the signature, so we need
+        # to use the url without the assignment query for signature validation
+        launchUrlParts = urlsplit(self.launch_url)
+        validateUrl = launchUrlParts.scheme + '://' + launchUrlParts.netloc + \
+            launchUrlParts.path
+
         valid, request = endpoint.validate_request(
-            self.launch_url,
+            validateUrl,
             'POST',
             self.to_params(),
             self.launch_headers
