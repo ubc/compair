@@ -38,6 +38,7 @@ function hideloadersearch() {
 function showsearchapi(search_data) {
 
     let tab = `<tr>
+          <th>Course Name</th>
           <th>Assignment Name</th>
           <th>Answering Begins</th>
           <th>Answering Ends</th>
@@ -50,7 +51,7 @@ function showsearchapi(search_data) {
     for (let key in  search_data) {
         //tab += `<tr><td colspan="4">${search_data[key]}</td></tr>`;
         let obj = JSON.parse(search_data[key])
-        tab += `<tr><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
+        tab += `<tr><td>${JSON.stringify(obj.course_name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
         iKey++;
     }
 
