@@ -1,4 +1,4 @@
-import elo
+from . import elo
 
 from compair.algorithms.score.score_algorithm_base import ScoreAlgorithmBase
 from compair.algorithms.comparison_pair import ComparisonPair

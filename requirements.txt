@@ -27,11 +27,6 @@ enum34==1.1.10
 # same as above for enum34
 SQLAlchemy-Enum34==2.0.0
 mock==4.0.3
-elo==0.1.1
-# elo setup requires use_2to3, which was removed in setuptools v58, so we need
-# to limit the setuptools version. elo dev recommends users move to
-# https://github.com/sublee/trueskill instead (which we do have)
-setuptools<58
 trueskill==0.4.4
 Celery==5.2.6
 kombu==5.2.4
