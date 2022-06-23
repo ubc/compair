@@ -51,6 +51,15 @@ function showsearchapi(search_data) {
     for (let key in  search_data) {
         //tab += `<tr><td colspan="4">${search_data[key]}</td></tr>`;
         let obj = JSON.parse(search_data[key])
+        
+        if (obj.compare_start == null){
+            obj.compare_start = 'After answering ends';
+        }
+
+        if (obj.compare_end == null){
+            obj.compare_end = '<i>No end date</i>';
+        }
+
         tab += `<tr><td>${JSON.stringify(obj.course_name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
         iKey++;
     }
