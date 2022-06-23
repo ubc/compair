@@ -51,13 +51,11 @@ function showsearchapi(search_data) {
     for (let key in  search_data) {
         //tab += `<tr><td colspan="4">${search_data[key]}</td></tr>`;
         let obj = JSON.parse(search_data[key])
-
-        obj.compare_start = null;
+        
         if (obj.compare_start == null){
             obj.compare_start = 'After answering ends';
         }
 
-        obj.compare_end = null;
         if (obj.compare_end == null){
             obj.compare_end = '<i>No end date</i>';
         }
