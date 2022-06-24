@@ -3,6 +3,10 @@ let api_url = "/api/assignment/search/enddate";
 const options = { year: 'numeric', month: 'short', day: 'numeric' };
 var searchDay = new Date().toLocaleDateString('en-us', options);
 
+const d = new Date();
+let diff = d.getTimezoneOffset();
+let localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 function formatDate(date) {
     var d = (new Date(date.toString().replace(/-/g, '\/')) );
     return d.toLocaleDateString('en-ca', options);
@@ -11,7 +15,9 @@ function formatDate(date) {
 function getObjectDate(object)
 {
     searchDay = formatDate(object);
-    strURL = api_url.concat('?compare_end=').concat(object);
+    strURL = api_url.concat('?compare_end=').concat(object).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
+
+    console.log(localTimeZone);
 
     getsearchapi(strURL);
 }
@@ -51,7 +57,7 @@ function showsearchapi(search_data) {
     for (let key in  search_data) {
         //tab += `<tr><td colspan="4">${search_data[key]}</td></tr>`;
         let obj = JSON.parse(search_data[key])
-        
+
         if (obj.compare_start == null){
             obj.compare_start = 'After answering ends';
         }
@@ -59,7 +65,8 @@ function showsearchapi(search_data) {
         if (obj.compare_end == null){
             obj.compare_end = '<i>No end date</i>';
         }
-
+        //FOR NEXT RELEASE 2 DISPLAY SELF_EVAL_DATES
+        //tab += `<tr><td>${JSON.stringify(obj.course_name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.self_eval_end).replace(/\"/g, "")}</td></tr>`;
         tab += `<tr><td>${JSON.stringify(obj.course_name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
         iKey++;
     }
