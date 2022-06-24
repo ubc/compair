@@ -36,6 +36,7 @@ new_assignment_parser.add_argument('answer_start', required=True, nullable=False
 new_assignment_parser.add_argument('answer_end', required=True, nullable=False)
 new_assignment_parser.add_argument('compare_start', default=None)
 new_assignment_parser.add_argument('compare_end', default=None)
+new_assignment_parser.add_argument('compare_localTimeZone', default='UTC')
 new_assignment_parser.add_argument('self_eval_start', default=None)
 new_assignment_parser.add_argument('self_eval_end', default=None)
 new_assignment_parser.add_argument('self_eval_instructions', type=non_blank_text, default=None)
