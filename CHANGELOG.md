@@ -5,7 +5,8 @@
 
 ### New Features
 * "Download All" attachments button was added to generate and download a zip file of all student submitted answer attachments. This can be found in an assignment's "Participation" tab under the "Attachments" column.
-* The "Assignment End-Date" feature was added for admin users to query for the assignments end-date. 
+* The "Assignment End-Date" tool was added for admin users to query for the assignments end-date. 
+  * The purpose of this page is to search for ongoing or active assignments on a given date, to help plan potential schedules for testing, staging, and production environments.
 
 ### New Environment Variables: For controlling worker memory leak
 * CELERY_WORKER_MAX_TASKS_PER_CHILD - Kills a worker process and forks a new one when it has executed the given number of tasks. 
