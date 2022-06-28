@@ -1,25 +1,30 @@
 # v1.3
+
 ## Notable changes
-
-* Upgrades: There is a high risk of regressions due to many upgrades to the libraries used by ComPAIR.
-
+* Many dependencies, both frontend and backend, were updated.
 
 ### New Features
-* 1. "Download All" attachments button was added to generate and download a zip file of all submitted attachments in answers
-* 2. The "Assignment End-Date" feature was added for admin users to query for the assignments end-date. 
+* "Download All" attachments button was added to generate and download a zip file of all student submitted answer attachments. This can be found in an assignment's "Participation" tab under the "Attachments" column.
+* The "Assignment End-Date" feature was added for admin users to query for the assignments end-date. 
 
-
-### Environment Variable Changes
-* CELERY_ALWAYS_EAGER is now CELERY_TASK_ALWAYS_EAGER
-  * Default: false
-
-### New Environment Variables: For controlling memory leak growth in Kubernetes
+### New Environment Variables: For controlling worker memory leak
 * CELERY_WORKER_MAX_TASKS_PER_CHILD - Kills a worker process and forks a new one when it has executed the given number of tasks. 
-  * Default to 20
 
 * CELERY_WORKER_MAX_MEMORY_PER_CHILD - Set to memory in kilobytes. Kills a worker process and forks a new one when it hits the given memory usage, the currently executing task will be allowed to complete before being killed. 
-  * Default to 600MB
 
+## Breaking Changes
+Celery 4 introduced a new all lowercase environment variables system. ComPAIR
+is now using this new system. To adapt a Celery environment variable to
+ComPAIR, convert the original Celery variable to all uppercase and prefix it
+"CELERY\_". ComPAIR will strip the prefix and lowercase the variable before
+passing it to Celery. A few Celery environment variables were renamed in the
+new system, the ones supported in ComPAIR are:
+
+* CELERY_ALWAYS_EAGER is now CELERY_TASK_ALWAYS_EAGER
+  * Set to true if running stock standalone, see `compair/settings.py`.
+  * Set to false if running via repo's docker-compose.yml
+* BROKER_TRANSPORT_OPTIONS  is now CELERY_BROKER_TRANSPORT_OPTIONS
+* CELERYBEAT_SCHEDULE is now CELERY_BEAT_SCHEDULE
 
 # v1.2.12
 
