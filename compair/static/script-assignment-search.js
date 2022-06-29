@@ -18,12 +18,11 @@ function formatDate(date) {
 function getObjectDate(object)
 {
 
-    if (object.includes("Invalid Date")){
+    searchDay = formatDate(object);
+    if (searchDay.includes("Invalid Date")){
         console.log("FOUND2:::" + object);
         searchDay = new Date().toLocaleDateString('en-us', options);
         console.log("RETURN2:::" + searchDay);
-    }else{
-        searchDay = formatDate(object);
     }
 
     strURL = api_url.concat('?compare_end=').concat(searchDay).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
