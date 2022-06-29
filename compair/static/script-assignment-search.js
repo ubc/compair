@@ -18,7 +18,7 @@ function formatDate(date) {
 function getObjectDate(object)
 {
     searchDay = formatDate(object);
-    strURL = api_url.concat('?compare_end=').concat(object).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
+    strURL = api_url.concat('?compare_end=').concat(searchDay).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
 
     console.log(localTimeZone);
 
