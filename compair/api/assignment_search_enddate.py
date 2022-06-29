@@ -30,9 +30,6 @@ from datetime import datetime
 assignment_search_enddate_api = Blueprint('assignment_search_enddate_api', __name__)
 api = new_restful_api(assignment_search_enddate_api)
 
-##event
-##on_assignment_get = event.signal('ASSIGNMENT_GET')
-
 def validate(date_text):
     try:
         if date_text != datetime.strptime(date_text, "%Y-%m-%d").strftime('%Y-%m-%d'):
@@ -76,13 +73,7 @@ class AssignmentRootAPI1(Resource):
         engine = create_engine(db_url, pool_size=5, pool_recycle=3600)
         conn = engine.connect()
 
-        print(compare_localTimeZone)
-
-        sql_text = str("SELECT JSON_OBJECT('course_name', t1.name,'name', t2.name,'answer_start', date_format(t2.answer_start, '%%M %%d, %%Y'),'answer_end', date_format(t2.answer_end, '%%M %%d, %%Y'),'compare_start', date_format(t2.compare_start, '%%M %%d, %%Y'), 'compare_end', date_format(t2.compare_end, '%%M %%d, %%Y'), 'self_eval_end', date_format(t2.self_eval_end, '%%M %%d, %%Y'), 'self_eval_start', date_format(t2.self_eval_start, '%%M %%d, %%Y')) FROM course as t1, assignment as t2 WHERE (t1.id = t2.course_id) AND (t2.active=TRUE AND t1.active=TRUE) AND (t2.compare_end >=  '" + end_date + "' OR answer_end >= '" + end_date + "' OR self_eval_end >= '" + end_date +  "');");
-        sql_text = str("SELECT JSON_OBJECT('course_name', t1.name,'name', t2.name,'answer_start', date_format(CONVERT_TZ(t2.answer_start, 'UTC','" + compare_localTimeZone + "'), '%%M %%d, %%Y'),'answer_end', date_format(t2.answer_end, '%%M %%d, %%Y'),'compare_start', date_format(t2.compare_start, '%%M %%d, %%Y'), 'compare_end', date_format(t2.compare_end, '%%M %%d, %%Y'), 'self_eval_end', date_format(t2.self_eval_end, '%%M %%d, %%Y'), 'self_eval_start', date_format(t2.self_eval_start, '%%M %%d, %%Y')) FROM course as t1, assignment as t2 WHERE (t1.id = t2.course_id) AND (t2.active=TRUE AND t1.active=TRUE) AND (t2.compare_end >=  '" + end_date + "' OR answer_end >= '" + end_date + "' OR self_eval_end >= '" + end_date +  "');");
-        sql_text = str("SELECT JSON_OBJECT('course_name', t1.name,'name', t2.name,'answer_start', date_format(CONVERT_TZ(t2.answer_start, 'UTC','" + compare_localTimeZone + "'), '%%M %%d, %%Y'),'answer_end', date_format(CONVERT_TZ(t2.answer_end, 'UTC','" + compare_localTimeZone + "'),  '%%M %%d, %%Y'),'compare_start', date_format(CONVERT_TZ(t2.compare_start, 'UTC','" + compare_localTimeZone + "'),  '%%M %%d, %%Y'), 'compare_end', date_format(CONVERT_TZ(t2.compare_end, 'UTC','" + compare_localTimeZone + "'),  '%%M %%d, %%Y'), 'self_eval_end', date_format(CONVERT_TZ(t2.self_eval_end, 'UTC','" + compare_localTimeZone + "'),  '%%M %%d, %%Y'), 'self_eval_start', date_format(CONVERT_TZ(t2.self_eval_start, 'UTC','" + compare_localTimeZone + "'), '%%M %%d, %%Y')) FROM course as t1, assignment as t2 WHERE (t1.id = t2.course_id) AND (t2.active=TRUE AND t1.active=TRUE) AND (t2.compare_end >=  '" + end_date + "' OR answer_end >= '" + end_date + "' OR self_eval_end >= '" + end_date +  "');");
         sql_text = str("SELECT JSON_OBJECT('course_name', t1.name,'name', t2.name,'answer_start', date_format(CONVERT_TZ(t2.answer_start, 'UTC','" + compare_localTimeZone + "'), '%%b %%d, %%Y'),'answer_end', date_format(CONVERT_TZ(t2.answer_end, 'UTC','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'),'compare_start', date_format(CONVERT_TZ(t2.compare_start, 'UTC','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'compare_end', date_format(CONVERT_TZ(t2.compare_end, 'UTC','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_end', date_format(CONVERT_TZ(t2.self_eval_end, 'UTC','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_start', date_format(CONVERT_TZ(t2.self_eval_start, 'UTC','" + compare_localTimeZone + "'), '%%b %%d, %%Y')) FROM course as t1, assignment as t2 WHERE (t1.id = t2.course_id) AND (t2.active=TRUE AND t1.active=TRUE) AND (t2.compare_end >=  '" + end_date + "' OR answer_end >= '" + end_date + "' OR self_eval_end >= '" + end_date +  "');");
-        print(sql_text)
 
         result = conn.execute(sql_text)
 
