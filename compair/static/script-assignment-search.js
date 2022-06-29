@@ -8,12 +8,25 @@ let diff = d.getTimezoneOffset();
 let localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 function formatDate(date) {
+    console.log("FORMAT DATE::::" + date);
+    if (date.includes("Invalid Date")){
+        console.log("FOUND:::" + date);
+        console.log("RETURN:::" + searchDay);
+        return searchDay;
+    }
     var d = (new Date(date.toString().replace(/-/g, '\/')) );
     return d.toLocaleDateString('en-ca', options);
 }
 
 function getObjectDate(object)
 {
+
+    if (object.includes("Invalid Date")){
+        console.log("FOUND2:::" + object);
+        searchDay = new Date().toLocaleDateString('en-us', options);
+        console.log("RETURN2:::" + searchDay);
+    }
+
     searchDay = formatDate(object);
     strURL = api_url.concat('?compare_end=').concat(object).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
 
