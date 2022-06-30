@@ -44,8 +44,6 @@ class AssignmentRootAPI1(Resource):
 
         # get app timezone in settings
         appTimeZone = current_app.config.get('APP_TIMEZONE', time.strftime('%Z') )
-        if not(appTimeZone in pytz.all_timezones):
-            appTimeZone = time.strftime('%Z')
 
         search_date_assignment_parser = RequestParser()
         search_date_assignment_parser.add_argument('compare_start', default=datetime.now().strftime("%Y-%m-%d"))

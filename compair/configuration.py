@@ -23,6 +23,8 @@ Currently the supported environment variables:
 import os
 import json
 import re
+import pytz
+import time
 
 from distutils.util import strtobool
 from flask import Config
@@ -150,3 +152,7 @@ if config['DEMO_INSTALLATION'] == True:
     config['APP_LOGIN_ENABLED'] = True
     config['CAS_LOGIN_ENABLED'] = False
     config['SAML_LOGIN_ENABLED'] = False
+
+# configuring APP_TIMEZONE
+if not(config['APP_TIMEZONE'] in pytz.all_timezones):
+    config['APP_TIMEZONE'] = time.strftime('%Z')
