@@ -294,7 +294,8 @@ def register_api_blueprints(app):
             data={'file_path': file_path, 'mimetype': mimetype})
 
         return send_file(file_path, mimetype=mimetype,
-            attachment_filename=attachment_filename, as_attachment=as_attachment)
+                         download_name=attachment_filename,
+                         as_attachment=as_attachment)
 
     # set Cache-Control for /api/* calls
     _api_call_pattern = re.compile('^' + re.escape('/api/'))

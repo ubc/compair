@@ -1,0 +1,54 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "==2.0.0"
+flask-login = "*"
+flask-restful = "*"
+flask-sqlalchemy = "*"
+flask-script = "*"
+flask-testing = "*"
+flask-mail = "*"
+pymysql = "*"
+sqlalchemy = "*"
+blinker = "*"
+bouncer = "*"
+factory-boy = "*"
+flask-bouncer = "*"
+passlib = "*"
+python-dateutil = "*"
+duration = "*"
+six = "*"
+"caslib.py" = "*"
+python3-saml = "*"
+alembic = "*"
+enum34 = "*"
+sqlalchemy-enum34 = "*"
+mock = "*"
+trueskill = "*"
+celery = "*"
+kombu = "*"
+redis = "*"
+tincan = "*"
+nose = "*"
+unicodecsv = "*"
+lxml = "*"
+werkzeug = "*"
+oauthlib = "*"
+requests-oauthlib = "*"
+rfc3986 = "*"
+imsglobal-caliper = {file = "https://github.com/IMSGlobal/caliper-python/archive/1.2.0.4.zip"}
+
+[dev-packages]
+# scipy 1.8 seems to be missing packages for python 3.7, so we'll stay with
+# 1.7.3 until python 3.7 is dropped
+scipy = "==1.7.3"
+# numpy 1.22 seems to be missing packages for python 3.7, so we'll stay with
+# 1.21.6 until python 3.7 is dropped
+numpy = "==1.21.6"
+pillow = "*"
+
+[requires]
+python_version = "3.8"

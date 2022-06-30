@@ -2,11 +2,12 @@
 
 FROM python:3.8-slim as python-base
 
-ADD requirements.txt .
+COPY Pipfile* /
 RUN apt-get update -y \
     && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl gcc pkg-config \
     && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
-    && pip install -r requirements.txt \
+    && pip install pipenv \
+    && pipenv install --system \
     && pip install uwsgi
 
 # NODE DEPS
@@ -36,12 +37,13 @@ ENV DEV 0
 WORKDIR /code
 
 COPY --from=python-base /root/.cache /root/.cache
-COPY --from=python-base /requirements.txt /code/requirements.txt
+COPY --from=python-base /Pipfile* /code/
 
 RUN apt-get update -y \
-    && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl \
+    && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl gcc pkg-config \
     && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
-    && pip install -r /code/requirements.txt \
+    && pip install pipenv \
+    && pipenv install --system \
     && pip install uwsgi \
     && rm -rf /root/.cache \
     && rm -rf /var/lib/apt/lists/*

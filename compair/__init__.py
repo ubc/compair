@@ -6,7 +6,7 @@ import re
 
 from flask import Flask, redirect, session as sess, jsonify, url_for, make_response
 from flask_bouncer import ensure
-from jinja2 import Markup
+from jinja2.utils import markupsafe
 from flask_login import current_user
 from sqlalchemy.orm import joinedload
 from werkzeug.routing import BaseConverter
@@ -152,7 +152,7 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
     create_persistent_dirs(app.config, app.logger)
 
     # add include_raw to jinja templates
-    app.jinja_env.globals['include_raw'] = lambda filename : Markup(app.jinja_loader.get_source(app.jinja_env, filename)[0])
+    app.jinja_env.globals['include_raw'] = lambda filename : markupsafe.Markup(app.jinja_loader.get_source(app.jinja_env, filename)[0])
     app.jinja_env.globals['clean_html'] = lambda html_string : clean_html(html_string) if html_string else ''
     if not skip_assets and not app.debug and not app.config.get('TESTING', False):
         assets = get_asset_names(app)
