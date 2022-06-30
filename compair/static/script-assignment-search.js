@@ -41,13 +41,13 @@ function getObjectDate(object)
 
     searchDay = formatDate(object);
     //console.log("OBJECT-searchDay:::" + formatDate2(searchDay));
-
+/*
     if (object.includes("Invalid Date")){
         //console.log("FOUND2:::" + object);
         searchDay = new Date().toLocaleDateString('en-us', options);
         //console.log("RETURN2:::" + searchDay);
     }
-
+*/
     strURL = api_url.concat('?compare_end=').concat(formatDateYYMMDD(searchDay)).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
 
     console.log(localTimeZone);
