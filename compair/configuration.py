@@ -91,7 +91,7 @@ env_overridables = [
     'KALTURA_SECRET', 'KALTURA_PLAYER_ID',
     'MAIL_SERVER', 'MAIL_DEBUG', 'MAIL_USERNAME', 'MAIL_PASSWORD',
     'MAIL_DEFAULT_SENDER', 'MAIL_SUPPRESS_SEND',
-    'GA_TRACKING_ID'
+    'GA_TRACKING_ID', 'APP_TIMEZONE'
 ]
 
 env_bool_overridables = [

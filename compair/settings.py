@@ -163,3 +163,6 @@ ALLOW_STUDENT_CHANGE_EMAIL = True
 
 # Allow impersonation
 IMPERSONATION_ENABLED = True
+
+# when APP_TIMEZONE is empty or incorrect, it will default to system timezone
+APP_TIMEZONE = ''
