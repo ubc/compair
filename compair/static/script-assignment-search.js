@@ -22,14 +22,14 @@ function formatDateYYMMDD(date) {
 }
 
 function formatDate(date) {
-    console.log("FORMAT DATE::::" + date);
+    //console.log("FORMAT DATE::::" + date);
     if (date.includes("Invalid Date")){
-        console.log("FOUND:::" + date);
-        console.log("RETURN:::" + searchDay);
+        //console.log("FOUND:::" + date);
+        //console.log("RETURN:::" + searchDay);
         return searchDay;
     }
     var d = (new Date(date.toString().replace(/-/g, '\/')) );
-    console.log("FORMATE DATE-varD2:::" + d.toLocaleDateString('en-ca', options) );
+    //console.log("FORMATE DATE-varD2:::" + d.toLocaleDateString('en-ca', options) );
 
     return d.toLocaleDateString('en-ca', options);
 }
@@ -37,15 +37,15 @@ function formatDate(date) {
 function getObjectDate(object)
 {
 
-    console.log("OBJECT::::" + object);
+    //console.log("OBJECT::::" + object);
 
     searchDay = formatDate(object);
-    console.log("OBJECT-searchDay:::" + formatDate2(searchDay));
+    //console.log("OBJECT-searchDay:::" + formatDate2(searchDay));
 
     if (object.includes("Invalid Date")){
-        console.log("FOUND2:::" + object);
+        //console.log("FOUND2:::" + object);
         searchDay = new Date().toLocaleDateString('en-us', options);
-        console.log("RETURN2:::" + searchDay);
+        //console.log("RETURN2:::" + searchDay);
     }
 
     strURL = api_url.concat('?compare_end=').concat(formatDateYYMMDD(searchDay)).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
