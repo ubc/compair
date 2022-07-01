@@ -1,5 +1,5 @@
 import os
-
+import time
 """
     Default settings, if no other settings is specified, values here are used.
 """
@@ -163,3 +163,7 @@ ALLOW_STUDENT_CHANGE_EMAIL = True
 
 # Allow impersonation
 IMPERSONATION_ENABLED = True
+
+# when APP_TIMEZONE is empty or incorrect, it will default to system timezone
+# example America/Vancouver or America/Montreal
+APP_TIMEZONE = time.strftime('%Z')

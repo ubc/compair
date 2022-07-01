@@ -1,23 +1,42 @@
 let api_url = "/api/assignment/search/enddate";
 
 const options = { year: 'numeric', month: 'short', day: 'numeric' };
-var searchDay = new Date().toLocaleDateString('en-us', options);
+let localeLang = 'en-ca';
+var searchDay = new Date().toLocaleDateString(localeLang, options);
 
 const d = new Date();
 let diff = d.getTimezoneOffset();
 let localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+function formatDateYYMMDD(date) {
+    var d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2)
+        month = '0' + month;
+    if (day.length < 2)
+        day = '0' + day;
+
+    return [year, month, day].join('-');
+}
+
 function formatDate(date) {
+    if (date.includes("Invalid Date")){
+        return searchDay;
+    }
     var d = (new Date(date.toString().replace(/-/g, '\/')) );
-    return d.toLocaleDateString('en-ca', options);
+    return d.toLocaleDateString(localeLang, options);
 }
 
 function getObjectDate(object)
 {
     searchDay = formatDate(object);
-    strURL = api_url.concat('?compare_end=').concat(object).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
-
-    console.log(localTimeZone);
+    if (object.includes("Invalid Date")){
+        searchDay = new Date().toLocaleDateString(localeLang, options);
+    }
+    strURL = api_url.concat('?compare_end=').concat(formatDateYYMMDD(searchDay)).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
 
     getsearchapi(strURL);
 }
@@ -55,7 +74,6 @@ function showsearchapi(search_data) {
 
     var iKey = 0;
     for (let key in  search_data) {
-        //tab += `<tr><td colspan="4">${search_data[key]}</td></tr>`;
         let obj = JSON.parse(search_data[key])
 
         if (obj.compare_start == null){
