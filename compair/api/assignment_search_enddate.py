@@ -22,7 +22,7 @@ from compair.authorization import require, is_user_access_restricted
 from compair.models import Assignment, Course, Criterion, AssignmentCriterion, Answer, Comparison, \
     AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File, User, UserCourse, \
     CourseRole, Group
-from .util import new_restful_api, get_model_changes, pagination_parser
+from .util import new_restful_api, get_model_changes
 
 from datetime import datetime
 import time

@@ -9,6 +9,10 @@ from flask_restful.reqparse import RequestParser
 from sqlalchemy import func, or_, and_, not_, desc
 from sqlalchemy.orm import joinedload, undefer_group
 
+from webargs import fields, validate
+from webargs.flaskparser import use_args
+from compair.util.fields import pagination_fields
+
 from . import dataformat
 from compair.core import db, event, abort
 from compair.authorization import require
@@ -16,7 +20,7 @@ from compair.models import Answer, Assignment, Course, User, Comparison, Criteri
     AnswerScore, UserCourse, SystemRole, CourseRole, AnswerComment, AnswerCommentType, \
     File, Group
 
-from .util import new_restful_api, get_model_changes, pagination_parser
+from .util import new_restful_api, get_model_changes
 
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
@@ -34,13 +38,6 @@ new_answer_parser.add_argument('attempt_ended', default=None)
 
 existing_answer_parser = new_answer_parser.copy()
 existing_answer_parser.add_argument('id', required=True, help="Answer id is required.")
-
-answer_list_parser = pagination_parser.copy()
-answer_list_parser.add_argument('group', required=False, default=None)
-answer_list_parser.add_argument('author', required=False, default=None)
-answer_list_parser.add_argument('orderBy', required=False, default=None)
-answer_list_parser.add_argument('top', type=bool, required=False, default=None)
-answer_list_parser.add_argument('ids', required=False, default=None)
 
 user_answer_list_parser = RequestParser()
 user_answer_list_parser.add_argument('draft', type=bool, required=False, default=False)
@@ -66,7 +63,14 @@ from compair.api.file import on_attach_file, on_detach_file
 # /
 class AnswerRootAPI(Resource):
     @login_required
-    def get(self, course_uuid, assignment_uuid):
+    @use_args({'group': fields.Str(missing=None, required=False),
+               'author': fields.Str(missing=None, required=False),
+               'orderBy': fields.Str(missing=None, required=False),
+               'top': fields.Bool(missing=None, required=False),
+               'ids': fields.Str(missing=None, required=False),
+               **pagination_fields},
+              location='query')
+    def get(self, args, course_uuid, assignment_uuid):
         """
         Return a list of answers for a assignment based on search criteria. The
         list of the answers are paginated. If there is any answers from instructor
@@ -84,15 +88,13 @@ class AnswerRootAPI(Resource):
             message="Answers are visible only to those enrolled in the course. Please double-check your enrollment in this course.")
         restrict_user = not can(MANAGE, assignment)
 
-        params = answer_list_parser.parse_args()
-
         # if assingment has no rank display limit set, restricted users can't force to retreive by rank
-        if params['orderBy'] == 'score' and restrict_user and not assignment.rank_display_limit:
+        if args['orderBy'] == 'score' and restrict_user and not assignment.rank_display_limit:
             abort(400, title="Answers Unavailable", message="Sorry, you cannot cannot see answers by rank for this assignment.")
 
         if restrict_user and not assignment.after_comparing:
             # only the answer from student himself/herself should be returned
-            params['author'] = current_user.uuid
+            args['author'] = current_user.uuid
 
         # this query could be further optimized by reduction the selected columns
         query = Answer.query \
@@ -129,8 +131,8 @@ class AnswerRootAPI(Resource):
             )) \
             .order_by(desc('instructor_role'), desc('ta_role'))
 
-        if params['author']:
-            user = User.get_by_uuid_or_404(params['author'])
+        if args['author']:
+            user = User.get_by_uuid_or_404(args['author'])
             group = user.get_course_group(course.id)
             if group:
                 query = query.filter(or_(
@@ -139,20 +141,20 @@ class AnswerRootAPI(Resource):
                 ))
             else:
                 query = query.filter(Answer.user_id == user.id)
-        elif params['group']:
-            group = Group.get_active_by_uuid_or_404(params['group'])
+        elif args['group']:
+            group = Group.get_active_by_uuid_or_404(args['group'])
             query = query.filter(or_(
                 UserCourse.group_id == group.id,
                 Answer.group_id == group.id
             ))
 
-        if params['ids']:
-            query = query.filter(Answer.uuid.in_(params['ids'].split(',')))
+        if args['ids']:
+            query = query.filter(Answer.uuid.in_(args['ids'].split(',')))
 
-        if params['top']:
+        if args['top']:
             query = query.filter(Answer.top_answer == True)
 
-        if params['orderBy'] == 'score':
+        if args['orderBy'] == 'score':
             # use outer join to include comparable answers that are not yet compared (for non-restricted users)
             query = query.outerjoin(AnswerScore) \
                 .filter(Answer.comparable == True) \
@@ -176,7 +178,7 @@ class AnswerRootAPI(Resource):
             # when ordered by date, non-comparable answers should be on top of the list
             query = query.order_by(Answer.comparable, Answer.submission_date.desc(), Answer.created.desc())
 
-        page = query.paginate(params['page'], params['perPage'], error_out=False)
+        page = query.paginate(args['page'], args['perPage'], error_out=False)
         # remove label entities from results
         page.items = [answer for (answer, instructor_role, ta_role) in page.items]
 
@@ -191,7 +193,7 @@ class AnswerRootAPI(Resource):
         # - requesters are non-restricted users (i.e. instructors / TAs); or,
         # - retrieving answers ordered by score/rank
         include_score = (not restrict_user) or \
-            (params['orderBy'] == 'score' and assignment.rank_display_limit)
+            (args['orderBy'] == 'score' and assignment.rank_display_limit)
 
         return {"objects": marshal(page.items, dataformat.get_answer(restrict_user, include_score=include_score)),
                 "page": page.page, "pages": page.pages,

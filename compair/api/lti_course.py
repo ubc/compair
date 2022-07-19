@@ -5,6 +5,10 @@ from flask_restful import Resource, marshal, reqparse, marshal_with
 from sqlalchemy import exc, or_, and_, desc, asc
 from six import text_type
 
+from webargs import fields, validate
+from webargs.flaskparser import use_args
+from compair.util.fields import pagination_fields
+
 from . import dataformat
 from compair.core import event, db, abort
 from compair.authorization import require
@@ -12,16 +16,11 @@ from compair.models import User, Course, LTIConsumer, LTIContext, LTIMembership,
     LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
 from compair.models.lti_models import MembershipNoValidContextsException, \
     MembershipNoResultsException, MembershipInvalidRequestException
-from .util import new_restful_api, get_model_changes, pagination_parser
+from .util import new_restful_api, get_model_changes
 from compair.tasks import update_lti_course_membership
 
 lti_course_api = Blueprint('lti_course_api', __name__)
 api = new_restful_api(lti_course_api)
-
-context_list_parser = pagination_parser.copy()
-context_list_parser.add_argument('orderBy', type=str, required=False, default=None)
-context_list_parser.add_argument('reverse', type=bool, default=False)
-context_list_parser.add_argument('search', required=False, default=None)
 
 # events
 on_lti_course_links_get = event.signal('LTI_CONTEXT_COURSE_LINKS')
@@ -33,28 +32,32 @@ on_lti_course_membership_status_get = event.signal('LTI_CONTEXT_COURSE_MEMBERSHI
 # /context
 class LTICourseLinksRootAPI(Resource):
     @login_required
-    def get(self):
+    @use_args({'orderBy': fields.Str(missing=None, required=False),
+               'reverse': fields.Bool(missing=False),
+               'search': fields.Str(missing=None, required=False),
+               **pagination_fields},
+              location='query')
+    def get(self, args):
         require(READ, LTIContext,
             title="Course Links Unavailable",
             message="Sorry, your system role does not allow you to view LTI course links.")
-
-        params = context_list_parser.parse_args()
 
         query = LTIContext.query \
             .join("lti_consumer") \
             .join("compair_course") \
             .add_columns(LTIConsumer.oauth_consumer_key, Course.name)
 
-        if params['orderBy']:
-            if params['reverse']:
-                query = query.order_by(desc(params['orderBy']))
+        # TODO: this throws a 502 when sorting by course.name
+        if args['orderBy']:
+            if args['reverse']:
+                query = query.order_by(desc(args['orderBy']))
             else:
-                query = query.order_by(asc(params['orderBy']))
+                query = query.order_by(asc(args['orderBy']))
         query = query.order_by(LTIContext.created)
 
-        if params['search']:
+        if args['search']:
             # match each word of search
-            for word in params['search'].strip().split(' '):
+            for word in args['search'].strip().split(' '):
                 if word != '':
                     search = '%'+word+'%'
                     query = query.filter(or_(
@@ -67,7 +70,7 @@ class LTICourseLinksRootAPI(Resource):
                         LTIContext.context_title.like(search)
                     ))
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(args['page'], args['perPage'])
 
         # unwrap link info
         lti_course_links = []

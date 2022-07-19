@@ -11,13 +11,17 @@ from sqlalchemy import desc, or_, func, and_
 from sqlalchemy.orm import joinedload, undefer_group, load_only
 from six import text_type
 
+from webargs import fields, validate
+from webargs.flaskparser import use_args
+from compair.util.fields import pagination_fields
+
 from . import dataformat
 from compair.core import db, event, abort
 from compair.authorization import require, is_user_access_restricted
 from compair.models import Assignment, Course, Criterion, AssignmentCriterion, Answer, Comparison, \
     AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File, User, UserCourse, \
     CourseRole, Group
-from .util import new_restful_api, get_model_changes, pagination_parser
+from .util import new_restful_api, get_model_changes
 
 assignment_api = Blueprint('assignment_api', __name__)
 api = new_restful_api(assignment_api)
@@ -56,10 +60,6 @@ new_assignment_parser.add_argument('self_evaluation_grade_weight', type=int, def
 
 existing_assignment_parser = new_assignment_parser.copy()
 existing_assignment_parser.add_argument('id', required=True, nullable=False, help="Assignment id is required.")
-
-assignment_users_comparison_list_parser = pagination_parser.copy()
-assignment_users_comparison_list_parser.add_argument('group', required=False, default=None)
-assignment_users_comparison_list_parser.add_argument('author', required=False, default=None)
 
 # events
 on_assignment_modified = event.signal('ASSIGNMENT_MODIFIED')
@@ -881,7 +881,11 @@ api.add_resource(AssignmentUserComparisonsAPI, '/<assignment_uuid>/user/comparis
 # /users/comparisons
 class AssignmentUsersComparisonsAPI(Resource):
     @login_required
-    def get(self, course_uuid, assignment_uuid):
+    @use_args({'group': fields.Str(missing=None, required=False),
+               'author': fields.Str(missing=None, required=False),
+               **pagination_fields},
+              location='query')
+    def get(self, args, course_uuid, assignment_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         require(READ, Comparison(course_id=course.id),
@@ -889,7 +893,6 @@ class AssignmentUsersComparisonsAPI(Resource):
             message="Sorry, your role in this course does not allow you to view all comparisons for this assignment.")
 
         restrict_user = is_user_access_restricted(current_user)
-        params = assignment_users_comparison_list_parser.parse_args()
 
         # get users who have at least made one comparison or finished self-eval.
         # each paginated item is a user (with a set of comparisons and self-evaluations)
@@ -943,14 +946,14 @@ class AssignmentUsersComparisonsAPI(Resource):
                 Comparison.assignment_id == assignment.id
             ))
 
-        if params['author']:
-            user = User.get_by_uuid_or_404(params['author'])
+        if args['author']:
+            user = User.get_by_uuid_or_404(args['author'])
 
             user_query = user_query.filter(User.id == user.id)
             self_evaluation_total = self_evaluation_total.filter(AnswerComment.user_id == user.id)
             comparison_total = comparison_total.filter(Comparison.user_id == user.id)
-        elif params['group']:
-            group = Group.get_active_by_uuid_or_404(params['group'])
+        elif args['group']:
+            group = Group.get_active_by_uuid_or_404(args['group'])
             user_query = user_query.filter(UserCourse.group_id == group.id)
 
             self_evaluation_total = self_evaluation_total \
@@ -967,7 +970,7 @@ class AssignmentUsersComparisonsAPI(Resource):
                 )) \
                 .filter(UserCourse.group_id == group.id)
 
-        page = user_query.paginate(params['page'], params['perPage'])
+        page = user_query.paginate(args['page'], args['perPage'])
         self_evaluation_total = self_evaluation_total.scalar()
         comparison_total = comparison_total.scalar()
 

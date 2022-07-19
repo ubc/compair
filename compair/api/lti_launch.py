@@ -12,7 +12,7 @@ from compair.models import User, Course, LTIConsumer, LTIContext, LTIMembership,
     LTIResourceLink, LTIUser, LTIUserResourceLink, LTINonce
 from compair.models.lti_models import MembershipNoValidContextsException, \
     MembershipNoResultsException, MembershipInvalidRequestException
-from .util import new_restful_api, get_model_changes, pagination_parser
+from .util import new_restful_api, get_model_changes
 from compair.tasks import update_lti_course_membership
 
 from lti.contrib.flask import FlaskToolProvider

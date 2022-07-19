@@ -297,6 +297,17 @@ def register_api_blueprints(app):
                          download_name=attachment_filename,
                          as_attachment=as_attachment)
 
+    # Return webargs validation errors as JSON
+    @app.errorhandler(422)
+    @app.errorhandler(400)
+    def handle_error(err):
+        headers = err.data.get("headers", None)
+        messages = err.data.get("messages", ["Invalid request."])
+        if headers:
+            return jsonify({"errors": messages}), err.code, headers
+        else:
+            return jsonify({"errors": messages}), err.code
+
     # set Cache-Control for /api/* calls
     _api_call_pattern = re.compile('^' + re.escape('/api/'))
     def _api_call_cache_control(resp):

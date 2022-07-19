@@ -8,7 +8,7 @@ from sqlalchemy import exc, asc, or_, and_, func
 
 from . import dataformat
 from compair.core import db, event, abort, random_generator, display_name_generator
-from .util import new_restful_api, get_model_changes, pagination_parser
+from .util import new_restful_api, get_model_changes
 from compair.models import User, SystemRole, UserCourse, CourseRole
 from compair.api.login import authenticate
 

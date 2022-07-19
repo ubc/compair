@@ -40,6 +40,7 @@ oauthlib = "*"
 requests-oauthlib = "*"
 rfc3986 = "*"
 imsglobal-caliper = {file = "https://github.com/IMSGlobal/caliper-python/archive/1.2.0.4.zip"}
+webargs = "*"
 
 [dev-packages]
 # scipy 1.8 seems to be missing packages for python 3.7, so we'll stay with

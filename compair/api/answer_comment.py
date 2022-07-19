@@ -6,12 +6,16 @@ from flask_restful import Resource, marshal
 from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
 
+from webargs import fields, validate
+from webargs.flaskparser import use_args
+from compair.util.fields import pagination_fields
+
 from . import dataformat
 from compair.core import db, event, abort
 from compair.authorization import require
 from compair.models import User, Answer, Assignment, Course, AnswerComment, \
     CourseRole, SystemRole, AnswerCommentType
-from .util import new_restful_api, get_model_changes, pagination_parser
+from .util import new_restful_api, get_model_changes
 
 answer_comment_api = Blueprint('answer_comment_api', __name__)
 api = new_restful_api(answer_comment_api)
@@ -29,15 +33,6 @@ new_answer_comment_parser.add_argument('attempt_ended', default=None)
 existing_answer_comment_parser = new_answer_comment_parser.copy()
 existing_answer_comment_parser.add_argument('id', required=True, help="Comment id is required.")
 
-answer_comment_list_parser = pagination_parser.copy()
-answer_comment_list_parser.add_argument('self_evaluation', required=False, default='true')
-answer_comment_list_parser.add_argument('evaluation', required=False, default='true')
-answer_comment_list_parser.add_argument('draft', required=False, default='false')
-answer_comment_list_parser.add_argument('ids', required=False, default=None)
-answer_comment_list_parser.add_argument('answer_ids', required=False, default=None)
-answer_comment_list_parser.add_argument('assignment_id', required=False, default=None)
-answer_comment_list_parser.add_argument('user_ids', required=False, default=None)
-
 # events
 on_answer_comment_modified = event.signal('ANSWER_COMMENT_MODIFIED')
 on_answer_comment_get = event.signal('ANSWER_COMMENT_GET')
@@ -47,7 +42,16 @@ on_answer_comment_delete = event.signal('ANSWER_COMMENT_DELETE')
 
 class AnswerCommentListAPI(Resource):
     @login_required
-    def get(self, course_uuid, assignment_uuid, **kwargs):
+    @use_args({'self_evaluation': fields.Str(missing='true', required=False),
+               'evaluation': fields.Str(missing='true', required=False),
+               'draft': fields.Str(missing='false', required=False),
+               'ids': fields.Str(missing=None, required=False),
+               'answer_ids': fields.Str(missing=None, required=False),
+               'assignment_id': fields.Str(missing=None, required=False),
+               'user_ids': fields.Str(missing=None, required=False),
+               **pagination_fields},
+              location='query')
+    def get(self, args, course_uuid, assignment_uuid, **kwargs):
         """
         :query string ids: a comma separated comment uuids to query
         :query string answer_ids: a comma separated answer uuids for answer filter
@@ -70,14 +74,13 @@ class AnswerCommentListAPI(Resource):
 
         restrict_user = not can(MANAGE, assignment)
 
-        params = answer_comment_list_parser.parse_args()
         answer_uuids = []
         if 'answer_uuid' in kwargs:
             answer_uuids.append(kwargs['answer_uuid'])
-        elif 'answer_ids' in params and params['answer_ids']:
-            answer_uuids.extend(params['answer_ids'].split(','))
+        elif 'answer_ids' in args and args['answer_ids']:
+            answer_uuids.extend(args['answer_ids'].split(','))
 
-        if not answer_uuids and not params['ids'] and not params['assignment_id'] and not params['user_ids']:
+        if not answer_uuids and not args['ids'] and not args['assignment_id'] and not args['user_ids']:
             abort(404, title="Feedback Unavailable", message="There was a problem getting the feedback for this answer. Please try again.")
 
         conditions = []
@@ -121,24 +124,24 @@ class AnswerCommentListAPI(Resource):
                 or_(*conditions)
             )
 
-        if params['ids']:
-            query = query.filter(AnswerComment.uuid.in_(params['ids'].split(',')))
+        if args['ids']:
+            query = query.filter(AnswerComment.uuid.in_(args['ids'].split(',')))
 
-        if params['self_evaluation'] == 'false':
+        if args['self_evaluation'] == 'false':
             # do not include self-evaluation
             query = query.filter(AnswerComment.comment_type != AnswerCommentType.self_evaluation)
-        elif params['self_evaluation'] == 'only':
+        elif args['self_evaluation'] == 'only':
             # only self_evaluation
             query = query.filter(AnswerComment.comment_type == AnswerCommentType.self_evaluation)
 
-        if params['evaluation'] == 'false':
+        if args['evaluation'] == 'false':
             # do not include evalulation comments
             query = query.filter(AnswerComment.comment_type != AnswerCommentType.evaluation)
-        elif params['evaluation'] == 'only':
+        elif args['evaluation'] == 'only':
             # only evaluation
             query = query.filter(AnswerComment.comment_type == AnswerCommentType.evaluation)
 
-        if params['draft'] == 'true':
+        if args['draft'] == 'true':
             # with draft (current_user)
             query = query.filter(or_(
                 AnswerComment.draft == False,
@@ -147,7 +150,7 @@ class AnswerCommentListAPI(Resource):
                     AnswerComment.user_id == current_user.id
                 )
             ))
-        elif params['draft'] == 'only':
+        elif args['draft'] == 'only':
             # only draft (current_user)
             query = query.filter(and_(
                 AnswerComment.draft == True,
@@ -157,8 +160,8 @@ class AnswerCommentListAPI(Resource):
             # do not include draft. Default
             query = query.filter(AnswerComment.draft == False)
 
-        if params['user_ids']:
-            user_ids = params['user_ids'].split(',')
+        if args['user_ids']:
+            user_ids = args['user_ids'].split(',')
             query = query \
                 .join(User, AnswerComment.user_id == User.id) \
                 .filter(User.uuid.in_(user_ids))

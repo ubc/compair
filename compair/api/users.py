@@ -12,10 +12,14 @@ from sqlalchemy.orm import load_only, joinedload
 from sqlalchemy import exc, asc, or_, and_, func, desc, asc
 from six import text_type
 
+from webargs import fields, validate
+from webargs.flaskparser import use_args
+from compair.util.fields import pagination_fields
+
 from . import dataformat
 from compair.authorization import is_user_access_restricted, require, USER_IDENTITY
 from compair.core import db, event, abort, impersonation
-from .util import new_restful_api, get_model_changes, pagination_parser
+from .util import new_restful_api, get_model_changes
 from compair.models import User, SystemRole, Course, UserCourse, CourseRole, Assignment, \
     LTIConsumer, LTIUser, LTIUserResourceLink, LTIContext, ThirdPartyUser, ThirdPartyType, \
     Answer, Comparison, AnswerComment, AnswerCommentType, EmailNotificationMethod
@@ -64,27 +68,6 @@ update_notification_settings_parser.add_argument('email_notification_method', re
 update_password_parser = RequestParser()
 update_password_parser.add_argument('oldpassword', required=False)
 update_password_parser.add_argument('newpassword', required=True, nullable=False)
-
-user_list_parser = pagination_parser.copy()
-user_list_parser.add_argument('search', required=False, default=None)
-user_list_parser.add_argument('orderBy', required=False, default=None)
-user_list_parser.add_argument('reverse', type=bool, default=False)
-user_list_parser.add_argument('ids', required=False, default=None)
-
-user_course_list_parser = pagination_parser.copy()
-user_course_list_parser.add_argument('search', required=False, default=None)
-user_course_list_parser.add_argument('includeSandbox', type=string_to_bool, required=False, default=None)
-user_course_list_parser.add_argument('period', type=non_blank_text, required=False, default=None)
-
-user_id_course_list_parser = pagination_parser.copy()
-user_id_course_list_parser.add_argument('search', required=False, default=None)
-user_id_course_list_parser.add_argument('includeSandbox', type=string_to_bool, required=False, default=None)
-user_id_course_list_parser.add_argument('period', type=non_blank_text, required=False, default=None)
-user_id_course_list_parser.add_argument('orderBy', required=False, default=None)
-user_id_course_list_parser.add_argument('reverse', type=bool, default=False)
-
-user_course_status_list_parser = RequestParser()
-user_course_status_list_parser.add_argument('ids', required=True, nullable=False, default=None)
 
 # events
 on_user_modified = event.signal('USER_MODIFIED')
@@ -232,17 +215,21 @@ class UserAPI(Resource):
 # /
 class UserListAPI(Resource):
     @login_required
-    def get(self):
+    @use_args({'search': fields.Str(missing=None, required=False),
+               'orderBy': fields.Str(missing=None, required=False),
+               'reverse': fields.Bool(missing=None, required=False),
+               'ids': fields.Str(missing=None, required=False),
+               **pagination_fields},
+              location='query')
+    def get(self, args):
         require(READ, USER_IDENTITY,
             title="User List Unavailable",
             message="Sorry, your system role does not allow you to view the list of users.")
 
-        params = user_list_parser.parse_args()
-
         query = User.query
-        if params['search']:
+        if args['search']:
             # match each word of search
-            for word in params['search'].strip().split(' '):
+            for word in args['search'].strip().split(' '):
                 if word != '':
                     search = '%'+word+'%'
                     query = query.filter(or_(
@@ -251,14 +238,14 @@ class UserListAPI(Resource):
                         User.displayname.like(search)
                     ))
 
-        if params['orderBy']:
-            if params['reverse']:
-                query = query.order_by(desc(params['orderBy']))
+        if args['orderBy']:
+            if args['reverse']:
+                query = query.order_by(desc(args['orderBy']))
             else:
-                query = query.order_by(asc(params['orderBy']))
+                query = query.order_by(asc(args['orderBy']))
         query = query.order_by(User.lastname.asc(), User.firstname.asc())
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(args['page'], args['perPage'])
 
         on_user_list_get.send(
             self,
@@ -372,9 +359,14 @@ class UserListAPI(Resource):
 # /courses
 class CurrentUserCourseListAPI(Resource):
     @login_required
-    def get(self):
-        params = user_course_list_parser.parse_args()
-
+    @use_args({'search': fields.Str(missing=None, required=False),
+               'includeSandbox': fields.Bool(missing=None, required=False),
+               'period': fields.Str(missing=None,
+                                    required=False,
+                                    validate=validate.Length(min=1)),
+               **pagination_fields},
+              location='query')
+    def get(self, args):
         # Note, start and end dates are optional so default sort is by start_date (course.start_date or min assignment start date), then name
         query = Course.query \
             .filter_by(active=True) \
@@ -388,8 +380,8 @@ class CurrentUserCourseListAPI(Resource):
                     UserCourse.course_role != CourseRole.dropped
                 ))
 
-        if params['search']:
-            search_terms = params['search'].split()
+        if args['search']:
+            search_terms = args['search'].split()
             for search_term in search_terms:
                 if search_term != "":
                     search = '%'+search_term+'%'
@@ -399,28 +391,28 @@ class CurrentUserCourseListAPI(Resource):
                         Course.term.like(search)
                     ))
 
-        if params['includeSandbox'] != None:
+        if args['includeSandbox'] != None:
             query = query.filter(
-                Course.sandbox == params['includeSandbox']
+                Course.sandbox == args['includeSandbox']
             )
 
-        if params['period'] != None:
+        if args['period'] != None:
             now = dateutil.parser.parse(datetime.datetime.utcnow().replace(tzinfo=pytz.utc).isoformat())
-            if params['period'] == 'upcoming':
+            if args['period'] == 'upcoming':
                 query = query.filter(
                     Course.start_date > now
                 )
-            elif params['period'] == 'active':
+            elif args['period'] == 'active':
                 query = query.filter(and_(
                     or_(Course.start_date == None, Course.start_date <= now),
                     or_(Course.end_date == None, Course.end_date >= now),
                 ))
-            elif params['period'] == 'past':
+            elif args['period'] == 'past':
                 query = query.filter(
                     Course.end_date < now
                 )
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(args['page'], args['perPage'])
 
         # TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
 
@@ -436,14 +428,21 @@ class CurrentUserCourseListAPI(Resource):
 # /id/courses
 class UserCourseListAPI(Resource):
     @login_required
-    def get(self, user_uuid):
+    @use_args({'search': fields.Str(missing=None, required=False),
+               'includeSandbox': fields.Bool(missing=None, required=False),
+               'period': fields.Str(missing=None,
+                                    required=False,
+                                    validate=validate.Length(min=1)),
+               'orderBy': fields.Str(missing=None, required=False),
+               'reverse': fields.Bool(missing=None, required=False),
+               **pagination_fields},
+              location='query')
+    def get(self, args, user_uuid):
         user = User.get_by_uuid_or_404(user_uuid)
 
         require(MANAGE, User,
             title="User's Courses Unavailable",
             message="Sorry, your system role does not allow you to view courses for this user.")
-
-        params = user_id_course_list_parser.parse_args()
 
         query = Course.query \
             .with_entities(Course, UserCourse) \
@@ -457,8 +456,8 @@ class UserCourseListAPI(Resource):
                 UserCourse.course_role != CourseRole.dropped
             ))
 
-        if params['search']:
-            search_terms = params['search'].split()
+        if args['search']:
+            search_terms = args['search'].split()
             for search_term in search_terms:
                 if search_term != "":
                     search = '%'+search_term+'%'
@@ -468,19 +467,19 @@ class UserCourseListAPI(Resource):
                         Course.term.like(search)
                     ))
 
-        if params['includeSandbox'] != None:
+        if args['includeSandbox'] != None:
             query = query.filter(
-                Course.sandbox == params['includeSandbox']
+                Course.sandbox == args['includeSandbox']
             )
 
-        if params['orderBy']:
-            if params['reverse']:
-                query = query.order_by(desc(params['orderBy']))
+        if args['orderBy']:
+            if args['reverse']:
+                query = query.order_by(desc(args['orderBy']))
             else:
-                query = query.order_by(asc(params['orderBy']))
+                query = query.order_by(asc(args['orderBy']))
         query = query.order_by(Course.start_date_order.desc(), Course.name)
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(args['page'], args['perPage'])
 
         # fix results
         courses = []
@@ -503,11 +502,11 @@ class UserCourseListAPI(Resource):
 # /courses/status
 class UserCourseStatusListAPI(Resource):
     @login_required
-    def get(self):
-        params = user_course_status_list_parser.parse_args()
-        course_uuids = params['ids'].split(',')
+    @use_args({'ids': fields.Str(required=True)}, location='query')
+    def get(self, args):
+        course_uuids = args['ids'].split(',')
 
-        if params['ids'] == '' or len(course_uuids) == 0:
+        if args['ids'] == '' or len(course_uuids) == 0:
             abort(400, title="Course Status Unavailable", message="Please select a course from the list of courses to see that course's status.")
 
         query = Course.query \
