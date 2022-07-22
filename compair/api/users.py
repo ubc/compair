@@ -14,7 +14,7 @@ from six import text_type
 
 from webargs import fields, validate
 from webargs.flaskparser import use_args
-from compair.util.fields import pagination_fields
+from compair.api.util.fields import not_empty, pagination_fields
 
 from . import dataformat
 from compair.authorization import is_user_access_restricted, require, USER_IDENTITY
@@ -363,7 +363,7 @@ class CurrentUserCourseListAPI(Resource):
                'includeSandbox': fields.Bool(missing=None, required=False),
                'period': fields.Str(missing=None,
                                     required=False,
-                                    validate=validate.Length(min=1)),
+                                    validate=not_empty),
                **pagination_fields},
               location='query')
     def get(self, args):
@@ -502,12 +502,16 @@ class UserCourseListAPI(Resource):
 # /courses/status
 class UserCourseStatusListAPI(Resource):
     @login_required
-    @use_args({'ids': fields.Str(required=True)}, location='query')
+    @use_args({'ids': fields.Str(required=True,
+                                 validate=not_empty,
+                                 error_messages={
+                                     'title': 'Course Status Unavailable',
+                                     'message': "Please select a course from the list of courses to see that course's status."
+                                 })
+               },
+              location='query')
     def get(self, args):
         course_uuids = args['ids'].split(',')
-
-        if args['ids'] == '' or len(course_uuids) == 0:
-            abort(400, title="Course Status Unavailable", message="Please select a course from the list of courses to see that course's status.")
 
         query = Course.query \
             .filter(and_(

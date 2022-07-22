@@ -13,7 +13,7 @@ from six import text_type
 
 from webargs import fields, validate
 from webargs.flaskparser import use_args
-from compair.util.fields import pagination_fields
+from compair.api.util.fields import pagination_fields
 
 from . import dataformat
 from compair.core import db, event, abort

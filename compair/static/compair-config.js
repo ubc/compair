@@ -49,6 +49,7 @@ myApp.factory('StandardErrorHandler',
         var message = error.data.message || undefined;
         switch (error.status) {
             case 400:
+            case 422:
             case 409:
                 $log.error(error.status, title, message);
                 Toaster.warning(title, message);

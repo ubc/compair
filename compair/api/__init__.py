@@ -299,14 +299,19 @@ def register_api_blueprints(app):
 
     # Return webargs validation errors as JSON
     @app.errorhandler(422)
-    @app.errorhandler(400)
     def handle_error(err):
         headers = err.data.get("headers", None)
         messages = err.data.get("messages", ["Invalid request."])
+        # if webargs wasn't given a custom error message, then we'll resort
+        # to throwing this default error message
+        defaultErrMsg = {'title': 'Invalid Field',
+                         'message': messages}
+        # note that we're throwing 400 instead of 422 cause our existing code
+        # have been built with the assumption of 400.
         if headers:
-            return jsonify({"errors": messages}), err.code, headers
+            return jsonify(defaultErrMsg), 400, headers
         else:
-            return jsonify({"errors": messages}), err.code
+            return jsonify(defaultErrMsg), 400
 
     # set Cache-Control for /api/* calls
     _api_call_pattern = re.compile('^' + re.escape('/api/'))

@@ -2,7 +2,8 @@
     Database Manager, manipulate the database from commandline
 """
 from alembic.config import Config
-from flask_script import Manager, prompt_bool
+import click
+from flask.cli import AppGroup
 
 from alembic import command
 from compair.core import db
@@ -12,17 +13,12 @@ from data.fixtures import DemoDataFixture
 from sqlalchemy.engine import reflection
 from sqlalchemy.schema import MetaData, Table, DropTable, ForeignKeyConstraint, DropConstraint
 
-manager = Manager(usage="Perform database operations")
+database_cli = AppGroup('database')
 
 def _drop_tables():
     db.drop_all()
 
     print ('All tables dropped...')
-
-def _truncate_tables():
-    metadata = MetaData()
-    for table in reversed(meta.sorted_tables):
-        db.session.execute(table.delete())
 
 def _create_tables():
     db.create_all()
@@ -44,24 +40,39 @@ def _populate_tables(default_data=False, sample_data=False):
     print ('All tables populated...')
 
 
-@manager.command
-def drop(yes=False):
+@database_cli.command('drop')
+@click.option('-y', '--yes', 'yes',  type=bool,
+              prompt='Are you sure you want to lose all your data')
+def click_drop(yes):
+    if yes:
+        drop()
+
+
+def drop():
     """Drops database tables"""
-    if yes or prompt_bool("Are you sure you want to lose all your data"):
-        try:
-            _drop_tables()
-            db.session.commit()
-        except Exception as e:
-            print ("Database drop error: "+str(e))
-            print ('Rolling back...')
-            db.session.rollback()
-            raise e
+    try:
+        _drop_tables()
+        db.session.commit()
+    except Exception as e:
+        print ("Database drop error: "+str(e))
+        print ('Rolling back...')
+        db.session.rollback()
+        raise e
 
-        print ('Drop database tables successful.')
+    print ('Drop database tables successful.')
 
 
-@manager.command
-def create(default_data=True, sample_data=False):
+@database_cli.command('create')
+@click.argument('default_data', default=True, type=bool)
+@click.argument('sample_data', default=False, type=bool)
+def click_create(default_data, sample_data):
+    create(default_data, sample_data)
+
+
+# we separated the click configured function from the actual function so that
+# we can call them from the tests. Calling them from the tests doesn't work
+# with the click decorators applied.
+def create(default_data, sample_data):
     """Creates database tables from sqlalchemy models"""
     if db.engine.has_table('user'):
         print ('Tables exist. Skipping database create. Use database recreate instead.')
@@ -79,27 +90,40 @@ def create(default_data=True, sample_data=False):
         print ('Create database successful.')
 
 
-@manager.command
-def recreate(yes=False, default_data=True, sample_data=False):
+@database_cli.command('recreate')
+@click.option('-y', '--yes', 'yes',  type=bool,
+              prompt='Are you sure you want to lose all your data')
+@click.option('-d', '--default-data', 'default_data', default=True, type=bool)
+@click.option('-s', '--sample-data', 'sample_data', default=False, type=bool)
+def click_recreate(yes, default_data, sample_data):
+    if yes:
+        recreate(default_data, sample_data)
+
+
+def recreate(default_data=True, sample_data=False):
     """Recreates database tables (same as issuing 'drop' and then 'create')"""
     print ("Resetting database state...")
-    if yes or prompt_bool("Are you sure you want to lose all your data"):
+    try:
+        _drop_tables()
+        _create_tables()
+        _populate_tables(default_data, sample_data)
+        db.session.commit()
+    except Exception as e:
+        print ("Database recreate error: "+str(e))
+        print ('Rolling back...')
+        db.session.rollback()
+        raise e
 
-        try:
-            _drop_tables()
-            _create_tables()
-            _populate_tables(default_data, sample_data)
-            db.session.commit()
-        except Exception as e:
-            print ("Database recreate error: "+str(e))
-            print ('Rolling back...')
-            db.session.rollback()
-            raise e
-
-        print ('Recreate database successful.')
+    print ('Recreate database successful.')
 
 
-@manager.command
+@database_cli.command('populate')
+@click.argument('default_data', default=False, type=bool)
+@click.argument('sample_data', default=False, type=bool)
+def click_populate(default_data, sample_data):
+    populate(default_data, sample_data)
+
+
 def populate(default_data=False, sample_data=False):
     """Populate database with default data"""
 

@@ -2,8 +2,10 @@ from bouncer.constants import CREATE, READ, EDIT, DELETE, MANAGE
 from flask import Blueprint, jsonify, request, current_app, url_for, redirect, session as sess
 from flask_login import login_required, current_user, logout_user
 from flask_restful import Resource, marshal
-from flask_restful.reqparse import RequestParser
 from sqlalchemy import and_, or_
+
+from webargs import fields
+from webargs.flaskparser import use_args
 
 from . import dataformat
 from compair.core import event, db, abort, display_name_generator
@@ -22,12 +24,11 @@ from oauthlib.oauth1 import RequestValidator
 lti_api = Blueprint("lti_api", __name__)
 api = new_restful_api(lti_api)
 
-lti_launch_parser = RequestParser()
-lti_launch_parser.add_argument('assignment', default=None)
-
 # /auth
 class LTIAuthAPI(Resource):
-    def post(self):
+    @use_args({'assignment': fields.Str(missing=None)},
+              location='query')
+    def post(self, args):
         """
         Kickstarts the LTI integration flow.
         """
@@ -39,6 +40,7 @@ class LTIAuthAPI(Resource):
             tool_provider = FlaskToolProvider.from_flask_request(request=request)
         except InvalidLaunchParamError as e:
             return "Invalid Request: {}".format(str(e)), 400
+
 
         validator = ComPAIRRequestValidator()
         if not tool_provider.is_valid_request(validator):
@@ -57,10 +59,9 @@ class LTIAuthAPI(Resource):
             return _return_validation_error(tool_provider, "ComPAIR requires the LTI tool consumer to send a basic lti launch request.")
 
         lti_consumer = LTIConsumer.get_by_tool_provider(tool_provider)
-        params = lti_launch_parser.parse_args()
         # override custom_assignment if not set in launch body but is in querystring
-        if not tool_provider.custom_assignment and params.get('assignment'):
-            tool_provider.custom_assignment = params.get('assignment')
+        if not tool_provider.custom_assignment and args.get('assignment'):
+            tool_provider.custom_assignment = args.get('assignment')
 
         # log current user out if needed
         logout_user()
