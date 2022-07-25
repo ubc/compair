@@ -2136,7 +2136,7 @@ class AssignmentUserComparisonsAPITests(ComPAIRAPITestCase):
 
             # get paginated list of all users in group with comparisons in assignment
             group_filter = { 'group': self.fixtures.groups[0].uuid }
-            rv = self.client.get(url, data=json.dumps(group_filter), content_type='application/json')
+            rv = self.client.get(url, query_string=group_filter)
             self.assert200(rv)
 
             # note there are 2 groups with half the students in each group
@@ -2150,7 +2150,7 @@ class AssignmentUserComparisonsAPITests(ComPAIRAPITestCase):
 
             # get paginated list of all comparisons in assignment for a user
             author_filter = { 'author': self.fixtures.students[0].uuid }
-            rv = self.client.get(url, data=json.dumps(author_filter), content_type='application/json')
+            rv = self.client.get(url, query_string=author_filter, content_type='application/json')
             self.assert200(rv)
 
             self.assertEqual(rv.json['page'], 1)

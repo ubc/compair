@@ -13,6 +13,9 @@ from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
 from flask_restful.reqparse import RequestParser
 
+from webargs import fields, validate
+from webargs.flaskparser import use_args
+
 from . import dataformat
 from compair.core import db, event, abort, allowed_file, display_name_generator
 from compair.authorization import require, USER_IDENTITY
@@ -31,9 +34,6 @@ update_users_course_role_parser = RequestParser()
 update_users_course_role_parser.add_argument('ids', type=list, required=True, nullable=False, default=[], location='json')
 update_users_course_role_parser.add_argument('course_role', default=CourseRole.dropped.value)
 
-
-import_classlist_parser = RequestParser()
-import_classlist_parser.add_argument('import_type', default=None, required=False)
 
 # upload file column name to index number
 COMPAIR_IMPORT = {
@@ -404,7 +404,9 @@ class ClasslistRootAPI(Resource):
             return {'objects': marshal(class_list, dataformat.get_users_in_course(restrict_user=restrict_user))}
 
     @login_required
-    def post(self, course_uuid):
+    @use_args({'import_type': fields.Str(missing=None, required=False)},
+              location='form')
+    def post(self, args, course_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         user_course = UserCourse(course_id=course.id)
         require(EDIT, user_course,
@@ -416,8 +418,7 @@ class ClasslistRootAPI(Resource):
             if course.id == DemoDataFixture.DEFAULT_COURSE_ID:
                 abort(400, title="Class List Not Imported", message="Sorry, you cannot import users for the default demo course.")
 
-        params = import_classlist_parser.parse_args()
-        import_type = params.get('import_type')
+        import_type = args.get('import_type')
 
         if import_type not in [ThirdPartyType.cas.value, ThirdPartyType.saml.value, None]:
             abort(400, title="Class List Not Imported", message="Please select a way for students to log in and try importing again.")

@@ -3,11 +3,12 @@ import os
 import re
 from functools import wraps
 
-from flask import redirect, render_template, jsonify, current_app
+from flask import current_app, jsonify, make_response, redirect, \
+    render_template, request, send_file, url_for
 from flask_login import login_required, current_user
-from flask import make_response
-from flask import send_file, url_for, redirect, request
-from flask_restful.reqparse import RequestParser
+
+from webargs import fields
+from webargs.flaskparser import use_args
 
 from bouncer.constants import READ
 from compair.authorization import require
@@ -16,8 +17,6 @@ from compair.models import File
 from compair.core import event
 on_get_file = event.signal('GET_FILE')
 
-attachment_download_parser = RequestParser()
-attachment_download_parser.add_argument('name', default=None)
 
 def register_api_blueprints(app):
     # Initialize rest of the api modules
@@ -240,13 +239,13 @@ def register_api_blueprints(app):
     @app.route('/app/<regex("attachment|report"):file_type>/<file_name>')
     @force_ms_office_refresh
     @login_required
-    def file_retrieve(file_type, file_name):
+    @use_args({'name': fields.Str(missing=None)}, location='query')
+    def file_retrieve(args, file_type, file_name):
         file_dirs = {
             'attachment': app.config['ATTACHMENT_UPLOAD_FOLDER'],
             'report': app.config['REPORT_FOLDER']
         }
         file_path = '{}/{}'.format(file_dirs[file_type], file_name)
-        params = attachment_download_parser.parse_args()
 
         if file_type == 'attachment':
             attachment = File.get_by_file_name_or_404(
@@ -278,11 +277,11 @@ def register_api_blueprints(app):
 
         # TODO: add bouncer for reports
         mimetype, encoding = mimetypes.guess_type(file_name)
-        attachment_filename = None
+        download_name = None
         as_attachment = False
 
         if file_type == 'attachment' and mimetype != "application/pdf":
-            attachment_filename = params.get('name') #optionally set the download file name
+            download_name = args.get('name') #optionally set the download file name
             as_attachment = True
 
         on_get_file.send(
@@ -294,7 +293,7 @@ def register_api_blueprints(app):
             data={'file_path': file_path, 'mimetype': mimetype})
 
         return send_file(file_path, mimetype=mimetype,
-                         download_name=attachment_filename,
+                         download_name=download_name,
                          as_attachment=as_attachment)
 
     # Return webargs validation errors as JSON

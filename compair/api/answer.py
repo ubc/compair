@@ -2,6 +2,7 @@ import datetime
 
 from bouncer.constants import CREATE, READ, EDIT, MANAGE, DELETE
 from flask import Blueprint, current_app
+from flask.views import MethodView
 from flask_bouncer import can
 from flask_login import login_required, current_user
 from flask_restful import Resource, marshal
@@ -38,9 +39,6 @@ new_answer_parser.add_argument('attempt_ended', default=None)
 
 existing_answer_parser = new_answer_parser.copy()
 existing_answer_parser.add_argument('id', required=True, help="Answer id is required.")
-
-user_answer_list_parser = RequestParser()
-user_answer_list_parser.add_argument('draft', type=bool, required=False, default=False)
 
 top_answer_parser = RequestParser()
 top_answer_parser.add_argument(
@@ -587,9 +585,11 @@ api.add_resource(AnswerIdAPI, '/<answer_uuid>')
 
 
 # /user
-class AnswerUserIdAPI(Resource):
+class AnswerUserIdAPI(MethodView):
     @login_required
-    def get(self, course_uuid, assignment_uuid):
+    @use_args({'draft': fields.Bool(missing=False, required=False)},
+              location='query')
+    def get(self, args, course_uuid, assignment_uuid):
         """
         Get answers submitted to the assignment submitted by current user
 
@@ -605,8 +605,6 @@ class AnswerUserIdAPI(Resource):
             message="Sorry, your role in this course does not allow you to view answers for this assignment.")
         restrict_user = not can(MANAGE, assignment)
 
-        params = user_answer_list_parser.parse_args()
-
         query = Answer.query \
             .options(joinedload('comments')) \
             .options(joinedload('file')) \
@@ -617,7 +615,7 @@ class AnswerUserIdAPI(Resource):
                 active=True,
                 assignment_id=assignment.id,
                 course_id=course.id,
-                draft=params.get('draft')
+                draft=args.get('draft')
             )
 
         # get group and individual answers for user if applicable
@@ -643,7 +641,8 @@ class AnswerUserIdAPI(Resource):
         return {"objects": marshal(answers, dataformat.get_answer(restrict_user))}
 
 
-api.add_resource(AnswerUserIdAPI, '/user')
+answers_api.add_url_rule('/user',
+                         view_func=AnswerUserIdAPI.as_view('AnswerUserId'))
 
 # /top
 class TopAnswerAPI(Resource):
