@@ -102,9 +102,29 @@ class ComPAIRTestCase(TestCase):
         db.session.remove()
         db.drop_all()
 
+
 class ComPAIRAPITestCase(ComPAIRTestCase):
     api = None
     resource = None
+
+    # Overrides Flask-Testing's implementation to allow relative urls. This is
+    # due to Werkzeug now allowing relative urls in the location header.
+    # Previously, it was forced into an absolute url, so Flask-Testing still
+    # expects absolute urls in the location header.
+    def assertRedirects(self, response, location, message=None):
+        """
+        Checks if response is an HTTP redirect to the
+        given location.
+        :param response: Flask response
+        :param location: relative URL path to SERVER_NAME or an absolute URL
+        """
+        expected_location = location
+
+        valid_status_codes = (301, 302, 303, 305, 307)
+        valid_status_code_str = ', '.join(str(code) for code in valid_status_codes)
+        not_redirect = "HTTP Status %s expected but got %d" % (valid_status_code_str, response.status_code)
+        self.assertTrue(response.status_code in valid_status_codes, message or not_redirect)
+        self.assertEqual(response.location, expected_location, message)
 
     @contextmanager
     def login(self, username, password="password"):
