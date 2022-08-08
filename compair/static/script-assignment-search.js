@@ -3,6 +3,7 @@ let api_url = "/api/assignment/search/enddate";
 const options = { year: 'numeric', month: 'short', day: 'numeric' };
 let localeLang = 'en-ca';
 var searchDay = new Date().toLocaleDateString(localeLang, options);
+var searchDay2 = new Date().toLocaleDateString(localeLang, options);
 
 const d = new Date();
 let diff = d.getTimezoneOffset();
@@ -29,7 +30,6 @@ function formatDate(date) {
     var d = (new Date(date.toString().replace(/-/g, '\/')) );
     return d.toLocaleDateString(localeLang, options);
 }
-
 function getObjectDate(object)
 {
     searchDay = formatDate(object);
@@ -39,6 +39,32 @@ function getObjectDate(object)
     strURL = api_url.concat('?compare_end=').concat(formatDateYYMMDD(searchDay)).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
 
     getsearchapi(strURL);
+}
+
+function getObjectDateRange(object,object2)
+{
+    searchDay = formatDate(object);
+    searchDay2 = formatDate(object2);
+    if (object.includes("Invalid Date")){
+        searchDay = new Date().toLocaleDateString(localeLang, options);
+    }
+    if (object2.includes("Invalid Date")){
+        searchDay2 = new Date().toLocaleDateString(localeLang, options);
+    }
+
+    //strURL = api_url.concat('?compare_end=').concat(formatDateYYMMDD(searchDay)).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
+    strURL = api_url;
+    strURL = strURL.concat('?compare_start=').concat(formatDateYYMMDD(searchDay));
+    strURL = strURL.concat('&compare_end=').concat(formatDateYYMMDD(searchDay2));
+    strURL = strURL.concat('&compare_localTimeZone=').concat(localTimeZone.toString());
+
+    console.log(searchDay);
+    console.log(searchDay2);
+    console.log(strURL);
+
+    //TODO: Modify API call to search for range
+    getsearchapi(strURL);
+
 }
 // Defining async function
 async function getsearchapi(url) {

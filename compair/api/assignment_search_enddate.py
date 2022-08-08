@@ -53,15 +53,15 @@ class AssignmentRootAPI1(Resource):
         args = search_date_assignment_parser.parse_args()
 
         end_date = datetime.now().strftime("%Y-%m-%d 00:00:00")
-        start_date = datetime.now().strftime("%Y-%m-%d")
+        start_date = datetime.now().strftime("%Y-%m-%d 00:00:00")
         compare_localTimeZone = appTimeZone
 
         if (args['compare_localTimeZone']):
             compare_localTimeZone = str(args['compare_localTimeZone'])
 
         if validate(args['compare_end']):
+            #end_date = dateConversion(end_date)
             end_date = str(args['compare_end']) + ' 00:00:00'
-
             ##convert this to System TZ
             local = pytz.timezone(compare_localTimeZone)
             naive = datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S")
@@ -70,12 +70,24 @@ class AssignmentRootAPI1(Resource):
             end_date = str(systemTZ_dt)
 
         if validate(args['compare_start']):
-            start_date = str(args['compare_start'])
+            #start_date = dateConversion(start_date)
+            start_date = str(args['compare_start']) + ' 00:00:00'
+            ##convert this to System TZ
+            local2 = pytz.timezone(compare_localTimeZone)
+            naive2 = datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S")
+            local_dt2 = local2.localize(naive2, is_dst=None)
+            systemTZ_dt2 = local_dt2.astimezone(pytz.timezone(appTimeZone))
+            start_date = str(systemTZ_dt2)
 
         db_url = str(current_app.config['SQLALCHEMY_DATABASE_URI'])
         engine = create_engine(db_url, pool_size=5, pool_recycle=3600)
         conn = engine.connect()
 
+        print("XXXX:" + start_date + ":" + end_date)
+
+        #sql_text = str("SELECT JSON_OBJECT('course_name', t1.name,'name', t2.name,'answer_start', date_format(CONVERT_TZ(t2.answer_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y'),'answer_end', date_format(CONVERT_TZ(t2.answer_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'),'compare_start', date_format(CONVERT_TZ(t2.compare_start, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'compare_end', date_format(CONVERT_TZ(t2.compare_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_end', date_format(CONVERT_TZ(t2.self_eval_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_start', date_format(CONVERT_TZ(t2.self_eval_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y')) FROM course as t1, assignment as t2 WHERE (t1.id = t2.course_id) AND (t2.active=TRUE AND t1.active=TRUE) AND (t2.compare_end >=  '" + end_date + "' OR answer_end >= '" + end_date + "' OR self_eval_end >= '" + end_date +  "');");
+
+        ##TODO: modify query to include stat_date
         sql_text = str("SELECT JSON_OBJECT('course_name', t1.name,'name', t2.name,'answer_start', date_format(CONVERT_TZ(t2.answer_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y'),'answer_end', date_format(CONVERT_TZ(t2.answer_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'),'compare_start', date_format(CONVERT_TZ(t2.compare_start, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'compare_end', date_format(CONVERT_TZ(t2.compare_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_end', date_format(CONVERT_TZ(t2.self_eval_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_start', date_format(CONVERT_TZ(t2.self_eval_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y')) FROM course as t1, assignment as t2 WHERE (t1.id = t2.course_id) AND (t2.active=TRUE AND t1.active=TRUE) AND (t2.compare_end >=  '" + end_date + "' OR answer_end >= '" + end_date + "' OR self_eval_end >= '" + end_date +  "');");
 
         result = conn.execute(sql_text)
@@ -84,5 +96,14 @@ class AssignmentRootAPI1(Resource):
         conn.close()
 
         return jsonify(final_result)
+
+def _dateConversion(date_value):
+    ##convert this to System TZ
+    local = pytz.timezone(compare_localTimeZone)
+    naive = datetime.strptime(date_value, "%Y-%m-%d %H:%M:%S")
+    local_dt = local.localize(naive, is_dst=None)
+    systemTZ_dt = local_dt.astimezone(pytz.timezone(appTimeZone))
+    end_date = str(systemTZ_dt)
+    return end_date
 
 api.add_resource(AssignmentRootAPI1, '')

@@ -928,9 +928,55 @@ module.filter("notScoredEnd", function () {
 module.controller("AssignmentSearchEndDateController",
     ["$scope", function($scope){
 
+        //TODO: set min date for the second calendar
+
             $scope.searchDate = function() {
                 var formatDate = new Date($scope.dt);
-                getObjectDate(formatDate.toLocaleDateString('en-ca', { year: 'numeric' }) + "-" + formatDate.toLocaleDateString('en-ca', { month: '2-digit' }) + "-" + formatDate.toLocaleDateString('en-ca', { day: '2-digit' }));
+                var formatDate2 = new Date($scope.dt2);
+
+                console.log("Testing AssignmentSearchEndDateController-dtOne:" + formatDate);
+                console.log("Testing AssignmentSearchEndDateController-dtTwo:" + formatDate2);
+
+                var strFormatDate = formatDate.toLocaleDateString('en-ca', { year: 'numeric' }) + "-" + formatDate.toLocaleDateString('en-ca', { month: '2-digit' }) + "-" + formatDate.toLocaleDateString('en-ca', { day: '2-digit' });
+                var strFormatDate2 = formatDate2.toLocaleDateString('en-ca', { year: 'numeric' }) + "-" + formatDate2.toLocaleDateString('en-ca', { month: '2-digit' }) + "-" + formatDate2.toLocaleDateString('en-ca', { day: '2-digit' });
+                console.log("Testing AssignmentSearchEndDateController-formatDate:" + strFormatDate);
+                console.log("Testing AssignmentSearchEndDateController-formatDate2:" + strFormatDate2);
+
+                //getObjectDate(formatDate.toLocaleDateString('en-ca', { year: 'numeric' }) + "-" + formatDate.toLocaleDateString('en-ca', { month: '2-digit' }) + "-" + formatDate.toLocaleDateString('en-ca', { day: '2-digit' }));
+                if (formatDate <= formatDate2){
+                    console.log("GOOD DATE RANGE");
+                }else{
+                    console.log("BAD DATE RANGE");
+                }
+                //TODO: use the validate above
+                getObjectDateRange(strFormatDate, strFormatDate2);
+            };
+
+            $scope.searchDate2 = function() {
+                var formatDate = new Date($scope.dt);
+                var formatDate2 = new Date($scope.dt2);
+
+                console.log("Testing AssignmentSearchEndDateController-dtOne:" + formatDate);
+                console.log("Testing AssignmentSearchEndDateController-dtTwo:" + formatDate2);
+
+                var strFormatDate = formatDate.toLocaleDateString('en-ca', { year: 'numeric' }) + "-" + formatDate.toLocaleDateString('en-ca', { month: '2-digit' }) + "-" + formatDate.toLocaleDateString('en-ca', { day: '2-digit' });
+                var strFormatDate2 = formatDate2.toLocaleDateString('en-ca', { year: 'numeric' }) + "-" + formatDate2.toLocaleDateString('en-ca', { month: '2-digit' }) + "-" + formatDate2.toLocaleDateString('en-ca', { day: '2-digit' });
+                console.log("Testing AssignmentSearchEndDateController-formatDate:" + strFormatDate);
+                console.log("Testing AssignmentSearchEndDateController-formatDate2:" + strFormatDate2);
+
+                //getObjectDate(formatDate2.toLocaleDateString('en-ca', { year: 'numeric' }) + "-" + formatDate.toLocaleDateString('en-ca', { month: '2-digit' }) + "-" + formatDate.toLocaleDateString('en-ca', { day: '2-digit' }));
+                //getObjectDateRange(formatDate.toLocaleDateString('en-ca', { year: 'numeric' }) + "-" + formatDate.toLocaleDateString('en-ca', { month: '2-digit' }) + "-" + formatDate.toLocaleDateString('en-ca', { day: '2-digit' }), formatDate2.toLocaleDateString('en-ca', { year: 'numeric' }) + "-" + formatDate.toLocaleDateString('en-ca', { month: '2-digit' }) + "-" + formatDate.toLocaleDateString('en-ca', { day: '2-digit' }));
+
+                if (formatDate <= formatDate2){
+                    console.log("GOOD DATE RANGE");
+                }else{
+                    console.log("BAD DATE RANGE");
+                }
+                //TODO: use the validate above
+                getObjectDateRange(strFormatDate, strFormatDate2);
+
+
+
             };
 
 }]);

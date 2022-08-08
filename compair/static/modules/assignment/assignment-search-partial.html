@@ -11,15 +11,23 @@
                 <span class="input-group">
                     <!--calendar-->
                     <div ng-app="ubc.ctlt.compair.assignment" ng-controller="AssignmentSearchEndDateController as ctrlEndDate" >
-                            <div class="input-group" style="width:200px" >
+                            <div class="input-group" >
                                 <input type="text" class="form-control" uib-datepicker-popup="yyyy-MMM-dd" ng-model="dt" is-open="isDatepickerOpen" ng-change="searchDate();"  datepicker-options="datepickerOptions" ng-required="true" ng-readonly="true" close-text="Close" alt-input-formats="altInputFormats"/>
                                 <span class="input-group-btn">
                                     <button type="button" class="btn btn-default" ng-click="isDatepickerOpen = !isDatepickerOpen">
                                       <i class="glyphicon glyphicon-calendar"></i>
                                     </button>
                                   </span>
+
+                                <input type="text" class="form-control" uib-datepicker-popup="yyyy-MMM-dd" ng-model="dt2" is-open="isDatepickerOpen2" ng-change="searchDate2();"  datepicker-options="datepickerOptions" ng-required="true" ng-readonly="true" close-text="Close" alt-input-formats="altInputFormats"/>
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default" ng-click="isDatepickerOpen2 = !isDatepickerOpen2">
+                                      <i class="glyphicon glyphicon-calendar"></i>
+                                    </button>
+                                  </span>
                             </div>
                     </div>
+
             </div>
 
         </form>
