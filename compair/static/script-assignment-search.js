@@ -95,6 +95,7 @@ function showsearchapi(search_data) {
           <th>Answering Ends</th>
           <th>Comparing Begins</th>
           <th>Comparing Ends</th>
+          <th>Self-Eval Ends</th>
          </tr>`;
 
 
@@ -110,8 +111,8 @@ function showsearchapi(search_data) {
             obj.compare_end = '<i>No end date</i>';
         }
         //FOR NEXT RELEASE 2 DISPLAY SELF_EVAL_DATES
-        //tab += `<tr><td>${JSON.stringify(obj.course_name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.self_eval_end).replace(/\"/g, "")}</td></tr>`;
-        tab += `<tr><td>${JSON.stringify(obj.course_name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
+        tab += `<tr><td>${JSON.stringify(obj.course_name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.self_eval_end).replace(/\"/g, "")}</td></tr>`;
+        //tab += `<tr><td>${JSON.stringify(obj.course_name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
         iKey++;
     }
 
@@ -120,6 +121,7 @@ function showsearchapi(search_data) {
         iKeyText = iKey.toString() + " active assignment";
     }
     document.getElementById("searchDay").innerHTML = (searchDay);
+    document.getElementById("searchDayEnd").innerHTML = (searchDay2);
     document.getElementById("numberOfAssignment").innerHTML = iKeyText;
 
     // Setting innerHTML as tab variable

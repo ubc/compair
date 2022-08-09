@@ -86,9 +86,8 @@ class AssignmentRootAPI1(Resource):
         print("XXXX:" + start_date + ":" + end_date)
 
         #sql_text = str("SELECT JSON_OBJECT('course_name', t1.name,'name', t2.name,'answer_start', date_format(CONVERT_TZ(t2.answer_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y'),'answer_end', date_format(CONVERT_TZ(t2.answer_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'),'compare_start', date_format(CONVERT_TZ(t2.compare_start, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'compare_end', date_format(CONVERT_TZ(t2.compare_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_end', date_format(CONVERT_TZ(t2.self_eval_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_start', date_format(CONVERT_TZ(t2.self_eval_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y')) FROM course as t1, assignment as t2 WHERE (t1.id = t2.course_id) AND (t2.active=TRUE AND t1.active=TRUE) AND (t2.compare_end >=  '" + end_date + "' OR answer_end >= '" + end_date + "' OR self_eval_end >= '" + end_date +  "');");
-
-        ##TODO: modify query to include stat_date
-        sql_text = str("SELECT JSON_OBJECT('course_name', t1.name,'name', t2.name,'answer_start', date_format(CONVERT_TZ(t2.answer_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y'),'answer_end', date_format(CONVERT_TZ(t2.answer_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'),'compare_start', date_format(CONVERT_TZ(t2.compare_start, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'compare_end', date_format(CONVERT_TZ(t2.compare_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_end', date_format(CONVERT_TZ(t2.self_eval_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_start', date_format(CONVERT_TZ(t2.self_eval_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y')) FROM course as t1, assignment as t2 WHERE (t1.id = t2.course_id) AND (t2.active=TRUE AND t1.active=TRUE) AND (t2.compare_end >=  '" + end_date + "' OR answer_end >= '" + end_date + "' OR self_eval_end >= '" + end_date +  "');");
+        sql_text = str("SELECT JSON_OBJECT('course_name', t1.name,'name', t2.name,'answer_start', date_format(CONVERT_TZ(t2.answer_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y'),'answer_end', date_format(CONVERT_TZ(t2.answer_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'),'compare_start', date_format(CONVERT_TZ(t2.compare_start, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'compare_end', date_format(CONVERT_TZ(t2.compare_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_end', date_format(CONVERT_TZ(t2.self_eval_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_start', date_format(CONVERT_TZ(t2.self_eval_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y')) FROM course as t1, assignment as t2 WHERE (t1.id = t2.course_id) AND (t2.active=TRUE AND t1.active=TRUE) AND ( (t2.compare_end >=  '" + start_date + "' AND t2.compare_end <=  '" + end_date + "') OR ( answer_end >= '" + start_date + "' AND answer_end <= '" + end_date + "') OR ( self_eval_end >= '" + start_date + "' AND self_eval_end <= '" + end_date +  "'));");
+        print(sql_text)
 
         result = conn.execute(sql_text)
 
@@ -97,13 +96,5 @@ class AssignmentRootAPI1(Resource):
 
         return jsonify(final_result)
 
-def _dateConversion(date_value):
-    ##convert this to System TZ
-    local = pytz.timezone(compare_localTimeZone)
-    naive = datetime.strptime(date_value, "%Y-%m-%d %H:%M:%S")
-    local_dt = local.localize(naive, is_dst=None)
-    systemTZ_dt = local_dt.astimezone(pytz.timezone(appTimeZone))
-    end_date = str(systemTZ_dt)
-    return end_date
 
 api.add_resource(AssignmentRootAPI1, '')

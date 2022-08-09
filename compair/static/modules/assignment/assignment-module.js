@@ -929,6 +929,7 @@ module.controller("AssignmentSearchEndDateController",
     ["$scope", function($scope){
 
         //TODO: set min date for the second calendar
+        $scope.minDate = new Date()
 
             $scope.searchDate = function() {
                 var formatDate = new Date($scope.dt);
@@ -948,6 +949,8 @@ module.controller("AssignmentSearchEndDateController",
                 }else{
                     console.log("BAD DATE RANGE");
                 }
+                //setting mindate
+                minDate = strFormatDate
                 //TODO: use the validate above
                 getObjectDateRange(strFormatDate, strFormatDate2);
             };
