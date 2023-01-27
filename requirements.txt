@@ -34,6 +34,9 @@ elo==0.1.1
 setuptools<58
 trueskill==0.4.4
 Celery==5.2.6
+# fixes https://github.com/python/importlib_metadata/issues/411
+# note celery is only affected for python 3.7 and earlier
+importlib-metadata<5.0; python_version < '3.8'
 kombu==5.2.4
 redis==4.2.2
 tincan==1.0.0
