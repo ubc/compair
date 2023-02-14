@@ -56,3 +56,5 @@ markupsafe==2.0.1
 # json api was deprecated in latest version, so need older version, can be
 # removed once upgraded to flask 2
 itsdangerous==2.0.1
+# for the kaltura migration script
+kalturaapiclient==19.1.0
