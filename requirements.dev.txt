@@ -4,4 +4,4 @@ scipy==1.7.3
 # numpy 1.22 seems to be missing packages for python 3.7, so we'll stay with
 # 1.21.6 until python 3.7 is dropped
 numpy==1.21.6
-pillow==9.1.0
+pillow==9.3.0
