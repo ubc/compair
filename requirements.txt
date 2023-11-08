@@ -38,7 +38,7 @@ Celery==5.2.6
 # note celery is only affected for python 3.7 and earlier
 importlib-metadata<5.0; python_version < '3.8'
 kombu==5.2.4
-redis==4.2.2
+redis==4.4.4
 tincan==1.0.0
 https://github.com/IMSGlobal/caliper-python/archive/1.2.0.4.zip
 nose==1.3.7
