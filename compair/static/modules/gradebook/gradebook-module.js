@@ -31,7 +31,7 @@ module.factory(
     ['$resource',
     function($resource)
     {
-        var ret = $resource('/api/courses/:courseId/assignments/:assignmentId/attachments/download');
+        var ret = $resource('/api/courses/:courseId/assignments/:assignmentId/attachments/download_students');
         return ret;
     }
 ]);
