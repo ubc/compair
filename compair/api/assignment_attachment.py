@@ -23,9 +23,13 @@ api = new_restful_api(assignment_attachment_api)
 # differs completely from that used by file.py, I've had to split it out.
 
 
-# given an assignment, download all attachments in that assignment.
-# /api/courses/<course>/assignments/<assignment>/attachments/download
-class DownloadAllAttachmentsAPI(Resource):
+# given an assignment, download all student attachments in that assignment.
+# This is restricted to only student answers to match the behaviour of the
+# "Participation" tab in the UI, where it only lists students.
+# /api/courses/<course>/assignments/<assignment>/attachments/download_students
+class DownloadAllStudentAttachmentsAPI(Resource):
+    DELIM = ' - '
+
     @login_required
     def get(self, course_uuid, assignment_uuid):
         # course unused, but we need to call it to check if it's a valid course
@@ -38,13 +42,21 @@ class DownloadAllAttachmentsAPI(Resource):
                 message="Sorry, your system role does not allow downloading all attachments")
 
         # grab answers so we can see how many has files
-        answers = self.getAnswersByAssignment(assignment)
+        answers = self.getStudentAnswersByAssignment(assignment)
         fileIds = []
+        fileAuthors = {}
         for answer in answers:
             if not answer.file_id:
                 continue
             # answer has an attachment
             fileIds.append(answer.file_id)
+            # the user who uploaded the file can be different from the answer
+            # author (e.g. instructor can upload on behalf of student), so
+            # we need to use the answer author instead of file uploader
+            author = answer.user_fullname
+            if answer.user_student_number:
+                author += self.DELIM + answer.user_student_number
+            fileAuthors[answer.file_id] = author
 
         if not fileIds:
             return {'msg': 'Assignment has no attachments'}
@@ -64,13 +76,9 @@ class DownloadAllAttachmentsAPI(Resource):
                     current_app.config['ATTACHMENT_UPLOAD_FOLDER'],
                     srcFile.name
                 )
-                # set filename to 'full name - student number - uuid.ext'
-                # omit student number or extension if not exist
-                delim = ' - '
-                srcFileName = srcFile.user.fullname
-                if srcFile.user.student_number:
-                    srcFileName += delim + srcFile.user.student_number
-                srcFileName += delim + srcFile.name
+                # filename should be 'full name - student number - uuid.ext'
+                # student number is omitted if user doesn't have one
+                srcFileName = fileAuthors[srcFile.id] + self.DELIM + srcFile.name
                 #current_app.logger.debug("writing " + srcFileName)
                 zipFile.write(srcFilePath, srcFileName)
         #current_app.logger.debug("Writing zip file")
@@ -79,7 +87,7 @@ class DownloadAllAttachmentsAPI(Resource):
 
     # this really should be abstracted out into the Answer model, but I wasn't
     # able to get the join with UserCourse to work inside the Answer model.
-    def getAnswersByAssignment(self, assignment):
+    def getStudentAnswersByAssignment(self, assignment):
         return Answer.query \
             .outerjoin(UserCourse, and_(
                 Answer.user_id == UserCourse.user_id,
@@ -91,7 +99,10 @@ class DownloadAllAttachmentsAPI(Resource):
                 Answer.practice == False,
                 Answer.draft == False,
                 or_(
-                    and_(UserCourse.course_role != CourseRole.dropped, Answer.user_id != None),
+                    and_(
+                        UserCourse.course_role == CourseRole.student,
+                        Answer.user_id != None
+                    ),
                     Answer.group_id != None
                 )
             )) \
@@ -102,4 +113,4 @@ class DownloadAllAttachmentsAPI(Resource):
                     filter(File.id.in_(fileIds)).all()
 
 
-api.add_resource(DownloadAllAttachmentsAPI, '/download')
+api.add_resource(DownloadAllStudentAttachmentsAPI, '/download_students')

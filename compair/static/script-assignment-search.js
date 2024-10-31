@@ -1,17 +1,42 @@
 let api_url = "/api/assignment/search/enddate";
 
 const options = { year: 'numeric', month: 'short', day: 'numeric' };
-var searchDay = new Date().toLocaleDateString('en-us', options);
+let localeLang = 'en-ca';
+var searchDay = new Date().toLocaleDateString(localeLang, options);
+
+const d = new Date();
+let diff = d.getTimezoneOffset();
+let localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+function formatDateYYMMDD(date) {
+    var d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2)
+        month = '0' + month;
+    if (day.length < 2)
+        day = '0' + day;
+
+    return [year, month, day].join('-');
+}
 
 function formatDate(date) {
+    if (date.includes("Invalid Date")){
+        return searchDay;
+    }
     var d = (new Date(date.toString().replace(/-/g, '\/')) );
-    return d.toLocaleDateString('en-ca', options);
+    return d.toLocaleDateString(localeLang, options);
 }
 
 function getObjectDate(object)
 {
     searchDay = formatDate(object);
-    strURL = api_url.concat('?compare_end=').concat(object);
+    if (object.includes("Invalid Date")){
+        searchDay = new Date().toLocaleDateString(localeLang, options);
+    }
+    strURL = api_url.concat('?compare_end=').concat(formatDateYYMMDD(searchDay)).concat('&compare_localTimeZone=').concat(localTimeZone.toString());
 
     getsearchapi(strURL);
 }
@@ -38,6 +63,7 @@ function hideloadersearch() {
 function showsearchapi(search_data) {
 
     let tab = `<tr>
+          <th>Course Name</th>
           <th>Assignment Name</th>
           <th>Answering Begins</th>
           <th>Answering Ends</th>
@@ -48,9 +74,18 @@ function showsearchapi(search_data) {
 
     var iKey = 0;
     for (let key in  search_data) {
-        //tab += `<tr><td colspan="4">${search_data[key]}</td></tr>`;
         let obj = JSON.parse(search_data[key])
-        tab += `<tr><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
+
+        if (obj.compare_start == null){
+            obj.compare_start = 'After answering ends';
+        }
+
+        if (obj.compare_end == null){
+            obj.compare_end = '<i>No end date</i>';
+        }
+        //FOR NEXT RELEASE 2 DISPLAY SELF_EVAL_DATES
+        //tab += `<tr><td>${JSON.stringify(obj.course_name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.self_eval_end).replace(/\"/g, "")}</td></tr>`;
+        tab += `<tr><td>${JSON.stringify(obj.course_name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.name).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.answer_end).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_start).replace(/\"/g, "")}</td><td>${JSON.stringify(obj.compare_end).replace(/\"/g, "")}</td></tr>`;
         iKey++;
     }
 

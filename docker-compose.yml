@@ -98,7 +98,7 @@ services:
       - app
   worker_monitor:
     image: mher/flower
-    command: flower --port=5555 --broker=redis://redis:6379
+    command: celery flower --port=5555 --broker=redis://redis:6379
     ports:
       - "5555:5555"
     depends_on:

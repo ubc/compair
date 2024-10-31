@@ -88,7 +88,8 @@ LAUNCH_PARAMS_IS_LIST = [
 
 LAUNCH_PARAMS_CANVAS = [
     'selection_directive',
-    'text'
+    'text',
+    'assignment'
 ]
 
 CONTENT_PARAMS_REQUEST = [
