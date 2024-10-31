@@ -1,3 +1,32 @@
+# v1.3
+
+## Notable changes
+* Many dependencies, both frontend and backend, were updated.
+
+### New Features
+* "Download All" attachments button was added to generate and download a zip file of all student submitted answer attachments. This can be found in an assignment's "Participation" tab under the "Attachments" column.
+* The "Assignment End-Date" tool was added for admin users to query for the assignments end-date. 
+  * The purpose of this page is to search for ongoing or active assignments on a given date, to help plan potential schedules for testing, staging, and production environments.
+
+### New Environment Variables: For controlling worker memory leak
+* CELERY_WORKER_MAX_TASKS_PER_CHILD - Kills a worker process and forks a new one when it has executed the given number of tasks. 
+
+* CELERY_WORKER_MAX_MEMORY_PER_CHILD - Set to memory in kilobytes. Kills a worker process and forks a new one when it hits the given memory usage, the currently executing task will be allowed to complete before being killed. 
+
+## Breaking Changes
+Celery 4 introduced a new all lowercase environment variables system. ComPAIR
+is now using this new system. To adapt a Celery environment variable to
+ComPAIR, convert the original Celery variable to all uppercase and prefix it
+"CELERY\_". ComPAIR will strip the prefix and lowercase the variable before
+passing it to Celery. A few Celery environment variables were renamed in the
+new system, the ones supported in ComPAIR are:
+
+* CELERY_ALWAYS_EAGER is now CELERY_TASK_ALWAYS_EAGER
+  * Set to true if running stock standalone, see `compair/settings.py`.
+  * Set to false if running via repo's docker-compose.yml
+* BROKER_TRANSPORT_OPTIONS  is now CELERY_BROKER_TRANSPORT_OPTIONS
+* CELERYBEAT_SCHEDULE is now CELERY_BEAT_SCHEDULE
+
 # v1.2.12
 
 ## Notable changes

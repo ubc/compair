@@ -471,6 +471,18 @@ myApp.config(
                 },
                 reloadOnSearch: false,
             })
+        .when ('/assignment/search/enddate',
+            {
+                title: 'Plan Release Date',
+                templateUrl: 'modules/assignment/assignment-search-partial.html',
+                label: "Plan Release Date",
+                controller: 'AssignmentSearchEndDateController',
+                resolve: {
+                    resolvedData: function() {
+                        // no data to preload
+                    }
+                }
+            })
         .when ('/course/:courseId/assignment/:assignmentId/edit',
             {
                 title: "Edit Assignment",

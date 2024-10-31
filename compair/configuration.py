@@ -23,6 +23,8 @@ Currently the supported environment variables:
 import os
 import json
 import re
+import pytz
+import time
 
 from distutils.util import strtobool
 from flask import Config
@@ -91,13 +93,13 @@ env_overridables = [
     'KALTURA_SECRET', 'KALTURA_PLAYER_ID',
     'MAIL_SERVER', 'MAIL_DEBUG', 'MAIL_USERNAME', 'MAIL_PASSWORD',
     'MAIL_DEFAULT_SENDER', 'MAIL_SUPPRESS_SEND',
-    'GA_TRACKING_ID'
+    'GA_TRACKING_ID', 'APP_TIMEZONE'
 ]
 
 env_bool_overridables = [
     'APP_LOGIN_ENABLED', 'CAS_LOGIN_ENABLED', 'SAML_LOGIN_ENABLED', 'LTI_LOGIN_ENABLED',
     'CAS_USE_SAML', 'DEMO_INSTALLATION', 'SAML_EXPOSE_METADATA_ENDPOINT',
-    'CELERY_ALWAYS_EAGER',
+    'CELERY_TASK_ALWAYS_EAGER',
     'XAPI_ENABLED', 'CALIPER_ENABLED', 'LRS_ACTOR_ACCOUNT_USE_GLOBAL_UNIQUE_IDENTIFIER',
     'KALTURA_ENABLED', 'KALTURA_USE_GLOBAL_UNIQUE_IDENTIFIER',
     'EXPOSE_EMAIL_TO_INSTRUCTOR', 'EXPOSE_THIRD_PARTY_USERNAMES_TO_INSTRUCTOR',
@@ -109,7 +111,8 @@ env_bool_overridables = [
 
 env_int_overridables = [
     'ATTACHMENT_UPLOAD_LIMIT', 'LRS_USER_INPUT_FIELD_SIZE_LIMIT',
-    'MAIL_PORT', 'MAIL_MAX_EMAILS'
+    'MAIL_PORT', 'MAIL_MAX_EMAILS', 'CELERY_WORKER_MAX_TASKS_PER_CHILD',
+    'CELERY_WORKER_MAX_MEMORY_PER_CHILD'
 ]
 
 env_set_overridables = [
@@ -149,3 +152,7 @@ if config['DEMO_INSTALLATION'] == True:
     config['APP_LOGIN_ENABLED'] = True
     config['CAS_LOGIN_ENABLED'] = False
     config['SAML_LOGIN_ENABLED'] = False
+
+# configuring APP_TIMEZONE
+if not(config['APP_TIMEZONE'] in pytz.all_timezones):
+    config['APP_TIMEZONE'] = time.strftime('%Z')

@@ -1,5 +1,5 @@
 import os
-
+import time
 """
     Default settings, if no other settings is specified, values here are used.
 """
@@ -51,8 +51,8 @@ CELERY_BROKER_URL = None
 CELERY_ACCEPT_CONTENT = ['json', 'msgpack', 'yaml']
 CELERY_IMPORTS = ['compair.tasks']
 CELERY_TIMEZONE = 'America/Vancouver'
-CELERY_ALWAYS_EAGER = True # By default, execute tasks locally
-BROKER_TRANSPORT_OPTIONS = {
+CELERY_TASK_ALWAYS_EAGER = True # By default, execute tasks locally
+CELERY_BROKER_TRANSPORT_OPTIONS = {
     'fanout_prefix': True,
     'fanout_patterns': True
 }
@@ -163,3 +163,7 @@ ALLOW_STUDENT_CHANGE_EMAIL = True
 
 # Allow impersonation
 IMPERSONATION_ENABLED = True
+
+# when APP_TIMEZONE is empty or incorrect, it will default to system timezone
+# example America/Vancouver or America/Montreal
+APP_TIMEZONE = time.strftime('%Z')

@@ -30,7 +30,7 @@ services:
       - DB_CONN_OPTIONS={"charset":"utf8mb4"}
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_ALWAYS_EAGER=0
+      - CELERY_TASK_ALWAYS_EAGER=0
       #- GA_TRACKING_ID=12345
       - ENFORCE_SSL=0
       - MAIL_NOTIFICATION_ENABLED=1
@@ -73,7 +73,9 @@ services:
       - DB_CONN_OPTIONS={"charset":"utf8mb4"}
       - DEV=1
       - CELERY_BROKER_URL=redis://redis:6379
-      - CELERY_ALWAYS_EAGER=0
+      - CELERY_TASK_ALWAYS_EAGER=0
+      - CELERY_WORKER_MAX_TASKS_PER_CHILD=5
+      #- CELERY_WORKER_MAX_MEMORY_PER_CHILD=12000 # in KB, e.g. 12000 = 12MB
       - ENFORCE_SSL=0
       - MAIL_NOTIFICATION_ENABLED=1
       - MAIL_SERVER=mail
@@ -96,7 +98,7 @@ services:
       - app
   worker_monitor:
     image: mher/flower
-    command: flower --port=5555 --broker=redis://redis:6379
+    command: celery flower --port=5555 --broker=redis://redis:6379
     ports:
       - "5555:5555"
     depends_on:

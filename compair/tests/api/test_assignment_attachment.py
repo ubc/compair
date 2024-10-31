@@ -37,14 +37,24 @@ class AssignmentAttachmentTests(ComPAIRAPITestCase):
         if assignmentUuid is None:
             assignmentUuid = self.fixtures.assignment.uuid
         return "/api/courses/" + courseUuid + "/assignments/" + assignmentUuid \
-            + "/attachments/download"
+            + "/attachments/download_students"
 
     # we need to create actual files
-    def _createAttachmentsInAssignment(self, assignment):
+    # isFileUploadedByInstructor simulates when instructors submit answers on
+    # behalf of students, the file would be owned by the instructor instead of
+    # the student
+    def _createAttachmentsInAssignment(
+            self,
+            assignment,
+            isFileUploadedByInstructor=False
+    ):
         uploadDir = current_app.config['ATTACHMENT_UPLOAD_FOLDER']
 
         for answer in assignment.answers:
-            attachFile = self.fixtures.add_file(answer.user)
+            uploader = answer.user
+            if isFileUploadedByInstructor:
+                uploader = self.fixtures.instructor
+            attachFile = self.fixtures.add_file(uploader)
             attachFilename = attachFile.uuid + '.png'
             attachFile.name = attachFilename
             attachFile.uuid = attachFile.uuid
@@ -57,6 +67,40 @@ class AssignmentAttachmentTests(ComPAIRAPITestCase):
             db.session.add(attachFile)
             db.session.add(answer)
             db.session.commit()
+
+    def _downloadAndCheckFiles(self):
+        with self.login(self.fixtures.instructor.username):
+            rv = self.client.get(self._getUrl())
+            self.assert200(rv)
+            # make sure that we got download path and filename in return
+            expectedFilename = '{} [attachments-{}].zip'.format(
+                self.fixtures.assignment.name, self.fixtures.assignment.uuid)
+            self.assertEqual(expectedFilename, rv.json['filename'])
+            self.assertEqual('report/' + expectedFilename, rv.json['file'])
+            # check that the actual zip file created exists
+            zipFilePath = '{}/{}'.format(current_app.config['REPORT_FOLDER'],
+                                         expectedFilename)
+            self.assertTrue(os.path.isfile(zipFilePath))
+            self.filePathsToCleanup.append(zipFilePath)
+            # check that the contents of the zip file are as expected
+            archive = zipfile.ZipFile(zipFilePath)
+            self.assertEqual(None, archive.testzip())
+            actualAttachments = archive.namelist()
+            for answer in self.fixtures.assignment.answers:
+                if not answer.file_id:
+                    continue
+                # we don't include inactive, draft, or practice answers
+                if not answer.active or answer.draft or answer.practice:
+                    continue
+                # we only want current active students
+                if answer.user not in self.fixtures.students:
+                    continue
+                expectedAttachment = '{} - {} - {}'.format(
+                    answer.user.fullname,
+                    answer.user.student_number,
+                    answer.file.name
+                )
+                self.assertTrue(expectedAttachment in actualAttachments)
 
     def test_download_all_attachments_block_unauthorized_users(self):
         # test login required
@@ -87,36 +131,9 @@ class AssignmentAttachmentTests(ComPAIRAPITestCase):
 
     def test_download_all_attachments(self):
         self._createAttachmentsInAssignment(self.fixtures.assignment)
-        with self.login(self.fixtures.instructor.username):
-            rv = self.client.get(self._getUrl())
-            self.assert200(rv)
-            # make sure that we got download path and filename in return
-            expectedFilename = '{} [attachments-{}].zip'.format(
-                self.fixtures.assignment.name, self.fixtures.assignment.uuid)
-            self.assertEqual(expectedFilename, rv.json['filename'])
-            self.assertEqual('report/' + expectedFilename, rv.json['file'])
-            # check that the actual zip file created exists
-            zipFilePath = '{}/{}'.format(current_app.config['REPORT_FOLDER'],
-                                         expectedFilename)
-            self.assertTrue(os.path.isfile(zipFilePath))
-            self.filePathsToCleanup.append(zipFilePath)
-            # check that the contents of the zip file are as expected
-            archive = zipfile.ZipFile(zipFilePath)
-            self.assertEqual(None, archive.testzip())
-            actualAttachments = archive.namelist()
-            for answer in self.fixtures.assignment.answers:
-                if not answer.file_id:
-                    continue
-                # we don't include inactive, draft, or practice answers
-                if not answer.active or answer.draft or answer.practice:
-                    continue
-                # we don't include dropped students
-                if answer.user in self.fixtures.dropped_students:
-                    continue
-                expectedAttachment = '{} - {} - {}'.format(
-                    answer.user.fullname,
-                    answer.user.student_number,
-                    answer.file.name
-                )
-                self.assertTrue(expectedAttachment in actualAttachments)
+        self._downloadAndCheckFiles()
+
+    def test_files_named_for_answer_author_not_uploader(self):
+        self._createAttachmentsInAssignment(self.fixtures.assignment, True)
+        self._downloadAndCheckFiles()
 

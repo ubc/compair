@@ -46,7 +46,7 @@
         <script src="{{ url_for('static', filename='lib/angular-timer/dist/angular-timer.js') }}"></script>
         <script src="{{ url_for('static', filename='lib/lodash/lodash.js') }}"></script>
         <script src="{{ url_for('static', filename='lib/blob-polyfill/Blob.js') }}"></script>
-        <script src="{{ url_for('static', filename='lib/file-saver.js/FileSaver.js') }}"></script>
+        <script src="{{ url_for('static', filename='lib/file-saver/dist/FileSaver.js') }}"></script>
         <script src="{{ url_for('static', filename='lib/angular-file-saver/dist/angular-file-saver.js') }}"></script>
         <script src="{{ url_for('static', filename='lib/clipboard/dist/clipboard.js') }}"></script>
         <script src="{{ url_for('static', filename='lib/ngclipboard/dist/ngclipboard.js') }}"></script>
@@ -192,15 +192,14 @@
             })();
         </script>
         {% if ga_tracking_id %}
-            <!-- Google Analytics -->
-            <script type="text/javascript">
-                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-                            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-                })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+            <!-- Global site tag (gtag.js) - Google Analytics -->
+            <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_tracking_id }}"></script>
+            <script>
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                      gtag('js', new Date());
 
-                ga('create', '{{ ga_tracking_id }}', 'auto');
-                ga('send', 'pageview');
+                  gtag('config', '{{ ga_tracking_id }}');
             </script>
         {% endif %}
     </head>
