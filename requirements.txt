@@ -7,7 +7,7 @@ Flask-SQLAlchemy==2.5.1
 Flask-Script==2.0.6
 Flask-Testing==0.8.1
 Flask-Mail==0.9.1
-PyMySQL==1.0.2
+PyMySQL==1.1.1
 SQLAlchemy==1.4.36
 blinker==1.4
 bouncer==0.1.12
