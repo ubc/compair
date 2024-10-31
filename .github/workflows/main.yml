@@ -32,6 +32,7 @@ jobs:
         python -m pip install --upgrade pip
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev
+        pip install setuptools==57.5.0
         pip install -r requirements.txt -r requirements.dev.txt
     - name: Backend Unit Tests MariaDB
       run: |
