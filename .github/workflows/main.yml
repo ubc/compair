@@ -25,7 +25,7 @@ jobs:
           node_modules/gulp/bin/gulp.js
           node_modules/gulp/bin/gulp.js prod
 
-      - uses: shallwefootball/s3-upload-action@master
+      - uses: shallwefootball/s3-upload-action@tue-master
         name: Upload S3
         id: S3
         with:
