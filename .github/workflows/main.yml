@@ -9,6 +9,53 @@ on:
   workflow_dispatch:
 
 jobs:
+
+  unit_test_backend:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Shutdown Ubuntu MySQL (conflict with MariaDB)
+        run: sudo service mysql stop || true
+
+      - name: Set up MariaDB
+        uses: getong/mariadb-action@v1.1
+        with:
+          mysql database: compair
+          mysql root password: ''
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libxml2-dev \
+            libxmlsec1-dev \
+            libxmlsec1-openssl \
+            libxslt1-dev \
+            libz-dev \
+            gcc \
+            pkg-config \
+            libssl-dev
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt -r requirements.dev.txt
+
+      - name: Run backend unit tests
+        run: |
+          pytest tests/backend  # Adjust the path to your backend test directory
+
   deploy_assets:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/tue-master'
