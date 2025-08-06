@@ -29,11 +29,11 @@ jobs:
         name: Upload S3
         id: S3
         with:
-          aws_key_id: ${{ secrets.AWS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_bucket: compair-assets
-          source_dir: compair/static/dist
-          destination_dir: dist
+          #aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          #aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          #aws_bucket: compair-assets
+          #source_dir: compair/static/dist
+          #destination_dir: dist
 
   deploy_docker_image:
     runs-on: ubuntu-latest
