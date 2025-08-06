@@ -15,18 +15,16 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Shutdown Ubuntu MySQL (conflict with MariaDB)
-        run: sudo service mysql stop || true
+      - name: Shutdown Ubuntu MySQL
+        run: sudo service mysql stop
 
       - name: Set up MariaDB
         uses: getong/mariadb-action@v1.1
@@ -46,15 +44,19 @@ jobs:
             gcc \
             pkg-config \
             libssl-dev
-
+            
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip setuptools wheel
           pip install -r requirements.txt -r requirements.dev.txt
 
-      - name: Run backend unit tests
+      - name: Run Backend Unit Tests (MariaDB)
         run: |
-          pytest tests/backend  # Adjust the path to your backend test directory
+          DATABASE_URI="mysql+pymysql://root@localhost/compair" nosetests
+
+      - name: Run Backend Unit Tests (SQLite)
+        run: |
+          DATABASE_URI="sqlite:///:memory:" nosetests
 
   deploy_assets:
     runs-on: ubuntu-latest
