@@ -46,6 +46,7 @@ nose==1.3.7
 unicodecsv==0.14.1
 # lxml==4.9.1
 lxml>=5.0.0
+lxml_html_clean
 xmlsec>=1.3.13
 Werkzeug==2.0.3
 # replaced with custom modified version to send Canvas specific params
