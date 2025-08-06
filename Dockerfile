@@ -6,6 +6,8 @@ ADD requirements.txt .
 RUN apt-get update -y \
     && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl gcc pkg-config \
     && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
+    && python -m pip install --upgrade pip setuptools wheel \
+    && pip install --no-binary :all: lxml xmlsec \
     && pip install -r requirements.txt \
     && pip install uwsgi
 
@@ -41,6 +43,8 @@ COPY --from=python-base /requirements.txt /code/requirements.txt
 RUN apt-get update -y \
     && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl \
     && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
+    && python -m pip install --upgrade pip setuptools wheel \
+    && pip install --no-binary :all: lxml xmlsec \
     && pip install -r /code/requirements.txt \
     && pip install uwsgi \
     && rm -rf /root/.cache \
@@ -53,7 +57,7 @@ COPY deploy/docker/docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 ADD . /code/
-# overrite static files from node built deps
+# overwrite static files from node built deps
 COPY --from=node-deps /home/node/app/compair/static/ /code/compair/static/
 COPY --from=node-deps /home/node/app/compair/templates/static/ /code/compair/templates/static/
 
@@ -62,3 +66,4 @@ VOLUME ["/code/persistent"]
 EXPOSE 3031
 
 CMD ["uwsgi", "--ini", "/etc/uwsgi/uwsgi.ini"]
+

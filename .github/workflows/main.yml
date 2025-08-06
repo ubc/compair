@@ -1,3 +1,4 @@
+
 name: Test and Deploy
 
 on:
@@ -15,96 +16,110 @@ jobs:
       matrix:
         python-version: [3.8]
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Shutdown Ubuntu MySQL (SUDO)
-      run: sudo service mysql stop
-    - name: Set up MariaDB
-      uses: getong/mariadb-action@v1.1
-      with:
-        mysql database: compair
-        mysql root password: ''
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y --no-install-recommends --no-install-suggests \
-        libxml2-dev libxmlsec1-dev libxmlsec1-openssl libz-dev pkg-config
-        python -m pip install --upgrade pip setuptools wheel
-        pip install -r requirements.txt -r requirements.dev.txt
-    - name: Backend Unit Tests MariaDB
-      run: |
-        DATABASE_URI="mysql+pymysql://root@localhost/compair" nosetests
-    - name: Backend Unit Tests SQLite
-      run: |
-        DATABASE_URI="sqlite:///:memory:" nosetests
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Shutdown Ubuntu MySQL
+        run: sudo service mysql stop
+
+      - name: Set up MariaDB
+        uses: getong/mariadb-action@v1.1
+        with:
+          mysql database: compair
+          mysql root password: ''
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends --no-install-suggests \
+            libxml2-dev libxmlsec1-dev libxmlsec1-openssl libz-dev pkg-config
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements.txt -r requirements.dev.txt
+
+      - name: Run Backend Unit Tests (MariaDB)
+        run: |
+          DATABASE_URI="mysql+pymysql://root@localhost/compair" nosetests
+
+      - name: Run Backend Unit Tests (SQLite)
+        run: |
+          DATABASE_URI="sqlite:///:memory:" nosetests
 
   unit_test_frontend:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 24
-    - name: Install dependencies
-      run: |
-        npm install
-        node_modules/gulp/bin/gulp.js
-    - name: Frontend Karma Tests
-      run: |
-        node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js --single-run
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 24
+
+      - name: Install frontend dependencies
+        run: |
+          npm install
+          node_modules/gulp/bin/gulp.js
+
+      - name: Frontend Karma Tests
+        run: |
+          node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js --single-run
 
   deploy_assets:
     runs-on: ubuntu-latest
     needs: [ unit_test_backend, unit_test_frontend ]
-    # only deploy master and tagged releases
     if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/tue-master'
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v1
-      with:
-        version: 12
-    - name: Install dependencies
-      run: |
-        npm install
-        node_modules/gulp/bin/gulp.js
-    - name: Generate assets
-      run: |
-        node_modules/gulp/bin/gulp.js prod
-    - uses: shallwefootball/s3-upload-action@master
-      name: Upload S3
-      id: S3
-      with:
-        aws_key_id: ${{ secrets.AWS_KEY_ID }}
-        aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws_bucket: compair-assets
-        source_dir: compair/static/dist
-        destination_dir: dist
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v1
+        with:
+          version: 12
+
+      - name: Install and generate frontend assets
+        run: |
+          npm install
+          node_modules/gulp/bin/gulp.js
+          node_modules/gulp/bin/gulp.js prod
+
+      - uses: shallwefootball/s3-upload-action@master
+        name: Upload S3
+        id: S3
+        with:
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_bucket: compair-assets
+          source_dir: compair/static/dist
+          destination_dir: dist
 
   deploy_docker_image:
     runs-on: ubuntu-latest
     needs: [ deploy_assets ]
-    # only deploy master and tagged releases
     if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/tue-master'
     steps:
-    - uses: actions/checkout@v2
-    - name: Publish to Registry
-      uses: docker/build-push-action@v1
-      with:
-        username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-        repository: ubcctlt/compair-app
-        tag_with_ref: true
-    - name: Trigger deploy
-      run: |
-        curl -X POST \
+      - uses: actions/checkout@v2
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          repository: ubcctlt/compair-app
+          tag_with_ref: true
+
+      - name: Trigger deploy
+        run: |
+          curl -X POST \
             --fail \
             -F token=${{ secrets.DEPLOYMENT_TOKEN }} \
             -F ref=tue-master \
             -F "variables[app__image__tag]=${GITHUB_REF##*/}" \
             -F "variables[worker__image__tag]=${GITHUB_REF##*/}" \
             https://repo.code.ubc.ca/api/v4/projects/366/trigger/pipeline
+
 
   # TODO: add acceptance testing (would be easier with a slight rewrite to gulp/generate_index)
