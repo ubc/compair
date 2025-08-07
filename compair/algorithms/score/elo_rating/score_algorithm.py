@@ -1,18 +1,22 @@
-from elo_rating import rate_1vs1
+from trueskill import Rating, rate_1vs1, setup as ts_setup
 
 from compair.algorithms.score.score_algorithm_base import ScoreAlgorithmBase
 from compair.algorithms.comparison_pair import ComparisonPair
 from compair.algorithms.comparison_winner import ComparisonWinner
 from compair.algorithms.scored_object import ScoredObject
-
 from compair.algorithms.exceptions import InvalidWinnerException
+
 
 class EloAlgorithmWrapper(ScoreAlgorithmBase):
     def __init__(self):
         super().__init__()
+
         self.storage = {}
         self.opponents = {}
         self.rounds = {}
+
+        # Setup TrueSkill with standard Microsoft settings
+        ts_setup(mu=25.0, sigma=8.333, beta=4.166, tau=0.0833, draw_probability=0.0)
 
     def calculate_score_1vs1(self, key1_scored_object, key2_scored_object, winner, other_comparison_pairs):
         self.storage = {}
@@ -21,8 +25,8 @@ class EloAlgorithmWrapper(ScoreAlgorithmBase):
         key1 = key1_scored_object.key
         key2 = key2_scored_object.key
 
-        r1 = key1_scored_object.variable1 or 1400.0
-        r2 = key2_scored_object.variable1 or 1400.0
+        r1 = key1_scored_object.variable1 or Rating()
+        r2 = key2_scored_object.variable1 or Rating()
 
         if winner == ComparisonWinner.key1:
             r1, r2 = rate_1vs1(r1, r2)
@@ -38,35 +42,33 @@ class EloAlgorithmWrapper(ScoreAlgorithmBase):
             self.opponents[key] = set()
             self.storage[key] = ScoredObject(
                 key=key,
-                score=rating,
+                score=rating.mu,
                 variable1=rating,
                 variable2=None,
                 rounds=0,
                 opponents=0,
                 wins=0,
-                loses=0
+                loses=0,
             )
 
         for comparison_pair in (other_comparison_pairs + [ComparisonPair(key1, key2, winner)]):
             cp_key1 = comparison_pair.key1
             cp_key2 = comparison_pair.key2
             cp_winner = comparison_pair.winner
-            cp_winner_key1 = cp_winner == ComparisonWinner.key1
-            cp_winner_key2 = cp_winner == ComparisonWinner.key2
 
             if cp_key1 in [key1, key2]:
                 if cp_winner is None:
                     self._update_rounds_only(cp_key1)
                 else:
-                    self._update_result_stats(cp_key1, cp_key2, cp_winner_key1, cp_winner_key2)
+                    self._update_result_stats(cp_key1, cp_key2, cp_winner == ComparisonWinner.key1, cp_winner == ComparisonWinner.key2)
 
             if cp_key2 in [key1, key2]:
                 if cp_winner is None:
                     self._update_rounds_only(cp_key2)
                 else:
-                    self._update_result_stats(cp_key2, cp_key1, cp_winner_key2, cp_winner_key1)
+                    self._update_result_stats(cp_key2, cp_key1, cp_winner == ComparisonWinner.key2, cp_winner == ComparisonWinner.key1)
 
-        return (self.storage[key1], self.storage[key2])
+        return self.storage[key1], self.storage[key2]
 
     def calculate_score(self, comparison_pairs):
         self.storage = {}
@@ -74,15 +76,16 @@ class EloAlgorithmWrapper(ScoreAlgorithmBase):
 
         keys = self.get_keys_from_comparison_pairs(comparison_pairs)
         for key in keys:
+            default_rating = Rating()
             self.storage[key] = ScoredObject(
                 key=key,
-                score=1400.0,
-                variable1=1400.0,
+                score=default_rating.mu,
+                variable1=default_rating,
                 variable2=None,
                 rounds=0,
                 opponents=0,
                 wins=0,
-                loses=0
+                loses=0,
             )
             self.opponents[key] = set()
 
@@ -96,23 +99,20 @@ class EloAlgorithmWrapper(ScoreAlgorithmBase):
                 self._update_rounds_only(key2)
                 continue
 
-            r1 = self.storage[key1].score
-            r2 = self.storage[key2].score
+            r1 = self.storage[key1].variable1
+            r2 = self.storage[key2].variable1
 
-            winner_key1 = winner == ComparisonWinner.key1
-            winner_key2 = winner == ComparisonWinner.key2
-
-            if winner_key1:
+            if winner == ComparisonWinner.key1:
                 r1, r2 = rate_1vs1(r1, r2)
-            elif winner_key2:
+            elif winner == ComparisonWinner.key2:
                 r2, r1 = rate_1vs1(r2, r1)
             elif winner == ComparisonWinner.draw:
                 r1, r2 = rate_1vs1(r1, r2, drawn=True)
             else:
                 raise InvalidWinnerException
 
-            self._update_rating(key1, r1, key2, winner_key1, winner_key2)
-            self._update_rating(key2, r2, key1, winner_key2, winner_key1)
+            self._update_rating(key1, r1, key2, winner == ComparisonWinner.key1, winner == ComparisonWinner.key2)
+            self._update_rating(key2, r2, key1, winner == ComparisonWinner.key2, winner == ComparisonWinner.key1)
 
         return self.storage
 
@@ -124,11 +124,12 @@ class EloAlgorithmWrapper(ScoreAlgorithmBase):
         self.opponents[key].add(opponent_key)
         wins = self.storage[key].wins
         loses = self.storage[key].loses
+        rating = self.storage[key].variable1
 
         self.storage[key] = ScoredObject(
             key=key,
-            score=self.storage[key].score,
-            variable1=self.storage[key].score,
+            score=rating.mu,
+            variable1=rating,
             variable2=None,
             rounds=self.storage[key].rounds + 1,
             opponents=len(self.opponents[key]),
@@ -143,7 +144,7 @@ class EloAlgorithmWrapper(ScoreAlgorithmBase):
 
         self.storage[key] = ScoredObject(
             key=key,
-            score=new_rating,
+            score=new_rating.mu,
             variable1=new_rating,
             variable2=None,
             rounds=self.storage[key].rounds + 1,
