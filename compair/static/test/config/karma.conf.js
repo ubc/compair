@@ -24,6 +24,20 @@ module.exports = function (config) {
 
         browsers: ['ChromeHeadless'],
 
+        customLaunchers: {
+            ChromeHeadless: {
+                base: 'Chrome',
+                flags: [
+                    '--headless',
+                    '--no-sandbox',
+                    '--disable-gpu',
+                    '--disable-dev-shm-usage',
+                    '--disable-extensions',
+                    '--remote-debugging-port=9222'
+                ]
+            }
+        },
+
         junitReporter: {
             outputFile: 'test_out/unit.xml',
             suite: 'unit'
