@@ -1,4 +1,6 @@
 import os
+import re
+from pathlib import Path
 
 from flask import Blueprint, request, current_app
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
@@ -15,15 +17,33 @@ from .util import new_restful_api
 file_api = Blueprint('file_api', __name__)
 api = new_restful_api(file_api)
 
-# events
-on_save_file = event.signal('FILE_CREATE')
-on_get_kaltura_token = event.signal('FILE_GET_KALTURA_TOKEN')
-on_save_kaltura_file = event.signal('FILE_CREATE_KALTURA_FILE')
+# Security helper functions
+def sanitize_filename(filename):
+    """Remove dangerous characters and path traversal attempts"""
+    # Remove path traversal characters
+    filename = re.sub(r'[\.]{2,}', '', filename)
+    filename = re.sub(r'[\/\\]', '', filename)
+    # Remove other potentially dangerous characters
+    filename = re.sub(r'[<>:"|?*]', '', filename)
+    return filename
 
-on_attach_file = event.signal('FILE_ATTACH')
-on_detach_file = event.signal('FILE_DETACH')
+def is_safe_path(base_path, file_path):
+    """Check if file_path is within base_path"""
+    base = Path(base_path).resolve()
+    file = Path(file_path).resolve()
 
-# /
+
+    # events
+    on_save_file = event.signal('FILE_CREATE')
+    on_get_kaltura_token = event.signal('FILE_GET_KALTURA_TOKEN')
+    on_save_kaltura_file = event.signal('FILE_CREATE_KALTURA_FILE')
+
+    on_attach_file = event.signal('FILE_ATTACH')
+    on_detach_file = event.signal('FILE_DETACH')
+
+    return base in file.parents or file == base
+    
+
 class FileAPI(Resource):
     @login_required
     def post(self):
@@ -46,7 +66,10 @@ class FileAPI(Resource):
         try:
             # Generate UUID and name BEFORE creating database record to avoid race condition
             temp_uuid = File.generate_uuid()
-            name = temp_uuid + '.' + uploaded_file.filename.lower().rsplit('.', 1)[1]
+            raw_name = temp_uuid + '.' + uploaded_file.filename.lower().rsplit('.', 1)[1]
+            
+            # Security Layer 1: Sanitize the filename
+            name = sanitize_filename(raw_name)
 
             db_file = File(
                 user_id=current_user.id,
@@ -55,10 +78,15 @@ class FileAPI(Resource):
             )
             db.session.add(db_file)
 
-            # create new file with name
+            # Security Layer 2: Construct path with sanitized name
             full_path = os.path.join(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], name)
+            
+            # Security Layer 3: Validate path before use
+            if not is_safe_path(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], full_path):
+                raise ValueError(f"Invalid file path: {full_path}")
+            
             uploaded_file.save(full_path)
-            current_app.logger.debug("Saved attachment {}/{}".format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], name))
+            current_app.logger.info("Saved attachment {}/{}".format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], name))
 
             # commit once with complete data
             db.session.commit()
@@ -66,7 +94,10 @@ class FileAPI(Resource):
             db.session.rollback()
             # Clean up physical file if it was created
             if 'full_path' in locals() and os.path.exists(full_path):
-                os.remove(full_path)
+                if is_safe_path(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], full_path):
+                    os.remove(full_path)
+                else:
+                    current_app.logger.warning(f"Attempted to delete file outside upload directory: {full_path}")
             raise e
 
         return {'file': marshal(db_file, dataformat.get_file())}
@@ -115,7 +146,10 @@ class FileKalturaUploadTokenAPI(Resource):
         try:
             # Generate UUID and name BEFORE creating database record to avoid race condition
             temp_uuid = File.generate_uuid()
-            name = temp_uuid + '.' + kaltura_media.extension
+            raw_name = temp_uuid + '.' + kaltura_media.extension
+            
+            # Security Layer 1: Sanitize the filename
+            name = sanitize_filename(raw_name)
 
             db_file = File(
                 user_id=current_user.id,
