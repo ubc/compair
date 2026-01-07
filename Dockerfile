@@ -5,7 +5,11 @@ FROM python:3.8-slim as python-base
 ADD requirements.txt .
 RUN apt-get update -y \
     && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl gcc pkg-config \
-    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
+    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev libxmlsec1 \
+    && apt-get upgrade -y libxmlsec1 \
+    && pip install --upgrade pip wheel \
+    && pip install "setuptools<58" \
+    && pip install "lxml==4.9.1" --no-cache-dir --no-binary :all: \
     && pip install -r requirements.txt \
     && pip install uwsgi
 
@@ -40,7 +44,11 @@ COPY --from=python-base /requirements.txt /code/requirements.txt
 
 RUN apt-get update -y \
     && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl \
-    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
+    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev libxmlsec1 \
+    && apt-get upgrade -y libxmlsec1 \
+    && pip install --upgrade pip wheel \
+    && pip install "setuptools<58" \
+    && pip install "lxml==4.9.1" --no-cache-dir --no-binary :all: \
     && pip install -r /code/requirements.txt \
     && pip install uwsgi \
     && rm -rf /root/.cache \

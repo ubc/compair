@@ -5,6 +5,7 @@ import time
 """
 
 COMPAIR_VERSION = "1.2.12"
+# Build tag for Docker images (incremented with each deployment)
 
 DATABASE = {
     'drivername': 'mysql+pymysql',
