@@ -17,13 +17,32 @@ from .util import new_restful_api
 file_api = Blueprint('file_api', __name__)
 api = new_restful_api(file_api)
 
-# events
-on_save_file = event.signal('FILE_CREATE')
-on_get_kaltura_token = event.signal('FILE_GET_KALTURA_TOKEN')
-on_save_kaltura_file = event.signal('FILE_CREATE_KALTURA_FILE')
+# Security helper functions
+def sanitize_filename(filename):
+    """Remove dangerous characters and path traversal attempts"""
+    # Remove path traversal characters
+    filename = re.sub(r'[\.]{2,}', '', filename)
+    filename = re.sub(r'[\/\\]', '', filename)
+    # Remove other potentially dangerous characters
+    filename = re.sub(r'[<>:"|?*]', '', filename)
+    return filename
 
-on_attach_file = event.signal('FILE_ATTACH')
-on_detach_file = event.signal('FILE_DETACH')
+def is_safe_path(base_path, file_path):
+    """Check if file_path is within base_path"""
+    base = Path(base_path).resolve()
+    file = Path(file_path).resolve()
+
+
+    # events
+    on_save_file = event.signal('FILE_CREATE')
+    on_get_kaltura_token = event.signal('FILE_GET_KALTURA_TOKEN')
+    on_save_kaltura_file = event.signal('FILE_CREATE_KALTURA_FILE')
+
+    on_attach_file = event.signal('FILE_ATTACH')
+    on_detach_file = event.signal('FILE_DETACH')
+
+    return base in file.parents or file == base
+    
 
 # Security helper functions
 def sanitize_filename(filename):
