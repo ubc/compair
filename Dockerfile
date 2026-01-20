@@ -43,7 +43,7 @@ COPY --from=python-base /root/.cache /root/.cache
 COPY --from=python-base /requirements.txt /code/requirements.txt
 
 RUN apt-get update -y \
-    && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl \
+    && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl gcc pkg-config \
     && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev libxmlsec1 \
     && apt-get upgrade -y libxmlsec1 \
     && pip install --upgrade pip wheel \
