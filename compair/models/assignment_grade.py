@@ -7,6 +7,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.exc import IntegrityError
 
 from . import *
 
@@ -129,7 +130,20 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
 
         assignment_grade.grade = grade
         db.session.add(assignment_grade)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError as e:
+            # Only handle duplicate (user_id, assignment_id); re-raise other integrity errors
+            errno = getattr(getattr(e, 'orig', None), 'args', (None,))[0]
+            if errno != 1062:
+                raise
+            db.session.rollback()
+            # Race: another request inserted the same (user_id, assignment_id). Update existing row.
+            assignment_grade = AssignmentGrade.get_user_assignment_grade(assignment, user)
+            if assignment_grade:
+                assignment_grade.grade = grade
+                db.session.add(assignment_grade)
+                db.session.commit()
 
         LTIOutcome.update_assignment_user_grade(assignment, user.id)
 
@@ -250,8 +264,40 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
 
             assignment_grade.grade = grade
 
-        db.session.add_all(assignment_grades + new_assignment_grades)
-        db.session.commit()
+        try:
+            db.session.add_all(assignment_grades + new_assignment_grades)
+            db.session.commit()
+        except IntegrityError as e:
+            errno = getattr(getattr(e, 'orig', None), 'args', (None,))[0]
+            if errno != 1062:
+                raise
+            db.session.rollback()
+            # Race: another process inserted one of these (user_id, assignment_id). Re-fetch and retry.
+            assignment_grades = AssignmentGrade.get_assignment_grades(assignment)
+            new_assignment_grades = []
+            for student_id in student_ids:
+                user_answer_count = next((result.answer_count for result in user_answer_counts
+                    if result.user_id == student_id
+                ), 0)
+                group_answer_count = next((result.answer_count for result in group_answer_counts
+                    if result.group_id == group.id
+                ), 0)
+                answer_count = user_answer_count + group_answer_count
+                comparison_count = next((result.comparison_count for result in comparison_counts
+                    if result.user_id == student_id
+                ), 0)
+                self_evaluation_count = next((result.self_evaluation_count for result in self_evaluation_counts
+                    if result.user_id == student_id
+                ), 0)
+                grade = _calculate_assignment_grade(assignment,
+                    answer_count, comparison_count, self_evaluation_count)
+                assignment_grade = next((ag for ag in assignment_grades if ag.user_id == student_id), None)
+                if assignment_grade is None:
+                    assignment_grade = AssignmentGrade(user_id=student_id, assignment_id=assignment.id)
+                    new_assignment_grades.append(assignment_grade)
+                assignment_grade.grade = grade
+            db.session.add_all(assignment_grades + new_assignment_grades)
+            db.session.commit()
 
         LTIOutcome.update_assignment_users_grades(assignment, student_ids)
 
@@ -390,8 +436,43 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
 
             assignment_grade.grade = grade
 
-        db.session.add_all(assignment_grades + new_assignment_grades)
-        db.session.commit()
+        try:
+            db.session.add_all(assignment_grades + new_assignment_grades)
+            db.session.commit()
+        except IntegrityError as e:
+            errno = getattr(getattr(e, 'orig', None), 'args', (None,))[0]
+            if errno != 1062:
+                raise
+            db.session.rollback()
+            # Race: another process inserted one of these (user_id, assignment_id). Re-fetch and retry.
+            assignment_grades = AssignmentGrade.get_assignment_grades(assignment)
+            new_assignment_grades = []
+            for student_id in student_ids:
+                user_answer_count = next((result.answer_count for result in user_answer_counts
+                    if result.user_id == student_id
+                ), 0)
+                group_id = user_groups.get(student_id)
+                group_answer_count = 0
+                if group_id:
+                    group_answer_count = next((result.answer_count for result in group_answer_counts
+                        if result.group_id == group_id
+                    ), 0)
+                answer_count = user_answer_count + group_answer_count
+                comparison_count = next((result.comparison_count for result in comparison_counts
+                    if result.user_id == student_id
+                ), 0)
+                self_evaluation_count = next((result.self_evaluation_count for result in self_evaluation_counts
+                    if result.user_id == student_id
+                ), 0)
+                grade = _calculate_assignment_grade(assignment,
+                    answer_count, comparison_count, self_evaluation_count)
+                assignment_grade = next((ag for ag in assignment_grades if ag.user_id == student_id), None)
+                if assignment_grade is None:
+                    assignment_grade = AssignmentGrade(user_id=student_id, assignment_id=assignment.id)
+                    new_assignment_grades.append(assignment_grade)
+                assignment_grade.grade = grade
+            db.session.add_all(assignment_grades + new_assignment_grades)
+            db.session.commit()
 
         LTIOutcome.update_assignment_grades(assignment)
 
