@@ -132,6 +132,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
         db.session.add(assignment_grade)
         try:
             db.session.commit()
+            LTIOutcome.update_assignment_user_grade(assignment, user.id)
         except IntegrityError as e:
             # Only handle duplicate (user_id, assignment_id); re-raise other integrity errors
             errno = getattr(getattr(e, 'orig', None), 'args', (None,))[0]
@@ -144,8 +145,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
                 assignment_grade.grade = grade
                 db.session.add(assignment_grade)
                 db.session.commit()
-
-        LTIOutcome.update_assignment_user_grade(assignment, user.id)
+                LTIOutcome.update_assignment_user_grade(assignment, user.id)
 
     @classmethod
     def calculate_group_grade(cls, assignment, group):
@@ -267,6 +267,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
         try:
             db.session.add_all(assignment_grades + new_assignment_grades)
             db.session.commit()
+            LTIOutcome.update_assignment_users_grades(assignment, student_ids)
         except IntegrityError as e:
             errno = getattr(getattr(e, 'orig', None), 'args', (None,))[0]
             if errno != 1062:
@@ -298,8 +299,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
                 assignment_grade.grade = grade
             db.session.add_all(assignment_grades + new_assignment_grades)
             db.session.commit()
-
-        LTIOutcome.update_assignment_users_grades(assignment, student_ids)
+            LTIOutcome.update_assignment_users_grades(assignment, student_ids)
 
     @classmethod
     def calculate_grades(cls, assignment):
@@ -439,6 +439,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
         try:
             db.session.add_all(assignment_grades + new_assignment_grades)
             db.session.commit()
+            LTIOutcome.update_assignment_grades(assignment)
         except IntegrityError as e:
             errno = getattr(getattr(e, 'orig', None), 'args', (None,))[0]
             if errno != 1062:
@@ -473,8 +474,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
                 assignment_grade.grade = grade
             db.session.add_all(assignment_grades + new_assignment_grades)
             db.session.commit()
-
-        LTIOutcome.update_assignment_grades(assignment)
+            LTIOutcome.update_assignment_grades(assignment)
 
 def _calculate_assignment_grade(assignment, answer_count, comparison_count, self_evaulation_count):
     grade = 0.0
