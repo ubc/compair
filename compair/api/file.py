@@ -1,5 +1,7 @@
 import os
 import re
+import uuid
+import base64
 from pathlib import Path
 
 from flask import Blueprint, request, current_app
@@ -31,17 +33,20 @@ def is_safe_path(base_path, file_path):
     """Check if file_path is within base_path"""
     base = Path(base_path).resolve()
     file = Path(file_path).resolve()
-
-
-    # events
-    on_save_file = event.signal('FILE_CREATE')
-    on_get_kaltura_token = event.signal('FILE_GET_KALTURA_TOKEN')
-    on_save_kaltura_file = event.signal('FILE_CREATE_KALTURA_FILE')
-
-    on_attach_file = event.signal('FILE_ATTACH')
-    on_detach_file = event.signal('FILE_DETACH')
-
     return base in file.parents or file == base
+
+
+def _file_uuid():
+    """Generate a 22-char UUID for file names (same format as File.uuid column)."""
+    return base64.urlsafe_b64encode(uuid.uuid4().bytes).decode('ascii').replace('=', '')
+
+
+# events
+on_save_file = event.signal('FILE_CREATE')
+on_get_kaltura_token = event.signal('FILE_GET_KALTURA_TOKEN')
+on_save_kaltura_file = event.signal('FILE_CREATE_KALTURA_FILE')
+on_attach_file = event.signal('FILE_ATTACH')
+on_detach_file = event.signal('FILE_DETACH')
     
 
 class FileAPI(Resource):
@@ -65,7 +70,7 @@ class FileAPI(Resource):
 
         try:
             # Generate UUID and name BEFORE creating database record to avoid race condition
-            temp_uuid = File.generate_uuid()
+            temp_uuid = _file_uuid()
             raw_name = temp_uuid + '.' + uploaded_file.filename.lower().rsplit('.', 1)[1]
             
             # Security Layer 1: Sanitize the filename
@@ -145,7 +150,7 @@ class FileKalturaUploadTokenAPI(Resource):
 
         try:
             # Generate UUID and name BEFORE creating database record to avoid race condition
-            temp_uuid = File.generate_uuid()
+            temp_uuid = _file_uuid()
             raw_name = temp_uuid + '.' + kaltura_media.extension
             
             # Security Layer 1: Sanitize the filename
