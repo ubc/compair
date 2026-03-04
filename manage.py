@@ -9,6 +9,7 @@ from compair.manage.grades import manager as grades_generator
 from compair.manage.score import manager as score_generator
 from compair.manage.user import manager as user_manager
 from compair.manage.utils import manager as util_manager
+from compair.manage.kaltura import manager as kaltura_manager
 from compair import create_app
 
 manager = Manager(create_app(skip_assets=True))
@@ -20,6 +21,7 @@ manager.add_command("score", score_generator)
 manager.add_command("runserver", Server(port=8080))
 manager.add_command("user", user_manager)
 manager.add_command("util", util_manager)
+manager.add_command("kaltura", kaltura_manager)
 
 
 @manager.command
