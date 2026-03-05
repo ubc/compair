@@ -28,11 +28,8 @@ enum34==1.1.10
 SQLAlchemy-Enum34==2.0.0
 mock==4.0.3
 trueskill==0.4.4
-Celery==5.2.6
-# fixes https://github.com/python/importlib_metadata/issues/411
-# note celery is only affected for python 3.7 and earlier
-importlib-metadata<5.0; python_version < '3.8'
-kombu==5.2.4
+Celery==5.6.2
+kombu==5.6.2
 redis==4.4.4
 tincan==1.0.0
 imsglobal-caliper @ https://compair-assets.s3.us-west-2.amazonaws.com/caliper-python-1.2.0.9.zip

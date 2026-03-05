@@ -26,7 +26,6 @@ import re
 import pytz
 import time
 
-from distutils.util import strtobool
 from flask import Config
 from sqlalchemy.engine.url import URL
 
@@ -128,6 +127,23 @@ env_json_overridables = [
 for env in env_overridables:
     if os.environ.get(env) != None:
         config[env] = os.environ.get(env)
+
+# this function was removed in python 3.13, copied inline as a quick fix
+# SOURCE: python3.12>site-packages>setuptools>_distutils>util>strtobool
+def strtobool(val: str) -> bool:
+    """Convert a string representation of truth to true (1) or false (0).
+
+    True values are 'y', 'yes', 't', 'true', 'on', and '1'; false values
+    are 'n', 'no', 'f', 'false', 'off', and '0'.  Raises ValueError if
+    'val' is anything else.
+    """
+    val = val.lower()
+    if val in ('y', 'yes', 't', 'true', 'on', '1'):
+        return True
+    elif val in ('n', 'no', 'f', 'false', 'off', '0'):
+        return False
+    else:
+        raise ValueError(f"invalid truth value {val!r}")
 
 for env in env_bool_overridables:
     if os.environ.get(env) != None:

@@ -1,6 +1,6 @@
 # Python DEPS
 
-FROM python:3.8-slim AS python-base
+FROM python:3.10-slim AS python-base
 
 COPY requirements.txt .
 RUN apt-get update -y \
@@ -24,7 +24,7 @@ RUN mkdir -p compair/templates/static/ \
 
 # Python Application image
 
-FROM python:3.8-slim AS python-app
+FROM python:3.10-slim AS python-app
 
 LABEL maintainer="Pan Luo <pan.luo@ubc.ca>"
 
