@@ -2,7 +2,7 @@
     Report Generator
 """
 import unicodecsv as csv
-import elo
+import compair.algorithms.score.elo_rating.elo
 from compair.algorithms import ScoredObject
 from compair.algorithms.score import calculate_score_1vs1
 import numbers
