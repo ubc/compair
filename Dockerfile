@@ -1,17 +1,16 @@
 # Python DEPS
 
-FROM python:3.8-slim as python-base
+FROM python:3.8-slim AS python-base
 
-ADD requirements.txt .
+COPY requirements.txt .
 RUN apt-get update -y \
-    && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl gcc pkg-config \
-    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
+    && apt-get install -y build-essential \
     && pip install -r requirements.txt \
     && pip install uwsgi
 
 # NODE DEPS
 
-FROM node:16 as node-deps
+FROM node:24 AS node-deps
 
 WORKDIR /home/node/app
 
@@ -25,9 +24,9 @@ RUN mkdir -p compair/templates/static/ \
 
 # Python Application image
 
-FROM python:3.8-slim as python-app
+FROM python:3.8-slim AS python-app
 
-MAINTAINER Pan Luo <pan.luo@ubc.ca>
+LABEL maintainer="Pan Luo <pan.luo@ubc.ca>"
 
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONPATH /code
@@ -38,13 +37,8 @@ WORKDIR /code
 COPY --from=python-base /root/.cache /root/.cache
 COPY --from=python-base /requirements.txt /code/requirements.txt
 
-RUN apt-get update -y \
-    && apt-get install -y libssl-dev libxml2-dev libxslt1-dev libxmlsec1-openssl \
-    && apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev \
-    && pip install -r /code/requirements.txt \
-    && pip install uwsgi \
-    && rm -rf /root/.cache \
-    && rm -rf /var/lib/apt/lists/*
+RUN pip install -r requirements.txt \
+    && pip install uwsgi
 
 # Copy the base uWSGI ini file to enable default dynamic uwsgi process number
 COPY deploy/docker/uwsgi.ini /etc/uwsgi/
@@ -52,7 +46,7 @@ COPY deploy/docker/uwsgi.ini /etc/uwsgi/
 COPY deploy/docker/docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-ADD . /code/
+COPY . /code/
 # overrite static files from node built deps
 COPY --from=node-deps /home/node/app/compair/static/ /code/compair/static/
 COPY --from=node-deps /home/node/app/compair/templates/static/ /code/compair/templates/static/
