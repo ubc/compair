@@ -46,13 +46,13 @@ testf:
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js test:unit
 
 testb:
-	$(DOCKERRUN_PY) nosetests
+	$(DOCKERRUN_PY) python -m pytest compair/tests/
 
 testb-coverage:
-	$(DOCKERRUN_PY) nosetests --with-coverage --cover-package=compair --cover-erase
+	$(DOCKERRUN_PY) python -m pytest compair/tests/ --cov=compair --cov-report=term-missing
 
 testb-profile:
-	$(DOCKERRUN_PY) nosetests --with-profile
+	$(DOCKERRUN_PY) python -m pytest compair/tests/ --profile
 
 tdd:
 	$(DOCKERRUN_NODE) node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js
@@ -61,7 +61,7 @@ test: testf testb
 
 testci:
 	$(DOCKERRUN_NODE) node_modules/karma/bin/karma start compair/static/test/config/karma.conf.js --single-run --browsers PhantomJS
-	$(DOCKERRUN_PY) python -m unittest discover -s compair/tests/
+	$(DOCKERRUN_PY) python -m pytest compair/tests/
 
 testsauce:
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js  test:acceptance:sauce
