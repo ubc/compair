@@ -23,8 +23,8 @@ SECRET_KEY = "zfjlkfaweerP* SDF()U@#$haDJ;JKLASDFHUIO"
 # we currently use SQLAlchemy event system directly
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-# recycle connections after ~5 minutes
-SQLALCHEMY_ENGINE_OPTIONS = {'pool_recycle': 299}
+# recycle connections after ~5 minutes; pre_ping avoids stale connection errors
+SQLALCHEMY_ENGINE_OPTIONS = {'pool_recycle': 299, 'pool_pre_ping': True}
 
 # persistent directories for uploads and download
 PERSISTENT_BASE = os.getcwd() + '/persistent'

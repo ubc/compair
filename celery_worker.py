@@ -1,5 +1,6 @@
 import os
 from compair import create_app, celery
+from compair.core import db
 
 app = create_app(skip_endpoints=True, skip_assets=True)
 
@@ -13,5 +14,8 @@ class ContextTask(TaskBase):
     abstract = True
     def __call__(self, *args, **kwargs):
         with app.app_context():
-            return TaskBase.__call__(self, *args, **kwargs)
+            try:
+                return TaskBase.__call__(self, *args, **kwargs)
+            finally:
+                db.session.remove()
 celery.Task = ContextTask
