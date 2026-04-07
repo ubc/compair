@@ -699,10 +699,17 @@ class LoginAPITests(ComPAIRAPITestCase):
 
     def test_saml_metadata(self):
         # test saml login enabled
-        self.app.config['SAML_LOGIN_ENABLED'] = True
-        self.app.config['SAML_EXPOSE_METADATA_ENDPOINT'] = True
-        rv = self.client.get('/api/saml/metadata', headers={'Accept': 'text/xml'})
-        self.assert200(rv)
+        with (
+            mock.patch('compair.saml.OneLogin_Saml2_IdPMetadataParser.parse_remote', return_value={}),
+            mock.patch(
+                'compair.saml.OneLogin_Saml2_IdPMetadataParser.merge_settings',
+                side_effect=lambda base_settings, idp_settings: base_settings
+            )
+        ):
+            self.app.config['SAML_LOGIN_ENABLED'] = True
+            self.app.config['SAML_EXPOSE_METADATA_ENDPOINT'] = True
+            rv = self.client.get('/api/saml/metadata', headers={'Accept': 'text/xml'})
+            self.assert200(rv)
 
         # test saml login disabled
         self.app.config['SAML_LOGIN_ENABLED'] = False
