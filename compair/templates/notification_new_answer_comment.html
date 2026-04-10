@@ -22,5 +22,5 @@
     on {{ comment.created.strftime('%b %d @ %I:%M %p') }}:
 </div>
 
-<div class="content">{{ clean_html(comment.content) | safe }}</div>
+<div class="content">{{ sanitized_comment_content | safe }}</div>
 {% endblock %}

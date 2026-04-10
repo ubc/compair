@@ -1,3 +1,5 @@
+import nh3
+
 from compair.core import celery, db
 from compair.models import User, UserCourse, CourseRole, \
     AnswerCommentType, EmailNotificationMethod
@@ -63,6 +65,7 @@ class Notification(object):
             comment=answer_comment,
             instructor_label=instructor_label,
             answer_comment_types=AnswerCommentType,
+            sanitized_comment_content=nh3.clean(answer_comment.content) if answer_comment.content else '',
         )
         text_body = render_template(
             'notification_new_answer_comment.txt',
@@ -79,5 +82,5 @@ class Notification(object):
             recipients=[recipient.email],
             subject=subject,
             html_body=html_body,
-            text_body=text_body
+            text_body=text_body,
         )
