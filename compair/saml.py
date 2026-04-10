@@ -33,9 +33,12 @@ def _get_saml_settings():
     idp_metadata_url = current_app.config.get('SAML_METADATA_URL')
     idp_metadata_entity_id = current_app.config.get('SAML_METADATA_ENTITY_ID', None)
     if idp_metadata_url:
+        # Pass validate_cert based on ENFORCE_SSL config (default to True for security)
+        validate_cert = current_app.config.get('ENFORCE_SSL', True)
         idp_settings = OneLogin_Saml2_IdPMetadataParser.parse_remote(
             idp_metadata_url,
-            entity_id=idp_metadata_entity_id
+            entity_id=idp_metadata_entity_id,
+            validate_cert=validate_cert
         )
 
         settings = OneLogin_Saml2_IdPMetadataParser.merge_settings(settings, idp_settings)
