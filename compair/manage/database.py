@@ -106,12 +106,7 @@ def recreate(yes, default_data, sample_data):
         print ('Recreate database successful.')
 
 
-@database_cli.command('populate')
-@click.option('--default-data', is_flag=True, default=False)
-@click.option('--sample-data', is_flag=True, default=False)
-def populate(default_data, sample_data):
-    """Populate database with default data"""
-
+def populate_tables(default_data=False, sample_data=False):
     try:
         _populate_tables(default_data, sample_data)
         db.session.commit()
@@ -122,3 +117,11 @@ def populate(default_data, sample_data):
         raise e
 
     print ('Populate database successful.')
+
+
+@database_cli.command('populate')
+@click.option('--default-data', is_flag=True, default=False)
+@click.option('--sample-data', is_flag=True, default=False)
+def populate(default_data, sample_data):
+    """Populate database with default data"""
+    populate_tables(default_data, sample_data)

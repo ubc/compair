@@ -20,7 +20,7 @@ from flask.testing import FlaskClient
 from six import wraps
 
 from compair import create_app
-from compair.manage.database import populate
+from compair.manage.database import populate_tables as populate
 from compair.core import db
 from compair.models import User, XAPILog, CaliperLog
 from compair.tests import test_app_settings
