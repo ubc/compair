@@ -2,13 +2,16 @@
     Recalculate Grades
 """
 
-from flask_script import Manager
+import click
+from flask.cli import AppGroup
 from compair.models import Course, Assignment
 
-manager = Manager(usage="Generate Grades")
+grades_cli = AppGroup('grades', help="Generate Grades")
 
-@manager.command
-def generate(course_id=None, all=False):
+@grades_cli.command('generate')
+@click.option('--course-id', default=None)
+@click.option('--all', 'all_courses', is_flag=True, default=False)
+def generate(course_id, all_courses):
     courses = []
     if course_id != None:
         course = Course.query.get(course_id)
@@ -17,7 +20,7 @@ def generate(course_id=None, all=False):
         else:
             print("No course found with that ID")
             return
-    elif all:
+    elif all_courses:
         courses = Course.query.all()
     else:
         print("Please enter a course_id or use the all flag")

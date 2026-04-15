@@ -20,7 +20,7 @@ from flask.testing import FlaskClient
 from six import wraps
 
 from compair import create_app
-from compair.manage.database import populate
+from compair.manage.database import populate_tables as populate
 from compair.core import db
 from compair.models import User, XAPILog, CaliperLog
 from compair.tests import test_app_settings
@@ -241,7 +241,7 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
         settings['LRS_XAPI_STATEMENT_ENDPOINT'] = 'local'
         settings['CALIPER_ENABLED'] = True
         settings['LRS_CALIPER_HOST'] = 'local'
-        # you can certify by uncommenting, running nosetests compair.tests.learning_records, and
+        # you can certify by uncommenting, running pytest /compair/tests/api/test_learning_records.py, and
         # running a few navigation events on the front end
         # settings['LRS_CALIPER_HOST'] = 'https://caliper-dev.imsglobal.org/caliper/4d7a0b79-0d0f-4127-808d-bfe88b6e037f/message'
         # settings['LRS_CALIPER_API_KEY'] = '4d7a0b79-0d0f-4127-808d-bfe88b6e037f'

@@ -221,7 +221,7 @@ gulp.task('test:unit', function (done) {
  * Generate index.html
  */
 gulp.task('generate_index', function(done) {
-    var proc = exec('PYTHONUNBUFFERED=1 python manage.py util generate_index');
+    var proc = exec('PYTHONUNBUFFERED=1 FLASK_APP=manage flask util generate-index');
     proc.stderr.on('data', function (data) {
         process.stderr.write(data);
         done();
@@ -344,7 +344,7 @@ gulp.task('test:acceptance:sauce', gulp.series('server:frontend', '_test:accepta
  * Run backend server
  */
 gulp.task('server:backend', function() {
-    var proc = exec('PYTHONUNBUFFERED=1 python manage.py runserver -h 0.0.0.0');
+    var proc = exec('FLASK_APP=compair flask run --host 0.0.0.0 --port 8080');
     proc.stderr.on('data', function (data) {
         process.stderr.write(data);
         done();
