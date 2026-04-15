@@ -43,11 +43,11 @@ or
 
 After initialization is finished, run the following command if it is the first time:
 
-    docker exec -it compair_app_1 python manage.py database create
+    docker exec -it -e FLASK_APP=manage compair-app-1 flask database create
 
 Alternatively you can create a pre-populated database with demo data:
 
-    docker exec -it compair_app_1 python manage.py database create -s
+    docker exec -it -e FLASK_APP=manage compair-app-1 flask database create --sample-data
 
 ComPAIR is accessible at
 
@@ -56,7 +56,7 @@ ComPAIR is accessible at
 ### Check Logs
 
     # app
-    docker logs -f compair_app_1
+    docker logs -f compair-app-1
     # nginx
     docker logs -f compair_web_1
     # db
@@ -73,15 +73,15 @@ ComPAIR is accessible at
 
 ### Access Database
 
-    docker exec -it compair_app_1 mysql
+    docker exec -it compair-app-1 mysql
 
 ### Upgrade Database
 
-    docker exec -it compair_app_1 alembic upgrade head
+    docker exec -it compair-app-1 alembic upgrade head
 
 ### Run Management Command
 
-    docker exec -it compair_app_1 python manage.py COMMAND
+    docker exec -it -e FLASK_APP=manage compair-app-1 flask COMMAND
 
 ### Build Docker Image Locally
 
@@ -92,7 +92,7 @@ ComPAIR is accessible at
     docker-compose down
     docker pull ubcctlt/compair-app # download latest ComPAIR image
     docker-compose up
-    docker exec -it compair_app_1 alembic upgrade head # upgrade database
+    docker exec -it compair-app-1 alembic upgrade head # upgrade database
 
 Running tests
 ---------------------------
@@ -117,13 +117,13 @@ Alternatively, these tests may be run inside docker:
     # with compair running via docker-compose, get a shell to the app service
     docker-compose exec app bash
     # run all the backend python tests
-    nosetests
-    # run individual tests, just use the test import path
-    nosetests compair.tests.api.test_assignment.AssignmentAPITests
+    pytest
+    # run individual tests, just use the test module path
+    pytest compair/tests/api/test_assignment.py
     # to make the test runner stop on the first failure, add -x
     # to make the test runner capture standard out (for debug prints), add -s
     # combined, this would be
-    nosetests -xs
+    pytest -xs
 
 To help debug sqlalchemy, you can tell sqlalchemy to log all generated
 statements to stderr by adding this setting to `compair/settings.py`:
@@ -403,7 +403,7 @@ Demo installations have default data of one course, 2 assignments, 1 instructor,
 
 **You should never turn a server with existing data into a demo.** Always delete all existing data first with:
 
-    python manage.py database drop
+    FLASK_APP=manage flask database drop
 
 ### Demo Settings
 
@@ -417,7 +417,7 @@ In order for the cron job to work properly, you must also create an additional c
 
 You can set the data the first time by running:
 
-    python manage.py database create
+    FLASK_APP=manage flask database create
 
 Attachments Settings
 ---------------------------

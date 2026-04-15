@@ -86,7 +86,7 @@ Setup Database default data (while still in virtual environment)
 
 Note: replace `compair_password` with your secure password.
 ```
-DATABASE_URI=mysql+pymysql://compair:compair_password@localhost/compair python manage.py database create
+DATABASE_URI=mysql+pymysql://compair:compair_password@localhost/compair FLASK_APP=manage flask database create
 ```
 
 Setup Port and File Permissions

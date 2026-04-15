@@ -108,7 +108,7 @@ The public IP is listed under `LoadBalancer Ingress` field. You may need to wait
 
 ### Initializing database
 ```
-kubectl exec -it $(kubectl get pods -l app=compair,tier=frontend --no-headers | cut -d " " -f 1) -- ./manage.py database create
+kubectl exec -it $(kubectl get pods -l app=compair,tier=frontend --no-headers | cut -d " " -f 1) -- env FLASK_APP=manage flask database create
 ```
 
 ### Default admin login

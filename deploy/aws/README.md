@@ -46,7 +46,7 @@ docker ps | grep "\-compair-app"
 
 Execute the database command:
 ```
-docker exec CONTAINER_ID ./manage.py database create
+docker exec -e FLASK_APP=manage CONTAINER_ID flask database create
 ```
 
 Once finished, ComPAIR should be accessible with default user `root`/`password`.
