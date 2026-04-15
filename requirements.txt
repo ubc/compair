@@ -4,7 +4,6 @@ Flask==1.1.2
 Flask-Login==0.6.1
 Flask-Restful==0.3.9
 Flask-SQLAlchemy==2.5.1
-Flask-Script==2.0.6
 Flask-Testing==0.8.1
 Flask-Mail==0.9.1
 PyMySQL==1.1.1
@@ -19,6 +18,7 @@ duration==1.1.1
 six==1.16.0
 caslib.py==2.3.0
 python3-saml==1.9.0
+click==8.3.1
 alembic==1.7.7
 # TODO remove once old migrations are no longer needed
 # backport of sqlalchemy enum for python before 3.4, not used except by

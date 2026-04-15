@@ -2,18 +2,18 @@
     User Management
 """
 
-from flask_script import Manager
+import click
+from flask.cli import AppGroup
 
 from compair.core import db
-from compair.models import User, ThirdPartyUser, ThirdPartyType, \
-    LTIUser
-from flask import current_app
-
-manager = Manager(usage="Manage Users")
+from compair.models import User, ThirdPartyUser, ThirdPartyType, LTIUser
 
 
-@manager.option('password', help='Specify a password.')
-@manager.option('username', help='Specify a user.')
+user_cli = AppGroup('user', help="Manage Users")
+
+@user_cli.command('password')
+@click.argument('username')
+@click.argument('password')
 def password(username, password):
     user = User.query.filter_by(username=username).first()
     if user is None:
@@ -26,7 +26,7 @@ def password(username, password):
 
     print("Password has been updated.")
 
-@manager.command
+@user_cli.command('generate-global-unique-identifiers')
 def generate_global_unique_identifiers():
     # we will attempt to fill global_unique_identifier in for users currently missing one
 

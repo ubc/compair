@@ -16,16 +16,16 @@ Requires that these Kaltura env vars are set to the new Kaltura environment:
 
 Usage options, run in app root:
 
-    python manage.py kaltura migrate /path/to/mappingCsv.csv
+    FLASK_APP=manage flask kaltura migrate /path/to/mappingCsv.csv
 
--d Do a dry run, without actually making any changes to the database:
+--dry-run  Do a dry run, without actually making any changes to the database:
 
-    python manage.py kaltura migrate -d /path/to/mappingCsv.csv
+    FLASK_APP=manage flask kaltura migrate --dry-run /path/to/mappingCsv.csv
 
--n If present, tells the CSV parser not to skip the first row. By default, we
+--no-header  If present, tells the CSV parser not to skip the first row. By default, we
 assume the first row is a header row and skip it:
 
-    python manage.py kaltura migrate -n /path/to/mappingCsv.csv
+    FLASK_APP=manage flask kaltura migrate --no-header /path/to/mappingCsv.csv
 
 """
 
@@ -37,14 +37,15 @@ from urllib.parse import unquote_plus
 from KalturaClient import KalturaClient, KalturaConfiguration
 from KalturaClient.Plugins.Core import (KalturaSessionType, KalturaMediaEntry,
                                         KalturaMediaType)
-from flask_script import Manager
+import click
+from flask.cli import AppGroup
 
 from compair.core import db
 from compair.kaltura.core import KalturaCore
 from compair.models import Answer, KalturaMedia, File
 from flask import current_app
 
-manager = Manager(usage="Kaltura Migration")
+kaltura_cli = AppGroup('kaltura', help="Kaltura Migration")
 
 def readMappingCsv(mappingCsv, noHeader):
     oldToNewEntryIds = {}
@@ -175,12 +176,15 @@ def migrateAnswerLinks(answers, oldToNewEntryIds, logfile):
 
 # Some videos were linked in answer content, we want to switch them to using
 # the file attachment system like all other kaltura media
-@manager.command
-def links(mappingCsv, noHeader=False, dryRun=False):
+@kaltura_cli.command('links')
+@click.argument('mapping_csv')
+@click.option('--no-header', is_flag=True, default=False)
+@click.option('--dry-run', is_flag=True, default=False)
+def links(mapping_csv, no_header, dry_run):
     ts = datetime.now().isoformat(timespec='seconds')
     logfile = open(f'kaltura-links-migration-log-{ts}.log', 'a')
     msg('Starting Kaltura links migration', logfile)
-    oldToNewEntryIds = readMappingCsv(mappingCsv, noHeader)
+    oldToNewEntryIds = readMappingCsv(mapping_csv, no_header)
     newToOldEntryIds = dict(map(reversed, oldToNewEntryIds.items()))
     needMigrationAnswers = []
     numInvalid = 0
@@ -219,7 +223,7 @@ def links(mappingCsv, noHeader=False, dryRun=False):
     # summarize what needs to be done
     summarize(len(needMigrationAnswers), numInvalid, numAlreadyMigrated,
               numNoMapping, numTotal, logfile)
-    if dryRun:
+    if dry_run:
         msg(f'*** Dry run completed, no changes were made ***', logfile)
     else:
         msg(f'Starting database session', logfile)
@@ -229,12 +233,15 @@ def links(mappingCsv, noHeader=False, dryRun=False):
     logfile.close()
 
 
-@manager.command
-def migrate(mappingCsv, noHeader=False, dryRun=False):
+@kaltura_cli.command('migrate')
+@click.argument('mapping_csv')
+@click.option('--no-header', is_flag=True, default=False)
+@click.option('--dry-run', is_flag=True, default=False)
+def migrate(mapping_csv, no_header, dry_run):
     ts = datetime.now().isoformat(timespec='seconds')
     logfile = open(f'kaltura-migration-log-{ts}.log', 'a')
     msg('Starting Kaltura migration', logfile)
-    oldToNewEntryIds = readMappingCsv(mappingCsv, noHeader)
+    oldToNewEntryIds = readMappingCsv(mapping_csv, no_header)
     newToOldEntryIds = dict(map(reversed, oldToNewEntryIds.items()))
     invalidKalturaMedias = [] # can't be migrated, might as well delete
     needMigrationMedias = [] # needs to be migrated
@@ -264,7 +271,7 @@ def migrate(mappingCsv, noHeader=False, dryRun=False):
     summarize(len(needMigrationMedias), len(invalidKalturaMedias),
               numAlreadyMigrated, numNoMapping, numTotal, logfile)
     # do the actual work in a transaction
-    if dryRun:
+    if dry_run:
         msg(f'*** Dry run completed, no changes were made ***', logfile)
     else:
         msg(f'Starting database session', logfile)

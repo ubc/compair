@@ -5,12 +5,11 @@ from io import open
 
 from flask import current_app
 from flask import render_template
-from flask_script import Manager
+from flask.cli import AppGroup
 
-manager = Manager(usage="Utility Commands")
+util_cli = AppGroup('util', help="Utility Commands")
 
-
-@manager.command
+@util_cli.command('generate-index')
 def generate_index():
     """
     Generate compair/static/index.html for acceptance testing

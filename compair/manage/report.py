@@ -8,7 +8,8 @@ from compair.algorithms.score import calculate_score_1vs1
 import numbers
 from werkzeug.utils import secure_filename
 
-from flask_script import Manager
+import click
+from flask.cli import AppGroup
 from sqlalchemy import and_, asc
 from sqlalchemy.orm import aliased, joinedload
 
@@ -16,7 +17,7 @@ from compair.models import AnswerScore, AnswerCriterionScore, \
     Answer, Criterion, Comparison, WinningAnswer, \
     Course, Assignment, User, UserCourse, ScoringAlgorithm
 
-manager = Manager(usage="Generate Reports")
+report_cli = AppGroup('report', help="Generate Reports")
 
 """
 @manager.option('-c', '--course', dest='course_id', help='Specify a course ID to generate report from.')
@@ -96,12 +97,10 @@ def create(course_id):
     print('Done.')
 """
 
-@manager.option('-a', '--assignment', dest='assignment_id', help='Specify a Assignment ID to generate report from.')
+@report_cli.command('create')
+@click.option('-a', '--assignment-id', required=True, help='Specify an Assignment ID to generate report from.')
 def create(assignment_id):
     """Creates report"""
-    if not assignment_id:
-        raise RuntimeError("Assignment with ID {} is not found.".format(assignment_id))
-
     assignment = Assignment.query.filter_by(id=assignment_id).first()
     if not assignment:
         raise RuntimeError("Assignment with ID {} is not found.".format(assignment_id))
