@@ -67,10 +67,10 @@ testsauce:
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js  test:acceptance:sauce
 
 run:
-	$(DOCKERRUN_PY) python manage.py runserver -h 0.0.0.0
+	$(DOCKERRUN_PY) FLASK_APP=main flask run --host 0.0.0.0 --port 8080
 
 rundev:
-	$(DOCKERRUN_PY) python manage.py runserver -h 0.0.0.0 -dr
+	$(DOCKERRUN_PY) FLASK_APP=main flask run --host 0.0.0.0 --port 8080 --debug
 
 docker-image:
 	docker build -t ubcctlt/compair-app .
