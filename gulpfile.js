@@ -344,7 +344,7 @@ gulp.task('test:acceptance:sauce', gulp.series('server:frontend', '_test:accepta
  * Run backend server
  */
 gulp.task('server:backend', function() {
-    var proc = exec('FLASK_APP=main flask run --host 0.0.0.0 --port 8080');
+    var proc = exec('FLASK_APP=compair flask run --host 0.0.0.0 --port 8080');
     proc.stderr.on('data', function (data) {
         process.stderr.write(data);
         done();
