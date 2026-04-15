@@ -58,9 +58,9 @@ ComPAIR is accessible at
     # app
     docker logs -f compair-app-1
     # nginx
-    docker logs -f compair_web_1
+    docker logs -f compair-web-1
     # db
-    docker logs -f compair_db_1
+    docker logs -f compair-db-1
 
 ### Stop Server
 
