@@ -12,12 +12,12 @@ import factory.fuzzy
 import pytz
 import datetime
 from hashlib import md5
+from functools import wraps
 
 from flask import session as sess
 from flask_testing import TestCase
 from os.path import dirname
 from flask.testing import FlaskClient
-from six import wraps
 
 from compair import create_app
 from compair.api import register_demo_api_blueprints
