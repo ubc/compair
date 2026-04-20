@@ -1,11 +1,11 @@
 import cProfile
 import contextlib
-from functools import wraps
 import pstats
+from functools import wraps
 from enum import Enum
 from flask_restx.reqparse import RequestParser
 
-from io import BytesIO
+from io import StringIO
 from flask import request, jsonify
 from flask_restx import Api
 from flask_sqlalchemy import Model
@@ -135,7 +135,7 @@ def profiled():
     pr.enable()
     yield
     pr.disable()
-    s = BytesIO()
+    s = StringIO()
     ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
     ps.print_stats()
     # uncomment this to see who's calling what
