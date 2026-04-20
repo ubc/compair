@@ -3,8 +3,7 @@ import re
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy import Enum, func, select, and_, or_
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import Enum, and_
 from flask_login import current_user
 from flask import current_app
 
@@ -16,15 +15,9 @@ from oauthlib.oauth1 import SIGNATURE_TYPE_BODY, SIGNATURE_TYPE_AUTH_HEADER, SIG
 from .helpers import LTIMemerbshipServiceOauthClient
 
 from requests_oauthlib import OAuth1
-from lti.utils import parse_qs, urlparse
+from lti.utils import parse_qs
 import requests
 from xml.etree import ElementTree
-
-import urllib
-try:
-    from urllib.parse import urlencode
-except ImportError:
-    from urllib import urlencode
 
 class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'lti_membership'

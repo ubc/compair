@@ -5,10 +5,8 @@ from hashlib import md5
 
 from flask import session as sess
 from flask_login import user_logged_in, user_logged_out
-from flask_sqlalchemy import Model
-from flask_login import UserMixin
 
-from .models import ActivityLog, User
+from .models import ActivityLog
 from .core import db
 
 
