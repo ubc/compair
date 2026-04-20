@@ -5,7 +5,6 @@ from __future__ import (absolute_import, division, print_function, unicode_liter
 import datetime
 import pytz
 import caliper
-from six import text_type
 
 from flask import current_app, session as sess
 from compair.learning_records.resource_iri import ResourceIRI
@@ -47,7 +46,7 @@ class CaliperEntities(object):
             id=ResourceIRI.compair(),
             name="ComPAIR",
             description="The ComPAIR learning application pairs student answers for deeper learning through comparison of peer work.",
-            version=text_type(current_app.config.get('COMPAIR_VERSION', ''))
+            version=str(current_app.config.get('COMPAIR_VERSION', ''))
         )
 
 
@@ -133,9 +132,9 @@ class CaliperEntities(object):
 
         return caliper.entities.SoftwareApplication(
             id=ResourceIRI.user_client(sess.get('session_id', '')),
-            userAgent=text_type(request.environ.get('HTTP_USER_AGENT', '')),
-            ipAddress=text_type(request.environ.get('REMOTE_ADDR', '')),
-            host=text_type(request.environ.get('HTTP_HOST', '')),
+            userAgent=str(request.environ.get('HTTP_USER_AGENT', '')),
+            ipAddress=str(request.environ.get('REMOTE_ADDR', '')),
+            host=str(request.environ.get('HTTP_HOST', '')),
         )
 
 

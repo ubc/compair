@@ -10,7 +10,6 @@ from flask_restx.reqparse import RequestParser
 from flask_login import login_required, current_user
 from sqlalchemy.orm import load_only, joinedload
 from sqlalchemy import exc, asc, or_, and_, func, desc, asc
-from six import text_type
 
 from . import dataformat
 from compair.authorization import is_user_access_restricted, require, USER_IDENTITY
@@ -28,7 +27,7 @@ def non_blank_text(value):
     if value is None:
         return None
     else:
-        return None if text_type(value).strip() == "" else text_type(value)
+        return None if str(value).strip() == "" else str(value)
 
 def string_to_bool(value):
     if value is None:

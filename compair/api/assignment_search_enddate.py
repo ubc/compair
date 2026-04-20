@@ -12,7 +12,6 @@ from flask_restx import Resource, marshal
 from flask_restx.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_, text
 from sqlalchemy.orm import joinedload, undefer_group, load_only
-from six import text_type
 
 from . import dataformat
 from compair.core import db, event, abort

@@ -6,7 +6,6 @@ from flask import Blueprint, current_app
 from flask_restx import Resource, marshal_with, marshal, reqparse
 from flask_login import login_required, current_user
 from sqlalchemy import exc, func
-from six import text_type
 
 from . import dataformat
 from compair.authorization import require
@@ -273,7 +272,7 @@ class CourseDuplicateAPI(Resource):
                 assignment_copy_data.get('compare_start'), assignment_copy_data.get('compare_end'),
                 assignment_copy_data.get('self_eval_start'), assignment_copy_data.get('self_eval_end'))
             if not valid:
-                error_message = error_message.replace(".", "") + " for assignment "+text_type(assignment_copy_data.get('name', ''))+"."
+                error_message = f"{error_message.replace('.', '')} for assignment {str(assignment_copy_data.get('name', ''))}."
                 abort(400, title="Course Not Saved", message=error_message)
 
         # duplicate course
