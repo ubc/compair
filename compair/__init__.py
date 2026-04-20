@@ -6,7 +6,7 @@ import re
 
 from flask import Flask, redirect, session as sess, jsonify, url_for, make_response
 from flask_bouncer import ensure
-from jinja2 import Markup
+from markupsafe import Markup
 from flask_login import current_user
 from sqlalchemy.orm import joinedload
 from werkzeug.routing import BaseConverter
