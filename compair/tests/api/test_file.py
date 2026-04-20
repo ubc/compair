@@ -78,14 +78,14 @@ class FileRetrieveTests(ComPAIRAPITestCase):
                         if extension == 'pdf':
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=None,
+                                download_name=None,
                                 as_attachment=False,
                                 mimetype=mimetype
                             )
                         else:
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=None,
+                                download_name=None,
                                 as_attachment=True,
                                 mimetype=mimetype
                             )
@@ -98,14 +98,14 @@ class FileRetrieveTests(ComPAIRAPITestCase):
                         if extension == 'pdf':
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=None,
+                                download_name=None,
                                 as_attachment=False,
                                 mimetype=mimetype
                             )
                         else:
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=override_name,
+                                download_name=override_name,
                                 as_attachment=True,
                                 mimetype=mimetype
                             )
