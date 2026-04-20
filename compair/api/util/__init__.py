@@ -76,7 +76,7 @@ def new_restful_api(blueprint):
     :param blueprint:
     :return:
     """
-    api = Api(blueprint)
+    api = Api(blueprint, doc=False)
     api.unauthorized = _unauthorized_override
     return api
 
