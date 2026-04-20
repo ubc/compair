@@ -20,6 +20,7 @@ from flask.testing import FlaskClient
 from six import wraps
 
 from compair import create_app
+from compair.api import register_demo_api_blueprints
 from compair.manage.database import populate_tables as populate
 from compair.core import db
 from compair.models import User, XAPILog, CaliperLog
@@ -83,6 +84,8 @@ def suppress_stdout():
         sys.stdout.close()
         sys.stdout = old_stdout
 
+# TODO: replace Flask-Testing with an alternative — it is unmaintained and incompatible with
+# Flask 2. Look into: plain unittest.TestCase, pytest-flask, or flask-unittest.
 class ComPAIRTestCase(TestCase):
     def create_app(self):
         app = create_app(settings_override=test_app_settings)
@@ -101,6 +104,16 @@ class ComPAIRTestCase(TestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+
+    def assertRedirects(self, response, location, message=None):
+        # Override Flask-Testing's assertRedirects which prepends http://localhost to relative URLs.
+        # Werkzeug 2.1 disabled autocorrect_location_header so response.location stays relative.
+        valid_status_codes = (301, 302, 303, 305, 307, 308)
+        valid_status_code_str = ', '.join(str(code) for code in valid_status_codes)
+        not_redirect = "HTTP Status {0} expected but got {1}".format(
+            valid_status_code_str, response.status_code)
+        self.assertIn(response.status_code, valid_status_codes, message or not_redirect)
+        self.assertEqual(response.location, location, message)
 
 class ComPAIRAPITestCase(ComPAIRTestCase):
     api = None
@@ -222,6 +235,7 @@ class ComPAIRAPIDemoTestCase(ComPAIRAPITestCase):
         with suppress_stdout():
             populate(default_data=True, sample_data=True)
         self.app.config['DEMO_INSTALLATION'] = True
+        register_demo_api_blueprints(self.app)
 
 
 class ComPAIRLearningRecordTestCase(ComPAIRTestCase):

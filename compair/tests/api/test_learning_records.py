@@ -9,6 +9,7 @@ from compair.models import XAPILog, CaliperLog
 class LearningRecordsAPITests(ComPAIRAPITestCase):
     def setUp(self):
         super(LearningRecordsAPITests, self).setUp()
+        register_learning_record_api_blueprints(self.app)
 
     def test_create_xapi_statement(self):
         self.app.config['LRS_XAPI_STATEMENT_ENDPOINT'] = 'local'
@@ -29,20 +30,18 @@ class LearningRecordsAPITests(ComPAIRAPITestCase):
             }
         }
 
-        # test XAPI_ENABLED needs to be set
-        self.app.config['XAPI_ENABLED'] = False
-        rv = self.client.post(url, data=json.dumps(statement), content_type='application/json')
-        self.assert404(rv)
-
-        # need to re-register api blueprints since we're changing XAPI_ENABLED
-        self.app.config['XAPI_ENABLED'] = True
-        self.app = register_learning_record_api_blueprints(self.app)
-
         # test login required
         rv = self.client.post(url, data=json.dumps(statement), content_type='application/json')
         self.assert401(rv)
 
         with self.login("root"):
+            # test XAPI_ENABLED needs to be set
+            self.app.config['XAPI_ENABLED'] = False
+            rv = self.client.post(url, data=json.dumps(statement), content_type='application/json')
+            self.assert404(rv)
+
+            self.app.config['XAPI_ENABLED'] = True
+
             # test object required
             statement_invalid = statement.copy()
             del statement_invalid['object']
@@ -86,20 +85,18 @@ class LearningRecordsAPITests(ComPAIRAPITestCase):
             'type': 'SessionEvent'
         }
 
-        # test CALIPER_ENABLED needs to be set
-        self.app.config['CALIPER_ENABLED'] = False
-        rv = self.client.post(url, data=json.dumps(event), content_type='application/json')
-        self.assert404(rv)
-
-        # need to re-register api blueprints since we're changing CALIPER_ENABLED
-        self.app.config['CALIPER_ENABLED'] = True
-        self.app = register_learning_record_api_blueprints(self.app)
-
         # test login required
         rv = self.client.post(url, data=json.dumps(event), content_type='application/json')
         self.assert401(rv)
 
         with self.login("root"):
+            # test CALIPER_ENABLED needs to be set
+            self.app.config['CALIPER_ENABLED'] = False
+            rv = self.client.post(url, data=json.dumps(event), content_type='application/json')
+            self.assert404(rv)
+
+            self.app.config['CALIPER_ENABLED'] = True
+
             # test object required
             event_invalid = event.copy()
             del event_invalid['object']
