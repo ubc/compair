@@ -7,7 +7,7 @@ from flask import redirect, render_template, jsonify, current_app
 from flask_login import login_required, current_user
 from flask import make_response
 from flask import send_file, url_for, redirect, request
-from flask_restful.reqparse import RequestParser
+from flask_restx.reqparse import RequestParser
 
 from bouncer.constants import READ
 from compair.authorization import require

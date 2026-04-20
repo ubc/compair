@@ -5,8 +5,8 @@ import pytz
 from flask import Blueprint, current_app, session as sess
 from bouncer.constants import MANAGE, EDIT, CREATE, READ
 from flask_bouncer import can
-from flask_restful import Resource, marshal
-from flask_restful.reqparse import RequestParser
+from flask_restx import Resource, marshal
+from flask_restx.reqparse import RequestParser
 from flask_login import login_required, current_user
 from sqlalchemy.orm import load_only, joinedload
 from sqlalchemy import exc, asc, or_, and_, func, desc, asc

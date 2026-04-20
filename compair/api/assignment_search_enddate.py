@@ -8,8 +8,8 @@ from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint, current_app
 from flask_bouncer import can
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal
-from flask_restful.reqparse import RequestParser
+from flask_restx import Resource, marshal
+from flask_restx.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_, text
 from sqlalchemy.orm import joinedload, undefer_group, load_only
 from six import text_type

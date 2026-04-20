@@ -1,5 +1,5 @@
 # Specify what columns should be sent out by the API
-from flask_restful import fields
+from flask_restx import fields
 import pytz
 from flask import current_app
 

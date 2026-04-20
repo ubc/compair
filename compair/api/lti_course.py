@@ -1,7 +1,7 @@
 from flask import Blueprint, session as sess
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal, reqparse, marshal_with
+from flask_restx import Resource, marshal, reqparse, marshal_with
 from sqlalchemy import exc, or_, and_, desc, asc
 from six import text_type
 

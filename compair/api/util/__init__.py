@@ -3,11 +3,11 @@ import contextlib
 from functools import wraps
 import pstats
 from enum import Enum
-from flask_restful.reqparse import RequestParser
+from flask_restx.reqparse import RequestParser
 
 from six import BytesIO, text_type
 from flask import request, jsonify
-from flask_restful import Api
+from flask_restx import Api
 from flask_sqlalchemy import Model
 from sqlalchemy import inspect
 

@@ -6,12 +6,12 @@ from bouncer.constants import EDIT, READ, MANAGE
 from flask import Blueprint, request, current_app, make_response
 from flask_bouncer import can
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal
+from flask_restx import Resource, marshal
+from flask_restx.reqparse import RequestParser
 from six import BytesIO
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
-from flask_restful.reqparse import RequestParser
 
 from . import dataformat
 from compair.core import db, event, abort, allowed_file, display_name_generator
