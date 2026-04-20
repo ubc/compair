@@ -5,7 +5,7 @@ import pstats
 from enum import Enum
 from flask_restx.reqparse import RequestParser
 
-from six import BytesIO, text_type
+from io import BytesIO
 from flask import request, jsonify
 from flask_restx import Api
 from flask_sqlalchemy import Model
@@ -111,12 +111,12 @@ def get_model_changes(model):
                     if len(history.deleted) > 0:
                         before_value = history.deleted[0]
                         if isinstance(before_value, Enum):
-                            before_value = text_type(before_value.value)
+                            before_value = str(before_value.value)
                         changes[attr.key]['before'] = before_value
                     if len(history.added) > 0:
                         after_value = history.added[0]
                         if isinstance(after_value, Enum):
-                            after_value = text_type(after_value.value)
+                            after_value = str(after_value.value)
                         changes[attr.key]['after'] = after_value
 
     return changes
@@ -135,7 +135,7 @@ def profiled():
     pr.enable()
     yield
     pr.disable()
-    s = BytesIO.BytesIO()
+    s = BytesIO()
     ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
     ps.print_stats()
     # uncomment this to see who's calling what

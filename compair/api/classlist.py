@@ -8,7 +8,7 @@ from flask_bouncer import can
 from flask_login import login_required, current_user
 from flask_restx import Resource, marshal
 from flask_restx.reqparse import RequestParser
-from six import BytesIO
+from io import BytesIO
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import joinedload
 from werkzeug.utils import secure_filename
