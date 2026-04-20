@@ -5,7 +5,6 @@ import random
 import factory.fuzzy
 
 from compair import db
-from six.moves import range
 from compair.models import SystemRole, CourseRole, Course, \
     Comparison, ThirdPartyType, AnswerCommentType, WinningAnswer, \
     UserCourse
