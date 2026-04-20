@@ -3,11 +3,6 @@ import time
 import unicodecsv as csv
 import re
 import string
-try:
-    from urllib import quote_plus
-except ImportError:
-    from urllib.parse import quote_plus
-
 from bouncer.constants import MANAGE
 from flask import Blueprint, current_app, request
 from flask import url_for
