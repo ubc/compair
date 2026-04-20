@@ -7,11 +7,9 @@ from flask.cli import AppGroup
 
 from alembic import command
 from compair.core import db
+from sqlalchemy.schema import MetaData
 from data.fixtures import DefaultFixture
 from data.fixtures import DemoDataFixture
-
-from sqlalchemy.engine import reflection
-from sqlalchemy.schema import MetaData, Table, DropTable, ForeignKeyConstraint, DropConstraint
 
 database_cli = AppGroup('database', help="Perform database operations")
 
