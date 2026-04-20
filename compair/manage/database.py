@@ -22,7 +22,7 @@ def _drop_tables():
 
 def _truncate_tables():
     metadata = MetaData()
-    for table in reversed(meta.sorted_tables):
+    for table in reversed(metadata.sorted_tables):
         db.session.execute(table.delete())
 
 def _create_tables():
