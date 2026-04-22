@@ -2,7 +2,8 @@
     Database Manager, manipulate the database from commandline
 """
 from alembic.config import Config
-from flask_script import Manager, prompt_bool
+import click
+from flask.cli import AppGroup
 
 from alembic import command
 from compair.core import db
@@ -12,7 +13,7 @@ from data.fixtures import DemoDataFixture
 from sqlalchemy.engine import reflection
 from sqlalchemy.schema import MetaData, Table, DropTable, ForeignKeyConstraint, DropConstraint
 
-manager = Manager(usage="Perform database operations")
+database_cli = AppGroup('database', help="Perform database operations")
 
 def _drop_tables():
     db.drop_all()
@@ -20,8 +21,7 @@ def _drop_tables():
     print ('All tables dropped...')
 
 def _truncate_tables():
-    metadata = MetaData()
-    for table in reversed(meta.sorted_tables):
+    for table in reversed(db.metadata.sorted_tables):
         db.session.execute(table.delete())
 
 def _create_tables():
@@ -44,10 +44,11 @@ def _populate_tables(default_data=False, sample_data=False):
     print ('All tables populated...')
 
 
-@manager.command
-def drop(yes=False):
+@database_cli.command('drop')
+@click.option('--yes', is_flag=True, default=False)
+def drop(yes):
     """Drops database tables"""
-    if yes or prompt_bool("Are you sure you want to lose all your data"):
+    if yes or click.confirm("Are you sure you want to lose all your data"):
         try:
             _drop_tables()
             db.session.commit()
@@ -60,8 +61,10 @@ def drop(yes=False):
         print ('Drop database tables successful.')
 
 
-@manager.command
-def create(default_data=True, sample_data=False):
+@database_cli.command('create')
+@click.option('--default-data/--no-default-data', default=True)
+@click.option('--sample-data', is_flag=True, default=False)
+def create(default_data, sample_data):
     """Creates database tables from sqlalchemy models"""
     if db.engine.has_table('user'):
         print ('Tables exist. Skipping database create. Use database recreate instead.')
@@ -79,11 +82,14 @@ def create(default_data=True, sample_data=False):
         print ('Create database successful.')
 
 
-@manager.command
-def recreate(yes=False, default_data=True, sample_data=False):
+@database_cli.command('recreate')
+@click.option('--yes', is_flag=True, default=False)
+@click.option('--default-data/--no-default-data', default=True)
+@click.option('--sample-data', is_flag=True, default=False)
+def recreate(yes, default_data, sample_data):
     """Recreates database tables (same as issuing 'drop' and then 'create')"""
     print ("Resetting database state...")
-    if yes or prompt_bool("Are you sure you want to lose all your data"):
+    if yes or click.confirm("Are you sure you want to lose all your data"):
 
         try:
             _drop_tables()
@@ -99,10 +105,7 @@ def recreate(yes=False, default_data=True, sample_data=False):
         print ('Recreate database successful.')
 
 
-@manager.command
-def populate(default_data=False, sample_data=False):
-    """Populate database with default data"""
-
+def populate_tables(default_data=False, sample_data=False):
     try:
         _populate_tables(default_data, sample_data)
         db.session.commit()
@@ -113,3 +116,11 @@ def populate(default_data=False, sample_data=False):
         raise e
 
     print ('Populate database successful.')
+
+
+@database_cli.command('populate')
+@click.option('--default-data', is_flag=True, default=False)
+@click.option('--sample-data', is_flag=True, default=False)
+def populate(default_data, sample_data):
+    """Populate database with default data"""
+    populate_tables(default_data, sample_data)

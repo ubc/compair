@@ -2,22 +2,22 @@
     User Management
 """
 
-from flask_script import Manager
+import click
+from flask.cli import AppGroup
 
 from compair.core import db
-from compair.models import User, ThirdPartyUser, ThirdPartyType, \
-    LTIUser
-from flask import current_app
-
-manager = Manager(usage="Manage Users")
+from compair.models import User, ThirdPartyUser, ThirdPartyType, LTIUser
 
 
-@manager.option('password', help='Specify a password.')
-@manager.option('username', help='Specify a user.')
+user_cli = AppGroup('user', help="Manage Users")
+
+@user_cli.command('password')
+@click.argument('username')
+@click.argument('password')
 def password(username, password):
     user = User.query.filter_by(username=username).first()
     if user is None:
-        raise RuntimeError("User with username {} is not found.".format(username))
+        raise RuntimeError(f"User with username {username} is not found.")
 
     user.password = password
 
@@ -26,7 +26,7 @@ def password(username, password):
 
     print("Password has been updated.")
 
-@manager.command
+@user_cli.command('generate-global-unique-identifiers')
 def generate_global_unique_identifiers():
     # we will attempt to fill global_unique_identifier in for users currently missing one
 
@@ -35,9 +35,7 @@ def generate_global_unique_identifiers():
         .filter_by(global_unique_identifier=None) \
         .all()
 
-    print("{} user(s) with no global unique identifier found.".format(
-        len(users)
-    ))
+    print(f"{len(users)} user(s) with no global unique identifier found.")
 
     if len(users) > 0:
         update_count = 0
@@ -59,9 +57,7 @@ def generate_global_unique_identifiers():
                     update_count += 1
                     break
 
-        print("Adding global unique identifiers for {} user(s).".format(
-            update_count
-        ))
+        print(f"Adding global unique identifiers for {update_count} user(s).")
         db.session.commit()
 
     print("Done")

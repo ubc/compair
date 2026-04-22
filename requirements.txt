@@ -4,7 +4,6 @@ Flask==1.1.2
 Flask-Login==0.6.1
 Flask-Restful==0.3.9
 Flask-SQLAlchemy==2.5.1
-Flask-Script==2.0.6
 Flask-Testing==0.8.1
 Flask-Mail==0.9.1
 PyMySQL==1.1.1
@@ -49,7 +48,5 @@ markupsafe==2.0.1
 # json api was deprecated in latest version, so need older version, can be
 # removed once upgraded to flask 2
 itsdangerous==2.0.1
-# for the kaltura migration script
-kalturaapiclient==19.1.0
 # sanitize user provided html for rendering
 nh3==0.3.3
