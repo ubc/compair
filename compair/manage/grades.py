@@ -13,7 +13,7 @@ grades_cli = AppGroup('grades', help="Generate Grades")
 @click.option('--all', 'all_courses', is_flag=True, default=False)
 def generate(course_id, all_courses):
     courses = []
-    if course_id != None:
+    if course_id is not None:
         course = Course.query.get(course_id)
         if course and course.active:
             courses = [course]

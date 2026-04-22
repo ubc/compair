@@ -26,7 +26,7 @@ def create(course_id):
     if course_id:
         course_name = Course.query.with_entities(Course.name).filter_by(id=course_id).scalar()
         if not course_name:
-            raise RuntimeError("Course with ID {} is not found.".format(course_id))
+            raise RuntimeError(f"Course with ID {course_id} is not found.")
         course_name = course_name.replace('"', '')
         course_name += '_'
 
@@ -103,7 +103,7 @@ def create(assignment_id):
     """Creates report"""
     assignment = Assignment.query.filter_by(id=assignment_id).first()
     if not assignment:
-        raise RuntimeError("Assignment with ID {} is not found.".format(assignment_id))
+        raise RuntimeError(f"Assignment with ID {assignment_id} is not found.")
     criteria = assignment.criteria
 
     file_name = assignment.course.name.replace('"', '') + '_' + assignment_id + '_'
@@ -360,7 +360,7 @@ def create(assignment_id):
 
 
 def write_csv(filename, headers, data):
-    with open(secure_filename(filename), 'wt') as csvfile:
+    with open(secure_filename(filename), 'wb') as csvfile:
         report_writer = csv.writer(
             csvfile, delimiter=',',
             quotechar='"', quoting=csv.QUOTE_MINIMAL

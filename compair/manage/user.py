@@ -17,7 +17,7 @@ user_cli = AppGroup('user', help="Manage Users")
 def password(username, password):
     user = User.query.filter_by(username=username).first()
     if user is None:
-        raise RuntimeError("User with username {} is not found.".format(username))
+        raise RuntimeError(f"User with username {username} is not found.")
 
     user.password = password
 
@@ -35,15 +35,13 @@ def generate_global_unique_identifiers():
         .filter_by(global_unique_identifier=None) \
         .all()
 
-    print("{} user(s) with no global unique identifier found.".format(
-        len(users)
-    ))
+    print(f"{len(users)} user(s) with no global unique identifier found.")
 
     if len(users) > 0:
         update_count = 0
         for user in users:
             lti_user = user.lti_user_links \
-                .filter(LTIUser.global_unique_identifier != None) \
+                .filter(LTIUser.global_unique_identifier is not None) \
                 .first()
 
             if lti_user:
@@ -59,9 +57,7 @@ def generate_global_unique_identifiers():
                     update_count += 1
                     break
 
-        print("Adding global unique identifiers for {} user(s).".format(
-            update_count
-        ))
+        print(f"Adding global unique identifiers for {update_count} user(s).")
         db.session.commit()
 
     print("Done")
