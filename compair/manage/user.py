@@ -41,7 +41,7 @@ def generate_global_unique_identifiers():
         update_count = 0
         for user in users:
             lti_user = user.lti_user_links \
-                .filter(LTIUser.global_unique_identifier is not None) \
+                .filter(LTIUser.global_unique_identifier != None) \
                 .first()
 
             if lti_user:
