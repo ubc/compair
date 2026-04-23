@@ -6,7 +6,7 @@ from enum import Enum
 from flask_restx.reqparse import RequestParser
 
 from io import StringIO
-from flask import request, jsonify
+from flask import request
 from flask_restx import Api
 from flask_sqlalchemy import Model
 from sqlalchemy import inspect
@@ -62,23 +62,8 @@ def pagination(model):
     return wrap
 
 
-def _unauthorized_override(response):
-    return jsonify({
-        "title": "Unauthorized",
-        "message": "Authentication Required. Please log in again."
-    }), 401
-
-
 def new_restful_api(blueprint):
-    """
-    Flask-Restful asks for authentication on 401 error through http basic-auth. Since
-    we're not using http basic-auth, we have to disable this default handler.
-    :param blueprint:
-    :return:
-    """
-    api = Api(blueprint, doc=False)
-    api.unauthorized = _unauthorized_override
-    return api
+    return Api(blueprint, doc=False)
 
 
 def get_model_changes(model):
