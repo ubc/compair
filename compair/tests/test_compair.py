@@ -8,7 +8,6 @@ import mock
 import uuid
 import sys
 import os
-import factory.fuzzy
 import pytz
 import datetime
 from hashlib import md5
@@ -17,7 +16,6 @@ from functools import wraps
 from flask import session as sess
 from flask_testing import TestCase
 from os.path import dirname
-from flask.testing import FlaskClient
 
 from compair import create_app
 from compair.api import register_demo_api_blueprints
@@ -84,8 +82,6 @@ def suppress_stdout():
         sys.stdout.close()
         sys.stdout = old_stdout
 
-# TODO: replace Flask-Testing with an alternative — it is unmaintained and incompatible with
-# Flask 2. Look into: plain unittest.TestCase, pytest-flask, or flask-unittest.
 class ComPAIRTestCase(TestCase):
     def create_app(self):
         app = create_app(settings_override=test_app_settings)
