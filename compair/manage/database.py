@@ -7,7 +7,6 @@ from flask.cli import AppGroup
 
 from alembic import command
 from compair.core import db
-from sqlalchemy.schema import MetaData
 from data.fixtures import DefaultFixture
 from data.fixtures import DemoDataFixture
 
