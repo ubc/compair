@@ -7,7 +7,6 @@ from compair.manage.grades import grades_cli
 from compair.manage.score import score_cli
 from compair.manage.user import user_cli
 from compair.manage.utils import util_cli
-from compair.manage.kaltura import kaltura_cli
 from compair import create_app
 
 app = create_app(skip_assets=True)
@@ -18,7 +17,6 @@ app.cli.add_command(grades_cli)
 app.cli.add_command(score_cli)
 app.cli.add_command(user_cli)
 app.cli.add_command(util_cli)
-app.cli.add_command(kaltura_cli)
 
 @app.cli.command('list-routes')
 def list_routes():

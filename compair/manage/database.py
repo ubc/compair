@@ -19,8 +19,7 @@ def _drop_tables():
     print ('All tables dropped...')
 
 def _truncate_tables():
-    metadata = MetaData()
-    for table in reversed(metadata.sorted_tables):
+    for table in reversed(db.metadata.sorted_tables):
         db.session.execute(table.delete())
 
 def _create_tables():

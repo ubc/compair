@@ -13,7 +13,7 @@ score_cli = AppGroup('score', help="Recalculate Assignment Answer Scores")
 def recalculate(assignment_id):
     assignment = Assignment.query.filter_by(id=assignment_id).first()
     if not assignment:
-        raise RuntimeError("Assignment with ID {} is not found.".format(assignment_id))
+        raise RuntimeError(f"Assignment with ID {assignment_id} is not found.")
 
     if click.confirm("""All current answer scores and answer criterion scores will be overwritten.
 Final scores may differ slightly due to floating point rounding (especially if recalculating on different systems).
