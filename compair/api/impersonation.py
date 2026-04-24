@@ -1,7 +1,7 @@
 from copy import copy
 from flask import Blueprint, current_app
 from flask_login import current_user, login_required
-from flask_restful import Resource, marshal
+from flask_restx import Resource, marshal
 
 from compair.models import User
 from compair.core import abort, impersonation, event

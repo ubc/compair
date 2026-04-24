@@ -1,7 +1,6 @@
 import datetime
 import copy
 import random
-from six.moves import range
 
 from compair.core import db, random_generator
 from data.factories import CourseFactory, UserFactory, UserCourseFactory, AssignmentFactory, \

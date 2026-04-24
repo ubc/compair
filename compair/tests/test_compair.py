@@ -8,18 +8,17 @@ import mock
 import uuid
 import sys
 import os
-import factory.fuzzy
 import pytz
 import datetime
 from hashlib import md5
+from functools import wraps
 
 from flask import session as sess
 from flask_testing import TestCase
 from os.path import dirname
-from flask.testing import FlaskClient
-from six import wraps
 
 from compair import create_app
+from compair.api import register_demo_api_blueprints
 from compair.manage.database import populate_tables as populate
 from compair.core import db
 from compair.models import User, XAPILog, CaliperLog
@@ -101,6 +100,16 @@ class ComPAIRTestCase(TestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+
+    def assertRedirects(self, response, location, message=None):
+        # Override Flask-Testing's assertRedirects which prepends http://localhost to relative URLs.
+        # Werkzeug 2.1 disabled autocorrect_location_header so response.location stays relative.
+        valid_status_codes = (301, 302, 303, 305, 307, 308)
+        valid_status_code_str = ', '.join(str(code) for code in valid_status_codes)
+        not_redirect = "HTTP Status {0} expected but got {1}".format(
+            valid_status_code_str, response.status_code)
+        self.assertIn(response.status_code, valid_status_codes, message or not_redirect)
+        self.assertEqual(response.location, location, message)
 
 class ComPAIRAPITestCase(ComPAIRTestCase):
     api = None
@@ -222,6 +231,7 @@ class ComPAIRAPIDemoTestCase(ComPAIRAPITestCase):
         with suppress_stdout():
             populate(default_data=True, sample_data=True)
         self.app.config['DEMO_INSTALLATION'] = True
+        register_demo_api_blueprints(self.app)
 
 
 class ComPAIRLearningRecordTestCase(ComPAIRTestCase):

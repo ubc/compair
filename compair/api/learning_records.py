@@ -1,5 +1,5 @@
 from flask import Blueprint, session as sess, request
-from flask_restful import Resource
+from flask_restx import Resource
 from flask_login import login_required, current_user
 
 from . import dataformat

@@ -2,7 +2,6 @@ from flask import current_app, request
 from tincan import RemoteLRS
 from compair.models import XAPILog
 from compair.core import db
-from six import text_type
 
 from compair.tasks import emit_lrs_xapi_statement
 

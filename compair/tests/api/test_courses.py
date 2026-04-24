@@ -144,7 +144,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             invalid_expected['start_date'] = None
             rv = self.client.post('/api/courses', data=json.dumps(invalid_expected), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json["message"]["start_date"], "Course start date is required.")
+            self.assertEqual(rv.json["errors"]["start_date"], "Course start date is required. Must not be null!")
 
             # Starts in the future
             now = datetime.datetime.utcnow()
@@ -235,7 +235,7 @@ class CoursesAPITests(ComPAIRAPITestCase):
             invalid['start_date'] = None
             rv = self.client.post(url, data=json.dumps(invalid), content_type='application/json')
             self.assert400(rv)
-            self.assertEqual(rv.json["message"]["start_date"], "Course start date is required.")
+            self.assertEqual(rv.json["errors"]["start_date"], "Course start date is required. Must not be null!")
 
             # Starts in the future
             now = datetime.datetime.utcnow()

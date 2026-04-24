@@ -1,5 +1,5 @@
 from flask import Blueprint
-from flask_restful import Resource, reqparse
+from flask_restx import Resource, reqparse
 from flask_login import login_required, current_user
 
 from compair.core import db, event, abort

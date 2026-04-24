@@ -11,7 +11,6 @@ from data.fixtures import DefaultFixture, UserFactory
 from compair.tests.test_compair import ComPAIRAPIDemoTestCase
 from compair.models import SystemRole, User
 from compair.core import db
-from compair.api import register_demo_api_blueprints
 
 
 class DemoAPITests(ComPAIRAPIDemoTestCase):
@@ -31,9 +30,7 @@ class DemoAPITests(ComPAIRAPIDemoTestCase):
         rv = self.client.post(url, data=json.dumps(student_data), content_type='application/json')
         self.assert404(rv)
 
-        # need to re-register api blueprints since we're changing DEMO_INSTALLATION
         self.app.config['DEMO_INSTALLATION'] = True
-        self.app = register_demo_api_blueprints(self.app)
 
         # test invalid system role
         rv = self.client.post(url, data=json.dumps(invalid_data), content_type='application/json')

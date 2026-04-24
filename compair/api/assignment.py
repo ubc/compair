@@ -5,11 +5,10 @@ from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint, current_app
 from flask_bouncer import can
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal
-from flask_restful.reqparse import RequestParser
+from flask_restx import Resource, marshal
+from flask_restx.reqparse import RequestParser
 from sqlalchemy import desc, or_, func, and_
 from sqlalchemy.orm import joinedload, undefer_group, load_only
-from six import text_type
 
 from . import dataformat
 from compair.core import db, event, abort
@@ -26,7 +25,7 @@ def non_blank_text(value):
     if value is None:
         return None
     else:
-        return None if text_type(value).strip() == "" else text_type(value)
+        return None if str(value).strip() == "" else str(value)
 
 new_assignment_parser = RequestParser()
 new_assignment_parser.add_argument('name', required=True, nullable=False, help="Assignment name is required.")

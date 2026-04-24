@@ -7,7 +7,7 @@ from flask import redirect, render_template, jsonify, current_app
 from flask_login import login_required, current_user
 from flask import make_response
 from flask import send_file, url_for, redirect, request
-from flask_restful.reqparse import RequestParser
+from flask_restx.reqparse import RequestParser
 
 from bouncer.constants import READ
 from compair.authorization import require
@@ -294,7 +294,7 @@ def register_api_blueprints(app):
             data={'file_path': file_path, 'mimetype': mimetype})
 
         return send_file(file_path, mimetype=mimetype,
-            attachment_filename=attachment_filename, as_attachment=as_attachment)
+            download_name=attachment_filename, as_attachment=as_attachment)
 
     # set Cache-Control for /api/* calls
     _api_call_pattern = re.compile('^' + re.escape('/api/'))

@@ -1,8 +1,8 @@
 import string
 
 from flask import Blueprint, current_app, session as sess
-from flask_restful import Resource, marshal
-from flask_restful.reqparse import RequestParser
+from flask_restx import Resource, marshal
+from flask_restx.reqparse import RequestParser
 from flask_login import current_user
 from sqlalchemy import exc, asc, or_, and_, func
 

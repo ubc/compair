@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import io
 import os
 import mock
-from six import text_type
 
 from flask import current_app
 from flask import make_response
@@ -56,7 +55,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             # invalid file name (db is not actually touched)
             rv = self.client.get(self.base_url + '/attachment/'+filename)
             self.assert404(rv)
-            self.assertEqual('invalid file name', text_type(rv.get_data(as_text=True)))
+            self.assertEqual('invalid file name', str(rv.get_data(as_text=True)))
 
             with mock.patch('compair.api.os.path.exists', return_value=True):
                 with mock.patch('compair.api.send_file', return_value=make_response("OK")) as mock_send_file:
@@ -78,14 +77,14 @@ class FileRetrieveTests(ComPAIRAPITestCase):
                         if extension == 'pdf':
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=None,
+                                download_name=None,
                                 as_attachment=False,
                                 mimetype=mimetype
                             )
                         else:
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=None,
+                                download_name=None,
                                 as_attachment=True,
                                 mimetype=mimetype
                             )
@@ -98,14 +97,14 @@ class FileRetrieveTests(ComPAIRAPITestCase):
                         if extension == 'pdf':
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=None,
+                                download_name=None,
                                 as_attachment=False,
                                 mimetype=mimetype
                             )
                         else:
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=override_name,
+                                download_name=override_name,
                                 as_attachment=True,
                                 mimetype=mimetype
                             )

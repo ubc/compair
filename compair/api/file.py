@@ -7,7 +7,7 @@ from pathlib import Path
 from flask import Blueprint, request, current_app
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal
+from flask_restx import Resource, marshal
 
 from compair.core import allowed_file, random_generator
 from . import dataformat

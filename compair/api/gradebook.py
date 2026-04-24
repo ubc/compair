@@ -5,7 +5,7 @@ import copy
 from bouncer.constants import MANAGE
 from flask import Blueprint, jsonify
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal_with, marshal, reqparse
+from flask_restx import Resource, marshal_with, marshal, reqparse
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import undefer, joinedload
 

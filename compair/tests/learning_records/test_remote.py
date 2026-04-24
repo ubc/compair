@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import json
 import pytz
 import mock
-from six import text_type
 
 from data.fixtures.test_data import SimpleAnswersTestData, LTITestData
 from compair.tests.test_compair import ComPAIRLearningRecordTestCase

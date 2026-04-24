@@ -5,7 +5,6 @@ import io
 import os
 import unicodecsv as csv
 import re
-import six
 
 from sqlalchemy import or_
 from data.fixtures import DefaultFixture
@@ -25,7 +24,7 @@ class ReportAPITest(ComPAIRAPITestCase):
         self.url = "/api/courses/" + self.fixtures.course.uuid + "/report"
         self.files_to_cleanup = []
 
-        self.delimiter = ",".encode('utf-8') if six.PY2 else ","
+        self.delimiter = ","
 
     def tearDown(self):
         folder = current_app.config['REPORT_FOLDER']

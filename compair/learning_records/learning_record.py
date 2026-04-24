@@ -1,5 +1,4 @@
 from flask import current_app, request
-from six import text_type
 import datetime
 import pytz
 import re
@@ -40,7 +39,7 @@ class LearningRecord(object):
 
     @classmethod
     def _strip_html(cls, text):
-        text = re.sub('<[^>]+>', '', text_type(text))
+        text = re.sub('<[^>]+>', '', str(text))
         text = text.replace('&nbsp;', ' ')
         return cls._unescape(text)
 

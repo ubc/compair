@@ -1,13 +1,13 @@
 import cProfile
 import contextlib
-from functools import wraps
 import pstats
+from functools import wraps
 from enum import Enum
-from flask_restful.reqparse import RequestParser
+from flask_restx.reqparse import RequestParser
 
-from six import BytesIO, text_type
-from flask import request, jsonify
-from flask_restful import Api
+from io import StringIO
+from flask import request
+from flask_restx import Api
 from flask_sqlalchemy import Model
 from sqlalchemy import inspect
 
@@ -62,23 +62,8 @@ def pagination(model):
     return wrap
 
 
-def _unauthorized_override(response):
-    return jsonify({
-        "title": "Unauthorized",
-        "message": "Authentication Required. Please log in again."
-    }), 401
-
-
 def new_restful_api(blueprint):
-    """
-    Flask-Restful asks for authentication on 401 error through http basic-auth. Since
-    we're not using http basic-auth, we have to disable this default handler.
-    :param blueprint:
-    :return:
-    """
-    api = Api(blueprint)
-    api.unauthorized = _unauthorized_override
-    return api
+    return Api(blueprint, doc=False)
 
 
 def get_model_changes(model):
@@ -111,12 +96,12 @@ def get_model_changes(model):
                     if len(history.deleted) > 0:
                         before_value = history.deleted[0]
                         if isinstance(before_value, Enum):
-                            before_value = text_type(before_value.value)
+                            before_value = str(before_value.value)
                         changes[attr.key]['before'] = before_value
                     if len(history.added) > 0:
                         after_value = history.added[0]
                         if isinstance(after_value, Enum):
-                            after_value = text_type(after_value.value)
+                            after_value = str(after_value.value)
                         changes[attr.key]['after'] = after_value
 
     return changes
@@ -135,7 +120,7 @@ def profiled():
     pr.enable()
     yield
     pr.disable()
-    s = BytesIO.BytesIO()
+    s = StringIO()
     ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
     ps.print_stats()
     # uncomment this to see who's calling what

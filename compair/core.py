@@ -3,7 +3,6 @@
 """
 from blinker import Namespace
 from werkzeug.exceptions import HTTPException
-from six import text_type
 from flask import session as sess, abort as flask_abort
 from flask_bouncer import Bouncer
 from celery import Celery
@@ -64,7 +63,7 @@ def abort(code=500, message=None, **kwargs):
         flask_abort(code)
     except HTTPException as e:
         if message:
-            kwargs['message'] = text_type(message)
+            kwargs['message'] = str(message)
         if kwargs:
             e.data = kwargs
         raise

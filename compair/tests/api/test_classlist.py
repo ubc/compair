@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import json
 import io
 import unicodecsv as csv
-import six
 
 from compair.core import db
 from data.fixtures.test_data import BasicTestData, ThirdPartyAuthTestData
@@ -18,7 +17,7 @@ class ClassListAPITest(ComPAIRAPITestCase):
         self.auth_data = ThirdPartyAuthTestData()
         self.url = "/api/courses/" + self.data.get_course().uuid + "/users"
 
-        self.delimiter = ",".encode('utf-8') if six.PY2 else ","
+        self.delimiter = ","
 
     def test_get_classlist(self):
         # test login required
