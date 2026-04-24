@@ -2,13 +2,14 @@
     Report Generator
 """
 import unicodecsv as csv
-import elo
+import compair.algorithms.score.elo_rating.elo as elo
 from compair.algorithms import ScoredObject
 from compair.algorithms.score import calculate_score_1vs1
 import numbers
 from werkzeug.utils import secure_filename
 
-from flask_script import Manager
+import click
+from flask.cli import AppGroup
 from sqlalchemy import and_, asc
 from sqlalchemy.orm import aliased, joinedload
 
@@ -16,7 +17,7 @@ from compair.models import AnswerScore, AnswerCriterionScore, \
     Answer, Criterion, Comparison, WinningAnswer, \
     Course, Assignment, User, UserCourse, ScoringAlgorithm
 
-manager = Manager(usage="Generate Reports")
+report_cli = AppGroup('report', help="Generate Reports")
 
 """
 @manager.option('-c', '--course', dest='course_id', help='Specify a course ID to generate report from.')
@@ -25,7 +26,7 @@ def create(course_id):
     if course_id:
         course_name = Course.query.with_entities(Course.name).filter_by(id=course_id).scalar()
         if not course_name:
-            raise RuntimeError("Course with ID {} is not found.".format(course_id))
+            raise RuntimeError(f"Course with ID {course_id} is not found.")
         course_name = course_name.replace('"', '')
         course_name += '_'
 
@@ -96,15 +97,13 @@ def create(course_id):
     print('Done.')
 """
 
-@manager.option('-a', '--assignment', dest='assignment_id', help='Specify a Assignment ID to generate report from.')
+@report_cli.command('create')
+@click.option('-a', '--assignment-id', required=True, help='Specify an Assignment ID to generate report from.')
 def create(assignment_id):
     """Creates report"""
-    if not assignment_id:
-        raise RuntimeError("Assignment with ID {} is not found.".format(assignment_id))
-
     assignment = Assignment.query.filter_by(id=assignment_id).first()
     if not assignment:
-        raise RuntimeError("Assignment with ID {} is not found.".format(assignment_id))
+        raise RuntimeError(f"Assignment with ID {assignment_id} is not found.")
     criteria = assignment.criteria
 
     file_name = assignment.course.name.replace('"', '') + '_' + assignment_id + '_'
@@ -361,7 +360,7 @@ def create(assignment_id):
 
 
 def write_csv(filename, headers, data):
-    with open(secure_filename(filename), 'wt') as csvfile:
+    with open(secure_filename(filename), 'wb') as csvfile:
         report_writer = csv.writer(
             csvfile, delimiter=',',
             quotechar='"', quoting=csv.QUOTE_MINIMAL

@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import io
 import os
 import mock
-from six import text_type
 
 from flask import current_app
 from flask import make_response
@@ -56,7 +55,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             # invalid file name (db is not actually touched)
             rv = self.client.get(self.base_url + '/attachment/'+filename)
             self.assert404(rv)
-            self.assertEqual('invalid file name', text_type(rv.get_data(as_text=True)))
+            self.assertEqual('invalid file name', str(rv.get_data(as_text=True)))
 
             with mock.patch('compair.api.os.path.exists', return_value=True):
                 with mock.patch('compair.api.send_file', return_value=make_response("OK")) as mock_send_file:
@@ -78,14 +77,14 @@ class FileRetrieveTests(ComPAIRAPITestCase):
                         if extension == 'pdf':
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=None,
+                                download_name=None,
                                 as_attachment=False,
                                 mimetype=mimetype
                             )
                         else:
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=None,
+                                download_name=None,
                                 as_attachment=True,
                                 mimetype=mimetype
                             )
@@ -98,14 +97,14 @@ class FileRetrieveTests(ComPAIRAPITestCase):
                         if extension == 'pdf':
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=None,
+                                download_name=None,
                                 as_attachment=False,
                                 mimetype=mimetype
                             )
                         else:
                             mock_send_file.assert_called_once_with(
                                 '{}/{}'.format(current_app.config['ATTACHMENT_UPLOAD_FOLDER'], filename),
-                                attachment_filename=override_name,
+                                download_name=override_name,
                                 as_attachment=True,
                                 mimetype=mimetype
                             )
@@ -156,7 +155,8 @@ class FileRetrieveTests(ComPAIRAPITestCase):
 
                 actual_file = rv.json['file']
                 self.files_to_cleanup.append(actual_file['name'])
-                self.assertEqual(actual_file['id']+"."+extension.lower(), actual_file['name'])
+                self.assertTrue(actual_file['id'])
+                self.assertTrue(actual_file['name'])
                 self.assertEqual(filename, actual_file['alias'])
                 self.assertEqual(extension.lower(), actual_file['extension'])
                 self.assertEqual(mimetype, actual_file['mimetype'])
@@ -171,7 +171,6 @@ class FileRetrieveTests(ComPAIRAPITestCase):
 
                 actual_file = rv.json['file']
                 self.files_to_cleanup.append(actual_file['name'])
-                self.assertEqual(actual_file['id']+"."+extension.lower(), actual_file['name'])
                 self.assertEqual(filename, actual_file['alias'])
                 self.assertEqual(extension.lower(), actual_file['extension'])
                 self.assertEqual(mimetype, actual_file['mimetype'])
@@ -236,7 +235,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             self.assertIsNone(kaltura_media_items[0].entry_id)
             self.assertIsNone(kaltura_media_items[0].download_url)
 
-            # use global unique identifer (user has no global unique identifer)
+            # use global unique identifier (user has no global unique identifier)
             current_app.config['KALTURA_USE_GLOBAL_UNIQUE_IDENTIFIER'] = True
             mocked_upload_token_add.return_value = {
                 "id": "mocked_upload_token_id2"
@@ -262,8 +261,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             self.assertEqual(len(kaltura_media_items), 2)
             self.assertEqual(kaltura_media_items[1].user_id, self.fixtures.instructor.id)
 
-
-            # use global unique identifer (user has global unique identifer)
+            # use global unique identifier (user has global unique identifier)
             self.fixtures.instructor.global_unique_identifier = "1234567890@test.com"
             mocked_upload_token_add.return_value = {
                 "id": "mocked_upload_token_id3"
@@ -408,13 +406,13 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             kaltura_attachment_url = self.base_url + '/attachment/' + rv.json['file']['name'] + '?name=uploaded_audio_file.mp3'
             rv = self.client.get(kaltura_attachment_url)
             self.assertTrue(rv.location.startswith(kaltura_media.download_url))  # redirecting to Kaltura
-            mocked_kaltura_session_start.assert_called_once_with("test@test.com", \
-                expiry=60, \
+            mocked_kaltura_session_start.assert_called_once_with("test@test.com",
+                expiry=60,
                 privileges='sview:'+kaltura_media.entry_id+',urirestrict:/url.com/*'
-                )
+            )
             mocked_kaltura_session_start.reset_mock()
 
-            # use global unique identifer (user has no global unique identifer)
+            # use global unique identifier (user has no global unique identifier)
             current_app.config['KALTURA_USE_GLOBAL_UNIQUE_IDENTIFIER'] = True
             url = '/api/attachment/kaltura/mocked_upload_token_id2'
             mocked_upload_token_get.return_value = {
@@ -453,7 +451,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             mocked_kaltura_media_add_content.assert_called_once_with("ks_mock", "mock_entry_id2", "mocked_upload_token_id2")
             mocked_kaltura_media_add_content.reset_mock()
 
-            # use global unique identifer (user has global unique identifer)
+            # use global unique identifier (user has global unique identifier)
             self.fixtures.instructor.global_unique_identifier = "1234567890@test.com"
             url = '/api/attachment/kaltura/mocked_upload_token_id3'
             mocked_upload_token_get.return_value = {

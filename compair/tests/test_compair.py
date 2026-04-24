@@ -8,19 +8,18 @@ import mock
 import uuid
 import sys
 import os
-import factory.fuzzy
 import pytz
 import datetime
 from hashlib import md5
+from functools import wraps
 
 from flask import session as sess
 from flask_testing import TestCase
 from os.path import dirname
-from flask.testing import FlaskClient
-from six import wraps
 
 from compair import create_app
-from compair.manage.database import populate
+from compair.api import register_demo_api_blueprints
+from compair.manage.database import populate_tables as populate
 from compair.core import db
 from compair.models import User, XAPILog, CaliperLog
 from compair.tests import test_app_settings
@@ -101,6 +100,16 @@ class ComPAIRTestCase(TestCase):
     def tearDown(self):
         db.session.remove()
         db.drop_all()
+
+    def assertRedirects(self, response, location, message=None):
+        # Override Flask-Testing's assertRedirects which prepends http://localhost to relative URLs.
+        # Werkzeug 2.1 disabled autocorrect_location_header so response.location stays relative.
+        valid_status_codes = (301, 302, 303, 305, 307, 308)
+        valid_status_code_str = ', '.join(str(code) for code in valid_status_codes)
+        not_redirect = "HTTP Status {0} expected but got {1}".format(
+            valid_status_code_str, response.status_code)
+        self.assertIn(response.status_code, valid_status_codes, message or not_redirect)
+        self.assertEqual(response.location, location, message)
 
 class ComPAIRAPITestCase(ComPAIRTestCase):
     api = None
@@ -222,6 +231,7 @@ class ComPAIRAPIDemoTestCase(ComPAIRAPITestCase):
         with suppress_stdout():
             populate(default_data=True, sample_data=True)
         self.app.config['DEMO_INSTALLATION'] = True
+        register_demo_api_blueprints(self.app)
 
 
 class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
@@ -241,7 +251,7 @@ class ComPAIRLearningRecordTestCase(ComPAIRTestCase):
         settings['LRS_XAPI_STATEMENT_ENDPOINT'] = 'local'
         settings['CALIPER_ENABLED'] = True
         settings['LRS_CALIPER_HOST'] = 'local'
-        # you can certify by uncommenting, running nosetests compair.tests.learning_records, and
+        # you can certify by uncommenting, running pytest /compair/tests/api/test_learning_records.py, and
         # running a few navigation events on the front end
         # settings['LRS_CALIPER_HOST'] = 'https://caliper-dev.imsglobal.org/caliper/4d7a0b79-0d0f-4127-808d-bfe88b6e037f/message'
         # settings['LRS_CALIPER_API_KEY'] = '4d7a0b79-0d0f-4127-808d-bfe88b6e037f'

@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: ['3.10']
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Shutdown Ubuntu MySQL (SUDO)
@@ -32,13 +32,14 @@ jobs:
         python -m pip install --upgrade pip
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends --no-install-suggests libxmlsec1-dev libz-dev
+        pip install setuptools==57.5.0
         pip install -r requirements.txt -r requirements.dev.txt
     - name: Backend Unit Tests MariaDB
       run: |
-        DATABASE_URI="mysql+pymysql://root@localhost/compair" nosetests
+        DATABASE_URI="mysql+pymysql://root@localhost/compair" pytest
     - name: Backend Unit Tests SQLite
       run: |
-        DATABASE_URI="sqlite:///:memory:" nosetests
+        DATABASE_URI="sqlite:///:memory:" pytest
 
   unit_test_frontend:
     runs-on: ubuntu-latest
@@ -96,14 +97,5 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
         repository: ubcctlt/compair-app
         tag_with_ref: true
-    - name: Trigger deploy
-      run: |
-        curl -X POST \
-            --fail \
-            -F token=${{ secrets.DEPLOYMENT_TOKEN }} \
-            -F ref=master \
-            -F "variables[app__image__tag]=${GITHUB_REF##*/}" \
-            -F "variables[worker__image__tag]=${GITHUB_REF##*/}" \
-            https://repo.code.ubc.ca/api/v4/projects/366/trigger/pipeline
 
   # TODO: add acceptance testing (would be easier with a slight rewrite to gulp/generate_index)

@@ -5,7 +5,7 @@ from hashlib import md5
 
 from flask import Blueprint, jsonify, request, session as sess, current_app, url_for, redirect, Flask
 from flask_login import current_user, login_required, login_user, logout_user
-from flask_restful import marshal, Resource
+from flask_restx import marshal, Resource
 
 from compair.core import db, event, abort, impersonation
 from compair.authorization import get_logged_in_user_permissions

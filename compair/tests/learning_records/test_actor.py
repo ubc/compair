@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import json
 import mock
 import pytz
-from six import text_type
 
 from data.fixtures.test_data import SimpleAnswersTestData, ThirdPartyAuthTestData, \
     LTITestData

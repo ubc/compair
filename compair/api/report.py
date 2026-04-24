@@ -3,17 +3,12 @@ import time
 import unicodecsv as csv
 import re
 import string
-try:
-    from urllib import quote_plus
-except ImportError:
-    from urllib.parse import quote_plus
-
 from bouncer.constants import MANAGE
 from flask import Blueprint, current_app, request
 from flask import url_for
 from flask_login import login_required, current_user
 
-from flask_restful import Resource, reqparse
+from flask_restx import Resource, reqparse
 
 from sqlalchemy import func, and_, or_
 from sqlalchemy.orm import joinedload

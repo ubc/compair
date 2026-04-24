@@ -1,42 +1,30 @@
 #!/usr/bin/env python
 from requests.utils import unquote
 
-from flask_script import Manager, Server
-
-from compair.manage.database import manager as database_manager
-from compair.manage.report import manager as report_generator
-from compair.manage.grades import manager as grades_generator
-from compair.manage.score import manager as score_generator
-from compair.manage.user import manager as user_manager
-from compair.manage.utils import manager as util_manager
-from compair.manage.kaltura import manager as kaltura_manager
+from compair.manage.database import database_cli
+from compair.manage.report import report_cli
+from compair.manage.grades import grades_cli
+from compair.manage.score import score_cli
+from compair.manage.user import user_cli
+from compair.manage.utils import util_cli
 from compair import create_app
 
-manager = Manager(create_app(skip_assets=True))
-# register sub-managers
-manager.add_command("database", database_manager)
-manager.add_command("report", report_generator)
-manager.add_command("grades", grades_generator)
-manager.add_command("score", score_generator)
-manager.add_command("runserver", Server(port=8080))
-manager.add_command("user", user_manager)
-manager.add_command("util", util_manager)
-manager.add_command("kaltura", kaltura_manager)
+app = create_app(skip_assets=True)
 
+app.cli.add_command(database_cli)
+app.cli.add_command(report_cli)
+app.cli.add_command(grades_cli)
+app.cli.add_command(score_cli)
+app.cli.add_command(user_cli)
+app.cli.add_command(util_cli)
 
-@manager.command
+@app.cli.command('list-routes')
 def list_routes():
-    import urllib
-
     output = []
-    for rule in manager.app.url_map.iter_rules():
+    for rule in app.url_map.iter_rules():
         methods = ','.join(rule.methods)
-        line = unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, rule))
+        line = unquote("{:60s} {:30s} {}".format(rule.endpoint, methods, rule))
         output.append(line)
 
     for line in sorted(output):
         print(line)
-
-
-if __name__ == "__main__":
-    manager.run()

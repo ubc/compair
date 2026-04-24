@@ -1,11 +1,9 @@
 import json
 import re
-from six import text_type
 
 # sqlalchemy
 from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy import Enum, func, select, and_, or_
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import Enum, and_
 from flask_login import current_user
 from flask import current_app
 
@@ -17,15 +15,9 @@ from oauthlib.oauth1 import SIGNATURE_TYPE_BODY, SIGNATURE_TYPE_AUTH_HEADER, SIG
 from .helpers import LTIMemerbshipServiceOauthClient
 
 from requests_oauthlib import OAuth1
-from lti.utils import parse_qs, urlparse
+from lti.utils import parse_qs
 import requests
 from xml.etree import ElementTree
-
-import urllib
-try:
-    from urllib.parse import urlencode
-except ImportError:
-    from urllib import urlencode
 
 class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
     __tablename__ = 'lti_membership'
@@ -165,7 +157,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
             lti_membership = LTIMembership(
                 lti_user=lti_user,
                 lti_context=lti_context,
-                roles=text_type(roles),
+                roles=str(roles),
                 lis_result_sourcedid=member.get('lis_result_sourcedid'),
                 lis_result_sourcedids=json.dumps(member.get('lis_result_sourcedids')) if member.get('lis_result_sourcedids') else None,
                 course_role=course_role
@@ -197,7 +189,7 @@ class LTIMembership(DefaultTableMixin, WriteTrackingMixin):
                         lti_user_resource_link = LTIUserResourceLink(
                             lti_resource_link=lti_resource_link,
                             lti_user=lti_user,
-                            roles=text_type(roles),
+                            roles=str(roles),
                             course_role=course_role
                         )
                         new_lti_user_resource_links.append(lti_user_resource_link)

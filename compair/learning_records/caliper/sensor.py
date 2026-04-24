@@ -16,7 +16,6 @@ from compair.models import CaliperLog
 from compair.core import db
 from compair.learning_records.learning_record import LearningRecord
 from compair.learning_records.resource_iri import ResourceIRI
-from six import text_type
 
 class CaliperSensor(LearningRecord):
     _version = CALIPER_VERSION
@@ -33,15 +32,15 @@ class CaliperSensor(LearningRecord):
     @classmethod
     def _get_config(cls):
         return caliper.HttpOptions(
-            host=text_type(current_app.config.get('LRS_CALIPER_HOST')),
+            host=str(current_app.config.get('LRS_CALIPER_HOST')),
             auth_scheme='Bearer',
-            api_key=text_type(current_app.config.get('LRS_CALIPER_API_KEY'))
+            api_key=str(current_app.config.get('LRS_CALIPER_API_KEY'))
         )
 
     @classmethod
     def _get_sensor(cls):
         return caliper.build_sensor_from_config(
-            sensor_id = text_type(ResourceIRI.compair()),
+            sensor_id = str(ResourceIRI.compair()),
             config_options = cls._get_config()
         )
 

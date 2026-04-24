@@ -3,7 +3,7 @@ import zipfile
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint
 from flask_login import login_required
-from flask_restful import Resource
+from flask_restx import Resource
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import contains_eager
 

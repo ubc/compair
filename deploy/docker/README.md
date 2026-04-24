@@ -26,7 +26,7 @@ docker-compose -f deploy/docker/docker-compose.yml up -d
 
 Once the containers are started, run the follow command to initialize the database:
 ```
-docker exec -it compair_app_1 python manage.py database create
+docker exec -it -e FLASK_APP=manage compair-app-1 flask database create
 ```
 
 Once finished, ComPAIR should be accessible with default user `root`/`password` at `http://localhost/`.
@@ -53,5 +53,5 @@ Upgrading ComPAIR
 docker pull ubcctlt/compair # pull in the latest image
 docker-compose -f deploy/docker/docker-compose.yml down
 docker-compose -f deploy/docker/docker-compose.yml up
-docker exec -it compair_app_1 alembic upgrade head # upgrade database
+docker exec -it compair-app-1 alembic upgrade head # upgrade database
 ```

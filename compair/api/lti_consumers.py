@@ -1,9 +1,8 @@
 from flask import Blueprint
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal, reqparse, marshal_with
+from flask_restx import Resource, marshal, reqparse, marshal_with
 from sqlalchemy import exc, or_, and_, desc, asc
-from six import text_type
 
 from . import dataformat
 from compair.core import event, db, abort
@@ -18,7 +17,7 @@ def non_blank_text(value):
     if value is None:
         return None
     else:
-        return None if text_type(value).strip() == "" else text_type(value)
+        return None if str(value).strip() == "" else str(value)
 
 new_consumer_parser = reqparse.RequestParser()
 new_consumer_parser.add_argument('oauth_consumer_key', type=str, required=True, nullable=False)

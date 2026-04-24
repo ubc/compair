@@ -62,24 +62,24 @@ Run the following commands from terminal:
     # install the dependencies
     pip install -r /path/to/requirements.txt
     # create database tables and populate initial data
-    python manage.py database create
+    FLASK_APP=manage flask database create
     # run the server
-    python manage.py runserver
+    FLASK_APP=compair flask run
 
 Database
 --------
 ###Initial Setup
 To create the tables in the database:
 
-    python manage.py database create
+    FLASK_APP=manage flask database create
 
 Or drop the existing data and recreate the tables:
 
-    python manage.py database recreate
+    FLASK_APP=manage flask database recreate
 
 For the full list commands for the database management:
 
-    python manage.py database
+    FLASK_APP=manage flask database --help
 
 For any updates to the database model SQLAlchemy Alembic scripts are used. ([detailed information](http://alembic.readthedocs.org/en/latest/))
 

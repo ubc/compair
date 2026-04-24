@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 import json
 import mock
-import six
 
 from data.fixtures import DefaultFixture
 from data.fixtures.test_data import SimpleAssignmentTestData, ThirdPartyAuthTestData
@@ -108,7 +107,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(third_party_user.user.system_role, SystemRole.student)
                 self.assertIsNone(third_party_user.user.firstname)
                 self.assertIsNone(third_party_user.user.lastname)
-                six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
+                self.assertRegex(third_party_user.user.displayname, r"^Student_\d{8}")
                 self.assertIsNone(third_party_user.user.email)
                 self.assertIsNone(third_party_user.user.student_number)
                 self.assertIsNone(third_party_user.user.global_unique_identifier)
@@ -139,7 +138,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(third_party_user.user.system_role, SystemRole.student)
                 self.assertIsNone(third_party_user.user.firstname)
                 self.assertIsNone(third_party_user.user.lastname)
-                six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
+                self.assertRegex(third_party_user.user.displayname, r"^Student_\d{8}")
                 self.assertIsNone(third_party_user.user.email)
                 self.assertIsNone(third_party_user.user.student_number)
                 self.assertIsNone(third_party_user.user.global_unique_identifier)
@@ -172,7 +171,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                     self.assertEqual(third_party_user.user.student_number, 'student1')
                 else:
                     self.assertIsNone(third_party_user.user.student_number)
-                six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
+                self.assertRegex(third_party_user.user.displayname, r"^Student_\d{8}")
 
                 # used attributes and valid instructor values
                 unique_identifier = system_role.value + "_with_used_attributes2"
@@ -196,7 +195,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(third_party_user.user.global_unique_identifier, system_role.value+"_puid2")
                 if system_role == SystemRole.student:
                     self.assertEqual(third_party_user.user.system_role, SystemRole.student)
-                    six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
+                    self.assertRegex(third_party_user.user.displayname, r"^Student_\d{8}")
                     self.assertEqual(third_party_user.user.student_number, 'student2')
                 else:
                     self.assertEqual(third_party_user.user.system_role, SystemRole.instructor)
@@ -417,7 +416,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(third_party_user.user.system_role, SystemRole.student)
                 self.assertIsNone(third_party_user.user.firstname)
                 self.assertIsNone(third_party_user.user.lastname)
-                six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
+                self.assertRegex(third_party_user.user.displayname, r"^Student_\d{8}")
                 self.assertIsNone(third_party_user.user.email)
                 self.assertIsNone(third_party_user.user.student_number)
                 self.assertIsNone(third_party_user.user.global_unique_identifier)
@@ -452,7 +451,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(third_party_user.user.system_role, SystemRole.student)
                 self.assertIsNone(third_party_user.user.firstname)
                 self.assertIsNone(third_party_user.user.lastname)
-                six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
+                self.assertRegex(third_party_user.user.displayname, r"^Student_\d{8}")
                 self.assertIsNone(third_party_user.user.email)
                 self.assertIsNone(third_party_user.user.student_number)
                 self.assertIsNone(third_party_user.user.global_unique_identifier)
@@ -498,7 +497,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                     self.assertEqual(third_party_user.user.student_number, 'student1')
                 else:
                     self.assertIsNone(third_party_user.user.student_number)
-                six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
+                self.assertRegex(third_party_user.user.displayname, r"^Student_\d{8}")
 
                 # used attributes and valid instructor values
                 unique_identifier = system_role.value + "_with_used_attributes2"
@@ -532,7 +531,7 @@ class LoginAPITests(ComPAIRAPITestCase):
                 self.assertEqual(third_party_user.user.global_unique_identifier, system_role.value+"_puid2")
                 if system_role == SystemRole.student:
                     self.assertEqual(third_party_user.user.system_role, SystemRole.student)
-                    six.assertRegex(self, third_party_user.user.displayname, r"^Student_\d{8}")
+                    self.assertRegex(third_party_user.user.displayname, r"^Student_\d{8}")
                     self.assertEqual(third_party_user.user.student_number, 'student2')
                 else:
                     self.assertEqual(third_party_user.user.system_role, SystemRole.instructor)
@@ -699,10 +698,17 @@ class LoginAPITests(ComPAIRAPITestCase):
 
     def test_saml_metadata(self):
         # test saml login enabled
-        self.app.config['SAML_LOGIN_ENABLED'] = True
-        self.app.config['SAML_EXPOSE_METADATA_ENDPOINT'] = True
-        rv = self.client.get('/api/saml/metadata', headers={'Accept': 'text/xml'})
-        self.assert200(rv)
+        with (
+            mock.patch('compair.saml.OneLogin_Saml2_IdPMetadataParser.parse_remote', return_value={}),
+            mock.patch(
+                'compair.saml.OneLogin_Saml2_IdPMetadataParser.merge_settings',
+                side_effect=lambda base_settings, idp_settings: base_settings
+            )
+        ):
+            self.app.config['SAML_LOGIN_ENABLED'] = True
+            self.app.config['SAML_EXPOSE_METADATA_ENDPOINT'] = True
+            rv = self.client.get('/api/saml/metadata', headers={'Accept': 'text/xml'})
+            self.assert200(rv)
 
         # test saml login disabled
         self.app.config['SAML_LOGIN_ENABLED'] = False

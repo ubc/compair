@@ -1,7 +1,5 @@
 import datetime
 import dateutil.parser
-import sqlalchemy as db1
-from sqlalchemy import create_engine
 import json
 from flask import jsonify
 import pytz
@@ -10,11 +8,10 @@ from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint, current_app
 from flask_bouncer import can
 from flask_login import login_required, current_user
-from flask_restful import Resource, marshal
-from flask_restful.reqparse import RequestParser
-from sqlalchemy import desc, or_, func, and_
+from flask_restx import Resource, marshal
+from flask_restx.reqparse import RequestParser
+from sqlalchemy import desc, or_, func, and_, text
 from sqlalchemy.orm import joinedload, undefer_group, load_only
-from six import text_type
 
 from . import dataformat
 from compair.core import db, event, abort
@@ -72,16 +69,30 @@ class AssignmentRootAPI1(Resource):
         if validate(args['compare_start']):
             start_date = str(args['compare_start'])
 
-        db_url = str(current_app.config['SQLALCHEMY_DATABASE_URI'])
-        engine = create_engine(db_url, pool_size=5, pool_recycle=3600)
-        conn = engine.connect()
+        sql_text = text(
+            "SELECT JSON_OBJECT("
+            "  'course_name', t1.name,"
+            "  'name', t2.name,"
+            "  'answer_start',   date_format(CONVERT_TZ(t2.answer_start,   :appTZ, :localTZ), '%b %d, %Y'),"
+            "  'answer_end',     date_format(CONVERT_TZ(t2.answer_end,     :appTZ, :localTZ), '%b %d, %Y'),"
+            "  'compare_start',  date_format(CONVERT_TZ(t2.compare_start,  :appTZ, :localTZ), '%b %d, %Y'),"
+            "  'compare_end',    date_format(CONVERT_TZ(t2.compare_end,    :appTZ, :localTZ), '%b %d, %Y'),"
+            "  'self_eval_end',  date_format(CONVERT_TZ(t2.self_eval_end,  :appTZ, :localTZ), '%b %d, %Y'),"
+            "  'self_eval_start',date_format(CONVERT_TZ(t2.self_eval_start,:appTZ, :localTZ), '%b %d, %Y')"
+            ") "
+            "FROM course AS t1, assignment AS t2 "
+            "WHERE t1.id = t2.course_id "
+            "  AND t2.active = TRUE AND t1.active = TRUE "
+            "  AND (t2.compare_end >= :end_date OR t2.answer_end >= :end_date OR t2.self_eval_end >= :end_date)"
+        )
 
-        sql_text = str("SELECT JSON_OBJECT('course_name', t1.name,'name', t2.name,'answer_start', date_format(CONVERT_TZ(t2.answer_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y'),'answer_end', date_format(CONVERT_TZ(t2.answer_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'),'compare_start', date_format(CONVERT_TZ(t2.compare_start, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'compare_end', date_format(CONVERT_TZ(t2.compare_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_end', date_format(CONVERT_TZ(t2.self_eval_end, '" + appTimeZone + "','" + compare_localTimeZone + "'),  '%%b %%d, %%Y'), 'self_eval_start', date_format(CONVERT_TZ(t2.self_eval_start, '" + appTimeZone + "','" + compare_localTimeZone + "'), '%%b %%d, %%Y')) FROM course as t1, assignment as t2 WHERE (t1.id = t2.course_id) AND (t2.active=TRUE AND t1.active=TRUE) AND (t2.compare_end >=  '" + end_date + "' OR answer_end >= '" + end_date + "' OR self_eval_end >= '" + end_date +  "');");
+        result = db.session.execute(sql_text, {
+            'appTZ': appTimeZone,
+            'localTZ': compare_localTimeZone,
+            'end_date': end_date,
+        })
 
-        result = conn.execute(sql_text)
-
-        final_result = [list(i) for i in result]
-        conn.close()
+        final_result = [list(row) for row in result]
 
         return jsonify(final_result)
 

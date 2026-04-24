@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 import json
 import datetime
-import six
 import mock
 
 from compair import db, mail
@@ -122,7 +121,7 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self.get_url(ids=','.join(ids), **base_params))
             self.assert200(rv)
             self.assertEqual(2, len(rv.json))
-            six.assertCountEqual(self, ids, [c['id'] for c in rv.json])
+            self.assertCountEqual(ids, [c['id'] for c in rv.json])
 
             answer_ids = [answer.uuid for answer in self.answers[self.assignment.id]]
             params = dict(base_params, answer_ids=','.join(answer_ids))
@@ -151,8 +150,7 @@ class AnswerCommentListAPITests(ComPAIRAPITestCase):
             rv = self.client.get(self.get_url(user_ids=user_ids, **base_params))
             self.assert200(rv)
             self.assertEqual(2, len(rv.json))
-            six.assertCountEqual(
-                self,
+            self.assertCountEqual(
                 [comment.uuid, self.data.answer_comments_by_assignment[self.assignment.id][0].uuid],
                 [c['id'] for c in rv.json])
 

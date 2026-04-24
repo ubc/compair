@@ -2,7 +2,6 @@ import hashlib
 from flask import current_app
 from datetime import datetime
 import time
-from six import text_type
 
 # sqlalchemy
 from sqlalchemy.orm import column_property, synonym, joinedload
