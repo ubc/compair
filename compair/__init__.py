@@ -18,11 +18,6 @@ from .core import login_manager, bouncer, db, celery, abort, mail, impersonation
 from .configuration import config
 from .models import User, File
 from .activity import log
-from .api import register_api_blueprints, log_events, \
-    register_demo_api_blueprints, log_demo_events, \
-    register_learning_record_api_blueprints, impersonation as impersonation_api
-from compair.learning_records import capture_events
-from compair.notifications import capture_notification_events
 
 class RegexConverter(BaseConverter):
     def __init__(self, url_map, *items):
@@ -75,6 +70,7 @@ def create_persistent_dirs(conf, logger):
             logger.warning('{} is not a directory.'.format(directory))
 
 def _populate_impersonation_url_whitelist():
+    from compair.api import impersonation as impersonation_api
     _impersonation_url_whitelist['GET'] = [
         re.compile('.*'),   # allow GET to any URL
     ]
@@ -168,6 +164,13 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
     app.after_request(_resp_header_defaults)
 
     if not skip_endpoints:
+        from .api import register_api_blueprints, log_events, \
+            register_demo_api_blueprints, log_demo_events, \
+            register_learning_record_api_blueprints
+
+        log_events(log)
+        _populate_impersonation_url_whitelist()
+
         # Flask-Login initialization
         login_manager.init_app(app)
 
@@ -245,6 +248,7 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         app = register_api_blueprints(app)
 
         if app.config.get('MAIL_NOTIFICATION_ENABLED', False):
+            from compair.notifications import capture_notification_events
             capture_notification_events()
 
         if app.config.get('DEMO_INSTALLATION', False):
@@ -252,10 +256,9 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
             app = register_demo_api_blueprints(app)
 
         if app.config.get('XAPI_ENABLED', False) or app.config.get('CALIPER_ENABLED', False) :
+            from compair.learning_records import capture_events
             capture_events()
             app = register_learning_record_api_blueprints(app)
 
     return app
 
-log_events(log)
-_populate_impersonation_url_whitelist()

@@ -79,27 +79,30 @@ def create(default_data, sample_data):
         print ('Create database successful.')
 
 
+def recreate_db(default_data=True, sample_data=False):
+    """Recreates database tables (drop then create). Raises on failure."""
+    print("Resetting database state...")
+    try:
+        _drop_tables()
+        _create_tables()
+        _populate_tables(default_data, sample_data)
+        db.session.commit()
+    except Exception as e:
+        print("Database recreate error: " + str(e))
+        print('Rolling back...')
+        db.session.rollback()
+        raise e
+    print('Recreate database successful.')
+
+
 @database_cli.command('recreate')
 @click.option('--yes', is_flag=True, default=False)
 @click.option('--default-data/--no-default-data', default=True)
 @click.option('--sample-data', is_flag=True, default=False)
 def recreate(yes, default_data, sample_data):
     """Recreates database tables (same as issuing 'drop' and then 'create')"""
-    print ("Resetting database state...")
     if yes or click.confirm("Are you sure you want to lose all your data"):
-
-        try:
-            _drop_tables()
-            _create_tables()
-            _populate_tables(default_data, sample_data)
-            db.session.commit()
-        except Exception as e:
-            print ("Database recreate error: "+str(e))
-            print ('Rolling back...')
-            db.session.rollback()
-            raise e
-
-        print ('Recreate database successful.')
+        recreate_db(default_data=default_data, sample_data=sample_data)
 
 
 def populate_tables(default_data=False, sample_data=False):
