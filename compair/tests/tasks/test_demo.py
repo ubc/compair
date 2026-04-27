@@ -30,4 +30,4 @@ def test_reset_demo_propagates_exception_from_recreate_db(app, mock_recreate_db)
 
     with app.app_context():
         with pytest.raises(Exception, match="db error"):
-            reset_demo.apply(throw=True)
+            reset_demo.apply(throw=True, retries=reset_demo.max_retries)
