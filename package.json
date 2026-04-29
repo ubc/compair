@@ -37,7 +37,7 @@
     "del": "^3.0.0",
     "gulp-protractor": "~4.1.1",
     "jasmine-core": "^4.1.1",
-    "karma": "^6.4.2",
+    "karma": "^6.4.4",
     "karma-chrome-launcher": "~3.2",
     "karma-jasmine": "^5.0.1",
     "karma-junit-reporter": "^2.0.1",
