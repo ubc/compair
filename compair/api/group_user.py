@@ -1,6 +1,6 @@
 from bouncer.constants import EDIT, READ, CREATE, DELETE, MANAGE
 from flask import Blueprint, current_app, request
-from flask_bouncer import can
+from compair.flask_bouncer import can
 from flask_restx import Resource, marshal
 from flask_restx.reqparse import RequestParser
 from flask_login import login_required

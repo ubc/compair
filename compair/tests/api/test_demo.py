@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import json
 import datetime
 
-from flask_bouncer import ensure
+from compair.flask_bouncer import ensure
 from flask_login import login_user, logout_user
 from werkzeug.exceptions import Unauthorized
 
