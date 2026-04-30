@@ -288,6 +288,9 @@ module.directive('richContent',
                 var processContent = function() {
                     var content = $sanitize($scope.content);
 
+                    // strip hrefs containing encoded chars that break out of HTML attribute context
+                    content = content.replace(/(<a[^>]*)\s+href="[^"]*(?:&quot;|&#39;|&lt;|&gt;|&#96;)[^"]*"([^>]*>)/ig, '$1$2');
+
                     $scope.embeddableLinks = [];
                     var linkMatches = [];
                     var linkRegex = /<a[^>]*>[^<]+<\/a>/ig;
@@ -297,7 +300,8 @@ module.directive('richContent',
                         var link = $(linkMatch[0]);
                         var rawHref = link.attr("href");
                         var href = null;
-                        if (rawHref && URL.canParse(rawHref)) {
+                        // reject hrefs containing characters that break out of HTML attributes
+                        if (rawHref && !/["'<>`]/.test(rawHref) && URL.canParse(rawHref)) {
                             var parsed = new URL(rawHref);
                             if (/^(https?|ftp|file):$/.test(parsed.protocol)) {
                                 href = parsed.href;
