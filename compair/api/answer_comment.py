@@ -12,6 +12,7 @@ from compair.authorization import require
 from compair.models import User, Answer, Assignment, Course, AnswerComment, \
     CourseRole, SystemRole, AnswerCommentType
 from .util import new_restful_api, get_model_changes, pagination_parser
+from compair.sanitization import sanitize_html
 
 answer_comment_api = Blueprint('answer_comment_api', __name__)
 api = new_restful_api(answer_comment_api)
@@ -199,7 +200,7 @@ class AnswerCommentListAPI(Resource):
 
         params = new_answer_comment_parser.parse_args()
         answer_comment.draft = params.get('draft')
-        answer_comment.content = params.get("content")
+        answer_comment.content = sanitize_html(params.get("content"))
         # require content not empty if not a draft
         if not answer_comment.content and not answer_comment.draft:
             abort(400, title="Feedback Not Saved", message="Please provide content in the text editor and try saving again.")
@@ -308,7 +309,7 @@ class AnswerCommentAPI(Resource):
             abort(400, title="Feedback Not Saved", message="The feedback's ID does not match the URL, which is required in order to save the feedback.")
 
         # modify answer comment according to new values, preserve original values if values not passed
-        answer_comment.content = params.get("content")
+        answer_comment.content = sanitize_html(params.get("content"))
 
         comment_types = [
             AnswerCommentType.public.value,
