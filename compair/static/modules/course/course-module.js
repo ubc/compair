@@ -1123,14 +1123,13 @@ module.controller(
 module.controller(
     'CourseController',
     ['$scope', '$route', '$routeParams', '$location', 'Session',
-     'CourseResource', 'Toaster', 'EditorOptions',  "resolvedData",
+     'CourseResource', 'Toaster', "resolvedData",
     function($scope, $route, $routeParams, $location, Session,
-             CourseResource, Toaster, EditorOptions, resolvedData)
+             CourseResource, Toaster, resolvedData)
     {
         $scope.courseId = $routeParams.courseId;
         $scope.course = resolvedData.course || {};
         $scope.loggedInUserId = resolvedData.loggedInUser.id;
-        $scope.editorOptions = EditorOptions.basic;
         $scope.saveAttempted = false;
 
         $scope.method = $scope.course.id ? "edit" : "create";
