@@ -96,6 +96,7 @@ module.factory("embeddableRichContent",
 
         return {
             generateEmbeddableContent: function(url, downloadName) {
+                var pdfMatch = url.match(embedRegexpPatterns.pdf);
                 if (url.match(embedRegexpPatterns.basicVideo)) {
                     return {
                         type: 'video',
@@ -114,11 +115,11 @@ module.factory("embeddableRichContent",
                         url: url,
                         displayInline: false
                     };
-                } else if (url.match(embedRegexpPatterns.pdf)) {
+                } else if (pdfMatch) {
                     return {
                         type: 'pdf',
-                        url: url,
-                        embed: pdfEmbed(url),
+                        url: pdfMatch[0],
+                        embed: pdfEmbed(pdfMatch[0]),
                         displayInline: false
                     };
                 } else if (url.match(embedRegexpPatterns.soundCloud)) {
