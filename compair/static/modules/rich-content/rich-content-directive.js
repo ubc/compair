@@ -78,6 +78,7 @@ module.factory("embeddableRichContent",
             return $sce.trustAsHtml(embed);
         }
 
+        // TODO: Remove related code - no Twitter API anymore
         var twitterPromise = function(url) {
             var twitterUrl =
                 'https://api.twitter.com/1/statuses/oembed.json?omit_script=true&&url=' + url + '&'+
@@ -96,7 +97,6 @@ module.factory("embeddableRichContent",
 
         return {
             generateEmbeddableContent: function(url, downloadName) {
-                var pdfMatch = url.match(embedRegexpPatterns.pdf);
                 if (url.match(embedRegexpPatterns.basicVideo)) {
                     return {
                         type: 'video',
@@ -115,11 +115,11 @@ module.factory("embeddableRichContent",
                         url: url,
                         displayInline: false
                     };
-                } else if (pdfMatch) {
+                } else if (url.match(embedRegexpPatterns.pdf)) {
                     return {
                         type: 'pdf',
-                        url: pdfMatch[0],
-                        embed: pdfEmbed(pdfMatch[0]),
+                        url: url,
+                        embed: pdfEmbed(url),
                         displayInline: false
                     };
                 } else if (url.match(embedRegexpPatterns.soundCloud)) {
@@ -295,7 +295,14 @@ module.directive('richContent',
                     while ( (linkMatch = linkRegex.exec(content)) !== null ) {
                         // add processed link if valid
                         var link = $(linkMatch[0]);
-                        var href = link.attr("href");
+                        var rawHref = link.attr("href");
+                        var href = null;
+                        if (rawHref && URL.canParse(rawHref)) {
+                            var parsed = new URL(rawHref);
+                            if (/^(https?|ftp|file):$/.test(parsed.protocol)) {
+                                href = parsed.href;
+                            }
+                        }
                         if (href) {
                             var embeddableContent = embeddableRichContent.generateEmbeddableContent(href, $scope.downloadName);
                             if (embeddableContent) {
