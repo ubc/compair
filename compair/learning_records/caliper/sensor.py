@@ -3,6 +3,7 @@
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
 import json
+import base64
 import caliper
 from caliper import condensor
 
@@ -31,10 +32,17 @@ class CaliperSensor(LearningRecord):
 
     @classmethod
     def _get_config(cls):
+        username = current_app.config.get('LRS_CALIPER_USERNAME')
+        password = current_app.config.get('LRS_CALIPER_PASSWORD')
+        if username is None or password is None:
+            raise RuntimeError('LRS_CALIPER_USERNAME and LRS_CALIPER_PASSWORD must be configured for Caliper auth')
+
+        api_key = base64.b64encode((str(username) + ':' + str(password)).encode('utf-8')).decode('ascii')
+
         return caliper.HttpOptions(
             host=str(current_app.config.get('LRS_CALIPER_HOST')),
-            auth_scheme='Bearer',
-            api_key=str(current_app.config.get('LRS_CALIPER_API_KEY'))
+            auth_scheme='Basic',
+            api_key=api_key
         )
 
     @classmethod

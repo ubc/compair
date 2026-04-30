@@ -69,6 +69,8 @@ LRS_XAPI_PASSWORD = None
 
 LRS_CALIPER_HOST = 'local' #url for LRS Caliper statements
 LRS_CALIPER_API_KEY = None
+LRS_CALIPER_USERNAME = None
+LRS_CALIPER_PASSWORD = None
 
 # limit user generated content field text size limit
 LRS_USER_INPUT_FIELD_SIZE_LIMIT = 10000 #10,000 characters
