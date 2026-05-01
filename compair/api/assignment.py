@@ -1007,7 +1007,7 @@ class AssignmentUsersComparisonsAPI(Resource):
                         AnswerComment.assignment_id == assignment.id
                 ))
 
-            # get comparison answers and self-evaluation comments
+            # get comparison comments and self-evaluation comments
             answer_comments = AnswerComment.query \
                 .filter_by(assignment_id=assignment.id) \
                 .filter(or_(*conditions)) \
