@@ -1,5 +1,6 @@
 import datetime
 import dateutil.parser
+from collections import defaultdict
 
 from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint, current_app
@@ -983,57 +984,55 @@ class AssignmentUsersComparisonsAPI(Resource):
                 )) \
                 .all()
 
-            # retrieve the answer comments
+            # map student comparer's user_id to a set of answer IDs they compared
             user_comparison_answers = {}
             for comparison in comparisons:
                 user_answers = user_comparison_answers.setdefault(comparison.user_id, set())
                 user_answers.add(comparison.answer1_id)
                 user_answers.add(comparison.answer2_id)
 
-            conditions = []
+            conditions = [
+                and_(
+                    AnswerComment.comment_type == AnswerCommentType.self_evaluation,
+                    AnswerComment.user_id == user_id,
+                    AnswerComment.assignment_id == assignment.id
+                )
+                for user_id in user_ids
+            ]
             for user_id, answer_set in user_comparison_answers.items():
                 conditions.append(and_(
                         AnswerComment.comment_type == AnswerCommentType.evaluation,
                         AnswerComment.user_id == user_id,
-                        AnswerComment.answer_id.in_(list(answer_set)),
+                        AnswerComment.answer_id.in_(answer_set),
                         AnswerComment.assignment_id == assignment.id
                 ))
-                conditions.append(and_(
-                    AnswerComment.comment_type == AnswerCommentType.self_evaluation,
-                    AnswerComment.user_id == user_id,
-                    AnswerComment.assignment_id == assignment.id
-                ))
 
+            # get comparison answers and self-evaluation comments
             answer_comments = AnswerComment.query \
                 .filter_by(assignment_id=assignment.id) \
                 .filter(or_(*conditions)) \
                 .filter_by(draft=False) \
                 .all()
 
-            # add comparison answer evaluation comments to comparison object
-            for comparison in comparisons:
-                comparison.answer1_feedback = [comment for comment in answer_comments if
-                    comment.user_id == comparison.user_id and
-                    comment.answer_id == comparison.answer1_id and
-                    comment.comment_type == AnswerCommentType.evaluation
-                ]
+            eval_comments = defaultdict(list)
+            self_eval_comments = defaultdict(list)
+            for comment in answer_comments:
+                if comment.comment_type == AnswerCommentType.evaluation:
+                    eval_comments[(comment.user_id, comment.answer_id)].append(comment)
+                elif comment.comment_type == AnswerCommentType.self_evaluation:
+                    self_eval_comments[comment.user_id].append(comment)
 
-                comparison.answer2_feedback = [comment for comment in answer_comments if
-                    comment.user_id == comparison.user_id and
-                    comment.answer_id == comparison.answer2_id and
-                    comment.comment_type == AnswerCommentType.evaluation
-                ]
+            user_comparisons = defaultdict(list)
+            for comparison in comparisons:
+                comparison.answer1_feedback = eval_comments[(comparison.user_id, comparison.answer1_id)]
+                comparison.answer2_feedback = eval_comments[(comparison.user_id, comparison.answer2_id)]
+                user_comparisons[comparison.user_id].append(comparison)
 
             for user in page.items:
                 comparison_sets.append({
                     'user': user,
-                    'comparisons': [comparison for comparison in comparisons if
-                        comparison.user_id == user.id
-                    ],
-                    'self_evaluations': [comment for comment in answer_comments if
-                        comment.user_id == user.id and
-                        comment.comment_type == AnswerCommentType.self_evaluation
-                    ]
+                    'comparisons': user_comparisons[user.id],
+                    'self_evaluations': self_eval_comments[user.id]
                 })
 
 
