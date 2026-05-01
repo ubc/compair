@@ -209,11 +209,6 @@ Note that [https://lrs.adlnet.gov/](https://lrs.adlnet.gov/) is set up for testi
 
 `LRS_CALIPER_HOST`: Set the url LRS. Use 'local' for dumping statements into `xapi_log` table ('local' by default)
 
-`LRS_CALIPER_USERNAME`: Username for Caliper Basic auth.
-
-`LRS_CALIPER_PASSWORD`: Password for Caliper Basic auth.
-
-ComPAIR sends `Authorization: Basic <base64(username:password)>` for Caliper events.
 
 Setting up Background Tasks
 ---------------------------
