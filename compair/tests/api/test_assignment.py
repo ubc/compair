@@ -7,10 +7,9 @@ import mock
 from data.fixtures import DefaultFixture
 from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData, \
     TestFixture, LTITestData, AnswerFactory
-from data.factories import AssignmentFactory, AnswerCommentFactory
+from data.factories import AnswerCommentFactory
 from compair.models import Assignment, Comparison, PairingAlgorithm, \
-    CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome, \
-    AnswerCommentType, WinningAnswer
+    CourseGrade, AssignmentGrade, SystemRole, AnswerCommentType, WinningAnswer
 from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 from compair.core import db
 
