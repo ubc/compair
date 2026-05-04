@@ -7,10 +7,9 @@ import mock
 from data.fixtures import DefaultFixture
 from data.fixtures.test_data import SimpleAssignmentTestData, ComparisonTestData, \
     TestFixture, LTITestData, AnswerFactory
-from data.factories import AssignmentFactory
+from data.factories import AnswerCommentFactory
 from compair.models import Assignment, Comparison, PairingAlgorithm, \
-    CourseGrade, AssignmentGrade, SystemRole, CourseRole, LTIOutcome, \
-    AnswerCommentType, WinningAnswer
+    CourseGrade, AssignmentGrade, SystemRole, AnswerCommentType, WinningAnswer
 from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
 from compair.core import db
 
@@ -2184,6 +2183,34 @@ class AssignmentUserComparisonsAPITests(ComPAIRAPITestCase):
             self.assertEqual(rv.json['total'], total_number_of_students)
             self.assertEqual(rv.json['comparison_total'], total_comparisons)
             self.assertEqual(rv.json['self_evaluation_total'], total_self_evaluations)
+
+    def test_self_eval_only_student_appears_in_all_comparisons(self):
+        # student with an answer and self-eval but zero comparisons should appear
+        # in the unfiltered "All Comparisons" view with their self-eval populated
+        url = f'/api/courses/{self.fixtures.course.uuid}/assignments/{self.fixtures.assignment.uuid}/users/comparisons'
+
+        # add a new student with only an answer and self-eval, no comparisons
+        new_student = self.fixtures.add_students(1).students[-1]
+        self.fixtures.add_answer(self.fixtures.assignment, new_student)
+        answer = self.fixtures.answers[-1]
+        AnswerCommentFactory(
+            user=new_student,
+            answer=answer,
+            comment_type=AnswerCommentType.self_evaluation,
+            draft=False
+        )
+        db.session.commit()
+
+        with self.login(self.fixtures.instructor.username):
+            rv = self.client.get(url, data=json.dumps({}), content_type='application/json')
+            self.assert200(rv)
+
+            user_ids = [obj['user']['id'] for obj in rv.json['objects']]
+            self.assertIn(new_student.uuid, user_ids)
+
+            new_student_set = next(obj for obj in rv.json['objects'] if obj['user']['id'] == new_student.uuid)
+            self.assertEqual(len(new_student_set['comparisons']), 0)
+            self.assertEqual(len(new_student_set['self_evaluations']), 1)
 
     def test_get_current_user_comparisons(self):
         url = '/api/courses/'+self.fixtures.course.uuid+'/assignments/'+self.fixtures.assignment.uuid+'/user/comparisons'
