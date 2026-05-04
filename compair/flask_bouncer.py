@@ -187,4 +187,4 @@ class Bouncer(object):
         if self._authorization_method is not None:
             return self._authorization_method
         else:
-            raise Exception('Expected authorication method to be set')
+            raise Exception('Expected authorization method to be set')
