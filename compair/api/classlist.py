@@ -4,7 +4,7 @@ import unicodecsv as csv
 
 from bouncer.constants import EDIT, READ, MANAGE
 from flask import Blueprint, request, current_app, make_response
-from flask_bouncer import can
+from compair.flask_bouncer import can
 from flask_login import login_required, current_user
 from flask_restx import Resource, marshal
 from flask_restx.reqparse import RequestParser

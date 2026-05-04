@@ -4,7 +4,7 @@
 from blinker import Namespace
 from werkzeug.exceptions import HTTPException
 from flask import session as sess, abort as flask_abort
-from flask_bouncer import Bouncer
+from compair.flask_bouncer import Bouncer
 from celery import Celery
 from flask_mail import Mail
 import string

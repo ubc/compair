@@ -5,7 +5,7 @@ import requests
 import re
 
 from flask import Flask, redirect, session as sess, jsonify, url_for, make_response
-from flask_bouncer import ensure
+from compair.flask_bouncer import ensure
 from markupsafe import Markup
 from flask_login import current_user
 from sqlalchemy.orm import joinedload

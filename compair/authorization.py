@@ -1,5 +1,5 @@
 from bouncer.constants import ALL, MANAGE, EDIT, READ, CREATE, DELETE
-from flask_bouncer import can, ensure
+from compair.flask_bouncer import can, ensure
 from flask_login import current_user
 from werkzeug.exceptions import Forbidden
 from sqlalchemy import and_

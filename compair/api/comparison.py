@@ -3,7 +3,7 @@ import datetime
 
 from bouncer.constants import READ, CREATE, EDIT, MANAGE
 from flask import Blueprint, current_app
-from flask_bouncer import can
+from compair.flask_bouncer import can
 from flask_login import login_required, current_user
 from flask_restx import Resource, marshal
 from flask_restx.reqparse import RequestParser
