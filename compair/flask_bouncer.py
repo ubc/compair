@@ -1,5 +1,5 @@
 # Vendored from flask-bouncer==0.3.0 with Flask 3 compatibility fix:
-# _app_ctx_stack was removed in Flask 3; get_app() removed (unused in this codebase).
+# _app_ctx_stack was removed in Flask 3
 from functools import wraps
 
 from flask import request, g, current_app, has_app_context
@@ -86,20 +86,6 @@ class Bouncer(object):
 
         if app is not None:
             self.init_app(app, **kwargs)
-
-    def get_app(self, reference_app=None):
-        if reference_app is not None:
-            return reference_app
-
-        if self.app is not None:
-            return self.app
-
-        if has_app_context():
-            return current_app
-
-        raise RuntimeError('Application not registered on Bouncer'
-                           ' instance and no application bound'
-                           ' to current context')
 
     def init_app(self, app, **kwargs):
         """ Initializes the Flask-Bouncer extension for the specified application.
