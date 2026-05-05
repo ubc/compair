@@ -125,7 +125,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         super(cls, cls).__declare_last__()
 
         cls.groups_locked = column_property(
-            exists([1]).
+            exists().
             where(and_(
                 Assignment.course_id == cls.id,
                 Assignment.active == True,
