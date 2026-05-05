@@ -108,7 +108,7 @@ class CompareRootAPI(Resource):
 
         # get evaluation comments for answers by current user
         answer_comments = AnswerComment.query \
-            .join("answer") \
+            .join(AnswerComment.answer) \
             .filter(and_(
                 # both draft and completed comments are allowed
                 AnswerComment.active == True,
