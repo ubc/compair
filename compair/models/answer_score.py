@@ -76,7 +76,7 @@ class AnswerScore(DefaultTableMixin, WriteTrackingMixin):
     def get_assignment_scores(cls, assignment_id):
         return AnswerScore.query \
             .with_entities(AnswerScore.score) \
-            .join("answer") \
+            .join(AnswerScore.answer) \
             .filter(and_(
                 Answer.active == True,
                 AnswerScore.assignment_id == assignment_id

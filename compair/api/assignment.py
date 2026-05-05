@@ -358,7 +358,7 @@ class AssignmentRootAPI(Resource):
 
         # Get all assignments for this course, order by answer_start date, created date
         base_query = Assignment.query \
-            .options(joinedload("assignment_criteria").joinedload("criterion")) \
+            .options(joinedload(Assignment.assignment_criteria).joinedload(AssignmentCriterion.criterion)) \
             .options(undefer_group('counts')) \
             .filter(
                 Assignment.course_id == course.id,
@@ -535,7 +535,7 @@ class AssignmentIdStatusAPI(Resource):
             .count()
 
         feedback_count = AnswerComment.query \
-            .join("answer") \
+            .join(AnswerComment.answer) \
             .filter(and_(
                 AnswerComment.active == True,
                 AnswerComment.draft == False,
@@ -551,7 +551,7 @@ class AssignmentIdStatusAPI(Resource):
             .count()
 
         drafts = Answer.query \
-            .options(load_only('id')) \
+            .options(load_only(Answer.id)) \
             .filter_by(
                 assignment_id=assignment.id,
                 active=True,
@@ -593,7 +593,7 @@ class AssignmentIdStatusAPI(Resource):
 
         if assignment.enable_self_evaluation:
             self_evaluations = AnswerComment.query \
-                .join("answer") \
+                .join(AnswerComment.answer) \
                 .filter(and_(
                     AnswerComment.user_id == current_user.id,
                     AnswerComment.active == True,
@@ -607,7 +607,7 @@ class AssignmentIdStatusAPI(Resource):
                 .count()
 
             self_evaluation_drafts = AnswerComment.query \
-                .join("answer") \
+                .join(AnswerComment.answer) \
                 .filter(and_(
                     AnswerComment.user_id == current_user.id,
                     AnswerComment.active == True,
@@ -733,7 +733,7 @@ class AssignmentRootStatusAPI(Resource):
             .all()
 
         query = Answer.query \
-            .options(load_only('id', 'assignment_id', 'uuid')) \
+            .options(load_only(Answer.id, Answer.assignment_id, Answer.uuid)) \
             .filter_by(
                 active=True,
                 practice=False,
@@ -831,7 +831,7 @@ class AssignmentUserComparisonsAPI(Resource):
 
         # get all self-evaluations and evaluation comments for current user
         answer_comments = AnswerComment.query \
-            .join("answer") \
+            .join(AnswerComment.answer) \
             .filter(and_(
                 AnswerComment.active == True,
                 AnswerComment.comment_type.in_([AnswerCommentType.self_evaluation, AnswerCommentType.evaluation]),

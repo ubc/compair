@@ -1,8 +1,6 @@
 import uuid
 import base64
 
-from sqlalchemy.orm import joinedload
-
 from compair.core import db, abort
 
 class UUIDMixin(db.Model):
@@ -13,9 +11,8 @@ class UUIDMixin(db.Model):
     @classmethod
     def get_by_uuid_or_404(cls, model_uuid, joinedloads=[], title=None, message=None):
         query = cls.query
-        # load relationships if needed
-        for load_string in joinedloads:
-            query.options(joinedload(load_string))
+        for load_option in joinedloads:
+            query = query.options(load_option)
 
         model = query.filter_by(uuid=model_uuid).one_or_none()
         if model is None:

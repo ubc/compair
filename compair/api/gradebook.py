@@ -31,7 +31,7 @@ class GradebookAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(
             assignment_uuid,
-            joinedloads=['assignment_criteria']
+            joinedloads=[joinedload(Assignment.assignment_criteria)]
         )
         require(MANAGE, assignment,
             title="Participation Results Unavailable",
@@ -68,7 +68,7 @@ class GradebookAPI(Resource):
         # get students comparisons counts for this assignment
         comparisons = User.query \
             .with_entities(User.id, func.count(Comparison.id).label('compare_count')) \
-            .join("comparisons") \
+            .join(User.comparisons) \
             .filter(and_(
                 Comparison.assignment_id == assignment.id,
                 Comparison.completed == True,

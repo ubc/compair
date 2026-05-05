@@ -181,7 +181,7 @@ def participation_stat_report(course, assignments, group, overall):
     for assignment in assignments:
         # ANSWERS: instructors / TAs could submit multiple answers. normally 1 answer per student
         answers = Answer.query \
-            .options(joinedload('score')) \
+            .options(joinedload(Answer.score)) \
             .filter(and_(
                 Answer.assignment_id == assignment.id,
                 Answer.comparable == True,
@@ -350,9 +350,9 @@ def participation_report(course, assignments, group):
 
     # ANSWERS - scores
     answers = Answer.query \
-        .options(joinedload('file')) \
-        .options(joinedload('score')) \
-        .options(joinedload('criteria_scores')) \
+        .options(joinedload(Answer.file)) \
+        .options(joinedload(Answer.score)) \
+        .options(joinedload(Answer.criteria_scores)) \
         .filter(and_(
             Answer.assignment_id.in_(assignment_ids),
             Answer.draft == False,
@@ -479,7 +479,7 @@ def peer_feedback_report(course, assignments, group):
     report = []
 
     senders = User.query \
-        .join("user_courses") \
+        .join(User.user_courses) \
         .filter(and_(
             UserCourse.course_id == course.id,
             UserCourse.course_role == CourseRole.student

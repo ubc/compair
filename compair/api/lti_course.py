@@ -40,8 +40,8 @@ class LTICourseLinksRootAPI(Resource):
         params = context_list_parser.parse_args()
 
         query = LTIContext.query \
-            .join("lti_consumer") \
-            .join("compair_course") \
+            .join(LTIContext.lti_consumer) \
+            .join(LTIContext.compair_course) \
             .add_columns(LTIConsumer.oauth_consumer_key, Course.name)
 
         if params['orderBy']:

@@ -70,7 +70,7 @@ class CompareRootAPI(Resource):
 
         # check if user has a comparison they have not completed yet
         comparison = Comparison.query \
-            .options(joinedload('comparison_criteria')) \
+            .options(joinedload(Comparison.comparison_criteria)) \
             .filter_by(
                 assignment_id=assignment.id,
                 user_id=current_user.id,
@@ -151,7 +151,7 @@ class CompareRootAPI(Resource):
                 message="Only students can save answer comparisons for this assignment. To change these settings to include instructors and teaching assistants, edit the assignment.")
 
         comparison = Comparison.query \
-            .options(joinedload('comparison_criteria')) \
+            .options(joinedload(Comparison.comparison_criteria)) \
             .filter_by(
                 assignment_id=assignment.id,
                 user_id=current_user.id,

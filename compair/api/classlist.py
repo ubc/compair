@@ -103,7 +103,7 @@ def _get_existing_users_by_identifier(import_type, users):
     if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
         # CAS/SAML login
         third_party_users = ThirdPartyUser.query \
-            .options(joinedload('user')) \
+            .options(joinedload(ThirdPartyUser.user)) \
             .filter(and_(
                 ThirdPartyUser.unique_identifier.in_(usernames),
                 ThirdPartyUser.third_party_type == ThirdPartyType(import_type)

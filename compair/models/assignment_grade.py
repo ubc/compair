@@ -103,7 +103,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
             .count()
 
         self_evaluation_count = AnswerComment.query \
-            .join("answer") \
+            .join(AnswerComment.answer) \
             .filter(and_(
                 AnswerComment.user_id == user.id,
                 AnswerComment.active == True,
@@ -213,7 +213,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
                 AnswerComment.user_id,
                 func.count(AnswerComment.user_id).label('self_evaluation_count')
             ) \
-            .join("answer") \
+            .join(AnswerComment.answer) \
             .filter(and_(
                 AnswerComment.active == True,
                 AnswerComment.comment_type == AnswerCommentType.self_evaluation,
@@ -382,7 +382,7 @@ class AssignmentGrade(DefaultTableMixin, WriteTrackingMixin):
                 AnswerComment.user_id,
                 func.count(AnswerComment.user_id).label('self_evaluation_count')
             ) \
-            .join("answer") \
+            .join(AnswerComment.answer) \
             .filter(and_(
                 AnswerComment.active == True,
                 AnswerComment.comment_type == AnswerCommentType.self_evaluation,
