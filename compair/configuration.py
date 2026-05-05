@@ -33,36 +33,34 @@ config = Config('.')
 config.from_object('compair.settings')
 config.from_pyfile(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config.py'), silent=True)
 
-db_conn_options = ''
+db_conn_query = {}
 if os.environ.get('DB_CONN_OPTIONS'):
-    options_dict = json.loads(os.environ.get('DB_CONN_OPTIONS'))
-    for key in options_dict:
-        db_conn_options = db_conn_options + ('?' if db_conn_options == '' else '&') + \
-            key + '=' + options_dict.get(key)
+    db_conn_query = json.loads(os.environ.get('DB_CONN_OPTIONS'))
 
 if os.environ.get('OPENSHIFT_MYSQL_DB_HOST'):
-    config['SQLALCHEMY_DATABASE_URI'] = URL(
-        'mysql+pymysql',
+    config['SQLALCHEMY_DATABASE_URI'] = URL.create(
+        drivername='mysql+pymysql',
         host=os.getenv('OPENSHIFT_MYSQL_DB_HOST', 'localhost'),
-        port=os.getenv('OPENSHIFT_MYSQL_DB_PORT', '3306'),
+        port=int(os.getenv('OPENSHIFT_MYSQL_DB_PORT', '3306')),
         username=os.getenv('OPENSHIFT_MYSQL_DB_USERNAME', 'compair'),
         password=os.getenv('OPENSHIFT_MYSQL_DB_PASSWORD', 'compair'),
         database=os.getenv('OPENSHIFT_GEAR_NAME', 'compair'),
     )
 elif os.environ.get('DB_HOST') or os.environ.get('DB_PORT') or os.environ.get('DB_USERNAME') \
         or os.environ.get('DB_PASSWORD') or os.environ.get('DB_NAME'):
-    config['SQLALCHEMY_DATABASE_URI'] = str(URL(
-        os.getenv('DB_DRIVER', 'mysql+pymysql'),
+    config['SQLALCHEMY_DATABASE_URI'] = URL.create(
+        drivername=os.getenv('DB_DRIVER', 'mysql+pymysql'),
         host=os.getenv('DB_HOST', 'localhost'),
-        port=os.getenv('DB_PORT', '3306'),
+        port=int(os.getenv('DB_PORT', '3306')),
         username=os.getenv('DB_USERNAME', 'compair'),
         password=os.getenv('DB_PASSWORD', 'compair'),
         database=os.getenv('DB_NAME', 'compair'),
-    )) + db_conn_options
+        query=db_conn_query,
+    )
 elif os.environ.get('DATABASE_URI'):
     config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')
 elif "DATABASE" in config and 'DATABASE_URI' not in config:
-    config['SQLALCHEMY_DATABASE_URI'] = URL(**config['DATABASE'])
+    config['SQLALCHEMY_DATABASE_URI'] = URL.create(**config['DATABASE'])
 elif "DATABASE_URI" in config:
     config['SQLALCHEMY_DATABASE_URI'] = config['DATABASE_URI']
 
