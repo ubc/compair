@@ -30,7 +30,7 @@ _CLEANER = nh3.Cleaner(
     clean_content_tags={"script", "style"},
     attributes={
         "span": {"style", "dir"},
-        "a": {"href", "target"},   # rel is injected via link_rel
+        "a": {"href", "target"},
         "img": {"src", "alt", "style"},
         "table": {"border", "cellpadding", "cellspacing", "summary", "align", "style"},
         "th": {"scope", "colspan", "rowspan"},
@@ -61,6 +61,7 @@ _CLEANER = nh3.Cleaner(
         # spans with class=combinedmath use this for inline-block
         "display",
     },
+    link_rel="noopener noreferrer",
     # ftp and news are pretty much obsolete but CKEditor allows them
     url_schemes={"http", "https", "mailto", "ftp", "news"},
     attribute_filter=_attribute_filter,
