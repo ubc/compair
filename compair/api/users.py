@@ -257,7 +257,7 @@ class UserListAPI(Resource):
                 query = query.order_by(asc(params['orderBy']))
         query = query.order_by(User.lastname.asc(), User.firstname.asc())
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(page=params['page'], per_page=params['perPage'])
 
         on_user_list_get.send(
             self,
@@ -419,7 +419,7 @@ class CurrentUserCourseListAPI(Resource):
                     Course.end_date < now
                 )
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(page=params['page'], per_page=params['perPage'])
 
         # TODO REMOVE COURSES WHERE COURSE IS UNAVAILABLE?
 
@@ -479,7 +479,7 @@ class UserCourseListAPI(Resource):
                 query = query.order_by(asc(params['orderBy']))
         query = query.order_by(Course.start_date_order.desc(), Course.name)
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(page=params['page'], per_page=params['perPage'])
 
         # fix results
         courses = []

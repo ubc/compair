@@ -177,7 +177,7 @@ class AnswerRootAPI(Resource):
             # when ordered by date, non-comparable answers should be on top of the list
             query = query.order_by(Answer.comparable, Answer.submission_date.desc(), Answer.created.desc())
 
-        page = query.paginate(params['page'], params['perPage'], error_out=False)
+        page = query.paginate(page=params['page'], per_page=params['perPage'], error_out=False)
         # remove label entities from results
         page.items = [answer for (answer, instructor_role, ta_role) in page.items]
 

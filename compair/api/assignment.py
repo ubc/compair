@@ -968,7 +968,7 @@ class AssignmentUsersComparisonsAPI(Resource):
                 )) \
                 .filter(UserCourse.group_id == group.id)
 
-        page = user_query.paginate(params['page'], params['perPage'])
+        page = user_query.paginate(page=params['page'], per_page=params['perPage'])
         self_evaluation_total = self_evaluation_total.scalar()
         comparison_total = comparison_total.scalar()
 

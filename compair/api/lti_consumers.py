@@ -59,7 +59,7 @@ class ConsumerAPI(Resource):
                 query = query.order_by(asc(params['orderBy']))
         query = query.order_by(LTIConsumer.created)
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(page=params['page'], per_page=params['perPage'])
 
         on_consumer_list_get.send(
             self,

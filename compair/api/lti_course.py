@@ -66,7 +66,7 @@ class LTICourseLinksRootAPI(Resource):
                         LTIContext.context_title.like(search)
                     ))
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(page=params['page'], per_page=params['perPage'])
 
         # unwrap link info
         lti_course_links = []
