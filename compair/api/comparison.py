@@ -17,6 +17,7 @@ from compair.models import Answer, Comparison, Course, WinningAnswer, \
     Assignment, UserCourse, CourseRole, AssignmentCriterion, \
     AnswerComment, AnswerCommentType
 from .util import new_restful_api
+from compair.sanitization import sanitize_html
 
 from compair.algorithms import InsufficientObjectsForPairException, \
     UserComparedAllObjectsException, UnknownPairGeneratorException
@@ -220,7 +221,7 @@ class CompareRootAPI(Resource):
                 winner = WinningAnswer(comparison_criterion_update['winner']) if comparison_criterion_update['winner'] != None else None
 
                 comparison_criterion.winner = winner
-                comparison_criterion.content = comparison_criterion_update['content']
+                comparison_criterion.content = sanitize_html(comparison_criterion_update['content'])
 
                 if completed:
                     weight = next((

@@ -18,6 +18,7 @@ from compair.models import Assignment, Course, Criterion, AssignmentCriterion, A
     AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File, User, UserCourse, \
     CourseRole, Group
 from .util import new_restful_api, get_model_changes, pagination_parser
+from compair.sanitization import sanitize_html
 
 assignment_api = Blueprint('assignment_api', __name__)
 api = new_restful_api(assignment_api)
@@ -140,8 +141,8 @@ class AssignmentIdAPI(Resource):
 
         # modify assignment according to new values, preserve original values if values not passed
         assignment.name = params.get("name", assignment.name)
-        assignment.description = params.get("description", assignment.description)
-        assignment.peer_feedback_prompt = params.get("peer_feedback_prompt", assignment.peer_feedback_prompt)
+        assignment.description = sanitize_html(params.get("description", assignment.description))
+        assignment.peer_feedback_prompt = sanitize_html(params.get("peer_feedback_prompt", assignment.peer_feedback_prompt))
         assignment.answer_start = datetime.datetime.strptime(
             params.get('answer_start', assignment.answer_start),
             '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -161,7 +162,7 @@ class AssignmentIdAPI(Resource):
                 '%Y-%m-%dT%H:%M:%S.%fZ')
 
         assignment.enable_self_evaluation = params.get('enable_self_evaluation', assignment.enable_self_evaluation)
-        assignment.self_eval_instructions = params.get('self_eval_instructions', None)
+        assignment.self_eval_instructions = sanitize_html(params.get('self_eval_instructions', None))
         assignment.self_eval_start = params.get('self_eval_start', None)
         if assignment.self_eval_start is not None:
             assignment.self_eval_start = datetime.datetime.strptime(
@@ -399,8 +400,8 @@ class AssignmentRootAPI(Resource):
 
         new_assignment.user_id = current_user.id
         new_assignment.name = params.get("name")
-        new_assignment.description = params.get("description")
-        new_assignment.peer_feedback_prompt = params.get("peer_feedback_prompt")
+        new_assignment.description = sanitize_html(params.get("description"))
+        new_assignment.peer_feedback_prompt = sanitize_html(params.get("peer_feedback_prompt"))
         new_assignment.answer_start = dateutil.parser.parse(params.get('answer_start'))
         new_assignment.answer_end = dateutil.parser.parse(params.get('answer_end'))
         new_assignment.educators_can_compare = params.get("educators_can_compare")
@@ -426,7 +427,7 @@ class AssignmentRootAPI(Resource):
             new_assignment.compare_end = dateutil.parser.parse(params.get('compare_end', None))
 
         new_assignment.enable_self_evaluation = params.get('enable_self_evaluation', False)
-        new_assignment.self_eval_instructions = params.get('self_eval_instructions', None)
+        new_assignment.self_eval_instructions = sanitize_html(params.get('self_eval_instructions', None))
         new_assignment.self_eval_start = params.get('self_eval_start', None)
         if new_assignment.self_eval_start is not None:
             new_assignment.self_eval_start = dateutil.parser.parse(new_assignment.self_eval_start)

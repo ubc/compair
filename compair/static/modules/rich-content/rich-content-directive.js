@@ -78,6 +78,7 @@ module.factory("embeddableRichContent",
             return $sce.trustAsHtml(embed);
         }
 
+        // TODO: Remove related code - no Twitter API anymore
         var twitterPromise = function(url) {
             var twitterUrl =
                 'https://api.twitter.com/1/statuses/oembed.json?omit_script=true&&url=' + url + '&'+
@@ -287,6 +288,9 @@ module.directive('richContent',
                 var processContent = function() {
                     var content = $sanitize($scope.content);
 
+                    // strip hrefs containing encoded chars that break out of HTML attribute context
+                    content = content.replace(/(<a[^>]*)\s+href="[^"]*(?:&quot;|&#39;|&lt;|&gt;|&#96;)[^"]*"([^>]*>)/ig, '$1$2');
+
                     $scope.embeddableLinks = [];
                     var linkMatches = [];
                     var linkRegex = /<a[^>]*>[^<]+<\/a>/ig;
@@ -294,7 +298,15 @@ module.directive('richContent',
                     while ( (linkMatch = linkRegex.exec(content)) !== null ) {
                         // add processed link if valid
                         var link = $(linkMatch[0]);
-                        var href = link.attr("href");
+                        var rawHref = link.attr("href");
+                        var href = null;
+                        // reject hrefs containing characters that break out of HTML attributes
+                        if (rawHref && !/["'<>`]/.test(rawHref) && URL.canParse(rawHref)) {
+                            var parsed = new URL(rawHref);
+                            if (/^(https?|ftp|file):$/.test(parsed.protocol)) {
+                                href = parsed.href;
+                            }
+                        }
                         if (href) {
                             var embeddableContent = embeddableRichContent.generateEmbeddableContent(href, $scope.downloadName);
                             if (embeddableContent) {

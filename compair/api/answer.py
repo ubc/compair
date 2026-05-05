@@ -17,6 +17,7 @@ from compair.models import Answer, Assignment, Course, User, Comparison, Criteri
     File, Group
 
 from .util import new_restful_api, get_model_changes, pagination_parser
+from compair.sanitization import sanitize_html
 
 answers_api = Blueprint('answers_api', __name__)
 api = new_restful_api(answers_api)
@@ -213,7 +214,7 @@ class AnswerRootAPI(Resource):
         answer = Answer(assignment_id=assignment.id)
 
         params = new_answer_parser.parse_args()
-        answer.content = params.get("content")
+        answer.content = sanitize_html(params.get("content"))
         answer.draft = params.get("draft")
 
         file_uuid = params.get('file_id')
@@ -404,7 +405,7 @@ class AnswerIdAPI(Resource):
             abort(400, title="Answer Not Submitted", message="The answer's ID does not match the URL, which is required in order to save the answer.")
 
         # modify answer according to new values, preserve original values if values not passed
-        answer.content = params.get("content")
+        answer.content = sanitize_html(params.get("content"))
 
         user_uuid = params.get("user_id")
         group_uuid = params.get("group_id")

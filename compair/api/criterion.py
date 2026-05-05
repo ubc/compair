@@ -9,6 +9,7 @@ from compair.core import event, db
 from compair.authorization import require
 from compair.models import Criterion
 from .util import new_restful_api
+from compair.sanitization import sanitize_html
 
 criterion_api = Blueprint('criterion_api', __name__)
 api = new_restful_api(criterion_api)
@@ -63,7 +64,7 @@ class CriteriaAPI(Resource):
             message="Sorry, your role does not allow you to add criteria.")
 
         criterion.name = params.get("name")
-        criterion.description = params.get("description", None)
+        criterion.description = sanitize_html(params.get("description", None))
         criterion.default = params.get("default")
 
         db.session.add(criterion)
@@ -110,7 +111,7 @@ class CriteriaIdAPI(Resource):
         params = existing_criterion_parser.parse_args()
 
         criterion.name = params.get('name', criterion.name)
-        criterion.description = params.get('description', criterion.description)
+        criterion.description = sanitize_html(params.get('description', criterion.description))
         criterion.default = params.get('default', criterion.default)
 
         db.session.commit()

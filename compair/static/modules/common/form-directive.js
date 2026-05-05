@@ -120,27 +120,21 @@ module.service('EditorOptions', function() {
         customConfig: '',
         // The toolbar groups arrangement, optimized for two toolbar rows.
         toolbarGroups: [
-            
-            { name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
             { name: 'clipboard', groups: [ 'undo', 'clipboard' ] },
             { name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
             { name: 'links', groups: [ 'links' ] },
             { name: 'insert', groups: [ 'insert' ] },
             { name: 'styles', groups: [ 'styles' ] },
-            { name: 'colors', groups: [ 'colors' ] },
             '/',
-            { name: 'forms', groups: [ 'forms' ] },
             { name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
             { name: 'paragraph', groups: [ 'list', 'indent', 'blocks', 'align', 'bidi', 'paragraph' ] },
             '/',
             { name: 'tools', groups: [ 'tools' ] },
-            { name: 'others', groups: [ 'others' ] },
-            { name: 'about', groups: [ 'about' ] }
         ],
 
         // Remove some buttons provided by the standard plugins, which are
         // not needed in the Standard(s) toolbar.
-        removeButtons: 'Source,Save,NewPage,Preview,Print,Templates,Cut,Copy,Find,Replace,SelectAll,Form,Checkbox,Radio,TextField,Textarea,Select,Button,ImageButton,HiddenField,Subscript,Superscript,CopyFormatting,CreateDiv,Unlink,Anchor,Flash,HorizontalRule,PageBreak,Iframe,Smiley,Font,FontSize,BGColor,Maximize,ShowBlocks,About',
+        removeButtons: 'Source,Cut,Copy,Subscript,Superscript,Unlink,Anchor,HorizontalRule,Maximize,About',
 
         // Set the most common block elements.
         format_tags: 'p;h1;h2;h3;pre',
@@ -165,27 +159,16 @@ module.service('EditorOptions', function() {
         customConfig: '',
         // The toolbar groups arrangement, optimized for two toolbar rows.
         toolbarGroups: [
-            
-            { name: 'document', groups: [ 'mode', 'document', 'doctools' ] },
-            { name: 'clipboard', groups: [ /*'undo',*/ 'clipboard' ] },
+            { name: 'clipboard', groups: [ 'clipboard' ] },
             { name: 'editing', groups: [ 'find', 'selection', 'spellchecker', 'editing' ] },
-            //{ name: 'links', groups: [ 'links' ] },
             { name: 'insert', groups: [ 'insert' ] },
-            //{ name: 'styles', groups: [ 'styles' ] },
-            //{ name: 'colors', groups: [ 'colors' ] },
-            //'/',
-            { name: 'forms', groups: [ 'forms' ] },
             { name: 'basicstyles', groups: [ 'basicstyles', 'cleanup' ] },
-            { name: 'paragraph', groups: [ 'list'/*, 'indent', 'blocks', 'align', 'bidi', 'paragraph'*/ ] },
-            '/',
-            { name: 'tools', groups: [ 'tools' ] },
-            { name: 'others', groups: [ 'others' ] },
-            { name: 'about', groups: [ 'about' ] }
+            { name: 'paragraph', groups: [ 'list' ] },
         ],
 
         // Remove some buttons provided by the standard plugins, which are
         // not needed in the Standard(s) toolbar.
-        removeButtons: 'Source,Save,NewPage,Preview,Print,Templates,Cut,Copy,Find,Replace,SelectAll,Form,Checkbox,Radio,TextField,Textarea,Select,Button,ImageButton,HiddenField,Subscript,Superscript,CopyFormatting,CreateDiv,Unlink,Anchor,Flash,HorizontalRule,PageBreak,Iframe,Smiley,Font,FontSize,BGColor,Maximize,ShowBlocks,About',
+        removeButtons: 'Source,Cut,Copy,Subscript,Superscript,Unlink,Anchor,HorizontalRule,Maximize,About',
 
         // Set the most common block elements.
         format_tags: 'p;h1;h2;h3;pre',
