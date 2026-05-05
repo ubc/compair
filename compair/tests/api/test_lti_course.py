@@ -90,7 +90,7 @@ class LTICourseAPITests(ComPAIRAPITestCase):
             result = rv.json['objects']
             expected_results = LTIContext.query \
                 .order_by(LTIContext.created.desc()) \
-                .paginate(2, 20)
+                .paginate(page=2, per_page=20)
 
             for i, expected in enumerate(expected_results.items):
                 self.assertEqual(expected.uuid, result[i]['id'])
