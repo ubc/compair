@@ -249,10 +249,7 @@ def register_api_blueprints(app):
         params = attachment_download_parser.parse_args()
 
         if file_type == 'attachment':
-            attachment = File.get_by_file_name_or_404(
-                file_name,
-                joinedloads=['answers', 'assignments']
-            )
+            attachment = File.get_by_file_name_or_404(file_name)
 
             for answer in attachment.answers:
                 require(READ, answer,
