@@ -74,9 +74,9 @@ class AnswerCriterionScore(DefaultTableMixin, WriteTrackingMixin):
 
         s_alias = cls.__table__.alias()
         cls.normalized_score = column_property(
-            select([
+            select(
                 (cls.score - func.min(s_alias.c.score)) / (func.max(s_alias.c.score) - func.min(s_alias.c.score)) * 100
-            ]).
+            ).
             where(and_(
                 s_alias.c.criterion_id == cls.criterion_id,
                 s_alias.c.assignment_id == cls.assignment_id,
