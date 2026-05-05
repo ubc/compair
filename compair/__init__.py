@@ -178,9 +178,7 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
         @login_manager.user_loader
         def load_user(user_id):
             app.logger.debug("User logging in, ID: " + user_id)
-            return User.query. \
-                options(joinedload("user_courses")). \
-                get(int(user_id))
+            return db.session.get(User, int(user_id), options=[joinedload(User.user_courses)])
 
         @login_manager.unauthorized_handler
         def unauthorized():
