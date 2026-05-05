@@ -1,12 +1,12 @@
 Jinja2==3.1.6
-Flask==2.3.3
+Flask==3.1.3
 Flask-Login==0.6.3
 flask-restx==1.3.0
-Flask-SQLAlchemy==2.5.1
+Flask-SQLAlchemy==3.1.1
 Flask-Testing==0.8.1
 Flask-Mail==0.9.1
 PyMySQL==1.1.1
-SQLAlchemy==1.4.36
+SQLAlchemy==2.0.49
 blinker==1.9.0
 bouncer==0.1.12
 factory_boy==3.2.1
