@@ -300,7 +300,7 @@ def register_api_blueprints(app):
     _api_call_pattern = re.compile('^' + re.escape('/api/'))
     def _api_call_cache_control(resp):
         if _api_call_pattern.match(request.full_path):
-            if 'cache-contorl' not in set(k.lower() for k in resp.headers.keys()):
+            if 'cache-control' not in set(k.lower() for k in resp.headers.keys()):
                 resp.headers['Cache-Control'] = 'no-store'
         return resp
     app.after_request(_api_call_cache_control)
