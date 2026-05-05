@@ -337,7 +337,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             upload_ks="upload_ks_mock2",
             upload_token_id="mocked_upload_token_id2"
         )
-        db.session.add(kaltura_media)
+        db.session.add(kaltura_media2)
 
         kaltura_media3 = KalturaMedia(
             user=self.fixtures.instructor,
@@ -347,7 +347,7 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             upload_ks="upload_ks_mock3",
             upload_token_id="mocked_upload_token_id3"
         )
-        db.session.add(kaltura_media)
+        db.session.add(kaltura_media3)
 
         invalid_kaltura_media =  KalturaMedia(
             user=self.fixtures.instructor,
