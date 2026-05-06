@@ -91,7 +91,7 @@ class Answer(DefaultTableMixin, UUIDMixin, AttemptMixin, ActiveMixin, WriteTrack
         super(cls, cls).__declare_last__()
 
         cls.comment_count = column_property(
-            select([func.count(AnswerComment.id)]).
+            select(func.count(AnswerComment.id)).
             where(and_(
                 AnswerComment.answer_id == cls.id,
                 AnswerComment.active == True,
@@ -102,7 +102,7 @@ class Answer(DefaultTableMixin, UUIDMixin, AttemptMixin, ActiveMixin, WriteTrack
         )
 
         cls.public_comment_count = column_property(
-            select([func.count(AnswerComment.id)]).
+            select(func.count(AnswerComment.id)).
             where(and_(
                 AnswerComment.answer_id == cls.id,
                 AnswerComment.active == True,
@@ -114,7 +114,7 @@ class Answer(DefaultTableMixin, UUIDMixin, AttemptMixin, ActiveMixin, WriteTrack
         )
 
         cls.self_evaluation_count = column_property(
-            select([func.count(AnswerComment.id)]).
+            select(func.count(AnswerComment.id)).
             where(and_(
                 AnswerComment.comment_type == AnswerCommentType.self_evaluation,
                 AnswerComment.active == True,

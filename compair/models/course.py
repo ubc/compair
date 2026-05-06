@@ -78,10 +78,11 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
 
     @start_date_order.expression
     def start_date_order(cls):
-        return case([
+        return case(
             (cls.start_date != None, cls.start_date),
-            (cls.min_assignment_answer_start != None, cls.min_assignment_answer_start)
-        ], else_ = cls.created)
+            (cls.min_assignment_answer_start != None, cls.min_assignment_answer_start),
+            else_=cls.created
+        )
 
     def calculate_grade(self, user):
         from . import CourseGrade
@@ -124,7 +125,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         super(cls, cls).__declare_last__()
 
         cls.groups_locked = column_property(
-            exists([1]).
+            exists().
             where(and_(
                 Assignment.course_id == cls.id,
                 Assignment.active == True,
@@ -139,7 +140,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.min_assignment_answer_start = column_property(
-            select([func.min(Assignment.answer_start)]).
+            select(func.min(Assignment.answer_start)).
             where(and_(
                 Assignment.course_id == cls.id,
                 Assignment.active == True
@@ -150,7 +151,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.lti_context_count = column_property(
-            select([func.count(LTIContext.id)]).
+            select(func.count(LTIContext.id)).
             where(LTIContext.compair_course_id == cls.id).
             scalar_subquery(),
             deferred=True,
@@ -158,7 +159,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.lti_context_sis_count = column_property(
-            select([func.count(LTIContext.id)]).
+            select(func.count(LTIContext.id)).
             where(and_(
                 LTIContext.compair_course_id == cls.id,
                 LTIContext.lis_course_offering_sourcedid != None,
@@ -170,7 +171,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.assignment_count = column_property(
-            select([func.count(Assignment.id)]).
+            select(func.count(Assignment.id)).
             where(and_(
                 Assignment.course_id == cls.id,
                 Assignment.active == True
@@ -181,7 +182,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.student_assignment_count = column_property(
-            select([func.count(Assignment.id)]).
+            select(func.count(Assignment.id)).
             where(and_(
                 Assignment.course_id == cls.id,
                 Assignment.active == True,
@@ -193,7 +194,7 @@ class Course(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.student_count = column_property(
-            select([func.count(UserCourse.id)]).
+            select(func.count(UserCourse.id)).
             where(and_(
                 UserCourse.course_id == cls.id,
                 UserCourse.course_role == CourseRole.student

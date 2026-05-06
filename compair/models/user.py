@@ -200,7 +200,7 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
     def get_user_course_group(cls, user_id, course_id):
         from . import UserCourse
         user_course = UserCourse.query \
-            .options(joinedload('group')) \
+            .options(joinedload(UserCourse.group)) \
             .filter_by(
                 course_id=course_id,
                 user_id=user_id
@@ -241,7 +241,7 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         super(cls, cls).__declare_last__()
 
         cls.third_party_auth_count = column_property(
-            select([func.count(ThirdPartyUser.id)]).
+            select(func.count(ThirdPartyUser.id)).
             where(ThirdPartyUser.user_id == cls.id).
             scalar_subquery(),
             deferred=True,
@@ -249,7 +249,7 @@ class User(DefaultTableMixin, UUIDMixin, WriteTrackingMixin, UserMixin):
         )
 
         cls.lti_user_link_count = column_property(
-            select([func.count(LTIUser.id)]).
+            select(func.count(LTIUser.id)).
             where(LTIUser.compair_user_id == cls.id).
             scalar_subquery(),
             deferred=True,

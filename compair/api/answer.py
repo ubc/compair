@@ -97,10 +97,10 @@ class AnswerRootAPI(Resource):
 
         # this query could be further optimized by reduction the selected columns
         query = Answer.query \
-            .options(joinedload('file')) \
-            .options(joinedload('user')) \
-            .options(joinedload('group')) \
-            .options(joinedload('score')) \
+            .options(joinedload(Answer.file)) \
+            .options(joinedload(Answer.user)) \
+            .options(joinedload(Answer.group)) \
+            .options(joinedload(Answer.score)) \
             .options(undefer_group('counts')) \
             .outerjoin(UserCourse, and_(
                 Answer.user_id == UserCourse.user_id,
@@ -177,7 +177,7 @@ class AnswerRootAPI(Resource):
             # when ordered by date, non-comparable answers should be on top of the list
             query = query.order_by(Answer.comparable, Answer.submission_date.desc(), Answer.created.desc())
 
-        page = query.paginate(params['page'], params['perPage'], error_out=False)
+        page = query.paginate(page=params['page'], per_page=params['perPage'], error_out=False)
         # remove label entities from results
         page.items = [answer for (answer, instructor_role, ta_role) in page.items]
 
@@ -358,7 +358,7 @@ class AnswerIdAPI(Resource):
 
         answer = Answer.get_active_by_uuid_or_404(
             answer_uuid,
-            joinedloads=['file', 'user', 'group', 'score']
+            joinedloads=[joinedload(Answer.file), joinedload(Answer.user), joinedload(Answer.group), joinedload(Answer.score)]
         )
         require(READ, answer,
             title="Answer Unavailable",
@@ -607,11 +607,11 @@ class AnswerUserIdAPI(Resource):
         params = user_answer_list_parser.parse_args()
 
         query = Answer.query \
-            .options(joinedload('comments')) \
-            .options(joinedload('file')) \
-            .options(joinedload('user')) \
-            .options(joinedload('group')) \
-            .options(joinedload('score')) \
+            .options(joinedload(Answer.comments)) \
+            .options(joinedload(Answer.file)) \
+            .options(joinedload(Answer.user)) \
+            .options(joinedload(Answer.group)) \
+            .options(joinedload(Answer.score)) \
             .filter_by(
                 active=True,
                 assignment_id=assignment.id,

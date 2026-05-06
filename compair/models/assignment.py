@@ -303,7 +303,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         super(cls, cls).__declare_last__()
 
         cls.answer_count = column_property(
-            select([func.count(Answer.id)]).
+            select(func.count(Answer.id)).
             select_from(
                 join(Answer, UserCourse, UserCourse.user_id == Answer.user_id, isouter=True).
                 join(Group, Group.id == Answer.group_id, isouter=True)
@@ -332,7 +332,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.student_answer_count = column_property(
-            select([func.count(Answer.id)]).
+            select(func.count(Answer.id)).
             select_from(
                 join(Answer, UserCourse, UserCourse.user_id == Answer.user_id, isouter=True).
                 join(Group, Group.id == Answer.group_id, isouter=True)
@@ -364,7 +364,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         # To be consistent with student_answer_count, we are not counting
         # answers from sys admin here
         cls.comparable_answer_count = column_property(
-            select([func.count(Answer.id)]).
+            select(func.count(Answer.id)).
             select_from(
                 join(Answer, UserCourse, UserCourse.user_id == Answer.user_id, isouter=True).
                 join(Group, Group.id == Answer.group_id, isouter=True)
@@ -394,7 +394,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.comparison_example_count = column_property(
-            select([func.count(ComparisonExample.id)]).
+            select(func.count(ComparisonExample.id)).
             where(and_(
                 ComparisonExample.assignment_id == cls.id,
                 ComparisonExample.active == True
@@ -405,7 +405,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.all_compare_count = column_property(
-            select([func.count(Comparison.id)]).
+            select(func.count(Comparison.id)).
             where(and_(
                 Comparison.assignment_id == cls.id
             )).
@@ -415,7 +415,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.compare_count = column_property(
-            select([func.count(Comparison.id)]).
+            select(func.count(Comparison.id)).
             where(and_(
                 Comparison.assignment_id == cls.id,
                 Comparison.completed == True
@@ -426,7 +426,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.self_evaluation_count = column_property(
-            select([func.count(AnswerComment.id)]).
+            select(func.count(AnswerComment.id)).
             select_from(join(AnswerComment, Answer, AnswerComment.answer_id == Answer.id)).
             where(and_(
                 AnswerComment.comment_type == AnswerCommentType.self_evaluation,
@@ -441,7 +441,7 @@ class Assignment(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         )
 
         cls.lti_resource_link_count = column_property(
-            select([func.count(LTIResourceLink.id)]).
+            select(func.count(LTIResourceLink.id)).
             where(LTIResourceLink.compair_assignment_id == cls.id).
             scalar_subquery(),
             deferred=True,

@@ -76,7 +76,7 @@ class AnswerScore(DefaultTableMixin, WriteTrackingMixin):
     def get_assignment_scores(cls, assignment_id):
         return AnswerScore.query \
             .with_entities(AnswerScore.score) \
-            .join("answer") \
+            .join(AnswerScore.answer) \
             .filter(and_(
                 Answer.active == True,
                 AnswerScore.assignment_id == assignment_id
@@ -98,9 +98,9 @@ class AnswerScore(DefaultTableMixin, WriteTrackingMixin):
 
         s_alias = cls.__table__.alias()
         cls.normalized_score = column_property(
-            select([
+            select(
                 (cls.score - func.min(s_alias.c.score)) / (func.max(s_alias.c.score) - func.min(s_alias.c.score)) * 100
-            ]).
+            ).
             select_from(join(Answer, s_alias, s_alias.c.answer_id == Answer.id)).
             where(and_(
                 Answer.active == True,

@@ -315,7 +315,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, AttemptMixin, WriteTrackingMixin)
 
         # get all other comparisons for the answers not including the ones being calculated
         other_comparisons = Comparison.query \
-            .options(load_only('winner', 'answer1_id', 'answer2_id')) \
+            .options(load_only(Comparison.winner, Comparison.answer1_id, Comparison.answer2_id)) \
             .filter(and_(
                 Comparison.assignment_id == assignment.id,
                 Comparison.id != comparison.id,
@@ -332,7 +332,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, AttemptMixin, WriteTrackingMixin)
 
         # get all other criterion comparisons for the answers not including the ones being calculated
         other_criterion_comparisons = ComparisonCriterion.query \
-            .join("comparison") \
+            .join(ComparisonCriterion.comparison) \
             .filter(and_(
                 Comparison.assignment_id == assignment.id,
                 Comparison.id != comparison.id,

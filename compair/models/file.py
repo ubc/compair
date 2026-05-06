@@ -1,7 +1,7 @@
 import mimetypes
 
 # sqlalchemy
-from sqlalchemy.orm import column_property, joinedload
+from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -57,9 +57,8 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
             message = "Sorry, this attachment was deleted or is no longer accessible."
 
         query = cls.query
-        # load relationships if needed
-        for load_string in joinedloads:
-            query.options(joinedload(load_string))
+        for load_option in joinedloads:
+            query = query.options(load_option)
 
         model = query.filter_by(name=filename).one_or_none()
         if model is None:
@@ -71,7 +70,7 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         super(cls, cls).__declare_last__()
 
         cls.assignment_count = column_property(
-            select([func.count(Assignment.id)]).
+            select(func.count(Assignment.id)).
             where(and_(
                 Assignment.file_id == cls.id,
                 Assignment.active == True
@@ -82,7 +81,7 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
         )
 
         cls.answer_count = column_property(
-            select([func.count(Answer.id)]).
+            select(func.count(Answer.id)).
             where(and_(
                 Answer.file_id == cls.id,
                 Answer.active == True

@@ -8,7 +8,6 @@ from flask_restx.reqparse import RequestParser
 from io import StringIO
 from flask import request
 from flask_restx import Api
-from flask_sqlalchemy import Model
 from sqlalchemy import inspect
 
 from compair.core import db
@@ -81,7 +80,7 @@ def get_model_changes(model):
             # skip synonym attributes, who has problem with .history
             if attr.key in synonyms:
                 continue
-            if isinstance(attr.value, Model):
+            if isinstance(attr.value, db.Model):
                 # recursive call on related model
                 ret = get_model_changes(attr.value)
                 if ret is not None:

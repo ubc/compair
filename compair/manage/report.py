@@ -109,8 +109,8 @@ def create(assignment_id):
     file_name = assignment.course.name.replace('"', '') + '_' + assignment_id + '_'
 
     answers = Answer.query \
-        .options(joinedload('score')) \
-        .options(joinedload('criteria_scores')) \
+        .options(joinedload(Answer.score)) \
+        .options(joinedload(Answer.criteria_scores)) \
         .filter(and_(
             Answer.assignment_id == assignment.id,
             Answer.active == True,
@@ -156,7 +156,7 @@ def create(assignment_id):
     past_comparisons['overall'] = []
 
     comparisons = Comparison.query \
-        .options(joinedload('comparison_criteria')) \
+        .options(joinedload(Comparison.comparison_criteria)) \
         .filter_by(
             assignment_id=assignment.id,
             completed=True

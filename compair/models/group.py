@@ -59,7 +59,7 @@ class Group(DefaultTableMixin, UUIDMixin, ActiveMixin, WriteTrackingMixin):
         super(cls, cls).__declare_last__()
 
         cls.group_answer_exists = column_property(
-            exists([1]).
+            exists().
             where(and_(
                 Answer.group_id == cls.id,
                 Answer.practice == False,

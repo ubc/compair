@@ -40,8 +40,8 @@ class LTICourseLinksRootAPI(Resource):
         params = context_list_parser.parse_args()
 
         query = LTIContext.query \
-            .join("lti_consumer") \
-            .join("compair_course") \
+            .join(LTIContext.lti_consumer) \
+            .join(LTIContext.compair_course) \
             .add_columns(LTIConsumer.oauth_consumer_key, Course.name)
 
         if params['orderBy']:
@@ -66,7 +66,7 @@ class LTICourseLinksRootAPI(Resource):
                         LTIContext.context_title.like(search)
                     ))
 
-        page = query.paginate(params['page'], params['perPage'])
+        page = query.paginate(page=params['page'], per_page=params['perPage'])
 
         # unwrap link info
         lti_course_links = []

@@ -67,7 +67,7 @@ class LTIOutcome(object):
 
     @classmethod
     def update_assignment_users_grades(cls, compair_assignment, compair_user_ids):
-        from compair.models import CourseRole, AssignmentGrade, LTIUser
+        from compair.models import CourseRole, AssignmentGrade, LTIUser, LTIUserResourceLink
         from compair.tasks import update_lti_assignment_grades
 
         lti_resource_links = compair_assignment.lti_resource_links.all()
@@ -101,7 +101,7 @@ class LTIOutcome(object):
                 continue
 
             lti_user_resource_links = lti_resource_link.lti_user_resource_links \
-                .join("lti_user") \
+                .join(LTIUserResourceLink.lti_user) \
                 .filter(LTIUser.compair_user_id.in_(compair_user_ids)) \
                 .all()
 
@@ -153,7 +153,7 @@ class LTIOutcome(object):
                 continue
 
             lti_user_resource_links = LTIUserResourceLink.query \
-                .join("lti_resource_link") \
+                .join(LTIUserResourceLink.lti_resource_link) \
                 .filter(
                     LTIResourceLink.lti_context_id == lti_context.id,
                     LTIResourceLink.compair_assignment_id == None
@@ -215,8 +215,8 @@ class LTIOutcome(object):
                 continue
 
             lti_user_resource_links = LTIUserResourceLink.query \
-                .join("lti_resource_link") \
-                .join("lti_user") \
+                .join(LTIUserResourceLink.lti_resource_link) \
+                .join(LTIUserResourceLink.lti_user) \
                 .filter(
                     LTIUser.compair_user_id.in_(compair_user_ids),
                     LTIResourceLink.lti_context_id == lti_context.id,

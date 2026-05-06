@@ -249,10 +249,7 @@ def register_api_blueprints(app):
         params = attachment_download_parser.parse_args()
 
         if file_type == 'attachment':
-            attachment = File.get_by_file_name_or_404(
-                file_name,
-                joinedloads=['answers', 'assignments']
-            )
+            attachment = File.get_by_file_name_or_404(file_name)
 
             for answer in attachment.answers:
                 require(READ, answer,
@@ -300,7 +297,7 @@ def register_api_blueprints(app):
     _api_call_pattern = re.compile('^' + re.escape('/api/'))
     def _api_call_cache_control(resp):
         if _api_call_pattern.match(request.full_path):
-            if 'cache-contorl' not in set(k.lower() for k in resp.headers.keys()):
+            if 'cache-control' not in set(k.lower() for k in resp.headers.keys()):
                 resp.headers['Cache-Control'] = 'no-store'
         return resp
     app.after_request(_api_call_cache_control)
