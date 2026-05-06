@@ -12,13 +12,14 @@ down_revision = '8b4e3c1d8c41'
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
 from compair.models import convention
 
 def upgrade():
     with op.batch_alter_table('answer', naming_convention=convention) as batch_op:
         batch_op.add_column(sa.Column('submission_date', sa.DateTime(), nullable=True))
-    op.execute('UPDATE answer SET submission_date=modified')
+    op.execute(text('UPDATE answer SET submission_date=modified'))
 
 def downgrade():
     with op.batch_alter_table('answer', naming_convention=convention) as batch_op:

@@ -12,6 +12,7 @@ down_revision = '153384f69a82'
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
 from compair.models import convention
 
@@ -23,7 +24,7 @@ def _check_data_legnth(conn, test_tuples):
     # check data for field length
     for (table, column, length) in test_tuples:
         query = 'select count(1) from `{}` where char_length(`{}`) > {}'.format(table, column, length)
-        res = conn.execute(query)
+        res = conn.execute(text(query))
         results = res.fetchone()
         res.close()
         if results[0] > 0:

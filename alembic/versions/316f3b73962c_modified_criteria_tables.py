@@ -39,7 +39,7 @@ def upgrade():
 
     # set the first criteria as public
     t = {"name": "Which is better?", "public": True}
-    op.get_bind().execute(text("Update Criteria set public=:public where name=:name"), **t)
+    op.get_bind().execute(text("Update Criteria set public=:public where name=:name"), t)
 
 
 def downgrade():

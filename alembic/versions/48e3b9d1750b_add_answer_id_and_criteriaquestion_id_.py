@@ -10,7 +10,7 @@ Create Date: 2015-08-28 23:17:44.797369
 import logging
 
 import sqlalchemy as sa
-from sqlalchemy import UniqueConstraint, exc
+from sqlalchemy import UniqueConstraint, exc, text
 
 from compair.models import convention
 
@@ -33,7 +33,7 @@ def upgrade():
                  'ON s.criteriaandquestions_id = s1.criteriaandquestions_id ' +
                  'AND s.answers_id = s1.answers_id ' +
                  'AND s.rounds != s1.max_round)')
-        op.get_bind().execute(query)
+        op.get_bind().execute(text(query))
         batch_op.create_unique_constraint(
             'uq_Scores_answers_id_criteriaandquestions_id', ['answers_id', 'criteriaandquestions_id'])
         # has to drop the fk before alter the column
