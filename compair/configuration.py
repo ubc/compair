@@ -51,7 +51,7 @@ elif os.environ.get('DB_HOST') or os.environ.get('DB_PORT') or os.environ.get('D
     config['SQLALCHEMY_DATABASE_URI'] = URL.create(
         drivername=os.getenv('DB_DRIVER', 'mysql+pymysql'),
         host=os.getenv('DB_HOST', 'localhost'),
-        port=int(os.getenv('DB_PORT', '3306')),
+        port=int(os.getenv('DB_PORT') or '3306'),
         username=os.getenv('DB_USERNAME', 'compair'),
         password=os.getenv('DB_PASSWORD', 'compair'),
         database=os.getenv('DB_NAME', 'compair'),
