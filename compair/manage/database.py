@@ -4,6 +4,7 @@
 from alembic.config import Config
 import click
 from flask.cli import AppGroup
+from sqlalchemy import inspect
 
 from alembic import command
 from compair.core import db
@@ -63,7 +64,7 @@ def drop(yes):
 @click.option('--sample-data', is_flag=True, default=False)
 def create(default_data, sample_data):
     """Creates database tables from sqlalchemy models"""
-    if db.engine.has_table('user'):
+    if inspect(db.engine).has_table('user'):
         print ('Tables exist. Skipping database create. Use database recreate instead.')
     else:
         try:
