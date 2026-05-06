@@ -41,7 +41,7 @@ if os.environ.get('OPENSHIFT_MYSQL_DB_HOST'):
     config['SQLALCHEMY_DATABASE_URI'] = URL.create(
         drivername='mysql+pymysql',
         host=os.getenv('OPENSHIFT_MYSQL_DB_HOST', 'localhost'),
-        port=int(os.getenv('OPENSHIFT_MYSQL_DB_PORT', '3306')),
+        port=int(os.getenv('OPENSHIFT_MYSQL_DB_PORT') or '3306'),
         username=os.getenv('OPENSHIFT_MYSQL_DB_USERNAME', 'compair'),
         password=os.getenv('OPENSHIFT_MYSQL_DB_PASSWORD', 'compair'),
         database=os.getenv('OPENSHIFT_GEAR_NAME', 'compair'),
