@@ -1,7 +1,7 @@
 import mimetypes
 
 # sqlalchemy
-from sqlalchemy.orm import column_property, joinedload
+from sqlalchemy.orm import column_property
 from sqlalchemy import func, select, and_, or_
 from sqlalchemy.ext.hybrid import hybrid_property
 
@@ -57,9 +57,8 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
             message = "Sorry, this attachment was deleted or is no longer accessible."
 
         query = cls.query
-        # load relationships if needed
-        for load_string in joinedloads:
-            query.options(joinedload(load_string))
+        for load_option in joinedloads:
+            query = query.options(load_option)
 
         model = query.filter_by(name=filename).one_or_none()
         if model is None:
