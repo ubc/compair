@@ -99,6 +99,8 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=tag
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
     - name: Log in to Docker Hub
@@ -111,7 +113,10 @@ jobs:
       with:
         context: .
         push: true
+        platforms: linux/amd64,linux/arm64
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
   # TODO: add acceptance testing (would be easier with a slight rewrite to gulp/generate_index)
