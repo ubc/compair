@@ -83,7 +83,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ vars.AWS_REGION }}
     - name: Upload to S3
-      run: aws s3 sync compair/static/dist s3://compair-assets/dist
+      run: aws s3 cp compair/static/dist s3://compair-assets/dist --recursive
 
   deploy_docker_image:
     runs-on: ubuntu-latest
