@@ -1,5 +1,3 @@
-from sqlalchemy.ext.declarative import declared_attr
-
 from compair.core import db
 
 class DefaultTableMixin(db.Model):

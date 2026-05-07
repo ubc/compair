@@ -1,12 +1,10 @@
 import datetime
-import dateutil.parser
-import pytz
 import re
 
 import uuid
 from duration import to_iso8601
 
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from compair.core import db, abort
