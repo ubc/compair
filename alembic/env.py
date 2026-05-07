@@ -10,7 +10,7 @@ from compair.configuration import config as compairconfig
 config = context.config
 
 if config.get_main_option('sqlalchemy.url') is None:
-    config.set_main_option('sqlalchemy.url', str(compairconfig['SQLALCHEMY_DATABASE_URI']))
+    config.set_main_option('sqlalchemy.url', compairconfig['SQLALCHEMY_DATABASE_URI'].render_as_string(hide_password=False))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
