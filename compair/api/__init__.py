@@ -127,6 +127,9 @@ def register_api_blueprints(app):
     from .healthz import healthz_api
     app.register_blueprint(healthz_api)
 
+    from .dragonballz import dragonballz_api
+    app.register_blueprint(dragonballz_api)
+
     from .impersonation import impersonation_api, IMPERSONATION_API_BASE_URL
     app.register_blueprint(impersonation_api, url_prefix=IMPERSONATION_API_BASE_URL)
 
