@@ -214,11 +214,30 @@ def import_users(import_type, course, users):
                     u.username = username
                     invalids.append({'user': u, 'message': 'This student number already exists in the file.'})
                     continue
-                # invalid if student number already exists in the system
+                # if student number already exists, link the third party auth to the existing account
                 elif student_number in existing_system_student_numbers:
-                    u.username = username
-                    invalids.append({'user': u, 'message': 'This student number already exists in the system.'})
-                    continue
+                    if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
+                        existing_user = existing_system_student_numbers[student_number]
+                        already_linked = existing_user.third_party_auths.filter_by(
+                            third_party_type=ThirdPartyType(import_type)
+                        ).first() is not None
+                        if already_linked:
+                            u.username = username
+                            invalids.append({'user': u, 'message': 'This student number already exists in the system.'})
+                            continue
+                        u = existing_user
+                        u.third_party_auths.append(ThirdPartyUser(
+                            unique_identifier=username,
+                            third_party_type=ThirdPartyType(import_type)
+                        ))
+                        import_usernames.append(username)
+                        import_student_numbers.append(student_number)
+                        imported_users.append((u, user.get('group')))
+                        continue
+                    else:
+                        u.username = username
+                        invalids.append({'user': u, 'message': 'This student number already exists in the system.'})
+                        continue
 
             u.system_role = SystemRole.student
             u.displayname = user.get('displayname') if user.get('displayname') else display_name_generator()
@@ -442,7 +461,7 @@ class ClasslistRootAPI(Resource):
         uploaded_file.save(tmp_name)
         current_app.logger.debug("Importing for course " + str(course.id) + " with " + filename)
         with open(tmp_name, 'rb') as csvfile:
-            spamreader = csv.reader(csvfile)
+            spamreader = csv.reader(csvfile, encoding='utf-8-sig')
             users = []
             for row in spamreader:
                 if row:
