@@ -967,6 +967,18 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertIsNotNone(enrollment)
             uploaded_file.close()
 
+            # test new CAS username with student number matching user that already has CAS auth — rejects
+            content = "another_cas_username," + student.student_number
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual("another_cas_username", result['invalids'][0]['user']['username'])
+            self.assertEqual('This student number already exists in the system.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
             # test duplicate student number in file
             content = "".join([
                 cas_student.unique_identifier, ",", student.student_number, "\n",
@@ -1237,6 +1249,18 @@ class ClassListAPITest(ComPAIRAPITestCase):
                 course_role=CourseRole.student
             ).first()
             self.assertIsNotNone(enrollment)
+            uploaded_file.close()
+
+            # test new SAML username with student number matching user that already has SAML auth — rejects
+            content = "another_saml_username," + student.student_number
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual("another_saml_username", result['invalids'][0]['user']['username'])
+            self.assertEqual('This student number already exists in the system.', result['invalids'][0]['message'])
             uploaded_file.close()
 
             # test duplicate student number in file
