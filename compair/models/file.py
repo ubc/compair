@@ -51,18 +51,16 @@ class File(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
 
     @classmethod
     def get_by_file_name_or_404(cls, filename, joinedloads=[], title=None, message=None):
-        if not title:
-            title = "Attachment Unavailable"
-        if not message:
-            message = "Sorry, this attachment was deleted or is no longer accessible."
-
         query = cls.query
         for load_option in joinedloads:
             query = query.options(load_option)
 
         model = query.filter_by(name=filename).one_or_none()
         if model is None:
-            abort(404, title=title, message=message)
+            abort(404,
+                title=title or "Attachment Unavailable",
+                message=message or "Sorry, this attachment was deleted or is no longer accessible."
+            )
         return model
 
     @classmethod

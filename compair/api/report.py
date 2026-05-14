@@ -41,7 +41,7 @@ def name_generator(course, report_name, group, file_type="csv"):
     # from https://gist.github.com/seanh/93666
     # return a file system safe filename
     valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
-    filename = course.name + "-" + group_name_output + report_name + "--" + date + "." + file_type
+    filename = course.name + "-" + group_name_output + report_name + "--" + date + "--" + course.uuid + "." + file_type
     return ''.join(char for char in filename if char in valid_chars)
 
 

@@ -44,11 +44,13 @@ class FileRetrieveTests(ComPAIRAPITestCase):
         rv = self.client.get(url)
         self.assert401(rv)
 
-        # TODO: no authorization control right now and needs to be added in the future
         # test unauthorized user
-        # with self.login(self.fixtures.unauthorized_instructor.username):
-        #     rv = self.client.get(url)
-        #     self.assert403(rv)
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            file_exists = mock.patch('compair.api.os.path.exists', return_value=True)
+            mock_send_file = mock.patch('compair.api.send_file', return_value=make_response("OK"))
+            with file_exists, mock_send_file:
+                rv = self.client.get(url)
+                self.assert403(rv)
 
         # valid instructor
         with self.login(self.fixtures.instructor.username):
@@ -109,6 +111,97 @@ class FileRetrieveTests(ComPAIRAPITestCase):
                                 mimetype=mimetype
                             )
                         mock_send_file.reset_mock()
+
+
+    def test_view_attachment_linked_to_assignment(self):
+        db_file = self.fixtures.add_file(self.fixtures.instructor)
+        self.fixtures.assignment.file_id = db_file.id
+        db.session.commit()
+
+        url = self.base_url + '/attachment/' + db_file.name
+
+        # unauthorized instructor (not enrolled in the course) cannot read the assignment
+        with self.login(self.fixtures.unauthorized_instructor.username), \
+                mock.patch('compair.api.os.path.exists', return_value=True), \
+                mock.patch('compair.api.send_file', return_value=make_response("OK")):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # enrolled student can read the assignment, so can access the attachment
+        with self.login(self.fixtures.students[0].username), \
+                mock.patch('compair.api.os.path.exists', return_value=True), \
+                mock.patch('compair.api.send_file', return_value=make_response("OK")):
+            rv = self.client.get(url)
+            self.assert200(rv)
+
+    def test_view_attachment_linked_to_answer(self):
+        # answers[0] belongs to students[0] (num_answers=1 in setUp)
+        student = self.fixtures.students[0]
+        answer = self.fixtures.answers[0]
+        db_file = self.fixtures.add_file(student)
+        answer.file_id = db_file.id
+        db.session.commit()
+
+        url = self.base_url + '/attachment/' + db_file.name
+
+        # unauthorized instructor cannot read the answer
+        with self.login(self.fixtures.unauthorized_instructor.username), \
+                mock.patch('compair.api.os.path.exists', return_value=True), \
+                mock.patch('compair.api.send_file', return_value=make_response("OK")):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # the student who submitted the answer can access its attachment
+        with self.login(student.username), \
+                mock.patch('compair.api.os.path.exists', return_value=True), \
+                mock.patch('compair.api.send_file', return_value=make_response("OK")):
+            rv = self.client.get(url)
+            self.assert200(rv)
+
+    def test_view_report(self):
+        course_uuid = self.fixtures.course.uuid
+        report_name = 'CourseName-participation--2026-05-01--{}.csv'.format(course_uuid)
+        url = self.base_url + '/report/' + report_name
+
+        # unauthenticated
+        rv = self.client.get(url)
+        self.assert401(rv)
+
+        # student cannot access reports
+        with self.login(self.fixtures.students[0].username):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # instructor from a different course cannot access this course's report
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # filename with no course UUID is rejected for non-admins
+        with self.login(self.fixtures.instructor.username):
+            rv = self.client.get(self.base_url + '/report/test_report.csv')
+            self.assert403(rv)
+
+        # TA enrolled in the course can access its report
+        with self.login(self.fixtures.ta.username), \
+                mock.patch('compair.api.os.path.exists', return_value=True), \
+                mock.patch('compair.api.send_file', return_value=make_response("OK")):
+            rv = self.client.get(url)
+            self.assert200(rv)
+
+        # instructor enrolled in the course can access its report
+        with self.login(self.fixtures.instructor.username), \
+                mock.patch('compair.api.os.path.exists', return_value=True), \
+                mock.patch('compair.api.send_file', return_value=make_response("OK")):
+            rv = self.client.get(url)
+            self.assert200(rv)
+
+        # sys admin can access any report regardless of course UUID
+        with self.login('root', 'password'), \
+                mock.patch('compair.api.os.path.exists', return_value=True), \
+                mock.patch('compair.api.send_file', return_value=make_response("OK")):
+            rv = self.client.get(url)
+            self.assert200(rv)
 
 
     def test_create_attachment(self):

@@ -42,6 +42,17 @@ def define_authorization(user, they, impersonation_original_user=None):
             .count()
         return bool(exists)
 
+    def if_can_read_attachment(file):
+        for assignment in file.assignments.all():
+            if can(READ, assignment):
+                return True
+
+        for answer in file.answers.all():
+            if can(READ, answer):
+                return True
+
+        return file.user_id == user.id
+
     def if_can_delete_attachment_reference(file):
         for assignment in file.assignments.all():
             if can(DELETE, assignment):
@@ -75,6 +86,8 @@ def define_authorization(user, they, impersonation_original_user=None):
     # they can read and edit their own criteria
     they.can((READ, EDIT), Criterion, user_id=user.id)
 
+    # they can read files linked to content they can access, or that they uploaded
+    they.can(READ, File, if_can_read_attachment)
     # they can delete their own attachments
     they.can(DELETE, File, user_id=user.id)
 
@@ -217,11 +230,7 @@ def require(operation, target, title=None, message=None):
     try:
         ensure(operation, target)
     except Forbidden as e:
-        if not title:
-            title = "Forbidden"
-        if not message:
-            message = e.description
-        abort(403, title=title, message=message)
+        abort(403, title=title or "Forbidden", message=message or e.description)
 
 
 def is_user_access_restricted(user):
