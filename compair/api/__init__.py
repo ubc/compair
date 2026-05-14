@@ -272,7 +272,6 @@ def register_api_blueprints(app):
             is_instructor_or_ta = any(
                 uc.course_role in (CourseRole.instructor, CourseRole.teaching_assistant)
                 for uc in user.user_courses
-                if uc.course_role != CourseRole.dropped
             )
             if not is_admin and not is_instructor_or_ta:
                 abort(403, title="Report Unavailable",

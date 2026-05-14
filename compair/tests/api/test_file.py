@@ -184,6 +184,14 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert200(rv)
 
+        # sys admin can access reports
+        with self.login('root', 'password'), \
+                mock.patch('compair.api.os.path.exists', return_value=True), \
+                mock.patch('compair.api.send_file', return_value=make_response("OK")):
+            rv = self.client.get(url)
+            self.assert200(rv)
+
+
     def test_create_attachment(self):
         url = '/api/attachment'
         test_formats = [
