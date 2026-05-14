@@ -12,7 +12,7 @@ from flask_restx.reqparse import RequestParser
 from bouncer.constants import READ
 from compair.authorization import require
 from compair.kaltura import KalturaAPI
-from compair.models import File, SystemRole, CourseRole
+from compair.models import File, SystemRole, CourseRole, Course
 from compair.core import event, abort
 on_get_file = event.signal('GET_FILE')
 
@@ -265,17 +265,25 @@ def register_api_blueprints(app):
                     return redirect(kaltura_url)
 
         elif file_type == 'report':
-            # TODO: does not verify the user has access to the specific course that generated
-            # the report. Report filenames include the course UUID to limit guessability.
             user = current_user._get_current_object()
             is_admin = user.system_role == SystemRole.sys_admin
-            is_instructor_or_ta = any(
-                uc.course_role in (CourseRole.instructor, CourseRole.teaching_assistant)
-                for uc in user.user_courses
-            )
-            if not is_admin and not is_instructor_or_ta:
-                abort(403, title="Report Unavailable",
-                    message="Sorry, your role does not allow you to view reports.")
+
+            if not is_admin:
+                uuid_match = re.search(r'--([A-Za-z0-9_-]{22})\.[^.]+$', file_name)
+                if not uuid_match:
+                    abort(403, title="Report Unavailable",
+                        message="Sorry, your role does not allow you to view reports.")
+
+                course_uuid = uuid_match.group(1)
+                course = Course.query.filter_by(uuid=course_uuid).one_or_none()
+                has_access = course is not None and any(
+                    uc.course_id == course.id and
+                    uc.course_role in (CourseRole.instructor, CourseRole.teaching_assistant)
+                    for uc in user.user_courses
+                )
+                if not has_access:
+                    abort(403, title="Report Unavailable",
+                        message="Sorry, your role does not allow you to view reports.")
 
         if not os.path.exists(file_path):
             return make_response('invalid file name', 404)

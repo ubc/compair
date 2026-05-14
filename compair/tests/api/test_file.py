@@ -159,7 +159,9 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             self.assert200(rv)
 
     def test_view_report(self):
-        url = self.base_url + '/report/test_report.csv'
+        course_uuid = self.fixtures.course.uuid
+        report_name = 'CourseName-participation--2026-05-01--{}.csv'.format(course_uuid)
+        url = self.base_url + '/report/' + report_name
 
         # unauthenticated
         rv = self.client.get(url)
@@ -170,21 +172,31 @@ class FileRetrieveTests(ComPAIRAPITestCase):
             rv = self.client.get(url)
             self.assert403(rv)
 
-        # TA can access reports
+        # instructor from a different course cannot access this course's report
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            rv = self.client.get(url)
+            self.assert403(rv)
+
+        # filename with no course UUID is rejected for non-admins
+        with self.login(self.fixtures.instructor.username):
+            rv = self.client.get(self.base_url + '/report/test_report.csv')
+            self.assert403(rv)
+
+        # TA enrolled in the course can access its report
         with self.login(self.fixtures.ta.username), \
                 mock.patch('compair.api.os.path.exists', return_value=True), \
                 mock.patch('compair.api.send_file', return_value=make_response("OK")):
             rv = self.client.get(url)
             self.assert200(rv)
 
-        # instructor can access reports
+        # instructor enrolled in the course can access its report
         with self.login(self.fixtures.instructor.username), \
                 mock.patch('compair.api.os.path.exists', return_value=True), \
                 mock.patch('compair.api.send_file', return_value=make_response("OK")):
             rv = self.client.get(url)
             self.assert200(rv)
 
-        # sys admin can access reports
+        # sys admin can access any report regardless of course UUID
         with self.login('root', 'password'), \
                 mock.patch('compair.api.os.path.exists', return_value=True), \
                 mock.patch('compair.api.send_file', return_value=make_response("OK")):
