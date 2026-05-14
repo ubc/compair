@@ -7,7 +7,7 @@ import unicodecsv as csv
 from compair.core import db
 from data.fixtures.test_data import BasicTestData, ThirdPartyAuthTestData
 from compair.tests.test_compair import ComPAIRAPITestCase, ComPAIRAPIDemoTestCase
-from compair.models import CourseRole, UserCourse, ThirdPartyType, Course, Group
+from compair.models import CourseRole, UserCourse, ThirdPartyType, ThirdPartyUser, Course, Group
 
 
 class ClassListAPITest(ComPAIRAPITestCase):
@@ -939,6 +939,46 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual('This student number already exists in the system.', result['invalids'][0]['message'])
             uploaded_file.close()
 
+            # test new CAS username with student number matching existing local user — links them
+            local_user = self.data.create_normal_user()
+            new_cas_username = 'new_cas_username'
+            content = new_cas_username + "," + local_user.student_number
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            linked = ThirdPartyUser.query.filter_by(
+                unique_identifier=new_cas_username,
+                third_party_type=ThirdPartyType.cas
+            ).first()
+            self.assertIsNotNone(linked)
+            self.assertEqual(local_user.id, linked.user_id)
+            self.assertIsNotNone(local_user.third_party_auths.filter_by(
+                third_party_type=ThirdPartyType.cas,
+                unique_identifier=new_cas_username
+            ).first())
+            enrollment = UserCourse.query.filter_by(
+                user_id=local_user.id,
+                course_id=self.data.get_course().id,
+                course_role=CourseRole.student
+            ).first()
+            self.assertIsNotNone(enrollment)
+            uploaded_file.close()
+
+            # test new CAS username with student number matching user that already has CAS auth — rejects
+            content = "another_cas_username," + student.student_number
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.cas.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual("another_cas_username", result['invalids'][0]['user']['username'])
+            self.assertEqual('This student number already exists in the system.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
             # test duplicate student number in file
             content = "".join([
                 cas_student.unique_identifier, ",", student.student_number, "\n",
@@ -1180,6 +1220,46 @@ class ClassListAPITest(ComPAIRAPITestCase):
             self.assertEqual(1, result['success'])
             self.assertEqual(1, len(result['invalids']))
             self.assertEqual("username1", result['invalids'][0]['user']['username'])
+            self.assertEqual('This student number already exists in the system.', result['invalids'][0]['message'])
+            uploaded_file.close()
+
+            # test new SAML username with student number matching existing local user — links them
+            local_user = self.data.create_normal_user()
+            new_saml_username = 'new_saml_username'
+            content = new_saml_username + "," + local_user.student_number
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(1, result['success'])
+            self.assertEqual(0, len(result['invalids']))
+            linked = ThirdPartyUser.query.filter_by(
+                unique_identifier=new_saml_username,
+                third_party_type=ThirdPartyType.saml
+            ).first()
+            self.assertIsNotNone(linked)
+            self.assertEqual(local_user.id, linked.user_id)
+            self.assertIsNotNone(local_user.third_party_auths.filter_by(
+                third_party_type=ThirdPartyType.saml,
+                unique_identifier=new_saml_username
+            ).first())
+            enrollment = UserCourse.query.filter_by(
+                user_id=local_user.id,
+                course_id=self.data.get_course().id,
+                course_role=CourseRole.student
+            ).first()
+            self.assertIsNotNone(enrollment)
+            uploaded_file.close()
+
+            # test new SAML username with student number matching user that already has SAML auth — rejects
+            content = "another_saml_username," + student.student_number
+            uploaded_file = io.BytesIO(content.encode('utf-8'))
+            rv = self.client.post(url, data=dict(file=(uploaded_file, filename), import_type=ThirdPartyType.saml.value))
+            self.assert200(rv)
+            result = rv.json
+            self.assertEqual(0, result['success'])
+            self.assertEqual(1, len(result['invalids']))
+            self.assertEqual("another_saml_username", result['invalids'][0]['user']['username'])
             self.assertEqual('This student number already exists in the system.', result['invalids'][0]['message'])
             uploaded_file.close()
 
