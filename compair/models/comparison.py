@@ -299,7 +299,7 @@ class Comparison(DefaultTableMixin, UUIDMixin, AttemptMixin, WriteTrackingMixin)
                 winner=None,
                 content=None,
             )
-            db.session.add(comparison)
+            db.session.add(comparison_criterion)
         db.session.commit()
 
         return comparison
