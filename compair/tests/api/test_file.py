@@ -44,11 +44,13 @@ class FileRetrieveTests(ComPAIRAPITestCase):
         rv = self.client.get(url)
         self.assert401(rv)
 
-        # TODO: no authorization control right now and needs to be added in the future
         # test unauthorized user
-        # with self.login(self.fixtures.unauthorized_instructor.username):
-        #     rv = self.client.get(url)
-        #     self.assert403(rv)
+        with self.login(self.fixtures.unauthorized_instructor.username):
+            file_exists = mock.patch('compair.api.os.path.exists', return_value=True)
+            mock_send_file = mock.patch('compair.api.send_file', return_value=make_response("OK"))
+            with file_exists, mock_send_file:
+                rv = self.client.get(url)
+                self.assert403(rv)
 
         # valid instructor
         with self.login(self.fixtures.instructor.username):

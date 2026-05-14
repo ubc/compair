@@ -12,8 +12,8 @@ from flask_restx.reqparse import RequestParser
 from bouncer.constants import READ
 from compair.authorization import require
 from compair.kaltura import KalturaAPI
-from compair.models import File
-from compair.core import event
+from compair.models import File, SystemRole, CourseRole
+from compair.core import event, abort
 on_get_file = event.signal('GET_FILE')
 
 attachment_download_parser = RequestParser()
@@ -251,15 +251,9 @@ def register_api_blueprints(app):
         if file_type == 'attachment':
             attachment = File.get_by_file_name_or_404(file_name)
 
-            for answer in attachment.answers:
-                require(READ, answer,
-                    title="Attachment Unavailable",
-                    message="Sorry, your role does not allow you to view the attachment.")
-
-            for assignment in attachment.assignments:
-                require(READ, assignment,
-                    title="Attachment Unavailable",
-                    message="Sorry, your role does not allow you to view the attachment.")
+            require(READ, attachment,
+                title="Attachment Unavailable",
+                message="Sorry, your role does not allow you to view the attachment.")
 
             # If attachment is in Kaltura, redirect the user
             if attachment.kaltura_media and KalturaAPI.enabled():
@@ -270,10 +264,21 @@ def register_api_blueprints(app):
                     kaltura_url = KalturaAPI.get_direct_access_url(entry_id, download_url, 60)
                     return redirect(kaltura_url)
 
+        elif file_type == 'report':
+            user = current_user._get_current_object()
+            is_admin = user.system_role == SystemRole.sys_admin
+            is_instructor_or_ta = any(
+                uc.course_role in (CourseRole.instructor, CourseRole.teaching_assistant)
+                for uc in user.user_courses
+                if uc.course_role != CourseRole.dropped
+            )
+            if not is_admin and not is_instructor_or_ta:
+                abort(403, title="Report Unavailable",
+                    message="Sorry, your role does not allow you to view reports.")
+
         if not os.path.exists(file_path):
             return make_response('invalid file name', 404)
 
-        # TODO: add bouncer for reports
         mimetype, encoding = mimetypes.guess_type(file_name)
         attachment_filename = None
         as_attachment = False
