@@ -265,6 +265,8 @@ def register_api_blueprints(app):
                     return redirect(kaltura_url)
 
         elif file_type == 'report':
+            # TODO: does not verify the user has access to the specific course that generated
+            # the report. Report filenames include the course UUID to limit guessability.
             user = current_user._get_current_object()
             is_admin = user.system_role == SystemRole.sys_admin
             is_instructor_or_ta = any(
