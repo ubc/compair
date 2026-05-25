@@ -279,10 +279,6 @@ def saml_auth():
                 thirdpartyuser.generate_or_link_user_account()
                 db.session.commit()
 
-            if thirdpartyuser.user and thirdpartyuser.user.global_unique_identifier is None:
-                thirdpartyuser.user.global_unique_identifier = unique_identifier
-                db.session.commit()
-
             authenticate(thirdpartyuser.user, login_method=thirdpartyuser.third_party_type.value)
             thirdpartyuser.params = attributes
 
