@@ -191,6 +191,7 @@ def import_users(import_type, course, users):
             )
             if import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value:
                 # CAS/SAML login
+                u.global_unique_identifier = username
                 u.third_party_auths.append(ThirdPartyUser(
                     unique_identifier=username,
                     third_party_type=ThirdPartyType(import_type)

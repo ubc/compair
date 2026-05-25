@@ -7,13 +7,16 @@ import uuid
 
 from compair import db
 from compair.models import User, Comparison, AnswerScore, \
-    AnswerCriterionScore, LTIOutcome, SystemRole
+    AnswerCriterionScore, LTIOutcome, SystemRole, ThirdPartyUser
+from compair.models.lti_models import LTIUser
+from compair.models import ThirdPartyType
 from compair.models.comparison import update_answer_scores, \
     update_answer_criteria_scores
 from compair.tests.test_compair import ComPAIRTestCase
 from compair.algorithms import ComparisonPair, ComparisonWinner
 from compair.algorithms.score import calculate_score
 from data.fixtures.test_data import TestFixture, LTITestData
+from data.factories import LTIConsumerFactory, UserFactory
 
 class TestUsersModel(ComPAIRTestCase):
     user = User()
@@ -114,6 +117,51 @@ class TestUtils(ComPAIRTestCase):
         score = AnswerCriterionScore(answer_id=1, criterion_id=1, id=2)
         scores = update_answer_criteria_scores([score], 1, criterion_comparison_results)
         self.assertEqual(len(scores), 4)
+
+class TestLTIUserGenerateOrLinkAccount(ComPAIRTestCase):
+    def setUp(self):
+        super(TestLTIUserGenerateOrLinkAccount, self).setUp()
+        self.lti_consumer = LTIConsumerFactory(
+            global_unique_identifier_param='custom_puid',
+            student_number_param='custom_student_number'
+        )
+        db.session.commit()
+
+    def test_links_existing_saml_user_by_student_number_when_global_unique_identifier_missing(self):
+        # user created via SAML - has student number but no global_unique_identifier
+        existing_user = UserFactory(
+            system_role=SystemRole.student,
+            student_number='12345678',
+            global_unique_identifier=None,
+            username=None,
+            password=None
+        )
+        ThirdPartyUser(
+            unique_identifier='saml_identifier',
+            third_party_type=ThirdPartyType.saml,
+            user=existing_user
+        )
+        db.session.commit()
+
+        user_count_before = User.query.count()
+
+        lti_user = LTIUser(
+            lti_consumer=self.lti_consumer,
+            user_id='canvas_user_123',
+            system_role=SystemRole.student,
+            global_unique_identifier='puid_abc',
+            student_number='12345678'
+        )
+        db.session.add(lti_user)
+        lti_user.generate_or_link_user_account()
+
+        # no new user should be created
+        self.assertEqual(User.query.count(), user_count_before)
+        # lti_user should be linked to the existing user
+        self.assertEqual(lti_user.compair_user_id, existing_user.id)
+        # global_unique_identifier should be backfilled on the existing user
+        self.assertEqual(existing_user.global_unique_identifier, 'puid_abc')
+
 
 class TestLTIOutcome(ComPAIRTestCase):
 
