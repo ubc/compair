@@ -180,6 +180,9 @@ def import_users(import_type, course, users):
             # overwrite password if user has not logged in yet
             if u.last_online == None and not password in [None, '*']:
                 set_user_passwords.append((u, password))
+            if (import_type == ThirdPartyType.cas.value or import_type == ThirdPartyType.saml.value) \
+                    and u.global_unique_identifier is None:
+                u.global_unique_identifier = username
         else:
             u = User(
                 username=None,

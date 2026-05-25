@@ -162,6 +162,41 @@ class TestLTIUserGenerateOrLinkAccount(ComPAIRTestCase):
         # global_unique_identifier should be backfilled on the existing user
         self.assertEqual(existing_user.global_unique_identifier, 'puid_abc')
 
+    def test_does_not_overwrite_existing_global_unique_identifier_when_linking_by_student_number(self):
+        # user already has a global_unique_identifier set from a prior SAML/CAS login
+        existing_user = UserFactory(
+            system_role=SystemRole.student,
+            student_number='12345678',
+            global_unique_identifier='existing_puid',
+            username=None,
+            password=None
+        )
+        ThirdPartyUser(
+            unique_identifier='saml_identifier',
+            third_party_type=ThirdPartyType.saml,
+            user=existing_user
+        )
+        db.session.commit()
+
+        user_count_before = User.query.count()
+
+        lti_user = LTIUser(
+            lti_consumer=self.lti_consumer,
+            user_id='canvas_user_456',
+            system_role=SystemRole.student,
+            global_unique_identifier='different_puid',
+            student_number='12345678'
+        )
+        db.session.add(lti_user)
+        lti_user.generate_or_link_user_account()
+
+        # no new user should be created
+        self.assertEqual(User.query.count(), user_count_before)
+        # lti_user should be linked to the existing user
+        self.assertEqual(lti_user.compair_user_id, existing_user.id)
+        # existing global_unique_identifier must not be overwritten
+        self.assertEqual(existing_user.global_unique_identifier, 'existing_puid')
+
 
 class TestLTIOutcome(ComPAIRTestCase):
 

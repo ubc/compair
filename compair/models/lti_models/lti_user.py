@@ -53,7 +53,7 @@ class LTIUser(DefaultTableMixin, UUIDMixin, WriteTrackingMixin):
                 self.compair_user = User.query \
                     .filter_by(student_number=self.student_number) \
                     .one_or_none()
-                if self.compair_user:
+                if self.compair_user and self.compair_user.global_unique_identifier is None:
                     self.compair_user.global_unique_identifier = self.global_unique_identifier
 
             if not self.compair_user:
