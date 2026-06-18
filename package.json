@@ -26,7 +26,7 @@
     "less": "~4.6.4",
     "main-bower-files": "^2.13.3",
     "proxy-middleware": "^0.15.0",
-    "streamqueue": "^1.1.2",
+    "streamqueue": "^2.0.0",
     "wiredep": "^4.0.0"
   },
   "devDependencies": {
