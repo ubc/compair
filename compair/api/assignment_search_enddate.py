@@ -1,4 +1,3 @@
-import datetime
 from flask import jsonify
 import pytz
 
@@ -11,7 +10,7 @@ from sqlalchemy import text
 from bouncer.constants import MANAGE
 from compair.core import db
 from compair.authorization import require
-from compair.models import Course
+from compair.models import User
 from .util import new_restful_api
 
 from datetime import datetime
@@ -31,7 +30,7 @@ def validate(date_text):
 class AssignmentRootAPI1(Resource):
     @login_required
     def get(self):
-        require(MANAGE, Course,
+        require(MANAGE, User,
             title="Assignments Unavailable",
             message="Sorry, your system role does not allow you to access this endpoint.")
 
