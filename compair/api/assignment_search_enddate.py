@@ -1,25 +1,18 @@
 import datetime
-import dateutil.parser
-import json
 from flask import jsonify
 import pytz
 
-from bouncer.constants import READ, EDIT, CREATE, DELETE, MANAGE
 from flask import Blueprint, current_app
-from compair.flask_bouncer import can
-from flask_login import login_required, current_user
-from flask_restx import Resource, marshal
+from flask_login import login_required
+from flask_restx import Resource
 from flask_restx.reqparse import RequestParser
-from sqlalchemy import desc, or_, func, and_, text
-from sqlalchemy.orm import joinedload, undefer_group, load_only
+from sqlalchemy import text
 
-from . import dataformat
-from compair.core import db, event, abort
-from compair.authorization import require, is_user_access_restricted
-from compair.models import Assignment, Course, Criterion, AssignmentCriterion, Answer, Comparison, \
-    AnswerComment, AnswerCommentType, PairingAlgorithm, Criterion, File, User, UserCourse, \
-    CourseRole, Group
-from .util import new_restful_api, get_model_changes, pagination_parser
+from bouncer.constants import MANAGE
+from compair.core import db
+from compair.authorization import require
+from compair.models import Course
+from .util import new_restful_api
 
 from datetime import datetime
 import time
@@ -38,6 +31,9 @@ def validate(date_text):
 class AssignmentRootAPI1(Resource):
     @login_required
     def get(self):
+        require(MANAGE, Course,
+            title="Assignments Unavailable",
+            message="Sorry, your system role does not allow you to access this endpoint.")
 
         # get app timezone in settings
         appTimeZone = current_app.config.get('APP_TIMEZONE', time.strftime('%Z') )
