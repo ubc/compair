@@ -479,7 +479,9 @@ myApp.config(
                 controller: 'AssignmentSearchEndDateController',
                 resolve: {
                     resolvedData: function() {
-                        // no data to preload
+                        return ResolveDeferredRouteData({
+                            canManageUsers: RouteResolves.canManageUsers()
+                        }, []);
                     }
                 }
             })

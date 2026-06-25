@@ -926,7 +926,13 @@ module.filter("notScoredEnd", function () {
 
 /***** Assignment Search EndDate Controllers *****/
 module.controller("AssignmentSearchEndDateController",
-    ["$scope", function($scope){
+    ["$scope", "$location", "resolvedData", function($scope, $location, resolvedData){
+            $scope.canManageUsers = resolvedData.canManageUsers;
+
+            if (!$scope.canManageUsers) {
+                $location.path('/');
+                return;
+            }
 
             $scope.searchDate = function() {
                 var formatDate = new Date($scope.dt);
