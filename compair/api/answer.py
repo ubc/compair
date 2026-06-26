@@ -395,6 +395,9 @@ class AnswerIdAPI(Resource):
 
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
 
+        if answer.assignment_id != assignment.id:
+            abort(403, title="Answer Not Saved", message="Sorry, this answer could not be saved. Please try again.")
+
         old_file = answer.file
 
         require(EDIT, answer,
