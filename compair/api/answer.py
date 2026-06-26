@@ -562,6 +562,11 @@ class AnswerIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
+
+        # ensure assignment and answer belong to the course in the URL, not just any course
+        if assignment.course_id != course.id or answer.assignment_id != assignment.id:
+            abort(403, title="Answer Not Deleted", message="Sorry, this answer could not be deleted. Please try again.")
+
         require(DELETE, answer,
             title="Answer Not Deleted",
             message="Sorry, your role in this course does not allow you to delete this answer.")
