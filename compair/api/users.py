@@ -232,7 +232,7 @@ class UserAPI(Resource):
 class UserListAPI(Resource):
     @login_required
     def get(self):
-        require(READ, USER_IDENTITY,
+        require(MANAGE, User,
             title="User List Unavailable",
             message="Sorry, your system role does not allow you to view the list of users.")
 
