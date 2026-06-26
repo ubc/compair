@@ -330,6 +330,14 @@ class AnswersAPITests(ComPAIRAPITestCase):
                     data=json.dumps(expected_answer), content_type='application/json')
                 self.assert404(rv)
 
+                # test assignment from a different course
+                second_fixtures = TestFixture().add_course(num_students=1)
+                rv = self.client.post(
+                    self._build_url(self.fixtures.course.uuid, second_fixtures.assignment.uuid),
+                    data=json.dumps(expected_answer), content_type='application/json')
+                self.assert403(rv)
+                self.assertEqual("Answer Not Submitted", rv.json['title'])
+
             # check that students can only submit answers when they are enrolled in a group for group assignments
             if assignment == self.group_assignment.id:
                 self.fixtures.add_students(1)
@@ -781,6 +789,21 @@ class AnswersAPITests(ComPAIRAPITestCase):
                     data=json.dumps(expected), content_type='application/json')
                 self.assert404(rv)
 
+                # test assignment from a different course
+                second_fixtures = TestFixture().add_course(num_students=1)
+                rv = self.client.post(
+                    self._build_url(self.fixtures.course.uuid, second_fixtures.assignment.uuid, '/' + answer.uuid),
+                    data=json.dumps(expected), content_type='application/json')
+                self.assert403(rv)
+                self.assertEqual("Answer Not Saved", rv.json['title'])
+
+                # test answer from a different assignment (use second_fixtures answer which is always active)
+                rv = self.client.post(
+                    self._build_url(self.fixtures.course.uuid, assignment.uuid, '/' + second_fixtures.answers[0].uuid),
+                    data=json.dumps(expected), content_type='application/json')
+                self.assert403(rv)
+                self.assertEqual("Answer Not Saved", rv.json['title'])
+
             # test unmatched answer id
             self.fixtures.add_students(1)
             self.fixtures.add_group(self.fixtures.course)
@@ -1075,6 +1098,19 @@ class AnswersAPITests(ComPAIRAPITestCase):
                 # test invalid answer id
                 rv = self.client.delete(self.base_url + '/999')
                 self.assert404(rv)
+
+                # test assignment from a different course
+                second_fixtures = TestFixture().add_course(num_students=1)
+                rv = self.client.delete(
+                    self._build_url(self.fixtures.course.uuid, second_fixtures.assignment.uuid, '/' + answer.uuid))
+                self.assert403(rv)
+                self.assertEqual("Answer Not Deleted", rv.json['title'])
+
+                # test answer from a different assignment (use second_fixtures answer which is always active)
+                rv = self.client.delete(
+                    self._build_url(self.fixtures.course.uuid, assignment.uuid, '/' + second_fixtures.answers[0].uuid))
+                self.assert403(rv)
+                self.assertEqual("Answer Not Deleted", rv.json['title'])
 
                 course_grade = CourseGrade.get_user_course_grade(self.fixtures.course, student).grade
                 assignment_grade = AssignmentGrade.get_user_assignment_grade(assignment, student).grade
