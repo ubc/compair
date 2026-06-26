@@ -203,6 +203,10 @@ class AnswerRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
+        # ensure assignment belongs to the course in the URL, not just any course
+        if assignment.course_id != course.id:
+            abort(403, title="Answer Not Submitted", message="Sorry, this answer could not be submitted. Please try again.")
+
         if not assignment.answer_grace and not can(MANAGE, assignment):
             abort(403, title="Answer Not Submitted", message="Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.")
 
@@ -381,6 +385,10 @@ class AnswerIdAPI(Resource):
     def post(self, course_uuid, assignment_uuid, answer_uuid):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+
+        # ensure assignment belongs to the course in the URL, not just any course
+        if assignment.course_id != course.id:
+            abort(403, title="Answer Not Saved", message="Sorry, this answer could not be saved. Please try again.")
 
         if not assignment.answer_grace and not can(MANAGE, assignment):
             abort(403, title="Answer Not Submitted", message="Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.")
