@@ -115,6 +115,11 @@ module.controller("UserWriteController",
             $scope.system_roles.pop()
         }
 
+        if (!$scope.canManageUsers && ($scope.method == 'create' || !$scope.ownProfile)) {
+            $location.path('/');
+            return;
+        }
+
         if ($scope.method == 'edit') {
             breadcrumbs.options = {'View User': "{0}'s Profile".format($scope.user.displayname)};
         } else if ($scope.method == 'create') {

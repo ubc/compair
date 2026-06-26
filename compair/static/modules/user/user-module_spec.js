@@ -86,6 +86,14 @@ describe('user-module', function () {
                 });
             });
 
+            it('should redirect to home when not authorized', function () {
+                createController({}, {
+                    canManageUsers: false,
+                    loggedInUser: angular.copy(mockUser),
+                });
+                expect($location.path()).toBe('/');
+            });
+
             it('should be correctly initialized', function () {
                 expect($rootScope.password).toEqual({});
                 expect($rootScope.ownProfile).toBe(false);
@@ -123,6 +131,15 @@ describe('user-module', function () {
                     canManageUsers: true,
                     loggedInUser: angular.copy(mockUser),
                 });
+            });
+
+            it('should redirect to home when not authorized to edit another user', function () {
+                createController({userId: editUser.id}, {
+                    user: editUser,
+                    canManageUsers: false,
+                    loggedInUser: angular.copy(mockUser),
+                });
+                expect($location.path()).toBe('/');
             });
 
             it('should be correctly initialized', function () {

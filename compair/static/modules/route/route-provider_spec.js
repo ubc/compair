@@ -123,7 +123,7 @@ describe('user-module', function () {
                 $httpBackend.flush();
 
                 expect(Session.getUser).toHaveBeenCalled();
-                expect(Authorize.can).not.toHaveBeenCalled();
+                expect(Authorize.can).toHaveBeenCalledWith(Authorize.CREATE, "Course");
 
                 expect(toaster.error).not.toHaveBeenCalled();
                 expect($rootScope.routeResolveLoadError).toBeUndefined();

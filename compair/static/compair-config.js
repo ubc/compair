@@ -341,6 +341,7 @@ myApp.config(
                     resolvedData: function() {
                         return ResolveDeferredRouteData({
                             loggedInUser: RouteResolves.loggedInUser(),
+                            canAddCourse: RouteResolves.canAddCourse(),
                         }, ['course']);
                     }
                 }
