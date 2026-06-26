@@ -395,6 +395,7 @@ class AnswerIdAPI(Resource):
 
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
 
+        # ensure answer belongs to the assignment in the URL, not just any assignment
         if answer.assignment_id != assignment.id:
             abort(403, title="Answer Not Saved", message="Sorry, this answer could not be saved. Please try again.")
 
