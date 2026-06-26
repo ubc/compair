@@ -1534,12 +1534,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url.format("999"), data=json.dumps(data), content_type='application/json')
             self.assert404(rv)
 
-            # test instructor changes the password of a student in the course
+            # test instructor cannot change the password of a student in the course
             rv = self.client.post(
                 url.format(self.data.get_authorized_student().uuid), data=json.dumps(data),
                 content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(self.data.get_authorized_student().uuid, rv.json['id'])
+            self.assert403(rv)
+            self.assertEqual("Password Not Saved", rv.json['title'])
 
             # test changing own password
             rv = self.client.post(

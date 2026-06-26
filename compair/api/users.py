@@ -797,6 +797,10 @@ class UserUpdatePasswordAPI(Resource):
             title="Password Not Saved",
             message="Sorry, your system role does not allow you to update passwords for this user.")
 
+        if current_user.id != user.id and not can(MANAGE, User):
+            abort(403, title="Password Not Saved",
+                message="Sorry, your system role does not allow you to update passwords for this user.")
+
         if not user.uses_compair_login:
             abort(400, title="Password Not Saved",
                 message="Sorry, you cannot update the password since this user does not use the ComPAIR account login method.")
