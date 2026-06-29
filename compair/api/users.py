@@ -232,7 +232,7 @@ class UserAPI(Resource):
 class UserListAPI(Resource):
     @login_required
     def get(self):
-        require(READ, USER_IDENTITY,
+        require(MANAGE, User,
             title="User List Unavailable",
             message="Sorry, your system role does not allow you to view the list of users.")
 
@@ -796,6 +796,10 @@ class UserUpdatePasswordAPI(Resource):
         require(EDIT, user,
             title="Password Not Saved",
             message="Sorry, your system role does not allow you to update passwords for this user.")
+
+        if current_user.id != user.id and not can(MANAGE, User):
+            abort(403, title="Password Not Saved",
+                message="Sorry, your system role does not allow you to update passwords for this user.")
 
         if not user.uses_compair_login:
             abort(400, title="Password Not Saved",

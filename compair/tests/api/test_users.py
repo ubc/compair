@@ -126,26 +126,8 @@ class UsersAPITests(ComPAIRAPITestCase):
             self.assertEqual(1, rv.json['total'])
 
         with self.login(self.data.authorized_instructor.username):
-            expected = sorted(
-                [user for user in self.data.users],
-                key=lambda user: (user.lastname, user.firstname)
-            )[:20]
             rv = self.client.get('/api/users')
-            self.assert200(rv)
-            result = rv.json['objects']
-            self.assertEqual([u.uuid for u in expected], [u['id'] for u in result])
-            self.assertEqual(1, rv.json['page'])
-            self.assertEqual(1, rv.json['pages'])
-            self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(len(expected), rv.json['total'])
-
-            rv = self.client.get('/api/users?search='+self.data.get_unauthorized_instructor().firstname)
-            self.assert200(rv)
-            self.assertEqual(self.data.get_unauthorized_instructor().uuid, rv.json['objects'][0]['id'])
-            self.assertEqual(1, rv.json['page'])
-            self.assertEqual(1, rv.json['pages'])
-            self.assertEqual(20, rv.json['per_page'])
-            self.assertEqual(1, rv.json['total'])
+            self.assert403(rv)
 
     def test_create_user(self):
         url = '/api/users'
@@ -1552,12 +1534,12 @@ class UsersAPITests(ComPAIRAPITestCase):
             rv = self.client.post(url.format("999"), data=json.dumps(data), content_type='application/json')
             self.assert404(rv)
 
-            # test instructor changes the password of a student in the course
+            # test instructor cannot change the password of a student in the course
             rv = self.client.post(
                 url.format(self.data.get_authorized_student().uuid), data=json.dumps(data),
                 content_type='application/json')
-            self.assert200(rv)
-            self.assertEqual(self.data.get_authorized_student().uuid, rv.json['id'])
+            self.assert403(rv)
+            self.assertEqual("Password Not Saved", rv.json['title'])
 
             # test changing own password
             rv = self.client.post(

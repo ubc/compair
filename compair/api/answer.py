@@ -203,6 +203,10 @@ class AnswerRootAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
+        # ensure assignment belongs to the course in the URL, not just any course
+        if assignment.course_id != course.id:
+            abort(403, title="Answer Not Submitted", message="Sorry, this answer could not be submitted. Please try again.")
+
         if not assignment.answer_grace and not can(MANAGE, assignment):
             abort(403, title="Answer Not Submitted", message="Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.")
 
@@ -382,10 +386,18 @@ class AnswerIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
 
+        # ensure assignment belongs to the course in the URL, not just any course
+        if assignment.course_id != course.id:
+            abort(403, title="Answer Not Saved", message="Sorry, this answer could not be saved. Please try again.")
+
         if not assignment.answer_grace and not can(MANAGE, assignment):
             abort(403, title="Answer Not Submitted", message="Sorry, the answer deadline has passed. No answers can be submitted after the deadline unless the instructor submits the answer for you.")
 
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
+
+        # ensure answer belongs to the assignment in the URL, not just any assignment
+        if answer.assignment_id != assignment.id:
+            abort(403, title="Answer Not Saved", message="Sorry, this answer could not be saved. Please try again.")
 
         old_file = answer.file
 
@@ -550,6 +562,11 @@ class AnswerIdAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
+
+        # ensure assignment and answer belong to the course in the URL, not just any course
+        if assignment.course_id != course.id or answer.assignment_id != assignment.id:
+            abort(403, title="Answer Not Deleted", message="Sorry, this answer could not be deleted. Please try again.")
+
         require(DELETE, answer,
             title="Answer Not Deleted",
             message="Sorry, your role in this course does not allow you to delete this answer.")

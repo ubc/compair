@@ -131,7 +131,16 @@ describe('course-module', function () {
                 beforeEach(function () {
                     controller = createController({}, {
                         loggedInUser: angular.copy(mockUser),
+                        canAddCourse: true,
                     });
+                });
+
+                it('should redirect to home when not authorized', function () {
+                    createController({}, {
+                        loggedInUser: angular.copy(mockUser),
+                        canAddCourse: false,
+                    });
+                    expect($location.path()).toBe('/');
                 });
 
                 it('should be correctly initialized', function () {

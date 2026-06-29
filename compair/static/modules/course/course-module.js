@@ -1133,6 +1133,11 @@ module.controller(
         $scope.saveAttempted = false;
 
         $scope.method = $scope.course.id ? "edit" : "create";
+
+        if ($scope.method == "create" && !resolvedData.canAddCourse) {
+            $location.path('/');
+            return;
+        }
         // unlike for assignments, course dates initially blank
         $scope.format = 'dd-MMMM-yyyy';
         $scope.date = {

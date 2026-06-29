@@ -188,6 +188,12 @@ class AnswerCommentListAPI(Resource):
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
+
+        # ensure assignment and answer belong to the course in the URL, not just any course
+        if assignment.course_id != course.id or answer.assignment_id != assignment.id:
+            abort(403, title="Feedback Not Saved",
+                message="Sorry, this feedback could not be saved. Please try again.")
+
         require(CREATE, AnswerComment(course_id=course.id),
             title="Feedback Not Saved",
             message="Sorry, your role in this course does not allow you to save feedback for this answer.")
@@ -293,6 +299,12 @@ class AnswerCommentAPI(Resource):
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
         answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
+
+        # ensure assignment, answer, and comment belong to the course in the URL, not just any course
+        if assignment.course_id != course.id or answer.assignment_id != assignment.id or answer_comment.answer_id != answer.id:
+            abort(403, title="Feedback Not Saved",
+                message="Sorry, this feedback could not be saved. Please try again.")
+
         require(EDIT, answer_comment,
             title="Feedback Not Saved",
             message="Sorry, your role in this course does not allow you to save feedback for this answer.")
@@ -378,7 +390,13 @@ class AnswerCommentAPI(Resource):
         """
         course = Course.get_active_by_uuid_or_404(course_uuid)
         assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+        answer = Answer.get_active_by_uuid_or_404(answer_uuid)
         answer_comment = AnswerComment.get_active_by_uuid_or_404(answer_comment_uuid)
+
+        # ensure assignment, answer, and comment belong to the course in the URL, not just any course
+        if assignment.course_id != course.id or answer.assignment_id != assignment.id or answer_comment.answer_id != answer.id:
+            abort(403, title="Feedback Not Deleted", message="Sorry, this feedback could not be deleted. Please try again.")
+
         require(DELETE, answer_comment,
             title="Feedback Not Deleted",
             message="Sorry, your role in this course does not allow you to delete feedback for this answer.")

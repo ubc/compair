@@ -475,7 +475,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
         comment = self.data.get_answer_comments_by_assignment(self.assignment)[0]
         url = self.get_url(
             course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
-            answer_uuid=self.answers[self.assignment.id][0].uuid, answer_comment_uuid=comment.uuid
+            answer_uuid=self.answers[self.assignment.id][1].uuid, answer_comment_uuid=comment.uuid
         )
 
         content = {
@@ -765,7 +765,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
         comment = self.data.get_answer_comments_by_assignment(self.assignment)[0]
         url = self.get_url(
             course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
-            answer_uuid=self.answers[self.assignment.id][0].uuid, answer_comment_uuid=comment.uuid)
+            answer_uuid=self.answers[self.assignment.id][1].uuid, answer_comment_uuid=comment.uuid)
 
         # test login required
         rv = self.client.delete(url)
@@ -794,7 +794,7 @@ class AnswerCommentAPITests(ComPAIRAPITestCase):
         with self.impersonate(self.data.get_authorized_instructor(), student):
             url = self.get_url(
                 course_uuid=self.course.uuid, assignment_uuid=self.assignment.uuid,
-                answer_uuid=self.answers[self.assignment.id][0].uuid, answer_comment_uuid=comment.uuid)
+                answer_uuid=self.answers[self.assignment.id][1].uuid, answer_comment_uuid=comment.uuid)
             rv = self.client.delete(url)
             self.assert403(rv)
             self.assertTrue(rv.json['disabled_by_impersonation'])
