@@ -26,7 +26,6 @@
     "angular-http-auth": "~1.5.0",
     "highlightjs": "~9.12.0",
     "angular-ckeditor": "~1.0.3",
-    "es-breadcrumbs": "~0.4.1",
     "angular-loading-bar": "~0.9.0",
     "AngularJS-Toaster": "~2.2.0",
     "angular-chosen-localytics": "~1.8.0",
@@ -43,7 +42,6 @@
     "angular-uuids": "~0.0.4",
     "angular-local-storage": "~0.7.1",
     "angular-promise-extras": "~0.1.8",
-    "navigator-sendbeacon": "~0.0.3",
     "ng-kaltura-player": "~1.2.1",
     "pdf.js-viewer": "~1.6.211"
   },

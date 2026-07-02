@@ -127,6 +127,7 @@ gulp.task('prod_minify_js', gulp.series('prod_templatecache', function() {
         //'./bower_components/ckeditor/plugins/widget/plugin.js',
         //'./bower_components/ckeditor/plugins/widget/lang/en.js',
         //'./bower_components/ckeditor/plugins/lineutils/plugin.js'
+        './compair/static/lib_extension/ng-breadcrumbs/ng-breadcrumbs.js'
     ]);
     // we need to sort to generate a stable order so that we have a stable hash
     var modules = gulp.src('./compair/static/modules/**/*-module.js');
