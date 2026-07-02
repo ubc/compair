@@ -212,7 +212,7 @@ module.factory("embeddableRichContent",
     }
 ]);
 
-app.directive('dynamicRichContent',
+module.directive('dynamicRichContent',
     ["$compile",
     function ($compile)
     {
