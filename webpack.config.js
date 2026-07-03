@@ -26,10 +26,10 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: 'webpack-bundle.css'
         }),
-        // These libraries only assign to a global (window._, window.$, etc.)
-        // when there's no CommonJS `module` present. Inside a webpack bundle
-        // there always is one, so without this they'd load correctly but
-        // never expose the global that the app's own code (written for
+        // These libraries only assign to a global (window._, window.moment,
+        // etc.) when there's no CommonJS `module` present. Inside a webpack
+        // bundle there always is one, so without this they'd load correctly
+        // but never expose the global that the app's own code (written for
         // plain <script> tags) expects to find.
         new webpack.ProvidePlugin({
             // $/jQuery aren't listed here: webpack-entry.js sets
