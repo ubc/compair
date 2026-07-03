@@ -10,15 +10,13 @@
         <title ng-bind="(title ? title+' | ' : '') + 'ComPAIR Learning Application'">ComPAIR Learning Application</title>
         <meta name="description" content="The ComPAIR learning application pairs student answers for deeper learning through comparison of peer work. This is the site for live courses at UBC.">
 
-        <!-- Bower Installed Libs, automatically inserted using gulp modules -->
-        <!-- bower:css -->
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/bootstrap/dist/css/bootstrap.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/highlightjs/styles/foundation.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/angular-loading-bar/build/loading-bar.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/AngularJS-Toaster/toaster.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/chosen/chosen.css') }}" />
-        <link rel="stylesheet" href="{{ url_for('static', filename='lib/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css') }}" />
-        <!-- endbower -->
+        <!-- Vendor CSS (bootstrap, highlightjs theme, loading-bar, toaster,
+             chosen, chosen-bootstrap-theme) is bundled via webpack; see
+             compair/static/webpack-entry.js. Linked here, at the top of
+             <head>, so it loads before compair.less's compiled output -
+             otherwise the app's own style overrides (e.g. the serif
+             heading font-family) lose the cascade to these vendor styles. -->
+        <link rel="stylesheet" href="{{ url_for('static', filename='build/webpack-bundle.css') }}" />
 
         <!-- Javascript Libraries -->
         <!-- tincanjs is intentionally not part of the webpack bundle below:

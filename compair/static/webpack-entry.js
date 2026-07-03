@@ -14,6 +14,19 @@
 // - bootstrap / chosen-bootstrap-theme: CSS only.
 // - CKEditor core: loaded from an external CDN <script> tag, unrelated
 //   to this dependency migration.
+// Explicit global (not just ProvidePlugin) because Angular checks
+// window.jQuery itself at load time to pick jQuery vs its limited jqLite
+// for angular.element - a property check ProvidePlugin can't satisfy.
+window.jQuery = window.$ = require('jquery');
+
+// CSS, in the same cascade order the old <link> tags used.
+require('bootstrap/dist/css/bootstrap.css');
+require('highlightjs/styles/foundation.css');
+require('angular-loading-bar/build/loading-bar.css');
+require('angularjs-toaster/toaster.css');
+require('chosen-js/chosen.css');
+require('chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css');
+
 require('angular');
 require('angular-animate');
 require('angular-resource');
@@ -40,13 +53,10 @@ require('ng-kaltura-player');
 
 require('./compair-config.js');
 
-// App modules/directives/services. Folder order and order *within* each
-// category don't matter (dev's hand-written list and prod's gulpfile.js
-// glob already use two different orders there, and both work) - but
-// *-module.js must load before *-directive.js/*-service.js, since some
-// directives/services extend an already-registered module via the
-// angular.module('name') getter form (no deps array), which throws
-// immediately if that module hasn't been created yet.
+// *-module.js must load before *-directive.js/*-service.js: some of the
+// latter extend an already-registered module via the angular.module('name')
+// getter form (no deps array), which throws if that module doesn't exist
+// yet. Folder order and order within each category don't matter otherwise.
 var moduleFiles = require.context('./modules', true, /-module\.js$/);
 moduleFiles.keys().forEach(moduleFiles);
 
