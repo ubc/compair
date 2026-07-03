@@ -26,7 +26,7 @@ prod:
 deps:
 	$(DOCKERRUN_PY) pip install -r requirements.txt -r requirements.dev.txt
 	$(DOCKERRUN_NODE) npm install
-	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js
+	$(DOCKERRUN_NODE) npm run build:dev
 
 clean:
 	find . -name '*.pyc' -exec rm -f {} \;
