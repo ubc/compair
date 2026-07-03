@@ -123,12 +123,15 @@
     </head>
     <body>
 
-    <!--[if lt IE 9 ]>
-    <div class="alert-warning">
+    <div id="ie-warning" class="alert-warning" style="display: none;">
         <i class="fa fa-warning"></i>
-        This application only supports <strong>Internet Explorer 9 and higher</strong>. Please <a href="http://windows.microsoft.com/en-ca/internet-explorer/download-ie">upgrade your browser</a> or download <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, <a href="http://www.google.com/chrome/">Chrome</a>, or <a href="https://www.apple.com/ca/safari/">Safari</a> to use instead. Thank you!
+        This application does not support <strong>Internet Explorer</strong>. Please download <a href="http://www.google.com/chrome/">Chrome</a>, <a href="https://www.microsoft.com/edge">Edge</a>, <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, or <a href="https://www.apple.com/ca/safari/">Safari</a> to use instead. Thank you!
     </div>
-    <![endif]-->
+    <script>
+        if (document.documentMode) {
+            document.getElementById('ie-warning').style.display = '';
+        }
+    </script>
 
     <!-- Main Navbar -->
     <navbar-component></navbar-component>
