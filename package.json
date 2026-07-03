@@ -74,6 +74,7 @@
     "karma-jasmine": "^5.0.1",
     "karma-junit-reporter": "^2.0.1",
     "karma-ng-html2js-preprocessor": "~1.0",
+    "karma-webpack": "^5.0.1",
     "mini-css-extract-plugin": "^2.10.2",
     "object-assign": "~4.1",
     "protractor-cucumber-framework": "~4.1.1",

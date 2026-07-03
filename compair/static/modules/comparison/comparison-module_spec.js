@@ -66,7 +66,7 @@ describe('comparison-module', function () {
         "start_time": null,
         "end_time": null
     };
-    beforeEach(module('ubc.ctlt.compair.comparison'));
+    beforeEach(angular.mock.module('ubc.ctlt.compair.comparison'));
     beforeEach(inject(function ($injector) {
         $httpBackend = $injector.get('$httpBackend');
         sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);

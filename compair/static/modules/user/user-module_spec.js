@@ -50,7 +50,7 @@ describe('user-module', function () {
         uses_compair_login: true,
         email_notification_method: 'enable'
     };
-    beforeEach(module('ubc.ctlt.compair.user'));
+    beforeEach(angular.mock.module('ubc.ctlt.compair.user'));
     beforeEach(inject(function ($injector) {
         $httpBackend = $injector.get('$httpBackend');
         sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);

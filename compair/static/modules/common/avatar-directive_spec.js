@@ -92,7 +92,7 @@ describe('avatar-directive', function () {
         "group_id": "1abcABC123-abcABC123_Z"
     };
 
-    beforeEach(module('ubc.ctlt.compair.common'));
+    beforeEach(angular.mock.module('ubc.ctlt.compair.common'));
 
     beforeEach(inject(function(_$compile_, _$rootScope_){
         $compile = _$compile_;

@@ -55,7 +55,7 @@ describe('user-module', function () {
     var mockAnswerId = "4abcABC123-abcABC123_Z";
     var mockUserId = "5abcABC123-abcABC123_Z";
     var mockConsumerId = "6abcABC123-abcABC123_Z";
-    beforeEach(module('myApp'));
+    beforeEach(angular.mock.module('myApp'));
 
     beforeEach(inject(function ($injector) {
         $httpBackend = $injector.get('$httpBackend');

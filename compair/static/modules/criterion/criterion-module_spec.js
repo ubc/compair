@@ -74,7 +74,7 @@ describe('course-module', function () {
         "name": "Test Criteria",
         "user_id": "1abcABC123-abcABC123_Z"
     };
-    beforeEach(module('ubc.ctlt.compair.criterion'));
+    beforeEach(angular.mock.module('ubc.ctlt.compair.criterion'));
     beforeEach(inject(function ($injector) {
         $httpBackend = $injector.get('$httpBackend');
         sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);
