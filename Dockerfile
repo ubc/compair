@@ -14,7 +14,7 @@ FROM node:24 AS node-deps
 
 WORKDIR /home/node/app
 
-COPY package.json package-lock.json bower.json gulpfile.js /home/node/app/
+COPY package.json package-lock.json gulpfile.js /home/node/app/
 COPY compair/static/ /home/node/app/compair/static/
 
 RUN mkdir -p compair/templates/static/ \

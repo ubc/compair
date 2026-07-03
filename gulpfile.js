@@ -6,8 +6,6 @@
  *              a font, which needs to be uploaded.
  */
 var gulp = require('gulp'),
-    bower = require('gulp-bower'),
-    wiredep = require('wiredep').stream,
     less = require('gulp-less'),
     concat = require('gulp-concat'),
     uglify = require('gulp-uglify'),
@@ -35,19 +33,6 @@ var gulp = require('gulp'),
     jsFilename = 'compair.js',
     karmaCommonConf = 'compair/static/test/config/karma.conf.js';
 
-// download Bower packages and copy them to the lib directory
-gulp.task('bowerInstall', function() {
-    return bower()
-        .pipe(gulp.dest('./compair/static/lib'));
-});
-
-// insert tags into index.html to include the libs downloaded by bower
-gulp.task('bowerWiredep', gulp.series('bowerInstall', function () {
-    return gulp.src('./compair/static/index.html', {allowEmpty: true})
-        .pipe(wiredep({directory: './compair/static/lib'}))
-        .pipe(gulp.dest('./compair/static/'));
-}));
-
 gulp.task('copy_pdf_viewer_html_template', function() {
     return gulp.src(['./node_modules/pdf.js-viewer/viewer.html'])
         .pipe(gulp.dest('./compair/templates/static'));
@@ -56,8 +41,7 @@ gulp.task('copy_pdf_viewer_html_template', function() {
 // pdf.js-viewer isn't bundled by webpack (it's a standalone viewer, not part
 // of the Angular app), so its runtime assets need to be copied to the exact
 // path compair/api/__init__.py's route_pdf_viewer() expects in dev mode:
-// url_for('static', filename='lib/pdf.js-viewer'). Bower used to populate
-// this same path as a side effect of bowerInstall; this replaces that.
+// url_for('static', filename='lib/pdf.js-viewer').
 gulp.task('copy_pdf_viewer_dev_assets', function() {
     return gulp.src([
             './node_modules/pdf.js-viewer/pdf.js',
@@ -178,15 +162,8 @@ gulp.task('prod_minify_js', gulp.series('prod_templatecache', function() {
     var libs = gulp.src([
         './compair/static/compair-config.js',
         './compair/static/build/templates.js',
-        // ckeditor plugins
-        //'./bower_components/ckeditor/plugins/codesnippet/plugin.js',
-        //'./bower_components/ckeditor/plugins/codesnippet/dialogs/codesnippet.js',
-        //'./bower_components/ckeditor/plugins/codesnippet/lang/en.js',
         './compair/static/lib_extension/ckeditor/plugins/combinedmath/plugin.js',
         './compair/static/lib_extension/ckeditor/plugins/combinedmath/dialogs/combinedmath.js',
-        //'./bower_components/ckeditor/plugins/widget/plugin.js',
-        //'./bower_components/ckeditor/plugins/widget/lang/en.js',
-        //'./bower_components/ckeditor/plugins/lineutils/plugin.js'
         './compair/static/lib_extension/ng-breadcrumbs/ng-breadcrumbs.js'
     ]);
     // we need to sort to generate a stable order so that we have a stable hash

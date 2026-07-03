@@ -49,7 +49,6 @@ config.py
 
 # compiled and generated files
 compair/static/compair.css
-bower_components
 node_modules
 compair/static/index.html
 
