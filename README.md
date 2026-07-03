@@ -37,7 +37,7 @@ or
     git clone git@github.com:ubc/compair.git compair
     cd compair
     npm install
-    node_modules/gulp/bin/gulp.js
+    npm run build:dev
     node_modules/gulp/bin/gulp.js prod
     docker-compose up -d
 
@@ -152,10 +152,10 @@ Individual tests can be run by editing `gulpfile.js`. Edit the `bdd` gulp task:
 Generate Production Release
 ---------------------------
 Run `gulp prod` to generate production assets. This currently just:
-1. Combine all Bower managed javascript libraries into a single minified file.
+1. Combine all npm managed javascript libraries into a single minified file.
 2. Compile and minify the less files into a single css file.
 3. Compile and minify the less files used for emails into a single css file in the static folder.
-4. Copies all Bower managed images and fonts into the static folder.
+4. Copies all npm managed images and fonts into the static folder.
 5. Copies the pdf viewer copy and assets into the static folder.
 
 
