@@ -27,7 +27,6 @@
     "bootstrap": "^3.3.7",
     "bower": "^1.8.14",
     "chosen-bootstrap-theme": "^1.0.5",
-    "file-saver": "^2.0.4",
     "gulp": "^4.0.2",
     "gulp-angular-templatecache": "^3.0.1",
     "gulp-bower": "^0.0.15",
