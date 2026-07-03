@@ -13,7 +13,6 @@ var gulp = require('gulp'),
     uglify = require('gulp-uglify'),
     htmlReplace = require('gulp-html-replace'),
     inject = require('gulp-inject'),
-    mainBowerFiles = require('main-bower-files'),
     cleanCss = require('gulp-clean-css'),
     rev = require('gulp-rev'),
     exec = require('child_process').exec,
@@ -22,12 +21,12 @@ var gulp = require('gulp'),
     templateCache = require('gulp-angular-templatecache');
 
     var cssFilenames = [
-        './bower_components/bootstrap/dist/css/bootstrap.css',
-        './bower_components/highlightjs/styles/foundation.css',
-        './bower_components/angular-loading-bar/build/loading-bar.css',
-        './bower_components/AngularJS-Toaster/toaster.css',
-        './bower_components/chosen/chosen.css',
-        './bower_components/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css',
+        './node_modules/bootstrap/dist/css/bootstrap.css',
+        './node_modules/highlightjs/styles/foundation.css',
+        './node_modules/angular-loading-bar/build/loading-bar.css',
+        './node_modules/angularjs-toaster/toaster.css',
+        './node_modules/chosen-js/chosen.css',
+        './node_modules/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css',
         './compair/static/build/compair.css'
     ],
     targetCssFilename = 'compair.css',
@@ -49,10 +48,36 @@ gulp.task('bowerWiredep', gulp.series('bowerInstall', function () {
         .pipe(gulp.dest('./compair/static/'));
 }));
 
-gulp.task('copy_pdf_viewer_html_template', gulp.series('bowerInstall', function() {
-    return gulp.src(['./compair/static/lib/pdf.js-viewer/viewer.html'])
+gulp.task('copy_pdf_viewer_html_template', function() {
+    return gulp.src(['./node_modules/pdf.js-viewer/viewer.html'])
         .pipe(gulp.dest('./compair/templates/static'));
-}));
+});
+
+// pdf.js-viewer isn't bundled by webpack (it's a standalone viewer, not part
+// of the Angular app), so its runtime assets need to be copied to the exact
+// path compair/api/__init__.py's route_pdf_viewer() expects in dev mode:
+// url_for('static', filename='lib/pdf.js-viewer'). Bower used to populate
+// this same path as a side effect of bowerInstall; this replaces that.
+gulp.task('copy_pdf_viewer_dev_assets', function() {
+    return gulp.src([
+            './node_modules/pdf.js-viewer/pdf.js',
+            './node_modules/pdf.js-viewer/pdf.worker.js',
+            './node_modules/pdf.js-viewer/viewer.css',
+            './node_modules/pdf.js-viewer/images/*',
+            './node_modules/pdf.js-viewer/cmaps/*',
+            './node_modules/pdf.js-viewer/locale/*',
+        ], {base: './node_modules/pdf.js-viewer/'})
+        .pipe(gulp.dest('./compair/static/lib/pdf.js-viewer'));
+});
+
+// tincanjs can't be webpack-bundled either (see webpack-entry.js for why),
+// so it needs its own file for a plain <script> tag, like pdf.js-viewer.
+// Copied to Bower's old path, not lib_extension/ (that's for hand-authored
+// content with no package-manager source, which this isn't).
+gulp.task('copy_tincan', function() {
+    return gulp.src(['./node_modules/tincanjs/build/tincan.js'], {base: './node_modules/tincanjs/'})
+        .pipe(gulp.dest('./compair/static/lib/tincan'));
+});
 
 // compile css
 gulp.task('less', function () {
@@ -86,9 +111,44 @@ gulp.task('prod_compile_email_css', gulp.series('email_less', function() {
         .pipe(concat(targetEmailCssFilename))
         .pipe(gulp.dest('./compair/templates/static'));
 }));
-// don't sort bower files as bower handles order and dependency
+// No tool auto-discovers npm's resolved dependency tree the way Bower's did,
+// so this is an explicit, ordered list instead - mirroring webpack-entry.js's
+// require order. Uses each package's actual browser-ready file, not its
+// declared "main" field: several (angular, angular-ui-bootstrap, etc.) point
+// at a require()-based wrapper that throws in a plain concatenated script
+// with no module system.
 gulp.task('prod_minify_js_libs', function() {
-    return gulp.src(mainBowerFiles({"filter": /.*\.js/}))
+    return gulp.src([
+            './node_modules/jquery/dist/jquery.js',
+            './node_modules/angular/angular.js',
+            './node_modules/angular-animate/angular-animate.js',
+            './node_modules/angular-resource/angular-resource.js',
+            './node_modules/angular-route/angular-route.js',
+            './node_modules/angular-sanitize/angular-sanitize.js',
+            './node_modules/angular-http-auth/src/http-auth-interceptor.js',
+            './node_modules/highlightjs/highlight.pack.js',
+            './node_modules/angular-ckeditor-legacy/angular-ckeditor.js',
+            './compair/static/lib_extension/ng-breadcrumbs/ng-breadcrumbs.js',
+            './node_modules/angular-loading-bar/build/loading-bar.js',
+            './node_modules/angularjs-toaster/toaster.js',
+            './node_modules/chosen-js/chosen.jquery.js',
+            './node_modules/angular-chosen-localytics/dist/angular-chosen.js',
+            './node_modules/moment/moment.js',
+            './node_modules/angular-moment/angular-moment.js',
+            './node_modules/angular-file-upload/dist/angular-file-upload.js',
+            './node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
+            './node_modules/humanize-duration/humanize-duration.js',
+            './node_modules/angular-timer/dist/angular-timer.js',
+            './node_modules/lodash/lodash.js',
+            './node_modules/ng-file-saver/dist/angular-file-saver.bundle.js',
+            './node_modules/clipboard/lib/clipboard.js',
+            './node_modules/ngclipboard/dist/ngclipboard.js',
+            './node_modules/tincanjs/build/tincan.js',
+            './node_modules/angular-uuid/angular-uuid.js',
+            './node_modules/angular-local-storage/dist/angular-local-storage.js',
+            './node_modules/angular-promise-extras/angular-promise-extras.js',
+            './node_modules/ng-kaltura-player/index.js',
+        ])
         .pipe(concat(jsLibsFilename))
         .pipe(uglify())
         .pipe(gulp.dest('./compair/static/build'));
@@ -105,13 +165,13 @@ gulp.task('prod_templatecache', function () {
 gulp.task('prod_copy_fonts', function () {
     // bootstrap fonts is loaded by bootstrap.css and default location is
     // ../fonts/
-    return gulp.src('bower_components/bootstrap/fonts/*.*')
+    return gulp.src('node_modules/bootstrap/fonts/*.*')
         .pipe(gulp.dest('compair/static/fonts/'));
 });
 gulp.task('prod_copy_images', function () {
     // chosen image is loaded by chosen.css and default location is
     // ./
-    return gulp.src(['bower_components/chosen/*.png', './compair/static/img/*.png', './compair/static/img/*.ico'])
+    return gulp.src(['node_modules/chosen-js/*.png', './compair/static/img/*.png', './compair/static/img/*.ico'])
         .pipe(gulp.dest('compair/static/dist/'));
 });
 gulp.task('prod_minify_js', gulp.series('prod_templatecache', function() {
@@ -147,13 +207,13 @@ gulp.task('prod_minify_js', gulp.series('prod_templatecache', function() {
 }));
 gulp.task('prod_pdf_viewer_files', function() {
     return gulp.src([
-            './compair/static/lib/pdf.js-viewer/pdf.js',
-            './compair/static/lib/pdf.js-viewer/pdf.worker.js',
-            './compair/static/lib/pdf.js-viewer/viewer.css',
-            './compair/static/lib/pdf.js-viewer/images/*',
-            './compair/static/lib/pdf.js-viewer/cmaps/*',
-            './compair/static/lib/pdf.js-viewer/locale/*',
-        ], {base: './compair/static/lib/pdf.js-viewer/'})
+            './node_modules/pdf.js-viewer/pdf.js',
+            './node_modules/pdf.js-viewer/pdf.worker.js',
+            './node_modules/pdf.js-viewer/viewer.css',
+            './node_modules/pdf.js-viewer/images/*',
+            './node_modules/pdf.js-viewer/cmaps/*',
+            './node_modules/pdf.js-viewer/locale/*',
+        ], {base: './node_modules/pdf.js-viewer/'})
         .pipe(gulp.dest('./compair/static/dist/pdf.js-viewer'));
 });
 gulp.task('prod', gulp.series('prod_minify_js_libs', 'prod_compile_minify_css', 'prod_compile_email_css',
@@ -369,6 +429,6 @@ gulp.task('webdriver_standalone', function(done) {
 });
 
 
-gulp.task("default", gulp.series('bowerInstall', 'bowerWiredep', 'copy_pdf_viewer_html_template', function(done){
+gulp.task("default", gulp.series('copy_tincan', 'copy_pdf_viewer_dev_assets', 'copy_pdf_viewer_html_template', function(done){
     done();
 }));

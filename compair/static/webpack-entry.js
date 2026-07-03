@@ -34,7 +34,7 @@ require('angular-route');
 require('angular-sanitize');
 require('angular-http-auth');
 require('highlightjs');
-require('angular-ckeditor');
+require('angular-ckeditor-legacy');
 require('./lib_extension/ng-breadcrumbs/ng-breadcrumbs.js');
 require('angular-loading-bar');
 require('angularjs-toaster');
