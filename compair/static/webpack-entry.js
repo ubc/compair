@@ -44,6 +44,10 @@ require('angular-moment');
 require('angular-file-upload');
 require('angular-ui-bootstrap');
 require('angular-timer');
+// file-saver sets window.saveAs as a side effect at this version (2.0.4,
+// matching what Bower resolved); ng-file-saver's own factory reads that
+// global directly instead of require()'ing file-saver itself.
+require('file-saver');
 require('ng-file-saver');
 require('ngclipboard');
 require('angular-uuid');
