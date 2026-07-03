@@ -2,7 +2,8 @@
 //
 // Code from:
 // https://github.com/ViktorQvarfordt/AngularJS-MathJax-Directive
-// Unfortunately, it's not Bower enabled, so have to manually include it
+// Unfortunately, it's not published as an installable package, so have to
+// manually include it
 (function() {
 
 var module = angular.module('ubc.ctlt.compair.rich.content.mathjax', []);
