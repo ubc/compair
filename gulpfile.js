@@ -125,7 +125,7 @@ gulp.task('prod_minify_js_libs', function() {
             './node_modules/angular-timer/dist/angular-timer.js',
             './node_modules/lodash/lodash.js',
             './node_modules/ng-file-saver/dist/angular-file-saver.bundle.js',
-            './node_modules/clipboard/lib/clipboard.js',
+            './node_modules/clipboard/dist/clipboard.js',
             './node_modules/ngclipboard/dist/ngclipboard.js',
             './node_modules/tincanjs/build/tincan.js',
             './node_modules/angular-uuid/angular-uuid.js',
