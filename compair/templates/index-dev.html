@@ -128,16 +128,6 @@
     </head>
     <body>
 
-    <div id="ie-warning" class="alert-warning" style="display: none;">
-        <i class="fa fa-warning"></i>
-        This application does not support <strong>Internet Explorer</strong>. Please download <a href="http://www.google.com/chrome/">Chrome</a>, <a href="https://www.microsoft.com/edge">Edge</a>, <a href="https://www.mozilla.org/en-US/firefox/new/">Firefox</a>, or <a href="https://www.apple.com/ca/safari/">Safari</a> to use instead. Thank you!
-    </div>
-    <script>
-        if (document.documentMode) {
-            document.getElementById('ie-warning').style.display = '';
-        }
-    </script>
-
     <!-- Main Navbar -->
     <navbar-component></navbar-component>
     <ng-include src="'modules/route/route-error-partial.html'"></ng-include>
