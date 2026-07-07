@@ -151,12 +151,16 @@ Individual tests can be run by editing `gulpfile.js`. Edit the `bdd` gulp task:
 
 Generate Production Release
 ---------------------------
-Run `gulp prod` to generate production assets. This currently just:
-1. Combine all npm managed javascript libraries into a single minified file.
-2. Compile and minify the less files into a single css file.
-3. Compile and minify the less files used for emails into a single css file in the static folder.
-4. Copies all npm managed images and fonts into the static folder.
-5. Copies the pdf viewer copy and assets into the static folder.
+Run `webpack --mode production` first, then `gulp prod` to generate production assets.
+
+`webpack --mode production` bundles all npm-managed vendor javascript libraries and the AngularJS app itself (every module/directive/service) into a single minified `webpack-bundle.js`, plus the vendor CSS (bootstrap, highlightjs theme, chosen, etc.) into `webpack-bundle.css`. See `compair/static/webpack-entry.js` for exactly what it includes.
+
+`gulp prod` must run after webpack, since it revs/hashes whatever it finds in `compair/static/build/` (including webpack's output) into `compair/static/dist/` and `rev-manifest.json`. It currently:
+1. Compiles and minifies the app's own less file (`compair.less`) into a single css file.
+2. Compiles and minifies the less file used for emails into a single css file in the static folder.
+3. Copies all npm-managed images and fonts into the static folder.
+4. Copies the pdf viewer and tincan.js into the static folder.
+5. Compiles the AngularJS `$templateCache` and the ckeditor combinedmath plugin into a single minified javascript file (everything else webpack doesn't handle).
 
 
 Setting up Learning Analytics
