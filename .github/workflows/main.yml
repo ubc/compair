@@ -75,6 +75,7 @@ jobs:
         node_modules/gulp/bin/gulp.js
     - name: Generate assets
       run: |
+        node_modules/webpack/bin/webpack.js --mode production
         node_modules/gulp/bin/gulp.js prod
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4

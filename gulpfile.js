@@ -15,21 +15,9 @@ var gulp = require('gulp'),
     rev = require('gulp-rev'),
     exec = require('child_process').exec,
     sort = require('gulp-sort'), // gulp.src with wildcard doesn't give us a stable file order
-    streamqueue = require('streamqueue'), // queued streams one by one
     templateCache = require('gulp-angular-templatecache');
 
-    var cssFilenames = [
-        './node_modules/bootstrap/dist/css/bootstrap.css',
-        './node_modules/highlightjs/styles/foundation.css',
-        './node_modules/angular-loading-bar/build/loading-bar.css',
-        './node_modules/angularjs-toaster/toaster.css',
-        './node_modules/chosen-js/chosen.css',
-        './node_modules/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css',
-        './compair/static/build/compair.css'
-    ],
-    targetCssFilename = 'compair.css',
-    targetEmailCssFilename = 'email.css',
-    jsLibsFilename = 'bowerJsLibs.js',
+var targetEmailCssFilename = 'email.css',
     jsFilename = 'compair.js',
     karmaCommonConf = 'compair/static/test/config/karma.conf.js';
 
@@ -69,10 +57,11 @@ gulp.task('less', function () {
         .pipe(less())
         .pipe(gulp.dest('./compair/static/build'));
 });
+// Vendor CSS (bootstrap, highlightjs, chosen, etc.) is bundled by webpack
+// (see webpack-entry.js) - this only compiles the app's own stylesheet.
 gulp.task('prod_compile_minify_css', gulp.series('less', function() {
-    return gulp.src(cssFilenames)
+    return gulp.src('./compair/static/build/compair.css')
         .pipe(cleanCss())
-        .pipe(concat(targetCssFilename))
         .pipe(gulp.dest('./compair/static/build'));
 }));
 
@@ -95,48 +84,6 @@ gulp.task('prod_compile_email_css', gulp.series('email_less', function() {
         .pipe(concat(targetEmailCssFilename))
         .pipe(gulp.dest('./compair/templates/static'));
 }));
-// No tool auto-discovers npm's resolved dependency tree the way Bower's did,
-// so this is an explicit, ordered list instead - mirroring webpack-entry.js's
-// require order. Uses each package's actual browser-ready file, not its
-// declared "main" field: several (angular, angular-ui-bootstrap, etc.) point
-// at a require()-based wrapper that throws in a plain concatenated script
-// with no module system.
-gulp.task('prod_minify_js_libs', function() {
-    return gulp.src([
-            './node_modules/jquery/dist/jquery.js',
-            './node_modules/angular/angular.js',
-            './node_modules/angular-animate/angular-animate.js',
-            './node_modules/angular-resource/angular-resource.js',
-            './node_modules/angular-route/angular-route.js',
-            './node_modules/angular-sanitize/angular-sanitize.js',
-            './node_modules/angular-http-auth/src/http-auth-interceptor.js',
-            './node_modules/highlightjs/highlight.pack.js',
-            './node_modules/angular-ckeditor-legacy/angular-ckeditor.js',
-            './compair/static/lib_extension/ng-breadcrumbs/ng-breadcrumbs.js',
-            './node_modules/angular-loading-bar/build/loading-bar.js',
-            './node_modules/angularjs-toaster/toaster.js',
-            './node_modules/chosen-js/chosen.jquery.js',
-            './node_modules/angular-chosen-localytics/dist/angular-chosen.js',
-            './node_modules/moment/moment.js',
-            './node_modules/angular-moment/angular-moment.js',
-            './node_modules/angular-file-upload/dist/angular-file-upload.js',
-            './node_modules/angular-ui-bootstrap/dist/ui-bootstrap-tpls.js',
-            './node_modules/humanize-duration/humanize-duration.js',
-            './node_modules/angular-timer/dist/angular-timer.js',
-            './node_modules/lodash/lodash.js',
-            './node_modules/ng-file-saver/dist/angular-file-saver.bundle.js',
-            './node_modules/clipboard/dist/clipboard.js',
-            './node_modules/ngclipboard/dist/ngclipboard.js',
-            './node_modules/tincanjs/build/tincan.js',
-            './node_modules/angular-uuid/angular-uuid.js',
-            './node_modules/angular-local-storage/dist/angular-local-storage.js',
-            './node_modules/angular-promise-extras/angular-promise-extras.js',
-            './node_modules/ng-kaltura-player/index.js',
-        ])
-        .pipe(concat(jsLibsFilename))
-        .pipe(uglify())
-        .pipe(gulp.dest('./compair/static/build'));
-});
 gulp.task('prod_templatecache', function () {
     return gulp.src('./compair/static/modules/**/*.html')
         // we need a stable order to get the stable hash
@@ -158,30 +105,49 @@ gulp.task('prod_copy_images', function () {
     return gulp.src(['node_modules/chosen-js/*.png', './compair/static/img/*.png', './compair/static/img/*.ico'])
         .pipe(gulp.dest('compair/static/dist/'));
 });
+// compair-config.js, ng-breadcrumbs.js, and every *-module/-directive/-service.js
+// file are bundled by webpack (see webpack-entry.js) - this only builds the
+// leftovers webpack doesn't handle: the angular $templateCache and the
+// ckeditor combinedmath plugin (a CKEditor plugin, not an Angular module).
 gulp.task('prod_minify_js', gulp.series('prod_templatecache', function() {
-    var libs = gulp.src([
-        './compair/static/compair-config.js',
+    return gulp.src([
         './compair/static/build/templates.js',
         './compair/static/lib_extension/ckeditor/plugins/combinedmath/plugin.js',
-        './compair/static/lib_extension/ckeditor/plugins/combinedmath/dialogs/combinedmath.js',
-        './compair/static/lib_extension/ng-breadcrumbs/ng-breadcrumbs.js'
-    ]);
-    // we need to sort to generate a stable order so that we have a stable hash
-    var modules = gulp.src('./compair/static/modules/**/*-module.js');
-    var directives = gulp.src('./compair/static/modules/**/*-directive.js');
-    var services = gulp.src('./compair/static/modules/**/*-service.js');
-
-    return streamqueue(
-        { objectMode: true },
-        libs,
-        modules.pipe(sort()),
-        directives.pipe(sort()),
-        services.pipe(sort())
-    )
+        './compair/static/lib_extension/ckeditor/plugins/combinedmath/dialogs/combinedmath.js'
+    ])
         .pipe(concat(jsFilename))
         .pipe(uglify())
         .pipe(gulp.dest('./compair/static/build'));
 }));
+// tincanjs can't be webpack-bundled (see webpack-entry.js), so it needs its
+// own delivery path. This copies the plain file into build/ so the rev()
+// step at the end of prod picks it up and hashes it into dist/ -
+// copy_tincan above only covers dev mode's static url, not CDN deployments
+// (ASSET_LOCATION=cloud), which only upload what's in dist/.
+gulp.task('prod_copy_tincan', function() {
+    return gulp.src(['./node_modules/tincanjs/build/tincan.js'])
+        .pipe(gulp.dest('./compair/static/build'));
+});
+// webpack emits font/image files referenced via url() in the vendor CSS it
+// bundles (e.g. bootstrap's @font-face files, chosen's sprite pngs) into
+// build/ under its own content-hashed names - webpack-bundle.css already has
+// those exact names baked into its url() references. rev() below only globs
+// build/*.js and build/*.css, so these never reach dist/ on their own, and
+// re-hashing them through rev() would break the reference a second time
+// (rev would rename them, but the CSS's url() would still point at the
+// original webpack-generated name). So they're copied verbatim instead -
+// same pattern as prod_copy_fonts/prod_copy_images, just for webpack's own
+// build output rather than a node_modules source.
+gulp.task('prod_copy_webpack_assets', function() {
+    return gulp.src([
+            './compair/static/build/*',
+            '!./compair/static/build/*.js',
+            '!./compair/static/build/*.css',
+            '!./compair/static/build/*.json',
+            '!./compair/static/build/*.txt',
+        ])
+        .pipe(gulp.dest('./compair/static/dist'));
+});
 gulp.task('prod_pdf_viewer_files', function() {
     return gulp.src([
             './node_modules/pdf.js-viewer/pdf.js',
@@ -193,8 +159,9 @@ gulp.task('prod_pdf_viewer_files', function() {
         ], {base: './node_modules/pdf.js-viewer/'})
         .pipe(gulp.dest('./compair/static/dist/pdf.js-viewer'));
 });
-gulp.task('prod', gulp.series('prod_minify_js_libs', 'prod_compile_minify_css', 'prod_compile_email_css',
-        'prod_minify_js', 'prod_copy_fonts', 'prod_copy_images', 'prod_pdf_viewer_files', function() {
+gulp.task('prod', gulp.series('prod_compile_minify_css', 'prod_compile_email_css',
+        'prod_minify_js', 'prod_copy_fonts', 'prod_copy_images', 'prod_pdf_viewer_files', 'prod_copy_tincan',
+        'prod_copy_webpack_assets', function() {
     return gulp.src([
             './compair/static/build/*.css',
             './compair/static/build/*.js',

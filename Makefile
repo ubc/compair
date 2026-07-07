@@ -21,6 +21,7 @@ prod:
 	$(DOCKERRUN_PY) pip install -r requirements.txt
 	$(DOCKERRUN_NODE) npm install
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js
+	$(DOCKERRUN_NODE) node_modules/webpack/bin/webpack.js --mode production
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js prod
 
 deps:
