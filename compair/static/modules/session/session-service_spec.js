@@ -51,7 +51,7 @@ describe('Service: Session', function() {
         }
     };
 
-    beforeEach(module('ubc.ctlt.compair.session'));
+    beforeEach(angular.mock.module('ubc.ctlt.compair.session'));
 
     beforeEach(inject(function($injector) {
         $httpBackend = $injector.get('$httpBackend');

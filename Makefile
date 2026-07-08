@@ -21,18 +21,19 @@ prod:
 	$(DOCKERRUN_PY) pip install -r requirements.txt
 	$(DOCKERRUN_NODE) npm install
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js
+	$(DOCKERRUN_NODE) node_modules/webpack/bin/webpack.js --mode production
 	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js prod
 
 deps:
 	$(DOCKERRUN_PY) pip install -r requirements.txt -r requirements.dev.txt
 	$(DOCKERRUN_NODE) npm install
-	$(DOCKERRUN_NODE) node_modules/gulp/bin/gulp.js
+	$(DOCKERRUN_NODE) npm run build:dev
 
 clean:
 	find . -name '*.pyc' -exec rm -f {} \;
 	find . -name '*.pyo' -exec rm -f {} \;
 	find . -name '*~' -exec rm -f {} \;
-	rm -rf bower_components node_modules
+	rm -rf node_modules
 	rm -rf compair/static/dist compair/static/build
 	find . -name '__pycache__' -exec rm -fR {} \;
 

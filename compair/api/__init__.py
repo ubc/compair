@@ -167,7 +167,9 @@ def register_api_blueprints(app):
 
         return render_template(
             'index.html',
-            bower_js_libs=prefix + assets['bowerJsLibs.js'],
+            webpack_js=prefix + assets['webpack-bundle.js'],
+            webpack_css=prefix + assets['webpack-bundle.css'],
+            tincan_js=prefix + assets['tincan.js'],
             compair_js=prefix + assets['compair.js'],
             compair_css=prefix + assets['compair.css'],
             static_img_path=prefix,

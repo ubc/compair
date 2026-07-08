@@ -1,22 +1,27 @@
 process.env.CHROME_BIN = require('puppeteer').executablePath()
 
+var appWebpackConfig = require('../../../../webpack.config.js');
+
 module.exports = function (config) {
-    var wiredep = require('wiredep');
-    var bowerFiles = wiredep({devDependencies: true, cwd: __dirname + '/../../../..'})['js'];
     config.set({
         basePath: '../../',
 
         preprocessors: {
-            'modules/**/*.html': ['ng-html2js']
+            'modules/**/*.html': ['ng-html2js'],
+            'test/config/karma-entry.js': ['webpack']
         },
 
-        files: bowerFiles.concat([
-            'modules/**/*-module.js',
-            'modules/**/*.js',
-            'modules/**/*.html',
-            'compair-config.js',
-            'test/helpers/*.js'
-        ]),
+        files: [
+            'lib/tincan/build/tincan.js',
+            'test/config/karma-entry.js',
+            'modules/**/*.html'
+        ],
+
+        webpack: {
+            mode: appWebpackConfig.mode,
+            module: appWebpackConfig.module,
+            plugins: appWebpackConfig.plugins
+        },
 
         frameworks: ['jasmine'],
 

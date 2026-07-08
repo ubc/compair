@@ -1,7 +1,7 @@
 describe('learning-record-module', function () {
     var $httpBackend;
     var id = "1abcABC123-abcABC123_Z";
-    beforeEach(module('ubc.ctlt.compair.learning_records.learning_record'));
+    beforeEach(angular.mock.module('ubc.ctlt.compair.learning_records.learning_record'));
     beforeEach(inject(function ($injector) {
         $httpBackend = $injector.get('$httpBackend');
     }));

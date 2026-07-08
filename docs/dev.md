@@ -49,9 +49,9 @@ Install the node dependencies (`package.json`):
 
     npm install
 
-Install the front-end javascript dependencies (`bower.json`):
+Build the front-end assets:
 
-    node_modules/.bin/gulp
+    npm run build:dev
 
 Running the application
 -----------------------

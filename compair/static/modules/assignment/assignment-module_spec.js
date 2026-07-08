@@ -751,7 +751,7 @@ describe('assignment-module', function () {
     };
 
 
-    beforeEach(module('ubc.ctlt.compair.course'));
+    beforeEach(angular.mock.module('ubc.ctlt.compair.course'));
     beforeEach(inject(function ($injector) {
         $httpBackend = $injector.get('$httpBackend');
         sessionRequestHandler = $httpBackend.when('GET', '/api/session').respond(mockSession);

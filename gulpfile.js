@@ -6,53 +6,50 @@
  *              a font, which needs to be uploaded.
  */
 var gulp = require('gulp'),
-    bower = require('gulp-bower'),
-    wiredep = require('wiredep').stream,
     less = require('gulp-less'),
     concat = require('gulp-concat'),
     uglify = require('gulp-uglify'),
     htmlReplace = require('gulp-html-replace'),
     inject = require('gulp-inject'),
-    mainBowerFiles = require('main-bower-files'),
     cleanCss = require('gulp-clean-css'),
     rev = require('gulp-rev'),
     exec = require('child_process').exec,
     sort = require('gulp-sort'), // gulp.src with wildcard doesn't give us a stable file order
-    streamqueue = require('streamqueue'), // queued streams one by one
     templateCache = require('gulp-angular-templatecache');
 
-    var cssFilenames = [
-        './bower_components/bootstrap/dist/css/bootstrap.css',
-        './bower_components/highlightjs/styles/foundation.css',
-        './bower_components/angular-loading-bar/build/loading-bar.css',
-        './bower_components/AngularJS-Toaster/toaster.css',
-        './bower_components/chosen/chosen.css',
-        './bower_components/chosen-bootstrap-theme/dist/chosen-bootstrap-theme.min.css',
-        './compair/static/build/compair.css'
-    ],
-    targetCssFilename = 'compair.css',
-    targetEmailCssFilename = 'email.css',
-    jsLibsFilename = 'bowerJsLibs.js',
+var targetEmailCssFilename = 'email.css',
     jsFilename = 'compair.js',
     karmaCommonConf = 'compair/static/test/config/karma.conf.js';
 
-// download Bower packages and copy them to the lib directory
-gulp.task('bowerInstall', function() {
-    return bower()
-        .pipe(gulp.dest('./compair/static/lib'));
+gulp.task('copy_pdf_viewer_html_template', function() {
+    return gulp.src(['./node_modules/pdf.js-viewer/viewer.html'])
+        .pipe(gulp.dest('./compair/templates/static'));
 });
 
-// insert tags into index.html to include the libs downloaded by bower
-gulp.task('bowerWiredep', gulp.series('bowerInstall', function () {
-    return gulp.src('./compair/static/index.html', {allowEmpty: true})
-        .pipe(wiredep({directory: './compair/static/lib'}))
-        .pipe(gulp.dest('./compair/static/'));
-}));
+// pdf.js-viewer isn't bundled by webpack (it's a standalone viewer, not part
+// of the Angular app), so its runtime assets need to be copied to the exact
+// path compair/api/__init__.py's route_pdf_viewer() expects in dev mode:
+// url_for('static', filename='lib/pdf.js-viewer').
+gulp.task('copy_pdf_viewer_dev_assets', function() {
+    return gulp.src([
+            './node_modules/pdf.js-viewer/pdf.js',
+            './node_modules/pdf.js-viewer/pdf.worker.js',
+            './node_modules/pdf.js-viewer/viewer.css',
+            './node_modules/pdf.js-viewer/images/*',
+            './node_modules/pdf.js-viewer/cmaps/*',
+            './node_modules/pdf.js-viewer/locale/*',
+        ], {base: './node_modules/pdf.js-viewer/'})
+        .pipe(gulp.dest('./compair/static/lib/pdf.js-viewer'));
+});
 
-gulp.task('copy_pdf_viewer_html_template', gulp.series('bowerInstall', function() {
-    return gulp.src(['./compair/static/lib/pdf.js-viewer/viewer.html'])
-        .pipe(gulp.dest('./compair/templates/static'));
-}));
+// tincanjs can't be webpack-bundled either (see webpack-entry.js for why),
+// so it needs its own file for a plain <script> tag, like pdf.js-viewer.
+// Copied to Bower's old path, not lib_extension/ (that's for hand-authored
+// content with no package-manager source, which this isn't).
+gulp.task('copy_tincan', function() {
+    return gulp.src(['./node_modules/tincanjs/build/tincan.js'], {base: './node_modules/tincanjs/'})
+        .pipe(gulp.dest('./compair/static/lib/tincan'));
+});
 
 // compile css
 gulp.task('less', function () {
@@ -60,10 +57,11 @@ gulp.task('less', function () {
         .pipe(less())
         .pipe(gulp.dest('./compair/static/build'));
 });
+// Vendor CSS (bootstrap, highlightjs, chosen, etc.) is bundled by webpack
+// (see webpack-entry.js) - this only compiles the app's own stylesheet.
 gulp.task('prod_compile_minify_css', gulp.series('less', function() {
-    return gulp.src(cssFilenames)
+    return gulp.src('./compair/static/build/compair.css')
         .pipe(cleanCss())
-        .pipe(concat(targetCssFilename))
         .pipe(gulp.dest('./compair/static/build'));
 }));
 
@@ -86,13 +84,6 @@ gulp.task('prod_compile_email_css', gulp.series('email_less', function() {
         .pipe(concat(targetEmailCssFilename))
         .pipe(gulp.dest('./compair/templates/static'));
 }));
-// don't sort bower files as bower handles order and dependency
-gulp.task('prod_minify_js_libs', function() {
-    return gulp.src(mainBowerFiles({"filter": /.*\.js/}))
-        .pipe(concat(jsLibsFilename))
-        .pipe(uglify())
-        .pipe(gulp.dest('./compair/static/build'));
-});
 gulp.task('prod_templatecache', function () {
     return gulp.src('./compair/static/modules/**/*.html')
         // we need a stable order to get the stable hash
@@ -105,58 +96,72 @@ gulp.task('prod_templatecache', function () {
 gulp.task('prod_copy_fonts', function () {
     // bootstrap fonts is loaded by bootstrap.css and default location is
     // ../fonts/
-    return gulp.src('bower_components/bootstrap/fonts/*.*')
+    return gulp.src('node_modules/bootstrap/fonts/*.*')
         .pipe(gulp.dest('compair/static/fonts/'));
 });
 gulp.task('prod_copy_images', function () {
     // chosen image is loaded by chosen.css and default location is
     // ./
-    return gulp.src(['bower_components/chosen/*.png', './compair/static/img/*.png', './compair/static/img/*.ico'])
+    return gulp.src(['node_modules/chosen-js/*.png', './compair/static/img/*.png', './compair/static/img/*.ico'])
         .pipe(gulp.dest('compair/static/dist/'));
 });
+// compair-config.js, ng-breadcrumbs.js, and every *-module/-directive/-service.js
+// file are bundled by webpack (see webpack-entry.js) - this only builds the
+// leftovers webpack doesn't handle: the angular $templateCache and the
+// ckeditor combinedmath plugin (a CKEditor plugin, not an Angular module).
 gulp.task('prod_minify_js', gulp.series('prod_templatecache', function() {
-    var libs = gulp.src([
-        './compair/static/compair-config.js',
+    return gulp.src([
         './compair/static/build/templates.js',
-        // ckeditor plugins
-        //'./bower_components/ckeditor/plugins/codesnippet/plugin.js',
-        //'./bower_components/ckeditor/plugins/codesnippet/dialogs/codesnippet.js',
-        //'./bower_components/ckeditor/plugins/codesnippet/lang/en.js',
         './compair/static/lib_extension/ckeditor/plugins/combinedmath/plugin.js',
-        './compair/static/lib_extension/ckeditor/plugins/combinedmath/dialogs/combinedmath.js',
-        //'./bower_components/ckeditor/plugins/widget/plugin.js',
-        //'./bower_components/ckeditor/plugins/widget/lang/en.js',
-        //'./bower_components/ckeditor/plugins/lineutils/plugin.js'
-    ]);
-    // we need to sort to generate a stable order so that we have a stable hash
-    var modules = gulp.src('./compair/static/modules/**/*-module.js');
-    var directives = gulp.src('./compair/static/modules/**/*-directive.js');
-    var services = gulp.src('./compair/static/modules/**/*-service.js');
-
-    return streamqueue(
-        { objectMode: true },
-        libs,
-        modules.pipe(sort()),
-        directives.pipe(sort()),
-        services.pipe(sort())
-    )
+        './compair/static/lib_extension/ckeditor/plugins/combinedmath/dialogs/combinedmath.js'
+    ])
         .pipe(concat(jsFilename))
         .pipe(uglify())
         .pipe(gulp.dest('./compair/static/build'));
 }));
+// tincanjs can't be webpack-bundled (see webpack-entry.js), so it needs its
+// own delivery path. This copies the plain file into build/ so the rev()
+// step at the end of prod picks it up and hashes it into dist/ -
+// copy_tincan above only covers dev mode's static url, not CDN deployments
+// (ASSET_LOCATION=cloud), which only upload what's in dist/.
+gulp.task('prod_copy_tincan', function() {
+    return gulp.src(['./node_modules/tincanjs/build/tincan.js'])
+        .pipe(gulp.dest('./compair/static/build'));
+});
+// webpack emits font/image files referenced via url() in the vendor CSS it
+// bundles (e.g. bootstrap's @font-face files, chosen's sprite pngs) into
+// build/ under its own content-hashed names - webpack-bundle.css already has
+// those exact names baked into its url() references. rev() below only globs
+// build/*.js and build/*.css, so these never reach dist/ on their own, and
+// re-hashing them through rev() would break the reference a second time
+// (rev would rename them, but the CSS's url() would still point at the
+// original webpack-generated name). So they're copied verbatim instead -
+// same pattern as prod_copy_fonts/prod_copy_images, just for webpack's own
+// build output rather than a node_modules source.
+gulp.task('prod_copy_webpack_assets', function() {
+    return gulp.src([
+            './compair/static/build/*',
+            '!./compair/static/build/*.js',
+            '!./compair/static/build/*.css',
+            '!./compair/static/build/*.json',
+            '!./compair/static/build/*.txt',
+        ])
+        .pipe(gulp.dest('./compair/static/dist'));
+});
 gulp.task('prod_pdf_viewer_files', function() {
     return gulp.src([
-            './compair/static/lib/pdf.js-viewer/pdf.js',
-            './compair/static/lib/pdf.js-viewer/pdf.worker.js',
-            './compair/static/lib/pdf.js-viewer/viewer.css',
-            './compair/static/lib/pdf.js-viewer/images/*',
-            './compair/static/lib/pdf.js-viewer/cmaps/*',
-            './compair/static/lib/pdf.js-viewer/locale/*',
-        ], {base: './compair/static/lib/pdf.js-viewer/'})
+            './node_modules/pdf.js-viewer/pdf.js',
+            './node_modules/pdf.js-viewer/pdf.worker.js',
+            './node_modules/pdf.js-viewer/viewer.css',
+            './node_modules/pdf.js-viewer/images/*',
+            './node_modules/pdf.js-viewer/cmaps/*',
+            './node_modules/pdf.js-viewer/locale/*',
+        ], {base: './node_modules/pdf.js-viewer/'})
         .pipe(gulp.dest('./compair/static/dist/pdf.js-viewer'));
 });
-gulp.task('prod', gulp.series('prod_minify_js_libs', 'prod_compile_minify_css', 'prod_compile_email_css',
-        'prod_minify_js', 'prod_copy_fonts', 'prod_copy_images', 'prod_pdf_viewer_files', function() {
+gulp.task('prod', gulp.series('prod_compile_minify_css', 'prod_compile_email_css',
+        'prod_minify_js', 'prod_copy_fonts', 'prod_copy_images', 'prod_pdf_viewer_files', 'prod_copy_tincan',
+        'prod_copy_webpack_assets', function() {
     return gulp.src([
             './compair/static/build/*.css',
             './compair/static/build/*.js',
@@ -368,6 +373,6 @@ gulp.task('webdriver_standalone', function(done) {
 });
 
 
-gulp.task("default", gulp.series('bowerInstall', 'bowerWiredep', 'copy_pdf_viewer_html_template', function(done){
+gulp.task("default", gulp.series('copy_tincan', 'copy_pdf_viewer_dev_assets', 'copy_pdf_viewer_html_template', function(done){
     done();
 }));

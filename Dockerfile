@@ -14,12 +14,13 @@ FROM node:24 AS node-deps
 
 WORKDIR /home/node/app
 
-COPY package.json package-lock.json bower.json gulpfile.js /home/node/app/
+COPY package.json package-lock.json gulpfile.js webpack.config.js /home/node/app/
 COPY compair/static/ /home/node/app/compair/static/
 
 RUN mkdir -p compair/templates/static/ \
     && npm install --production --no-optional \
     && node_modules/gulp/bin/gulp.js \
+    && node_modules/webpack/bin/webpack.js --mode production \
     && node_modules/gulp/bin/gulp.js prod
 
 # Python Application image
