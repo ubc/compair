@@ -210,6 +210,16 @@ class ComPAIRRequestValidator(RequestValidator):
         lower, upper = self.client_key_length
         return lower <= len(client_key) <= upper
 
+    def check_nonce(self, nonce):
+        """
+        Check that the nonce only contains safe characters (default safe characters
+        plus '-', since some LTI consumers e.g. D2L Brightspace send GUID-style
+        nonces) and is no shorter than lower and no longer than upper.
+        """
+        lower, upper = self.nonce_length
+        safe_characters = self.safe_characters | {'-'}
+        return set(nonce) <= safe_characters and lower <= len(nonce) <= upper
+
     def validate_timestamp_and_nonce(self, client_key, timestamp, nonce,
                                      request, request_token=None, access_token=None):
         return LTINonce.is_valid_nonce(client_key, nonce, timestamp)
