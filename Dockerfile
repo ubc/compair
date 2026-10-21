@@ -35,6 +35,10 @@ ENV DEV 0
 
 WORKDIR /code
 
+RUN apt-get update -y \
+    && apt-get install -y --only-upgrade ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=python-base /root/.cache /root/.cache
 COPY --from=python-base /requirements.txt /code/requirements.txt
 
