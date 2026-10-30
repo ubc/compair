@@ -43,11 +43,24 @@ module.controller(
         $scope.types = [
             {'id': 'participation', 'name': 'Basic Participation (best for grading purposes)'},
             {'id': 'participation_stat', 'name': 'Advanced Participation (best for research purposes)'},
-            {'id': 'peer_feedback', 'name': 'Compiled Peer Feedback'}
+            {'id': 'peer_feedback', 'name': 'Compiled Peer Feedback'},
+            {'id': 'brightspace_gradebook', 'name': 'Brightspace Gradebook (for grade import)'}
         ];
+        // assignment id -> max points of the matching Brightspace grade item
+        $scope.maxPoints = {};
+        var defaultMaxPoints = 10;
 
         $scope.changeReport = function() {
             $scope.reportFile = null;
+            $scope.skippedStudents = 0;
+        };
+
+        // assignments that need a max points value for the Brightspace gradebook report
+        $scope.brightspaceAssignments = function() {
+            return $scope.assignments.filter(function(assignment) {
+                return assignment.id != 'all' &&
+                    ($scope.report.assignment == 'all' || assignment.id == $scope.report.assignment);
+            });
         };
 
         $scope.getGroupsAssignments = function() {
@@ -60,6 +73,10 @@ module.controller(
             AssignmentResource.get({'courseId': $scope.report.course_id}).$promise.then(
                 function (ret) {
                     $scope.report.assignment = 'all';
+                    $scope.maxPoints = {};
+                    angular.forEach(ret.objects, function(assignment) {
+                        $scope.maxPoints[assignment.id] = defaultMaxPoints;
+                    });
                     if (ret.objects.length > 0) {
                         ret.objects.push(all);
                     }
@@ -110,10 +127,17 @@ module.controller(
             if (report.group_id == 'all') {
                 delete report.group_id;
             }
+            if (report.type == 'brightspace_gradebook') {
+                report.max_points = {};
+                angular.forEach($scope.brightspaceAssignments(), function(assignment) {
+                    report.max_points[assignment.id] = $scope.maxPoints[assignment.id];
+                });
+            }
 
             ReportResource.save({'id': report.course_id}, report).$promise.then(
                 function (ret) {
                     $scope.reportFile = ret.file;
+                    $scope.skippedStudents = ret.skipped_students || 0;
                 }
             ).finally(function() {
                 $scope.submitted = false;

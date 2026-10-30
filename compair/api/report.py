@@ -1,3 +1,4 @@
+import math
 import os
 import time
 import unicodecsv as csv
@@ -16,7 +17,8 @@ from sqlalchemy.orm import joinedload
 from compair.authorization import require
 from compair.core import event, abort
 from compair.models import User, CourseRole, Assignment, UserCourse, Course, Answer, \
-    AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType, Group, File, KalturaMedia
+    AnswerComment, AssignmentCriterion, Comparison, AnswerCommentType, Group, File, KalturaMedia, \
+    AssignmentGrade
 from compair.kaltura import KalturaAPI
 from .util import new_restful_api
 
@@ -28,6 +30,10 @@ report_parser.add_argument('group_id')
 # may change 'type' to int
 report_parser.add_argument('type', required=True, nullable=False)
 report_parser.add_argument('assignment')
+# brightspace_gradebook only: {assignment_uuid: max points of the matching Brightspace grade item}
+report_parser.add_argument('max_points', type=dict, location='json')
+
+BRIGHTSPACE_DEFAULT_MAX_POINTS = 10
 
 # events
 on_export_report = event.signal('EXPORT_REPORT')
@@ -59,11 +65,17 @@ class ReportRootAPI(Resource):
         report_type = params.get('type')
 
         group = Group.get_active_by_uuid_or_404(group_uuid) if group_uuid else None
+        if group and group.course_id != course.id:
+            abort(404, title="Group Unavailable",
+                message="Sorry, this group was deleted or is no longer accessible.")
 
         assignments = []
         assignment_uuid = params.get('assignment', None)
         if assignment_uuid:
             assignment = Assignment.get_active_by_uuid_or_404(assignment_uuid)
+            if assignment.course_id != course.id:
+                abort(404, title="Assignment Unavailable",
+                    message="Sorry, this assignment was deleted or is no longer accessible.")
             assignments = [assignment]
         else:
             assignments = Assignment.query \
@@ -71,8 +83,10 @@ class ReportRootAPI(Resource):
                     course_id=course.id,
                     active=True
                 ) \
+                .order_by(Assignment.id) \
                 .all()
 
+        extra_response = {}
         if report_type == "participation_stat":
             data = participation_stat_report(course, assignments, group, assignment_uuid is None)
 
@@ -127,6 +141,24 @@ class ReportRootAPI(Resource):
             data = peer_feedback_report(course, assignments, group)
             titles = [titles1, titles2]
 
+        elif report_type == "brightspace_gradebook":
+            # Brightspace matches grade columns to grade items by name, so duplicates would be ambiguous
+            assignment_names = [assignment.name for assignment in assignments]
+            duplicate_names = sorted(set(name for name in assignment_names if assignment_names.count(name) > 1))
+            if duplicate_names:
+                abort(400, title="Report Not Run",
+                    message="More than one assignment is named "+", ".join('"'+name+'"' for name in duplicate_names)+
+                        ". Please rename them so each matches its own Brightspace grade item, or run the report for one assignment at a time.")
+
+            # Brightspace's grade import format: one heading row, an identifier column,
+            # one "<grade item> Points Grade" column per item, and an end of line marker
+            titles = [['OrgDefinedId'] +
+                [name + ' Points Grade' for name in assignment_names] +
+                ['End-of-Line Indicator']]
+            data, skipped_students = brightspace_gradebook_report(
+                course, assignments, group, params.get('max_points'))
+            extra_response['skipped_students'] = skipped_students
+
         else:
             abort(400, title="Report Not Run", message="Please try again with a report type from the list of report types provided.")
 
@@ -147,7 +179,9 @@ class ReportRootAPI(Resource):
             course_id=course.id,
             data={'type': report_type, 'filename': name})
 
-        return {'file': 'report/' + name}
+        response = {'file': 'report/' + name}
+        response.update(extra_response)
+        return response
 
 
 api.add_resource(ReportRootAPI, '')
@@ -560,6 +594,81 @@ def peer_feedback_report(course, assignments, group):
                 report.append(temp)
 
     return report
+
+
+def brightspace_gradebook_report(course, assignments, group, max_points):
+    """
+    Participation grades scaled to points, keyed by student number (Brightspace OrgDefinedId).
+    Students with no grades are left out, and blank cells are skipped by Brightspace's import,
+    so existing Brightspace grades are never cleared. Returns (rows, skipped_students), where
+    skipped_students counts graded students left out because they have no student number.
+    """
+    max_points = max_points or {}
+    assignment_max_points = []
+    for assignment in assignments:
+        value = max_points.get(assignment.uuid, BRIGHTSPACE_DEFAULT_MAX_POINTS)
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            value = None
+        if value is None or not math.isfinite(value) or not value > 0:
+            abort(400, title="Report Not Run",
+                message="Please enter a max points value greater than 0 for "+assignment.name+".")
+        assignment_max_points.append(value)
+
+    query = User.query \
+        .join(UserCourse, UserCourse.user_id == User.id) \
+        .filter(and_(
+            UserCourse.course_id == course.id,
+            UserCourse.course_role == CourseRole.student
+        ))
+    if group:
+        query = query.filter(UserCourse.group_id == group.id)
+    students = query \
+        .with_entities(User.id, User.student_number) \
+        .order_by(User.lastname, User.firstname, User.id) \
+        .all()
+
+    assignment_ids = [assignment.id for assignment in assignments]
+    student_ids = [student.id for student in students]
+
+    user_grades = {} # structure - user_id/assignment_id/grade
+    if assignment_ids and student_ids:
+        assignment_grades = AssignmentGrade.query \
+            .filter(and_(
+                AssignmentGrade.assignment_id.in_(assignment_ids),
+                AssignmentGrade.user_id.in_(student_ids)
+            )) \
+            .with_entities(AssignmentGrade.user_id, AssignmentGrade.assignment_id, AssignmentGrade.grade) \
+            .all()
+        for (user_id, assignment_id, grade) in assignment_grades:
+            user_grades.setdefault(user_id, {})[assignment_id] = grade
+
+    report = []
+    skipped_students = 0
+    for student in students:
+        grades = user_grades.get(student.id)
+        if not grades:
+            continue
+
+        student_number = (student.student_number or '').strip()
+        if not student_number:
+            skipped_students += 1
+            continue
+
+        row = [student_number]
+        for assignment, points in zip(assignments, assignment_max_points):
+            grade = grades.get(assignment.id)
+            row.append('' if grade is None else format_points(grade * points))
+        row.append('#')
+        report.append(row)
+
+    return report, skipped_students
+
+
+def format_points(points):
+    # 2 decimal places without trailing zeros (8.5, not 8.50)
+    return '{:.2f}'.format(points).rstrip('0').rstrip('.')
 
 
 def strip_html(text):
