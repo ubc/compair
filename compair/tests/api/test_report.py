@@ -9,6 +9,7 @@ import re
 from sqlalchemy import or_
 from data.fixtures import DefaultFixture
 from data.fixtures.test_data import TestFixture
+from data.factories import AssignmentFactory, CourseFactory, GroupFactory
 from compair.tests.test_compair import ComPAIRAPITestCase
 from compair.models import CourseRole, Answer, Comparison, AnswerComment, AnswerCommentType, AssignmentGrade
 from compair.core import db
@@ -545,6 +546,166 @@ class ReportAPITest(ComPAIRAPITestCase):
             self.assert200(rv)
             file_name = rv.json['file'].split("/")[-1]
             self.files_to_cleanup.append(file_name)
+
+    def test_generate_brightspace_gradebook_report(self):
+        assignments = self.fixtures.assignments
+        max_points = {assignment.uuid: 10 for assignment in assignments}
+        max_points[assignments[0].uuid] = 100
+        params = {
+            'group_id': None,
+            'type': "brightspace_gradebook",
+            'assignment': None,
+            'max_points': max_points
+        }
+
+        # a graded student without a student number can't be matched in Brightspace
+        graded_student_ids = set(grade.user_id for grade in AssignmentGrade.query
+            .filter(AssignmentGrade.assignment_id.in_([a.id for a in assignments])).all())
+        no_number_student = next(s for s in self.fixtures.students if s.id in graded_student_ids)
+        no_number_student.student_number = None
+        db.session.commit()
+
+        with self.login(self.fixtures.instructor.username):
+            # test invalid max points
+            for invalid_value in [0, -5, "abc", "inf", "nan"]:
+                invalid_params = params.copy()
+                invalid_params['max_points'] = dict(max_points)
+                invalid_params['max_points'][assignments[0].uuid] = invalid_value
+                rv = self.client.post(self.url, data=json.dumps(invalid_params), content_type='application/json')
+                self.assert400(rv)
+
+            # test entire course
+            rv = self.client.post(self.url, data=json.dumps(params), content_type='application/json')
+            self.assert200(rv)
+            self.assertEqual(rv.json['skipped_students'], 1)
+            file_name = rv.json['file'].split("/")[-1]
+            self.files_to_cleanup.append(file_name)
+
+            tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
+            with open(tmp_name, 'rb') as csvfile:
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
+
+                heading = next(reader)
+                self.assertEqual(heading[0], 'OrgDefinedId')
+                self.assertEqual(heading[-1], 'End-of-Line Indicator')
+                assignments_by_heading = {a.name + ' Points Grade': a for a in assignments}
+                self.assertEqual(sorted(heading[1:-1]), sorted(assignments_by_heading.keys()))
+                column_assignments = [assignments_by_heading[h] for h in heading[1:-1]]
+
+                rows = {row[0]: row for row in reader}
+
+            expected_rows = {}
+            for student in self.fixtures.students:
+                grades = {grade.assignment_id: grade.grade for grade in AssignmentGrade.query
+                    .filter_by(user_id=student.id)
+                    .filter(AssignmentGrade.assignment_id.in_([a.id for a in assignments])).all()}
+                if not grades or not student.student_number:
+                    continue
+                row = [student.student_number]
+                for assignment in column_assignments:
+                    grade = grades.get(assignment.id)
+                    row.append('' if grade is None else
+                        '{:.2f}'.format(grade * max_points[assignment.uuid]).rstrip('0').rstrip('.'))
+                row.append('#')
+                expected_rows[row[0]] = row
+
+            self.assertGreater(len(expected_rows), 0)
+            self.assertEqual(rows, expected_rows)
+
+            # test single assignment, defaulting to 10 max points
+            single_params = {
+                'group_id': None,
+                'type': "brightspace_gradebook",
+                'assignment': assignments[0].uuid
+            }
+            rv = self.client.post(self.url, data=json.dumps(single_params), content_type='application/json')
+            self.assert200(rv)
+            file_name = rv.json['file'].split("/")[-1]
+            self.files_to_cleanup.append(file_name)
+
+            tmp_name = os.path.join(current_app.config['REPORT_FOLDER'], file_name)
+            with open(tmp_name, 'rb') as csvfile:
+                reader = csv.reader(csvfile, delimiter=self.delimiter)
+                heading = next(reader)
+                self.assertEqual(heading, ['OrgDefinedId', assignments[0].name + ' Points Grade', 'End-of-Line Indicator'])
+                for row in reader:
+                    self.assertEqual(len(row), 3)
+                    self.assertFalse(row[0].startswith('#'))
+                    self.assertEqual(row[2], '#')
+                    if row[1] != '':
+                        self.assertTrue(0 <= float(row[1]) <= 10)
+
+            # test duplicate assignment names
+            original_name = assignments[1].name
+            assignments[1].name = assignments[0].name
+            db.session.commit()
+            rv = self.client.post(self.url, data=json.dumps(params), content_type='application/json')
+            self.assert400(rv)
+            assignments[1].name = original_name
+            db.session.commit()
+
+            # test assignment from another course
+            other_assignment = AssignmentFactory(course=CourseFactory())
+            db.session.commit()
+            invalid_params = single_params.copy()
+            invalid_params['assignment'] = other_assignment.uuid
+            rv = self.client.post(self.url, data=json.dumps(invalid_params), content_type='application/json')
+            self.assert404(rv)
+
+    def test_brightspace_gradebook_report_permissions(self):
+        params = {
+            'group_id': None,
+            'type': "brightspace_gradebook",
+            'assignment': None
+        }
+        post = lambda url=self.url, data=params: self.client.post(url, data=json.dumps(data), content_type='application/json')
+
+        # test login required
+        rv = post()
+        self.assert401(rv)
+
+        # students, instructors of other courses, and instructors dropped from the course can't run it
+        for user in [self.fixtures.students[0], self.fixtures.unauthorized_student,
+                self.fixtures.unauthorized_instructor, self.fixtures.dropped_instructor]:
+            with self.login(user.username):
+                rv = post()
+                self.assert403(rv)
+
+        # sys admin impersonating a student can't run it
+        with self.impersonate(DefaultFixture.ROOT_USER, self.fixtures.students[0]):
+            rv = post()
+            self.assert403(rv)
+
+        # the course's instructor and TA, and sys admins, can run it
+        for user_context in [self.login(self.fixtures.instructor.username),
+                self.login(self.fixtures.ta.username), self.login('root', 'password')]:
+            with user_context:
+                rv = post()
+                self.assert200(rv)
+                self.files_to_cleanup.append(rv.json['file'].split("/")[-1])
+
+        other_course = CourseFactory()
+        other_assignment = AssignmentFactory(course=other_course)
+        other_group = GroupFactory(course=other_course)
+        db.session.commit()
+
+        with self.login(self.fixtures.instructor.username):
+            # can't run it for a course they aren't in
+            rv = post(url="/api/courses/" + other_course.uuid + "/report")
+            self.assert403(rv)
+
+            # can't pull in another course's assignment or group through their own course
+            rv = post(data=dict(params, assignment=other_assignment.uuid))
+            self.assert404(rv)
+            rv = post(data=dict(params, group_id=other_group.uuid))
+            self.assert404(rv)
+
+    def test_format_points(self):
+        from compair.api.report import format_points
+        self.assertEqual(format_points(10.0), '10')
+        self.assertEqual(format_points(8.5), '8.5')
+        self.assertEqual(format_points(2.0 / 3 * 10), '6.67')
+        self.assertEqual(format_points(0.0), '0')
 
     def _check_participation_stat_report_heading_rows(self, heading):
         expected_heading = [

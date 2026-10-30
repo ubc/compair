@@ -46,12 +46,28 @@
             <p ng-if="assignments.length > 0 && (reportForm.report.assignment.$invalid || !report.assignment) && saveAttempted" class="alert alert-warning">Which assignment(s) do you want to see in the report?</p>
         </div>
     </fieldset>
+    <fieldset ng-if="report.type == 'brightspace_gradebook' && brightspaceAssignments().length > 0">
+        <legend>Brightspace Max Points</legend>
+        <p class="intro-text">Enter what each assignment's grade item is out of in Brightspace (find this under Grades &rarr; Manage Grades). Participation grades are converted to points using these values, and each column is named "&lt;assignment name&gt; Points Grade", so the Brightspace grade item names need to match the assignment names.</p>
+        <div class="form-group" ng-repeat="assignment in brightspaceAssignments()"
+             ng-class="{'has-error': !(maxPoints[assignment.id] > 0) && saveAttempted}">
+            <label for="maxPoints{{ $index }}" class="required-star">{{ assignment.name }}</label>
+            <input type="number" class="form-control" id="maxPoints{{ $index }}" name="maxPoints{{ $index }}"
+                   ng-model="maxPoints[assignment.id]" min="0.01" step="any" ng-change="changeReport()" required>
+            <p ng-if="!(maxPoints[assignment.id] > 0) && saveAttempted" class="alert alert-warning">What is this assignment's grade item out of in Brightspace?</p>
+        </div>
+    </fieldset>
     <!-- different helper messages for pre or post save attempts -->
     <p class="text-center text-muted" ng-if="!saveAttempted && !reportFile"><span class="required-star"></span> = required (please make sure these areas are filled in)</p>
     <p class="text-center text-warning" ng-if="saveAttempted && !reportFile"><strong><i class="glyphicon glyphicon-warning-sign"></i></strong> {{helperMsg}}</p>
     <div class="alert alert-success text-center" ng-show="reportFile">
         <p class="h4">Report Complete</p><br />
         <p>Your report is ready to <a class="btn btn-success" href="{{ reportFile }}">Download</a></p>
+        <p ng-if="report.type == 'brightspace_gradebook'">Import it in Brightspace under Grades &rarr; Enter Grades &rarr; Import, and check the grades in the preview before confirming.</p>
+        <p ng-if="report.type == 'brightspace_gradebook' && skippedStudents > 0" class="text-warning">
+            <strong><i class="glyphicon glyphicon-warning-sign"></i></strong>
+            {{ skippedStudents }} student{{ skippedStudents == 1 ? '' : 's' }} with grades {{ skippedStudents == 1 ? 'was' : 'were' }} left out because they have no student number in ComPAIR. Their grades will need to be entered in Brightspace by hand.
+        </p>
         <p>Run <a href="" ng-click="changeReport()">another report</a>?</p>
         <br />
     </div>
