@@ -17,6 +17,14 @@ Deploying ComPAIR
 
 ### Deploying
 
+Set a strong, unique `SECRET_KEY` first. Flask signs session cookies with it, so
+anyone who knows it can forge cookies and impersonate any user. The app refuses
+to start without it, and the compose file requires it in the environment:
+
+```bash
+export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+```
+
 ```bash
 vi deploy/docker/docker-compose.yml # edit the yaml file to replace the default credentials
 docker-compose -f deploy/docker/docker-compose.yml up -d

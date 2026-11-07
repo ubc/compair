@@ -14,6 +14,7 @@ test_app_settings = {
     'DEBUG': False,
     'TESTING': True,
     #'PRESERVE_CONTEXT_ON_EXCEPTION': False,
+    'SECRET_KEY': 'test-secret-key-not-for-production',
     'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
     'SQLALCHEMY_ECHO': False,
     'CSRF_ENABLED': False,

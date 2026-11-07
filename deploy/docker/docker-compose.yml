@@ -25,6 +25,10 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - DB_NAME=compair
+      # Set a strong, unique SECRET_KEY in the environment before starting, e.g.
+      #   export SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+      # The app refuses to start if it is unset. Rotating it logs out all sessions.
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set to a strong, unique, secret value}
       - SQLALCHEMY_ENGINE_OPTIONS={"pool_recycle":299}
       - CELERY_BROKER_URL=redis://redis:6379
       - ASSET_LOCATION=local
@@ -44,6 +48,8 @@ services:
       - DB_HOST=db
       - DB_PORT=3306
       - DB_NAME=compair
+      # Must match the app service's SECRET_KEY (see note above).
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set to a strong, unique, secret value}
       - SQLALCHEMY_ENGINE_OPTIONS={"pool_recycle":299}
       - CELERY_BROKER_URL=redis://redis:6379
       - ASSET_LOCATION=local

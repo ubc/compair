@@ -16,8 +16,10 @@ DATABASE = {
     'query': {'charset': 'utf8mb4'},
 }
 
-# enable sessions by setting the secret key
-SECRET_KEY = "zfjlkfaweerP* SDF()U@#$haDJ;JKLASDFHUIO"
+# Sessions are signed with SECRET_KEY. No default is shipped: set a strong,
+# unique value via the SECRET_KEY environment variable or config.py. The app
+# refuses to start if SECRET_KEY is unset (see compair/__init__.py).
+SECRET_KEY = None
 
 # save some system resources, (will be false by default in Flask-SQLAlchemy in a future release)
 # we currently use SQLAlchemy event system directly

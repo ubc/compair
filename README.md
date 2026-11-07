@@ -15,6 +15,24 @@ The frontend is purely written in Javascript, using [AngularJS](http://angularjs
 The backend uses the python web application framework [Flask](http://flask.pocoo.org/) with [Flask SQLAlchemy](http://pythonhosted.org/Flask-SQLAlchemy/) for database persistence.
 [Alembic](http://alembic.readthedocs.org/) is used to maintain database updates.
 
+Required Configuration
+----------------------
+
+`SECRET_KEY` **must** be set to a strong, unique, secret value before running
+ComPAIR. Flask signs session cookies with it; anyone who knows it can forge
+session cookies and impersonate any user, including administrators. No default
+is shipped and the application refuses to start if `SECRET_KEY` is unset.
+
+Set it through the `SECRET_KEY` environment variable or `config.py`. Generate a
+random value, for example:
+
+    python -c 'import secrets; print(secrets.token_urlsafe(64))'
+
+Keep the value secret and identical across the app and all Celery workers. If a
+deployment ever ran with the old hard-coded default (ComPAIR 1.2.12 and
+earlier), rotate `SECRET_KEY` to a new random value; rotating it invalidates all
+existing sessions and logs everyone out.
+
 Developer Installation - Docker
 -------------------------------
 
