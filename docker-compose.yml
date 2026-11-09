@@ -28,6 +28,8 @@ services:
       - DB_NAME=compair
       - DB_CONN_OPTIONS={"charset":"utf8mb4"}
       - DEV=1
+      # Development-only key. Generate a unique, random value for any real deployment.
+      - SECRET_KEY=dev-only-insecure-secret-key-change-me
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_TASK_ALWAYS_EAGER=0
       #- GA_TRACKING_ID=12345
@@ -71,6 +73,8 @@ services:
       - DB_NAME=compair
       - DB_CONN_OPTIONS={"charset":"utf8mb4"}
       - DEV=1
+      # Development-only key. Generate a unique, random value for any real deployment.
+      - SECRET_KEY=dev-only-insecure-secret-key-change-me
       - CELERY_BROKER_URL=redis://redis:6379
       - CELERY_TASK_ALWAYS_EAGER=0
       - CELERY_WORKER_MAX_TASKS_PER_CHILD=5

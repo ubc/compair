@@ -1,5 +1,17 @@
 # v1.3
 
+## Security
+* **Removed the hard-coded default `SECRET_KEY`** (GHSA-cgvf-m9v9-wvgh). Older
+  releases shipped a fixed `SECRET_KEY` in `compair/settings.py`. Because Flask
+  signs session cookies with it, anyone who knew the public value could forge
+  session cookies and impersonate any user, including administrators. No default
+  is shipped anymore and the application now refuses to start unless a
+  `SECRET_KEY` is configured (and rejects the old leaked value).
+  * **Action required:** set a strong, unique `SECRET_KEY` via the `SECRET_KEY`
+    environment variable or `config.py`. Any deployment that ran with the old
+    default must rotate to a new value; rotating `SECRET_KEY` logs out all
+    existing sessions. See the "Required Configuration" section in the README.
+
 ## Notable changes
 * Many dependencies, both frontend and backend, were updated.
 

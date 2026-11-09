@@ -90,6 +90,33 @@ def is_allowed_during_impersonation(request):
             return True
     return False
 
+# The fixed SECRET_KEY that shipped in compair/settings.py up to and including
+# 1.2.12. It is public, so any deployment still using it can have its session
+# cookies forged. Reject it (and empty keys) outright so the app cannot run with
+# a key an attacker already knows.
+LEAKED_DEFAULT_SECRET_KEY = "zfjlkfaweerP* SDF()U@#$haDJ;JKLASDFHUIO"
+
+
+def validate_secret_key(secret_key):
+    """Ensure a strong, non-public SECRET_KEY is configured, or refuse to start.
+
+    :param secret_key: the configured SECRET_KEY value
+    :raises RuntimeError: if the key is missing, blank, or the leaked default
+    """
+    if not secret_key or not str(secret_key).strip():
+        raise RuntimeError(
+            "SECRET_KEY is not set. Set a strong, unique SECRET_KEY via the "
+            "SECRET_KEY environment variable or config.py before starting ComPAIR."
+        )
+    if secret_key == LEAKED_DEFAULT_SECRET_KEY:
+        raise RuntimeError(
+            "SECRET_KEY is set to the publicly known default that shipped in "
+            "older ComPAIR releases. It can be used to forge session cookies. "
+            "Set a strong, unique SECRET_KEY and rotate it (this logs out all "
+            "existing sessions)."
+        )
+
+
 def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_assets=False):
     """Return a :class:`Flask` application instance
 
@@ -101,6 +128,8 @@ def create_app(conf=config, settings_override=None, skip_endpoints=False, skip_a
     app = Flask(__name__, static_url_path='/app')
     app.config.update(conf)
     app.config.update(settings_override)
+
+    validate_secret_key(app.config.get('SECRET_KEY'))
 
     if not app.config.get('ENFORCE_SSL', True):
         try:
