@@ -16,6 +16,7 @@ from itsdangerous import BadSignature
 
 from compair import create_app
 from compair import settings as default_settings
+from compair.configuration import config as base_config
 from compair.tests import test_app_settings
 from compair.tests.test_compair import ComPAIRAPITestCase
 
@@ -35,6 +36,17 @@ def _settings_with_secret_key(secret_key):
     return settings
 
 
+def _conf_without_secret_key():
+    """The loaded configuration minus SECRET_KEY.
+
+    create_app() applies `conf` before `settings_override`, and `conf` picks up
+    SECRET_KEY from the environment or config.py (e.g. the dev docker-compose
+    sets one). Strip it so the missing-key test does not depend on the
+    developer's environment.
+    """
+    return {k: v for k, v in base_config.items() if k != 'SECRET_KEY'}
+
+
 class SecretKeyConfigTest(ComPAIRAPITestCase):
     def test_default_settings_do_not_ship_a_usable_secret_key(self):
         shipped = getattr(default_settings, 'SECRET_KEY', None)
@@ -46,7 +58,8 @@ class SecretKeyConfigTest(ComPAIRAPITestCase):
 
     def test_create_app_refuses_a_missing_secret_key(self):
         with self.assertRaises(RuntimeError):
-            create_app(settings_override=_settings_with_secret_key(_UNSET))
+            create_app(conf=_conf_without_secret_key(),
+                       settings_override=_settings_with_secret_key(_UNSET))
 
     def test_create_app_refuses_a_blank_secret_key(self):
         for blank in ('', '   '):
