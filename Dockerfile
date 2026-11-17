@@ -35,8 +35,10 @@ ENV DEV 0
 
 WORKDIR /code
 
+# python:3.10-slim is past end of life and no longer rebuilt upstream, so pick up
+# Debian security fixes for packages in the runtime image here (apt: CVE-2026-109518).
 RUN apt-get update -y \
-    && apt-get install -y --only-upgrade ca-certificates \
+    && apt-get install -y --only-upgrade ca-certificates apt \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=python-base /root/.cache /root/.cache
