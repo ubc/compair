@@ -14,6 +14,9 @@
 
 ## Notable changes
 * Many dependencies, both frontend and backend, were updated.
+* The Docker image's uWSGI now shuts down gracefully on SIGTERM (`docker stop`,
+  Kubernetes pod termination): it finishes the requests in progress and exits,
+  instead of dropping them and restarting until it is killed.
 
 ### New Features
 * "Download All" attachments button was added to generate and download a zip file of all student submitted answer attachments. This can be found in an assignment's "Participation" tab under the "Attachments" column.
